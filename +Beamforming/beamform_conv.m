@@ -124,7 +124,7 @@ end
     function w = generateApodization(wintype,winlength,wshift)
         if nargin > 2,
             for qq = 1:numel(wshift),
-                w = myhamming(winlength,wshift(qq));
+                w = Beamforming.hamming(winlength,wshift(qq));
             end
             return
         end
