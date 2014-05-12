@@ -1,5 +1,7 @@
 function [xn n] = addnoise(x,SNR,fs,freq_band)
 
+import Utils.gausspass
+
 n = randn(size(x));
 
 if nargin > 3    

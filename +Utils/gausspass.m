@@ -7,6 +7,8 @@ function [y,spectrum] = gausspass(sig,fc,rel_bandwidth,fs,nonnormal)
 % NB! rel_bandwidth -- bandwidth relative to fc!
 % If fc = 0, rel_bandwidth should be replaced by absolute bandwidth
 
+import Utils.*
+
 % Normalize frequencies
 fc = fc/fs;
 fs = 1;
