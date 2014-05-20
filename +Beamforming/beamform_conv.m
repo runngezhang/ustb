@@ -17,7 +17,7 @@ p.addOptional('TxSteeringAngle',0); % [rad]
 p.addOptional('RxSteeringAngle',0); % use this to modify x and y
 % p.addOptional('RxDepthOffset',0); % use this to modify x and y
 p.addOptional('RxDelay',0); % Delay before beginning to sample [s]
-p.addParamValue('Fnumber',0); % receive f-number
+p.addParamValue('RxFnumber',0); % receive f-number
 p.addParamValue('Apodization',@hamming); % only hamming accepted right now
 p.addParamValue('Interpolation','linear');
 p.addParamValue('Pitch',[]);
@@ -42,8 +42,9 @@ Ecorr = exp(2i*pi*single(0:NEcorr)'/NEcorr); % we need both endpoints
 % floorodd = @(v)2*floor((v-1)/2)+1;
 roundeven = @(v)2*round(v/2);
 flooreven = @(v)2*floor(v/2);
-% Naprt = min(floorodd(Nch), roundodd(z(:)/(par.Pitch*par.Fnumber)));
-Naprt = min(flooreven(Nch), roundeven(z(:)/(par.Pitch*par.Fnumber)));
+% Naprt = min(floorodd(Nch), roundodd(z(:)/(par.Pitch*par.RxFnumber)));
+Naprt = min(flooreven(Nch), roundeven(z(:)/(par.Pitch*par.RxFnumber)));
+Naprt = max(4,Naprt);
 
 x_ele = par.x/par.Pitch + (Nch-1)/2 + 1;
 

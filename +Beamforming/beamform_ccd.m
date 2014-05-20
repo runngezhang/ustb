@@ -17,7 +17,7 @@ p.addOptional('TxSteeringAngle',0); % [rad]
 p.addOptional('RxSteeringAngle',0); % use this to modify x and y
 % p.addOptional('RxDepthOffset',0); % use this to modify x and y
 p.addOptional('RxDelay',0); % Delay before beginning to sample [s]
-p.addParamValue('Fnumber',0); % receive f-number
+p.addParamValue('RxFnumber',0); % receive f-number % TODO: find sensible default.
 p.addParamValue('Apodization',@hamming); % only hamming accepted right now
 p.addParamValue('Interpolation','linear');
 p.addParamValue('Pitch',[]);
@@ -50,7 +50,8 @@ end
 xxd_ele = xxd/par.Pitch + (Nch+1)/2;
 
 %% Apodization and Rx steering
-Naprt = min(Nch, round(z(:)/(par.Pitch*par.Fnumber)));
+Naprt = round(z(:)/(par.Pitch*par.RxFnumber));
+Naprt = max(3,min(Nch,Naprt)); % force Naprt between 3 and Nch
 overshoot = ceil( Naprt(end)/2 + max(-min(xxd_ele(:)), max(xxd_ele(:))-Nch));
 overshoot = max(0, overshoot); % avoid negative values
 x0padded = [(-overshoot:-1)*par.Pitch+x0(1),x0(:)',(1:overshoot)*par.Pitch+x0(end)];
@@ -150,9 +151,9 @@ end
 
 %% 
     function w = generateApodization(wintype,winlength,wshift)
-        if nargin > 2,
+        if nargin > 2 && strcmpi(wintype,'hamming'),
             for qq = 1:numel(wshift),
-                w = myhamming(winlength,wshift(qq));
+                w = Beamforming.hamming(winlength,wshift(qq));
             end
             return
         end
