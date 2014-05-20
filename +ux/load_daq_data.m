@@ -1,85 +1,99 @@
-function [hdr, RFframe] = load_daq_data(data_path, chanls, frames, reRoute)
-% Read the specified channel data from .daq files
-% Usage:
-% [hdr, RFframe] = load_daq_data(data_path, chanls, frames,reRoute);
-%       data_path:  strings showing the path to the data folder
-%       chanls:     chanels of interest
-%       frames:     index of frames of interest, 1,2...
-%       reRoute:    true: transducer element, false: DAQ element
-% Example:
-%       Reading single frame
-%       [header, RFframe] = readRFframe('c:\foldername\', ones(1,128), 2, true);
-%       will return the second frame as a 2D matrix in RFframe
-% 
-% Author: Reza Zahiri Azar, March 2008, University of British Columbia
-% Changed by Thor Andreas Tangen, January 2010, NTNU
+function varargout = load_daq_data(datapath,varargin)
 
+% TODO: Allow for number of elements other than 128!
+Nch = 128;
 
-% Signal assignement to transducer element
-if (reRoute)
-    chRout = [0 16 32 48 64 80 96 112 1 17 33 49 65 81 97 113 2 18 34 50 66 82 98 114 ...
-              3 19 35 51 67 83 99 115 4 20 36 52 68 84 100 116 5 21 37 53 69 85 101 117 ...
-              6 22 38 54 70 86 102 118 7 23 39 55 71 87 103 119 8 24 40 56 72 88 104 120 ...
-              9 25 41 57 73 89 105 121 10 26 42 58 74 90 106 122 11 27 43 59 75 91 107 ...
-              123 12 28 44 60 76 92 108 124 13 29 45 61 77 93 109 125 14 30 46 62 78 94 ...
-              110 126 15 31 47 63 79 95 111 127];
-else    % show channel signals
-    chRout = 0:127;  
-end
+p = inputParser();
+p.CaseSensitive = false;
+p.addParameter('Reroute',false);
+% p.addParameter('Size',[]);
+p.addParameter('WriteToFile',[]);
+p.addParameter('Precision','int16');
+p.addParameter('Channels',0:Nch-1);
+p.addParameter('FileNo',0);
+p.addParameter('FileFormat','6.0');
+p.addParameter('Frames',[]);
+p.parse(varargin{:});
+res = p.Results;
 
-% open channel file
-            
-for ii = 1:128        
-    if (chanls(1 + chRout(ii)) == 1)
-        % create the file name
-        chlInd = ii-1;
-        if (chlInd<10)
-            tag = ['00',num2str(chlInd)];
-        elseif (chlInd<100)
-            tag = ['0',num2str(chlInd)];
+for fileno = res.FileNo(:)',
+    ch = res.Channels;
+    if str2double(res.FileFormat) < 6.0,
+        daqfilename0 = fullfile(datapath,sprintf('CH%03d-%04d.daq',ch(1),fileno));
+        header_length = 2; % bytes
+        hdr = read_daq_header(daqfilename0,header_length);
+    else
+        daqfilename0 = fullfile(datapath,sprintf('CH%03d.daq',ch(1)));
+        header_length = 3; % bytes
+        hdr = read_daq_header(daqfilename0,header_length);
+    end
+    if isempty(res.Frames),
+        res.Frames = 1:hdr(1);
+    end
+    Nrf = hdr(2);
+    
+    if true,%isempty(fsize),
+        fsize = [Nrf,numel(ch),numel(res.Frames)];
+    end
+    
+    % Signal assignement to transducer element
+    chRout = 0:Nch-1;
+    if res.Reroute,
+        Q = 16;
+        chRout = reshape(reshape(chRout',Q,[])',1,[]);
+    end
+    
+    if res.WriteToFile,
+        if numel(res.FileNo) > 1,
+            [outdir,fname,ext] = fileparts(res.WriteToFile);
+            fmtstr = sprintf('%%s%%0%dd%%s',floor(log10(max(res.FileNo)))+1);
+            matfilename = sprintf(fmtstr,fullfile(outdir,fname),fileno,ext);
         else
-            tag = num2str(chlInd);
+            matfilename = res.WriteToFile;
         end
-        
-        filename = fullfile(data_path,['CH',tag,'-0000.daq']);
+        S = matfile(matfilename,'Writable',true);
+    else
+        S = struct();
+    end
+    S.RFframe = zeros(fsize,res.Precision);
+    
+    [frames_,~,frind] = unique(res.Frames(:));
+    frame_density = numel(frames_)/(frames_(end)-frames_(1)+1);
+    
+    % open channel file
+    for jj = 1:numel(ch),
+        % filename = fullfile(datapath,sprintf('CH%03d-%04d.daq',ch(jj),res.FileNo));
+        filename = fullfile(datapath,sprintf('CH%03d.daq',ch(jj)));
         fid = fopen(filename,'r');
+        hcl = onCleanup(@()fclose(fid));
         
-        if fid < 0            
-            error('Could not load file %s',filename);
+        if frame_density > 1/20,
+            % Most efficient to read chunk of frames, and sort them out later
+            frame_skip = header_length*4 + 2*Nrf*(frames_(1)-1); % skip header too, 8 bytes
+            fseek(fid,frame_skip,'bof');
+            T = fread(fid,[Nrf,frames_(end)-frames_(1)+1],['*',res.Precision]);
+            S.RFframe(1:Nrf,1+chRout(1+ch(jj)),1:numel(frind)) = permute(T(:,frind),[1,3,2]);
+        else
+            % Most efficient to loop
+            fseek(fid,header_length*4,'bof');
+            frame_skip = 2*Nrf*(diff([0;frames_])-1);
+            for kk = 1:numel(frames_),
+                fseek(fid,frame_skip(kk),'cof');
+                S.RFframe(1:Nrf,1+chRout(1+ch(jj)),kk) = fread(fid,[Nrf,1],['*',precision]);
+            end
         end
-        
-        % read header
-        hdr = fread(fid, 2, 'int32');
-        numFrame = hdr(1);      % number of frames acquired
-        lLength  = hdr(2);      % length of each line in samples
-        
-        for kk=1:length(frames)                        
-            if frames(kk) > numFrame
-                warning('Specified frame number exceeds the number of acquired frames');
-                break;
-            end
-            
-            if ~exist('RFframe','var')
-                RFframe = zeros(lLength,128,length(frames));
-            end
-            
-            if kk == 1
-                frame_skip = frames(kk);
-            else
-                frame_skip = frames(kk) - frames(kk-1);
-            end                        
-
-            if fseek( fid, (frame_skip - 1) * ( lLength * 2), 'cof') < 0                               
-                error(ferror(fid))
-            end
-            
-            % read channel data and correct the mapping
-            dataformat = 'int16';
-            ind = 1 + chRout(ii);
-            RFframe(:,ind,kk) = fread(fid, lLength, dataformat );   % the actual data                       
-            fclose(fid);
-        end;
-    end;
-    % close channel file    
+    end 
 end
 
+if nargout,
+    varargout{1} = S.RFframe;
+end
+
+    function h = read_daq_header(filename,hdrlen)
+        fid0 = fopen(filename,'r');
+        h = fread(fid0, hdrlen, 'int32');
+        h = h(end-1:end);
+        fclose(fid0);
+    end
+
+end

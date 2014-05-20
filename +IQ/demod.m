@@ -1,4 +1,4 @@
-function [iq,a,b,c,s] = demod_ustb(rf,fs,fdemod,method,varargin)
+function [iq,a,b,c,s] = demod(rf,fs,fdemod,method,varargin)
 % [iq,a,b,c,s] = demod_ustb(rf,fs,fdemod,method,varargin);
 % 
 % IQ demodulation. There is two different ways to do this, either by hilbert transform or by using a narrowband approximation.

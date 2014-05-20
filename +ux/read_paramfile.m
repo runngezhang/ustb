@@ -1,4 +1,4 @@
-function params = read_param_file(fname)
+function params = read_paramfile(fname)
 
 fid = fopen(fname);
 hcl = onCleanup(@()fclose(fid));
