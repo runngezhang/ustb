@@ -1,7 +1,7 @@
 clear all;
 close all;
 
-% field initialisation
+%% field II initialisation
 field_init;
 set_field('att', 0);
 c=1540; set_field('c',c);                % Speed of sound [m/s]
@@ -83,7 +83,19 @@ close(wb);
 % normalising signal
 IR=IR./max(abs(IR(:)));
 
-%% Define the sta dataset
+%% Define a reconstruction object
+recons=reconstruction();
+
+% define the scan -> only linear scan svailable for the moment 
+recons.scan.x_axis=linspace(-20e-3,20e-3,256).';               % x vector [m]
+recons.scan.z_axis=linspace(2e-3,42e-3,512).';                 % z vector [m]
+
+% define the transmit & receive beams
+%F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
+recons.transmit_beam=beam(1.2,E.apodization_type.boxcar,0,0,0);
+recons.receive_beam=beam(1.2,E.apodization_type.boxcar,0,0,0);
+
+%% Define the sta dataset object
 s=sta('Field II, STA, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
       c,...                             % reference speed of sound (m/s)
@@ -91,25 +103,11 @@ s=sta('Field II, STA, RF format',...    % name of the dataset
       IR,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
-%% Define of reconstruction domain
-x_vector=linspace(-20e-3,20e-3,256);    % x vector [m]
-z_vector=linspace(2e-3,42e-3,512);      % z vector [m]
-[x z]=meshgrid(x_vector,z_vector);      % matrix of the reconstruction locations
-recons=struct('x',x,'z',z);             % reconstruction structure         
+%% reconstruction and show
+s.image_reconstruction(recons);
+recons.show();
 
-%% Definition of the imaging beam
-transmit=struct('FN',1.2,...                                   % transmit F-number 
-                'apodization',E.apodization_type.boxcar,...     % transmit apodization
-                'steer_angle',0);                               % transmit steering angle [rad]
-receive=struct('FN',1.2,...
-                'apodization',E.apodization_type.boxcar,...     % receive F-number 
-                'steer_angle',0);                               % receive apodization
-beam=struct('transmit',transmit,'receive',receive);             % receive steering angle [rad]
-
-%% Reconstruction
-[sig_rf]=s.image_reconstruction(beam,recons);
-
-%% we convert it to IQ to avoid the Hilbert artifact
+%% demodulate data and create another sta object that avoids the Hilbert artifact
 out=tools.demodulate(s);
 s2=sta('Field II, STA, IQ format',...     % name of the dataset
       E.signal_format.IQ,...              % signal format: RF or IQ
@@ -119,6 +117,6 @@ s2=sta('Field II, STA, IQ format',...     % name of the dataset
       [x0.' zeros(N_elements,2)],...      % probe geometry [x, y, z] (m)
       out.modulation_frequency);
 
-%% Reconstruct again
-[sig_iq]=s2.image_reconstruction(beam,recons);
-
+%% reconstructs and show again
+s2.image_reconstruction(recons);
+recons.show();

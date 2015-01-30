@@ -1,19 +1,7 @@
 clear all;
 close all;
 
-% Probe, 3.8 cm, f0 = 5MHz
-% Sekvens av N planbølger, (N = 5?, PRFmax = 15000?)
-% (Nframes = 50?)
-%  
-% vz = vNyq/2  = c*PRFmax/(8*f0*N)
-% vx = vz
-%  
-% Punktspreder passerer element K/2 ved t = Nframes/(2*PRFmax*N)
- 
-
-
-
-% field initialisation
+%% field II initialisation
 field_init;
 set_field('att', 0);
 c=1540; set_field('c',c);                % Speed of sound [m/s]
@@ -112,7 +100,19 @@ close(wb);
 % normalising signal
 PW=PW./max(abs(PW(:)));
 
-%% Define the sta dataset
+%% Define a reconstruction object
+recons=reconstruction();
+
+% define the scan -> only linear scan svailable for the moment 
+recons.scan.x_axis=linspace(-5e-3,5e-3,256).';               % x vector [m]
+recons.scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
+
+% define the transmit & receive beams
+%F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
+recons.transmit_beam=beam(1.2,E.apodization_type.boxcar,0,0,0);
+recons.receive_beam=beam(1.2,E.apodization_type.boxcar,0,15,2);
+
+%% Define a cpw dataset object
 s=cpw('Field II, CPW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
       c,...                             % reference speed of sound (m/s)
@@ -121,50 +121,10 @@ s=cpw('Field II, CPW, RF format',...    % name of the dataset
       PW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
   
-%% Define of reconstruction domain
-x_vector=linspace(-5e-3,5e-3,256);    % x vector [m]
-z_vector=linspace(15e-3,25e-3,256);      % z vector [m]
-[x z]=meshgrid(x_vector,z_vector);      % matrix of the reconstruction locations
-r=struct('x',x,'z',z);             % reconstruction structure         
-
-%% Definition of the imaging beam
-transmit=struct('FN',1.75,...                                   % transmit F-number 
-                'apodization',E.apodization_type.hanning,...     % transmit apodization
-                'steer_angle',0);                               % transmit steering angle [rad]
-receive=struct('FN',1.75,...
-                'apodization',E.apodization_type.hanning,...     % receive F-number 
-                'steer_angle',0);                               % receive apodization
-beam=struct('transmit',transmit,'receive',receive);             % receive steering angle [rad]
-
-%% Reconstruction
-[sig,im]=s.image_reconstruction(beam,r);
-
-%% making a video -> envelope
-writerObj = VideoWriter('envelope2.avi');
-open(writerObj);
-
-im_dB=20*log10(im./max(im(:)));
-figure; set(gca,'fontsize',16);
-for f=1:F
-    pcolor(r.x*1e3,r.z*1e3,im_dB(:,:,f)); shading flat; axis equal; axis tight; colormap gray; caxis([-60 0]);colorbar; hold on;
-    xlabel('x [mm]');
-    ylabel('z [mm]');
-    set(gca,'YDir','reverse');
-    set(gca,'fontsize',16);
-    axis([min(r.x(:)) max(r.x(:)) min(r.z(:)) max(r.z(:))]*1e3);
-    title(sprintf('Frame %d (%0.2fs/f)',f,s.elapsed_time/s.F)); 
-    plot([0 0],[15 25],'r--');
-    plot([-5 5],[20 20],'r--')
-    set(gcf,'Position',[680   618   640   480]);
-    drawnow;
-    
-    frame = getframe(gcf,[0 0 640 480]);
-    writeVideo(writerObj,frame);
-    
-    hold off;
-end
-
-close(writerObj);
+%% Reconstruction show
+s.image_reconstruction(recons);
+recons.show();
+recons.write_video('point2.avi');
 
 %% making a video -> RF signal
 writerObj = VideoWriter('rf2.avi');

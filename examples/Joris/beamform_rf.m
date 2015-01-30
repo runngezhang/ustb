@@ -1,26 +1,17 @@
 clear all;
 close all;
 
-%% Definition of the reconstruction area
-x_vector = linspace(-7.6e-3,7.6e-3,256);                        % x corrdinates of pixels [m]
-z_vector = linspace(0,60e-3,1280);                              % z coordinates of pixels [m]
-[x z]=meshgrid(x_vector,z_vector);                              % matrix of pixel locations
-recons=struct('x',x,'z',z);                                     % reconstruction structure         
+%% Define a reconstruction object
+recons=reconstruction();
 
-%% Definition of the imaging beam
-transmit=struct('FN',1,...                                      % transmit F-number 
-                'apodization',E.apodization_type.none,...       % transmit apodization
-                'steer_angle',0,...                             % transmit steering angle [rad]
-                'damping',0,...                                 % length of the damping area [elements]
-                'damping_order',0);                             % order of the damping polynomial
-            
-receive=struct('FN',1.1,...                                     % receive F-number 
-                'apodization',E.apodization_type.hanning,...    % receive apodization 
-                'steer_angle',0,...                             % transmit steering angle [rad]
-                'damping',15,...                                % length of the damping area [elements]
-                'damping_order',2);                             % order of the damping polynomial
-            
-beam=struct('transmit',transmit,'receive',receive);             
+% define the scan -> only linear scan svailable for the moment 
+recons.scan.x_axis=linspace(-7.6e-3,7.6e-3,256).';               % x vector [m]
+recons.scan.z_axis=linspace(0,60e-3,1280).';                     % z vector [m]
+
+% define the transmit & receive beams
+%F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
+recons.transmit_beam=beam(1,E.apodization_type.none,0,0,0);
+recons.receive_beam=beam(1.1,E.apodization_type.hanning,0,15,2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% plane wave
@@ -43,8 +34,12 @@ cpw_dataset=cpw('Joris data, CPW',...
                  data,...
                  geom);
 
-% request reconstruction
-[sig,im_cpwi]=cpw_dataset.image_reconstruction(beam,recons);
+% request reconstruction 
+cpw_dataset.image_reconstruction(recons);
+
+% write a video to disk
+% filename, dynamic_range, video_size_in_pixels 
+recons.write_video('joris_rf_cpw.avi',40,[500 1000]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% diverging wave
@@ -70,58 +65,7 @@ dw_dataset=vs('Joris data, CPW',...
                  geom);
 
 % request reconstruction
-[sig,im_dw]=dw_dataset.image_reconstruction(beam,recons);
+dw_dataset.image_reconstruction(recons);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Creating videos
-
-% making a video of CPW
-writerObj = VideoWriter('cpw.avi');
-open(writerObj);
-
-im_dB=20*log10(im_cpwi./max(im_cpwi(:)));
-figure; set(gca,'fontsize',16);
-for f=1:size(im_cpwi,3)
-    pcolor(recons.x*1e3,recons.z*1e3,im_dB(:,:,f)); shading flat; axis equal; axis tight; colormap gray; caxis([-40 0]);colorbar; hold on;
-    xlabel('x [mm]');
-    ylabel('z [mm]');
-    set(gca,'YDir','reverse');
-    set(gca,'fontsize',16);
-    axis([min(recons.x(:)) max(recons.x(:)) min(recons.z(:)) max(recons.z(:))]*1e3);
-    title(sprintf('CPW, Frame %d',f)); 
-    set(gcf,'Position',[969 49 944 1068]);
-    drawnow;
-    
-    frame = getframe(gcf,[0 0 944 1068]);
-    writeVideo(writerObj,frame);
-    
-    hold off;
-end
-
-close(writerObj);
-
-% making a video of DW
-writerObj = VideoWriter('dw.avi');
-open(writerObj);
-
-im_dB=20*log10(im_dw./max(im_dw(:)));
-figure; set(gca,'fontsize',16);
-for f=1:size(im_dw,3)
-    pcolor(recons.x*1e3,recons.z*1e3,im_dB(:,:,f)); shading flat; axis equal; axis tight; colormap gray; caxis([-40 0]);colorbar; hold on;
-    xlabel('x [mm]');
-    ylabel('z [mm]');
-    set(gca,'YDir','reverse');
-    set(gca,'fontsize',16);
-    axis([min(recons.x(:)) max(recons.x(:)) min(recons.z(:)) max(recons.z(:))]*1e3);
-    title(sprintf('DW, Frame %d',f)); 
-    set(gcf,'Position',[969 49 944 1068]);
-    drawnow;
-    
-    frame = getframe(gcf,[0 0 944 1068]);
-    writeVideo(writerObj,frame);
-    
-    hold off;
-end
-
-close(writerObj);
-
+% write a video to disk
+recons.write_video('joris_rf_dw.avi',40,[500 1000]);

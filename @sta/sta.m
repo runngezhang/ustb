@@ -1,25 +1,35 @@
 classdef sta < dataset
-    % sta Class containig properties and methods to work with Synthetic
-    % transmit aperture (sta) dataset.
-    
+%STA    Synthetic transmit aperture (sta) dataset.
+%
+%   See also DATASET, STA.STA
+
+%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+%   $Date: 2015/01/28 $
+
     properties (SetAccess = public)
     end
     
     properties (SetAccess = private)
     end
     
+    %% constructor
     methods (Access = public)        
         function h = sta(name,input_format,input_c0,input_time,input_data,input_geom,input_modulation_frequency)
-            % sta(name,format,c0,time,data,geom,modulation_frequency) 
-            %  * name:      name of the dataset
-            %  * format:    format of the signal (E.signal_format.RF, default=E.signal_format.IQ)
-            %  * c0:        reference speed of sound (m/s)
-            %  * time:      fast time vector (s)
-            %  * data:      Numerical data [time_samples, channels, firings, frames]
-            %  * geom:      Probe geometry [x, y, z] (m)
-            %  * modulation_frequency:      Modulation frequency (Hz), only for IQ format
-            
-            % Call superclass constructor
+            %STA    Constructor of the sta class.
+            %
+            %   Syntax:
+            %   STA(name,format,c0,time,data,geom,modulation_frequency) 
+            %       name                    Name of the dataset
+            %       format                  Format of the signal (E.signal_format.RF, default=E.signal_format.IQ)
+            %       c0                      Reference speed of sound (m/s)
+            %       time                    Time vector (s)
+            %       data                    Numerical data [time_samples, channels, firings, frames]
+            %       geom                    Probe geometry [x, y, z] (m)
+            %       modulation_frequency    Modulation frequency (Hz) - required only for IQ format
+            %
+            %   See also STA, DATASET
+                        
+            % call superclass constructor
             h@dataset(name); 
             
             % required data
@@ -38,29 +48,41 @@ classdef sta < dataset
             h.F=size(h.data,4);  % short for the number of frames
             h.t0= h.time(1);
         end
-        
-        function [sig,im] = image_reconstruction(h,beam,r,imp)
-            % [sig,im] = image_reconstruction(beam,r,imp)
-            if (nargin<4) imp=E.implementation.mex; end
+    end
+    
+    %% image recontructor
+    methods (Access = public)        
+        function elapsed_time=image_reconstruction(h,recons,implem)
+            %IMAGE_RECONSTRUCTION    Method for image reconstruction of
+            %Synthetic transmit aperture datasets.
+            %
+            %   Syntax:
+            %   IMAGE_RECONSTRUCTION(reconstruction,implementation)
+            %       reconstruction          Class containing the reconstruction specification
+            %       implementation          Enumeration specifying the algorithm 
+            %
+            %   See also RECONSTRUCTION, STA
+                        
+            % default implementation
+            if ~exist('implem') implem=E.implementation.mex; end
             
-            % storing this makes the code cleaner
-            h.Nz=size(r.x,1);    % number of pixels in the axial direction
-            h.Nx=size(r.x,2);    % number of pixels in the lateral direction
+            % initial time -> performance test
+            tic; 
             
-            tic; % initial time -> performance test
-            
-            % set tx and rx apodization
-            h.rx_apodization = h.linear_apodization(beam.receive,r);
-            h.tx_apodization = h.linear_apodization(beam.transmit,r);
+            % precompute transmit and receive apodization
+            xT=ones(recons.scan.pixels,1)*(h.geom(:,1).');   % position of transmit and receive element
+            h.tx_apodization = recons.calculate_apodization(recons.transmit_beam,xT);
+            h.rx_apodization = recons.calculate_apodization(recons.receive_beam,xT);
             
             % launch selected implementation
-            sig=h.launch_implementation(r,imp);
+            recons.data=h.launch_implementation(recons,implem);
             
-            h.elapsed_time=toc; % elapsed time -> performance test
-            
-            % image processing
-            im=h.envelope(sig);
-            %h.show(r,im,60);
+            % copy data to reconstruction
+            recons.format=h.format;
+            [recons.central_frequency recons.bandwidth]=tools.estimate_frequency(h.time,h.data);
+                        
+            % elapsed time for performance test
+            elapsed_time=toc; 
         end
     end
     
