@@ -109,8 +109,8 @@ recons.scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-recons.transmit_beam=beam(1.2,E.apodization_type.boxcar,0,0,0);
-recons.receive_beam=beam(1.2,E.apodization_type.boxcar,0,15,2);
+recons.transmit_beam=beam(1.75,E.apodization_type.hanning,0,0,0);
+recons.receive_beam=beam(1.75,E.apodization_type.hanning,0,15,2);
 
 %% Define a cpw dataset object
 s=cpw('Field II, CPW, RF format',...    % name of the dataset
@@ -123,32 +123,4 @@ s=cpw('Field II, CPW, RF format',...    % name of the dataset
   
 %% Reconstruction show
 s.image_reconstruction(recons);
-recons.show();
-recons.write_video('point2.avi');
-
-%% making a video -> RF signal
-writerObj = VideoWriter('rf2.avi');
-open(writerObj);
-
-sig_nm=sig./max(abs(sig(:)));
-figure; set(gca,'fontsize',16);
-for f=1:F
-    pcolor(r.x*1e3,r.z*1e3,sig_nm(:,:,f)); shading flat; axis equal; axis tight; colormap gray; caxis([-1 1]);colorbar; hold on;
-    xlabel('x [mm]');
-    ylabel('z [mm]');
-    set(gca,'YDir','reverse');
-    set(gca,'fontsize',16);
-    axis([min(r.x(:)) max(r.x(:)) min(r.z(:)) max(r.z(:))]*1e3);
-    title(sprintf('Frame %d (%0.2fs/f)',f,s.elapsed_time/s.F)); 
-    plot([0 0],[15 25],'r--');
-    plot([-5 5],[20 20],'r--')
-    set(gcf,'Position',[680   618   640   480]);
-    drawnow;
-    
-    frame = getframe(gcf,[0 0 640 480]);
-    writeVideo(writerObj,frame);
-    
-    hold off;
-end
-
-close(writerObj);
+recons.write_video('point.avi',40,[1000 500]);

@@ -10,10 +10,6 @@ classdef cpw < dataset
         angle       % vector containing the angles (rad)
     end
     
-    properties (SetAccess = private)
-        N           % number of plane waves in the sequence
-    end
-    
     %% Constructor
     methods  (Access = public)       
         function h = cpw(name,input_format,input_c0,input_angle,input_time,input_data,input_geom,input_modulation_frequency)
@@ -47,12 +43,9 @@ classdef cpw < dataset
                 h.modulation_frequency=input_modulation_frequency;
             end
             
-            % dependent data
-            h.Fs = 1/mean(diff(h.time));    % sampling frequency (Hz)
-            h.F=size(h.data,4);             % short for the number of frames
-            h.N = size(h.angle,1);          % short for the number of firings
-            h.M = size(h.geom,1);           % short for the number of channels
-            h.t0= h.time(1);                % initial time (s)
+            % checks
+            assert(h.channels==size(h.geom,1),'The length of the geometry vector should match number of channels in the dataset');
+            assert(h.firings==length(h.angle),'The angle definition should match the number of firings in the dataset');
         end
     end
 
@@ -75,11 +68,11 @@ classdef cpw < dataset
             tic; 
             
             % precompute transmit and receive apodization
-            xT=recons.scan.x*ones(1,h.N)-recons.scan.z*tan(h.angle.'); % position of equivalent receive element -> Alfonso's equation 
+            xT=recons.scan.x*ones(1,h.firings)-recons.scan.z*tan(h.angle.'); % position of equivalent receive element -> Alfonso's equation 
             valid_apodization =(xT>h.geom(1,1))&(xT<h.geom(end,1));         % check we don't get out of the aperture
-            h.tx_apodization = valid_apodization.*recons.calculate_apodization(recons.transmit_beam,xT);
+            h.transmit_apodization = valid_apodization.*recons.calculate_apodization(recons.transmit_beam,xT);
             xR=ones(recons.scan.pixels,1)*(h.geom(:,1).');                  % position of receive element
-            h.rx_apodization = recons.calculate_apodization(recons.receive_beam,xR);
+            h.receive_apodization = recons.calculate_apodization(recons.receive_beam,xR);
             
             % launch selected implementation
             recons.data=h.launch_implementation(recons,implem);
@@ -96,11 +89,8 @@ classdef cpw < dataset
     %% set methods
     methods  
         function set.angle(h,input_angle)
-            if(size(input_angle,1)<size(input_angle,2))
-                error('The angle vector must be a column vector!');
-            else
-                h.angle=input_angle;
-            end
+            assert(size(input_angle,1)>=size(input_angle,2), 'The angle must be a column vector');
+            h.angle=input_angle;
         end
     end
     

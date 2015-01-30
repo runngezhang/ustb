@@ -42,11 +42,9 @@ classdef sta < dataset
                 h.modulation_frequency=input_modulation_frequency;
             end
             
-            % dependent data
-            h.Fs = 1/mean(diff(h.time));
-            h.M = size(h.geom,1);
-            h.F=size(h.data,4);  % short for the number of frames
-            h.t0= h.time(1);
+            % checks
+            assert(h.channels==size(h.geom,1),'The length of the geometry vector should match number of channels in the dataset');
+            assert(h.channels==h.firings,'The number of channels must match the number of firings in STA');
         end
     end
     
@@ -71,8 +69,8 @@ classdef sta < dataset
             
             % precompute transmit and receive apodization
             xT=ones(recons.scan.pixels,1)*(h.geom(:,1).');   % position of transmit and receive element
-            h.tx_apodization = recons.calculate_apodization(recons.transmit_beam,xT);
-            h.rx_apodization = recons.calculate_apodization(recons.receive_beam,xT);
+            h.transmit_apodization = recons.calculate_apodization(recons.transmit_beam,xT);
+            h.receive_apodization = recons.calculate_apodization(recons.receive_beam,xT);
             
             % launch selected implementation
             recons.data=h.launch_implementation(recons,implem);

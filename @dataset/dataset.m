@@ -11,26 +11,27 @@ classdef dataset < handle
 %   $Date: 2015/01/28 $
 
     properties  (SetAccess = public)
-        name=''         % String containing the name of the dataset
-        creation_date   % String containing the date the dataset class was created
+        name=''             % String containing the name of the dataset
+        creation_date       % String containing the date the dataset class was created
         format = E.signal_format.IQ  % Signal_format RF or IQ (enumerations.signal_format.RF, default=enumerations.signal_format.IQ)
-        geom            % matrix M x 3 containing probe geometry [x, y, z] (m)
-        data            % Matrix containing the numerical data. For acquisition
-                        % datasets the matrix dimensions are [time_samples, channels, firings, frames]
-                        % For image reconstruction datasets the matrix
-                        % dimensions are [pixels, frames]
-        time            % vector containing fast time (s)
-        c0              % value conatining  the reference speed of sound (m/s)
+        geom                % matrix M x 3 containing probe geometry [x, y, z] (m)
+        data                % Matrix containing the numerical data. For acquisition
+                            % datasets the matrix dimensions are [time_samples, channels, firings, frames]
+                            % For image reconstruction datasets the matrix
+                            % dimensions are [pixels, frames]
+        time                % vector containing fast time (s)
+        c0                  % reference speed of sound (m/s)
         modulation_frequency % value conatining the modulation frequency (Hz), only required for IQ format
     end
     
     properties  (SetAccess = protected)   
-        F               % number of frames in the dataset        
-        M               % number of elements in the transducer
-        t0              % initial time (s)
-        Fs              % sampling frequency (Hz)
-        tx_apodization  % matrix containing the apodization used for transmit
-        rx_apodization  % matrix containing the apodization used for transmit
+        frames                  % number of frames in the dataset        
+        channels                % number of channels in the transducer
+        firings                 % number of firings in the sequence (i.e. number of plane waves in CPWI, virtual sources in VSI, or elements in STAI)
+        initial_time            % initial time (s)
+        sampling_frequency      % sampling frequency (Hz)
+        transmit_apodization    % matrix containing the apodization used for transmiting
+        receive_apodization     % matrix containing the apodization used for receiving
     end
     
     %% constructor
@@ -98,6 +99,19 @@ classdef dataset < handle
         function set.time(h,input_time)
             assert(size(input_time,1)>size(input_time,2), 'The time vector must be a column vector!')
             h.time=input_time;
+            h.sampling_frequency=1/mean(diff(input_time));
+            h.initial_time=input_time(1);
+        end
+        function set.data(h,input_data)
+            assert(ndims(input_data)>=3, 'The dataset must have 4 dimensions [time_samples, channels, firings, frames]')
+            h.channels=size(input_data,2);
+            h.firings=size(input_data,3);
+            h.frames=size(input_data,4);
+            h.data=input_data;
+        end
+        function set.geom(h,input_geom)
+            assert(ndims(input_geom)==2&&size(input_geom,2)==3, 'Wrong probe geometry definition. It should be a three column matrix [x, y, z]')
+            h.geom=input_geom;
         end
     end
     

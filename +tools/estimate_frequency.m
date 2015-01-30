@@ -1,4 +1,4 @@
-function [ fc, bw ] = estimate_frequency(time,data)
+function [fc, bw] = estimate_frequency(time,data)
     Fs=1/mean(diff(time));                      % sampling frequency
     [fx pw]=tools.power_spectrum(data,Fs);
     fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)];

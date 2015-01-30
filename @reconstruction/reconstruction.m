@@ -114,14 +114,9 @@ classdef reconstruction < handle
                     
                     if(ratio<4)
                         warning(sprintf('The spatial sampling in the beam direction does not allow to compute the Hilbert transform on pixel data. Displayed envelopes will be innacurate. To solve this issue please consider: working with demodulated signal (IQ), or increasing the sampling resolution in the beam direction by a factor of %0.2f',4/ratio));
-                        for f=1:h.frames
-                            super_axis=linspace(h.scan.z_axis(1),h.scan.z_axis(end),8/ratio*length(h.scan.z_axis));
-                            im(:,:,f)=abs(interp1(super_axis,hilbert(interp1(h.scan.z_axis,h.data(:,:,f),super_axis)),h.scan.z_axis));
-                        end                        
-                    else
-                        for f=1:h.frames
-                            im(:,:,f)=abs(hilbert(h.data(:,:,f)));
-                        end
+                    end
+                    for f=1:h.frames
+                        im(:,:,f)=abs(hilbert(h.data(:,:,f)));
                     end
                     
                 case E.signal_format.IQ
@@ -169,7 +164,8 @@ classdef reconstruction < handle
             %   Syntax:
             %   write_video(filename,dynamic_range)
             %       filename        Path and name where the video will be written
-            %       dynamic_range   Desired dynamic range of the displayed images
+            %       dynamic_range   Desired dynamic range of the displayed images (optional)
+            %       figure_size     Size of the exported video in pixels [horizontal, vertical] (optional)
             %
             %   See also RECONSTRUCTION
        

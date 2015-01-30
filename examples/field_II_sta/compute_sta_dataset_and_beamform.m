@@ -56,7 +56,7 @@ z_point=5e-3:5e-3:40e-3;
 N_sca=length(zzp(:));
 point=[xxp(:) zeros(N_sca,1) zzp(:)];
 
-cropat=round(2.5*2*max(point(3,:))/c/dt);
+cropat=round(2.5*2*40e-3/c/dt);
 sca=[0 0 0; point]; 
 amp=[0; ones(N_sca,1)];
 
@@ -108,15 +108,8 @@ s.image_reconstruction(recons);
 recons.show();
 
 %% demodulate data and create another sta object that avoids the Hilbert artifact
-out=tools.demodulate(s);
-s2=sta('Field II, STA, IQ format',...     % name of the dataset
-      E.signal_format.IQ,...              % signal format: RF or IQ
-      c,...                               % reference speed of sound (m/s)
-      out.time,...                        % time vector (s)
-      out.data,...                        % matrix with the data [samples, channels, firings, frames]
-      [x0.' zeros(N_elements,2)],...      % probe geometry [x, y, z] (m)
-      out.modulation_frequency);
+s.demodulate(true);
 
 %% reconstructs and show again
-s2.image_reconstruction(recons);
+s.image_reconstruction(recons);
 recons.show();
