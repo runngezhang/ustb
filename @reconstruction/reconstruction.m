@@ -7,7 +7,7 @@ classdef reconstruction < handle
         creation_date=''            % String containing the date the reconstruction was created
         transmit_beam=beam()        % BEAM class defining transmit beam
         receive_beam=beam()         % BEAM class defining receive beam            
-        scan=linear_scan()          % SCAN class defining the scan area
+        scan=linear_scan()          % SCAN class defining the scan area 
         format=E.signal_format.RF   % format of the signal
         data                        % matrix containing the reconstructed raw signal
         envelope                    % matrix containing the envelope of the reconstructed signal
@@ -18,19 +18,52 @@ classdef reconstruction < handle
     
     %% constructor
     methods (Access = public)
-        function h = reconstruction(name)
+        function h = reconstruction(name, object)
             %RECONSTRUCTION    Constructor of the RECONSTRUCTION class.
             %
             %   Syntax:
-            %   RECONSTRUCTION(name) 
+            %   RECONSTRUCTION(name, object) 
             %       name                    Name of the reconstruction
+            %       object                  Instance of a reconstruction class to copy values from
             %
             %   See also BEAM, LINEAR_SCAN
+
+            t_now=now;
+            h.creation_date=[date sprintf('-%d-%d-%d',hour(t_now),minute(t_now),round(second(t_now)))];
+
+            if exist('object') 
+                h.copy(object);
+            end
+
             if exist('name') 
                 h.name=name;
             end
-            t_now=now;
-            h.creation_date=[date sprintf('-%d-%d-%d',hour(t_now),minute(t_now),round(second(t_now)))];
+        end
+    end
+    
+    %% copy
+    methods (Access = public)
+        function copy(h,object)
+            %COPY    Copy the values from another reconstruction
+            %
+            %   Syntax:
+            %   COPY(object) 
+            %       object       Instance of a reconstruction class
+            %
+            %   See also BEAM, LINEAR_SCAN
+            assert(isa(object,class(h)),'Class of the input object is not identical'); 
+
+            h.name=object.name;     
+            h.transmit_beam=object.transmit_beam;   % beam is not a handle class thus we can copy it
+            h.receive_beam=object.receive_beam;     % beam is not a handle class thus we can copy it       
+            h.scan=object.scan;                     % scan is not a handle class thus we can copy it       
+            
+            h.format=object.format;                 
+            h.data=object.data;
+            h.envelope=object.envelope;
+            h.frames=object.frames;
+            h.central_frequency=object.central_frequency;     
+            h.bandwidth=object.bandwidth;
         end
     end
    
@@ -89,6 +122,176 @@ classdef reconstruction < handle
                     apo(:,end-nn+1)=apo(:,end-nn+1).*mask(nn);
                 end
             end
+        end
+    end
+    
+    %% HUFF
+    methods (Access = public)
+        function huff_write(h,filename,location)
+            %HUFF_WRITE    Dumps all the information of the ultrasound
+            %dataset to a group in a HDF5
+            %
+            %   Syntax:
+            %   HUFF_WRITE(file_name,location)
+            %       file_name                    Name of the hdf5 file
+            %       location                   Name of the group destination
+            %
+            %   See also RECONSTRUCTION
+            
+            % Dataset type
+            file = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
+            filetype = H5T.enum_create ('H5T_NATIVE_INT');
+                H5T.enum_insert (filetype, 'US', 0); 
+                H5T.enum_insert (filetype, 'SR', 1); 
+            gid = H5G.open(file,location);
+            space = H5S.create_simple (1,1,[]);
+
+            attr = H5A.create (gid, 'type', filetype, space, 'H5P_DEFAULT');
+            H5A.write (attr, filetype, uint32(1));  % <--- SR
+            H5A.close (attr);
+            H5G.close(gid);    
+            H5S.close (space);
+            H5T.close (filetype);
+            H5F.close (file);
+                        
+            % Signal format 
+            file = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
+            filetype = H5T.enum_create ('H5T_NATIVE_INT');
+                H5T.enum_insert (filetype, 'RF', 0); 
+                H5T.enum_insert (filetype, 'IQ', 1); 
+            gid = H5G.open(file,location);
+            space = H5S.create_simple (1,1,[]);
+
+            attr = H5A.create (gid, 'signal_format', filetype, space, 'H5P_DEFAULT');
+            switch(h.format)
+                case E.signal_format.RF
+                    H5A.write (attr, filetype, uint32(0));
+                case E.signal_format.IQ
+                    H5A.write (attr, filetype, uint32(1));
+            end
+            H5A.close (attr);
+            H5G.close(gid);    
+            H5S.close (space);
+            H5T.close (filetype);
+            H5F.close (file);
+
+            % add name
+            attr = h.name;
+            attr_details.Name = 'name';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+
+            % add date
+            attr = h.creation_date;
+            attr_details.Name = 'creation_date';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+
+            % add frames
+            attr = h.frames;
+            attr_details.Name = 'frames';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add central frequency
+            attr = h.central_frequency;
+            attr_details.Name = 'central_frequency';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add bandwidth
+            attr = h.bandwidth;
+            attr_details.Name = 'bandwidth';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add data
+            dset_details.Location = [location '/data'];
+            dset_details.Name = 'real';
+            hdf5write(filename, dset_details, real(h.data), 'WriteMode', 'append');
+            dset_details.Name = 'imag';
+            hdf5write(filename, dset_details, imag(h.data), 'WriteMode', 'append');
+
+            % add envelope
+            dset_details.Location = [location];
+            dset_details.Name = 'envelope';
+            hdf5write(filename, dset_details, h.envelope, 'WriteMode', 'append');
+            
+            % create new groups for substructures
+            fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
+            gid = H5G.open(fid,location);
+            gid2 = H5G.create(gid,'transmit_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            gid3 = H5G.create(gid,'receive_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            gid4 = H5G.create(gid,'scan','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            H5G.close(gid4);
+            H5G.close(gid3);
+            H5G.close(gid2);
+            H5G.close(gid);
+            H5F.close(fid);
+
+            % dump substructures
+            h.transmit_beam.huff_write(filename,[location '/transmit_beam']);
+            h.receive_beam.huff_write(filename,[location '/receive_beam']);
+            h.scan.huff_write(filename,[location '/scan']);
+
+        end
+        
+        function huff_read(h,filename,location)
+            %HUFF_READ    Dumps all the information of the ultrasound
+            %dataset to a group in a HDF5
+            %
+            %   Syntax:
+            %   HUFF_READ(file_name,location)
+            %       file_name                    Name of the hdf5 file
+            %       location                   Name of the group destination
+            %
+            %   See also US_DATASET
+            
+            % type
+            dataset_type=h5readatt(filename,location,'type');
+            assert(strcmp(dataset_type,'SR'),'Spatial reconstruction type does not match!');
+            
+            % read signal format 
+            signal_format=h5readatt(filename,location,'signal_format');
+            switch(signal_format{1})
+                case 'RF'
+                    h.format=E.signal_format.RF;
+                case 'IQ'
+                    h.format=E.signal_format.IQ;
+                otherwise
+                    error('Unknown signal format!');
+            end
+
+            % read substructures
+            h.transmit_beam=h.transmit_beam.huff_read(filename,[location '/transmit_beam']);
+            h.receive_beam=h.receive_beam.huff_read(filename,[location '/transmit_beam']);
+            h.scan=h.scan.huff_read(filename,[location '/scan']);  % <--- when we define different scan we must change this
+            
+            % read frames
+            h.frames=h5readatt(filename,location,'frames');
+
+            % read creation_date
+            h.creation_date=h5readatt(filename,location,'creation_date');
+            
+            % read central_frequency
+            h.central_frequency=h5readatt(filename,location,'central_frequency');
+
+            % read bandwidth
+            h.bandwidth=h5readatt(filename,location,'bandwidth');
+
+            % read data
+            real_part=h5read(filename,[location '/data/real']);
+            imag_part=h5read(filename,[location '/data/imag']);
+            h.data=real_part+1i*imag_part;
+            
+            % read envelope --> optional
+            h.envelope=h5read(filename,[location '/envelope']);
+            
         end
     end
     
@@ -207,14 +410,26 @@ classdef reconstruction < handle
 
     %% Set methods
     methods
-        function set.data(h,input_data)
-            % check that the data format matches the specification
-            assert(size(input_data,1)==h.scan.pixels, 'The number of rows in the data does not match the scan specification!');
-            h.frames=size(input_data,2);
+        function h=set.data(h,input_data)
+            % column-based format
+            if(size(input_data,2)==1)
+                % check that the data format matches the specification
+                assert(size(input_data,1)==h.scan.pixels, 'The number of rows in the data does not match the scan specification!');
+                h.frames=size(input_data,2);
             
-            % reshape beamformed image
-            h.data=reshape(input_data,[length(h.scan.z_axis) length(h.scan.x_axis) h.frames]);
-            h.envelope=[];
+                % reshape beamformed image
+                h.data=reshape(input_data,[length(h.scan.z_axis) length(h.scan.x_axis) h.frames]);
+                h.envelope=[];
+            % matrix format
+            else
+                % check that the data format matches the specification
+                assert(size(input_data,1)==length(h.scan.z_axis)&&size(input_data,2)==length(h.scan.x_axis), 'The number of rows in the data does not match the scan specification!');
+                h.frames=size(input_data,3);
+            
+                % copy beamformed image
+                h.data=input_data;
+                h.envelope=[];
+            end
         end
     end
 

@@ -1,4 +1,4 @@
-classdef beam < handle
+classdef beam 
 %beam   Beam definition
 %
 %   See also BEAM.BEAM
@@ -14,8 +14,9 @@ classdef beam < handle
         smoothing_order=0                       % Order of the edge smoothing function 
     end
     
+    %% constructor
     methods (Access = public)
-        function h = beam(input_f_number,input_apo,input_steer_angle,input_smooth,input_order)
+        function h=beam(input_f_number,input_apo,input_steer_angle,input_smooth,input_order)
             %BEAM   Constructor of beam class
             %
             %Usage:
@@ -41,6 +42,128 @@ classdef beam < handle
             if nargin>4
                 h.smoothing_order=input_order;
             end
+        end
+    end
+    
+    %% HUFF
+    methods (Access = public)
+        function huff_write(h,filename,location)
+            %HUFF_WRITE    Dumps all the information of the ultrasound
+            %dataset to a group in a HDF5
+            %
+            %   Syntax:
+            %   HUFF_WRITE(file_name,location)
+            %       file_name                    Name of the hdf5 file
+            %       location                   Name of the group destination
+            %
+            %   See also RECONSTRUCTION
+            
+            % apodization type
+            file = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
+            filetype = H5T.enum_create('H5T_NATIVE_INT');
+                H5T.enum_insert (filetype, 'none', 0); 
+                H5T.enum_insert (filetype, 'boxcar', 1); 
+                H5T.enum_insert (filetype, 'hanning', 2); 
+                H5T.enum_insert (filetype, 'tukey25', 3); 
+                H5T.enum_insert (filetype, 'tukey50', 4); 
+                H5T.enum_insert (filetype, 'tukey80', 5); 
+            gid = H5G.open(file,location);
+            space = H5S.create_simple (1,1,[]);
+
+            attr = H5A.create (gid, 'apodization', filetype, space, 'H5P_DEFAULT');
+            switch (h.apodization)
+                case E.apodization_type.none
+                    H5A.write (attr, filetype, uint32(0));  
+                case E.apodization_type.boxcar
+                    H5A.write (attr, filetype, uint32(1));  
+                case E.apodization_type.hanning
+                    H5A.write (attr, filetype, uint32(2));  
+                case E.apodization_type.tukey25
+                    H5A.write (attr, filetype, uint32(3));  
+                case E.apodization_type.tukey50
+                    H5A.write (attr, filetype, uint32(4));  
+                case E.apodization_type.tukey80
+                    H5A.write (attr, filetype, uint32(5));  
+                otherwise
+                    error('Unknown apodization type');
+            end
+                    
+            H5A.close (attr);
+            H5G.close(gid);    
+            H5S.close (space);
+            H5T.close (filetype);
+            H5F.close (file);
+                        
+            % add f_number
+            attr = h.f_number;
+            attr_details.Name = 'f_number';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add steer angle
+            attr = h.steer_angle;
+            attr_details.Name = 'steer_angle';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add smoothing
+            attr = h.smoothing;
+            attr_details.Name = 'smoothing';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+            
+            % add smoothing order
+            attr = h.smoothing_order;
+            attr_details.Name = 'smoothing_order';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+        end
+        
+        function h=huff_read(h,filename,location)
+            %HUFF_READ    Dumps all the information of the ultrasound
+            %dataset to a group in a HDF5
+            %
+            %   Syntax:
+            %   HUFF_READ(file_name,location)
+            %       file_name                    Name of the hdf5 file
+            %       location                   Name of the group destination
+            %
+            %   See also US_DATASET
+            
+            % read signal format 
+            apodization=h5readatt(filename,location,'apodization');
+            switch(apodization{1})
+                case 'none'
+                    h.apodization=E.apodization_type.none;
+                case 'boxcar'
+                    h.apodization=E.apodization_type.boxcar;
+                case 'hanning'
+                    h.apodization=E.apodization_type.hanning;
+                case 'tukey25'
+                    h.apodization=E.apodization_type.tukey25;                    
+                case 'tukey50'
+                    h.apodization=E.apodization_type.tukey50;                    
+                case 'tukey80'
+                    h.apodization=E.apodization_type.tukey80;                    
+                otherwise
+                    error('Unknown apodization type!');
+            end
+
+            % read f number
+            h.f_number=h5readatt(filename,location,'f_number');
+
+            % read date
+            h.steer_angle=h5readatt(filename,location,'steer_angle');
+
+            % read speed of sound
+            h.smoothing=h5readatt(filename,location,'smoothing');
+
+            % read initial_time
+            h.smoothing_order=h5readatt(filename,location,'smoothing_order');
         end
     end
 end

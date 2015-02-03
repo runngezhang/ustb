@@ -5,7 +5,7 @@ close all;
 recons=reconstruction();
 
 % define the scan -> only linear scan svailable for the moment 
-recons.scan.x_axis=linspace(-7.6e-3,7.6e-3,256).';               % x vector [m]
+recons.scan.x_axis=linspace(-11.1e-3,11.1e-3,256).';               % x vector [m]
 recons.scan.z_axis=linspace(0,60e-3,512).';                      % z vector [m]
 
 % define the transmit & receive beams
