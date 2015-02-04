@@ -59,15 +59,15 @@ alpha=linspace(-alpha_max,alpha_max,Na);
 PRF=1./(2*40e-3/c);
 
 % Define domain
-F=50;           % number of frames
-vz = c*PRF/(8*f0*Na); vx=vz;
+F=50;                               % number of frames
+vz = c*PRF/(8*f0*Na); vx=-vz;
 N_sca=1;
 point=[0 0 20e-3]-[vx 0 -vz].*F/2.*Na/PRF;
 cropat=round(2*2*40e-3/c/dt);
 amp=[0; ones(N_sca,1)];
 
-%% Compute STA signals
-disp('Computing STA signals');
+%% Compute CPW signals
+disp('Computing CPW signals');
 duration_delay=(2*length(excitation)+1)*dt/2; % delay inserted by Field II 
 t_out=0:dt:((cropat-1)*dt);
 wb = waitbar(0, 'Computing IR');
@@ -104,13 +104,14 @@ PW=PW./max(abs(PW(:)));
 recons=reconstruction();
 
 % define the scan -> only linear scan svailable for the moment 
-recons.scan.x_axis=linspace(-5e-3,5e-3,256).';               % x vector [m]
+recons.scan=linear_scan();
+recons.scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';              % x vector [m]
 recons.scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-recons.transmit_beam=beam(1.75,E.apodization_type.hanning,0,0,0);
-recons.receive_beam=beam(1.75,E.apodization_type.hanning,0,15,2);
+recons.transmit_beam=beam(1,E.apodization_type.none);
+recons.receive_beam=beam(1.75,E.apodization_type.hanning);
 
 %% Define a cpw dataset object
 s=cpw('Field II, CPW, RF format',...    % name of the dataset
@@ -123,4 +124,4 @@ s=cpw('Field II, CPW, RF format',...    % name of the dataset
   
 %% Reconstruction show
 s.image_reconstruction(recons);
-recons.write_video('point.avi',40,[1000 500]);
+recons.write_video('moving_point_scatterer_135_degrees.avi');

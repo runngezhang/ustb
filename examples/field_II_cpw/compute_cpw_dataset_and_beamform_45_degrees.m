@@ -9,10 +9,10 @@ fs=100e6; set_field('fs',fs); dt=1/fs;    % Sampling frequency [Hz]
 set_field('use_rectangles',1);
 
 % define transducer
-f0=4.5e6; % Transducer center frequency [Hz]
+f0=5e6; % Transducer center frequency [Hz]
 lambda=c/f0; % Wavelength [m]
 height=4e-3;  % Height of element [m]
-pitch=0.33e-3; % pitch [m]
+pitch=lambda; % pitch [m]
 kerf=pitch./10; % Distance between transducer elements [m]
 width=pitch-kerf; % Width of element [m]
 N_elements=128; % Number of elements
@@ -49,68 +49,79 @@ xdc_impulse (Rh, impulse_response);
 ir_2ways=conv(impulse_response,impulse_response); ir_2ways=ir_2ways./max(abs(ir_2ways));
 t0_2ways=dt:dt:(dt*(length(ir_2ways))); t0_2ways=t0_2ways-2*cycles/f0/2-dt;
 
-% Define domain
-x_point=-15e-3:5e-3:15e-3;
-z_point=5e-3:5e-3:40e-3;
-[xxp zzp]=meshgrid(x_point,z_point);
-N_sca=length(zzp(:));
-point=[xxp(:) zeros(N_sca,1) zzp(:)];
+% plane wave sequence
+FN_min=1.75;
+alpha_max=atan(1/2/FN_min);
+Na=5; 
+alpha=linspace(-alpha_max,alpha_max,Na);
 
-cropat=round(2.5*2*40e-3/c/dt);
-sca=[0 0 0; point]; 
+% define maximum PRF
+PRF=1./(2*40e-3/c);
+
+% Define domain
+F=50;           % number of frames
+vz = c*PRF/(8*f0*Na); vx=vz;
+N_sca=1;
+point=[0 0 20e-3]-[vx 0 -vz].*F/2.*Na/PRF;
+cropat=round(2*2*40e-3/c/dt);
 amp=[0; ones(N_sca,1)];
 
-%% Compute STA signals
-disp('Computing STA signals');
+%% Compute CPW signals
+disp('Computing CPW signals');
 duration_delay=(2*length(excitation)+1)*dt/2; % delay inserted by Field II 
-IR=zeros(cropat,N_elements,N_elements);
 t_out=0:dt:((cropat-1)*dt);
 wb = waitbar(0, 'Computing IR');
-for n=1:N_elements
-    waitbar(n/N_elements, wb);
+PW=zeros(cropat,N_elements,Na,F);
+time_iterator=0;
+for f=1:F
+    waitbar(0, wb, sprintf('frame %d',f));
+    for n=1:Na
+        waitbar(n/Na, wb);
 
-    xdc_apodization(Th,0,[zeros(1,n-1) 1 zeros(1,N_elements-n)]);
-    xdc_apodization(Rh,0,ones(1,N_elements));
-    [v,t]=calc_scat_multi (Th, Rh, sca, amp);
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-duration_delay-2*min_delay; 
-    v_aux=interp1(t_in,v,t_out,'linear',0);
+        sca=[0 0 0; point+[vx 0 -vz].*time_iterator/PRF];
+        
+        xdc_apodization(Th,0,ones(1,N_elements));
+        xdc_times_focus(Th,0,x0(:).'*sin(alpha(n))/c);
 
-    IR(:,:,n)=v_aux;
-    
+        xdc_apodization(Rh,0,ones(1,N_elements));
+
+        [v,t]=calc_scat_multi (Th, Rh, sca, amp);
+        t_in=(0:dt:((size(v,1)-1)*dt))+t-duration_delay-2*min_delay; 
+        v_aux=interp1(t_in,v,t_out,'linear',0);
+
+        PW(:,:,n,f)=v_aux;
+        
+        
+        time_iterator=time_iterator+1;
+    end
 end
 close(wb);
 
 % normalising signal
-IR=IR./max(abs(IR(:)));
+PW=PW./max(abs(PW(:)));
 
 %% Define a reconstruction object
 recons=reconstruction();
 
 % define the scan -> only linear scan svailable for the moment 
 recons.scan=linear_scan();
-recons.scan.x_axis=linspace(-20e-3,20e-3,256).';               % x vector [m]
-recons.scan.z_axis=linspace(2e-3,42e-3,512).';                 % z vector [m]
+recons.scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';              % x vector [m]
+recons.scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-recons.transmit_beam=beam(1.2,E.apodization_type.boxcar);
-recons.receive_beam=beam(1.2,E.apodization_type.boxcar);
+recons.transmit_beam=beam(1,E.apodization_type.none);
+recons.receive_beam=beam(1.75,E.apodization_type.hanning);
 
-%% Define the sta dataset object
-s=sta('Field II, STA, RF format',...    % name of the dataset
+%% Define a cpw dataset object
+s=cpw('Field II, CPW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
       c,...                             % reference speed of sound (m/s)
+      alpha.',...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
-      IR,...                            % matrix with the data [samples, channels, firings, frames]
+      PW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
-
-%% reconstruction and show
+  
+%% Reconstruction show
 s.image_reconstruction(recons);
-recons.show();
-
-%% demodulate data and create another sta object that avoids the Hilbert artifact
-s.demodulate(true);
-
-%% reconstructs and show again
-s.image_reconstruction(recons);
-recons.show();
+recons.write_video('moving_point_scatterer_45_degrees.avi');

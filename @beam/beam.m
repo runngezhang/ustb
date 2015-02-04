@@ -11,21 +11,21 @@ classdef beam
         apodization=E.apodization_type.none     % Apodization type as given by E.apodization_type
         steer_angle=0                           % Steering angle of the beam (rad)
         smoothing=0                             % Length of the edge smoothing function (0 = no edge smoothing)
-        smoothing_order=0                       % Order of the edge smoothing function 
     end
     
     %% constructor
     methods (Access = public)
-        function h=beam(input_f_number,input_apo,input_steer_angle,input_smooth,input_order)
+        function h=beam(input_f_number,input_apo,input_steer_angle,input_smooth)
             %BEAM   Constructor of beam class
             %
-            %Usage:
+            %   Syntax:
             %   h = beam(f_number,apodization,steer_angle,smoothing,amoothing_order)
             %       f_number=1                              F-number
             %       apodization=E.apodization_type.none     Apodization type as given by E.apodization_type
             %       steer_angle=0                           Steering angle of the beam (rad)
             %       smoothing=0                             Length of the edge smoothing function (0 = no edge smoothing)
-            %       smoothing_order=0                       Order of the edge smoothing function 
+            %
+            %   See also BEAM
             
             if nargin>0
                 h.f_number=input_f_number;
@@ -38,9 +38,6 @@ classdef beam
             end
             if nargin>3
                 h.smoothing=input_smooth;
-            end
-            if nargin>4
-                h.smoothing_order=input_order;
             end
         end
     end
@@ -94,30 +91,23 @@ classdef beam
             H5T.close (filetype);
             H5F.close (file);
                         
-            % add f_number
+            % write f_number
             attr = h.f_number;
             attr_details.Name = 'f_number';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
             
-            % add steer angle
+            % write steer angle
             attr = h.steer_angle;
             attr_details.Name = 'steer_angle';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
             
-            % add smoothing
+            % write smoothing
             attr = h.smoothing;
             attr_details.Name = 'smoothing';
-            attr_details.AttachedTo = location;
-            attr_details.AttachType = 'group';
-            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
-            
-            % add smoothing order
-            attr = h.smoothing_order;
-            attr_details.Name = 'smoothing_order';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
@@ -156,14 +146,11 @@ classdef beam
             % read f number
             h.f_number=h5readatt(filename,location,'f_number');
 
-            % read date
+            % read angle
             h.steer_angle=h5readatt(filename,location,'steer_angle');
 
-            % read speed of sound
+            % read smoothing
             h.smoothing=h5readatt(filename,location,'smoothing');
-
-            % read initial_time
-            h.smoothing_order=h5readatt(filename,location,'smoothing_order');
         end
     end
 end
