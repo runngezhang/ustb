@@ -4,14 +4,15 @@ close all;
 %% Create a reconstruction object
 recons=reconstruction();
 
-% define the scan -> only linear scan svailable for the moment 
+% define the scan 
+recons.scan=linear_scan();
 recons.scan.x_axis=linspace(-2e-3,2e-3,200).';                  % x vector [m]
 recons.scan.z_axis=linspace(39e-3,41e-3,100).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-recons.transmit_beam=beam(1.75,E.apodization_type.boxcar,0,0,0);
-recons.receive_beam=beam(1.75,E.apodization_type.boxcar,0,0,0);
+recons.transmit_beam=beam(1.75,E.apodization_type.boxcar);
+recons.receive_beam=beam(1.75,E.apodization_type.boxcar);
 
 %% Synthetic transmit aperture
 % format RF 

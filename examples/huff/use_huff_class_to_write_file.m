@@ -13,13 +13,14 @@ recording=huff('recording.h5','w');
 sta_recons=reconstruction('STA, IQ, Mex');
 
 % define the scan -> only linear scan svailable for the moment 
+sta_recons.scan=linear_scan();
 sta_recons.scan.x_axis=linspace(-2e-3,2e-3,200).';                  % x vector [m]
 sta_recons.scan.z_axis=linspace(39e-3,41e-3,100).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-sta_recons.transmit_beam=beam(1.75,E.apodization_type.boxcar,0,0,0);
-sta_recons.receive_beam=beam(1.75,E.apodization_type.boxcar,0,0,0);
+sta_recons.transmit_beam=beam(1.75,E.apodization_type.boxcar);
+sta_recons.receive_beam=beam(1.75,E.apodization_type.boxcar);
 
 %% Synthetic transmit aperture
 % format IQ

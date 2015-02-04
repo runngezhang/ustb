@@ -7,7 +7,7 @@ classdef reconstruction < handle
         creation_date=''            % String containing the date the reconstruction was created
         transmit_beam=beam()        % BEAM class defining transmit beam
         receive_beam=beam()         % BEAM class defining receive beam            
-        scan=linear_scan()          % SCAN class defining the scan area 
+        scan                        % SCAN class defining the scan area 
         format=E.signal_format.RF   % format of the signal
         data                        % matrix containing the reconstructed raw signal
         envelope                    % matrix containing the envelope of the reconstructed signal
@@ -83,16 +83,17 @@ classdef reconstruction < handle
             assert(size(x0,1)==h.scan.pixels, 'The element position vector must be a column vector!');
             
             % we take the number of apodization values from x0
-            number_elements=size(x0,2);
+            number_transmitting_events=size(x0,2);
             
             % apodization computation 
             if beam.apodization==E.apodization_type.none
-                apo=ones(h.scan.pixels,number_elements);
+                apo=ones(h.scan.pixels,number_transmitting_events);
             else
-                apo=zeros(h.scan.pixels,number_elements);
+                apo=zeros(h.scan.pixels,number_transmitting_events);
                 Aperture=h.scan.z./beam.f_number;
-                for n=1:number_elements
-                    xd=abs(x0(:,n)-h.scan.x+h.scan.z*tan(beam.steer_angle));
+                for n=1:number_transmitting_events
+                    %xd=abs(x0(:,n)-h.scan.x+h.scan.z*tan(beam.steer_angle));
+                    xd=h.scan.lateral_distance(x0(:,n),beam.steer_angle);
                     switch(beam.apodization)
                         case E.apodization_type.boxcar
                             apo(:,n)=double(xd<Aperture/2); 
@@ -100,27 +101,28 @@ classdef reconstruction < handle
                             apo(:,n)=double(xd<Aperture/2).*(0.5 + 0.5*cos(2*pi*xd./Aperture)); 
                         case E.apodization_type.tukey25
                             roll=0.25;
-                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd/Aperture-roll/2-1/2)));                               
+                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
                         case E.apodization_type.tukey50
                             roll=0.5;
-                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd/Aperture-roll/2-1/2)));                               
+                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
                         case E.apodization_type.tukey80
                             roll=0.8;
-                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd/Aperture-roll/2-1/2)));                               
+                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
                         otherwise
                             error('Unknown apodization type!');
                     end
                 end
             end
             
-            % implementation of edge smoothing
-            if(beam.smoothing)
-                n0=1:(beam.smoothing+1);                                  
-                mask=(n0/(beam.smoothing+1)).^(1./beam.smoothing_order);
-                for nn=n0(1):n0(end) % <--- have to think how to vectorise this
-                    apo(:,nn)=apo(:,nn).*mask(nn);
-                    apo(:,end-nn+1)=apo(:,end-nn+1).*mask(nn);
-                end
+            % our implementation of edge smoothing -> inspired by tukey window
+            if(size(apo,2)>(2*(beam.smoothing+1)))
+                % compute edge smoothing mask
+                mask=0.5-0.5*cos((0:beam.smoothing)/beam.smoothing*pi);  % vector mask
+                mask=(ones(h.scan.pixels,1)*mask(2:(beam.smoothing+1))); % matrix mask
+                
+                % modifying apodization edges
+                apo(:,1:beam.smoothing)=apo(:,1:beam.smoothing).*mask;
+                apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events)=apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events).*fliplr(mask);
             end
         end
     end
@@ -270,7 +272,17 @@ classdef reconstruction < handle
             % read substructures
             h.transmit_beam=h.transmit_beam.huff_read(filename,[location '/transmit_beam']);
             h.receive_beam=h.receive_beam.huff_read(filename,[location '/transmit_beam']);
-            h.scan=h.scan.huff_read(filename,[location '/scan']);  % <--- when we define different scan we must change this
+            scan_type=h5readatt(filename,[location '/scan'],'scan_type');
+            switch (scan_type{1})
+                case 'linear_scan'
+                    h.scan=linear_scan();
+                    h.scan=h.scan.huff_read(filename,[location '/scan']);  
+                case 'sector_scan'
+                    h.scan=sector_scan();
+                    h.scan=h.scan.huff_read(filename,[location '/scan']);  
+                otherwise
+                    warning('Unknown scan format!');
+            end
             
             % read frames
             h.frames=h5readatt(filename,location,'frames');
@@ -308,7 +320,7 @@ classdef reconstruction < handle
             
             switch(h.format)
                 case E.signal_format.RF
-                    dz=mean(diff(h.scan.z_axis));   % spatial step in the beam direction
+                    dz=h.scan.depth_step();
                     Fs=1540/2/dz;                   % effective sampling frequency (Hz)
                     maximum_frequency=h.central_frequency+h.bandwidth;
                     ratio=Fs/maximum_frequency;
@@ -348,15 +360,19 @@ classdef reconstruction < handle
             im=20*log10(h.envelope./max(h.envelope(:)));
             figure; set(gca,'fontsize',16); 
             for f=1:h.frames
-                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar;
+                x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
+                % black background
+                %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
+                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
                 axis equal manual;
                 xlabel('x [mm]');
                 ylabel('z [mm]');
                 set(gca,'YDir','reverse');
                 set(gca,'fontsize',16);
-                axis([min(h.scan.x_axis) max(h.scan.x_axis) min(h.scan.z_axis) max(h.scan.z_axis)]*1e3);
+                axis([x_lim z_lim]);
                 title(sprintf('%s (%s)',char(h.name),char(h.format))); 
-                drawnow;
+                drawnow; hold off;
                 pause(0.05);
             end
         end
@@ -373,7 +389,7 @@ classdef reconstruction < handle
             %   See also RECONSTRUCTION
        
             if ~exist('dynamic_range') dynamic_range=60; end
-            if ~exist('figure_size') figure_size=[500 500]; end
+            if ~exist('figure_size') figure_size=[1024 768]; end
             
             
             %% making a video -> envelope
@@ -386,13 +402,15 @@ classdef reconstruction < handle
             im=20*log10(h.envelope./max(h.envelope(:)));
             figure; set(gca,'fontsize',16); 
             for f=1:h.frames
+                x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
                 pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis([-dynamic_range 0]);colorbar; hold on;
                 axis equal manual;
                 xlabel('x [mm]');
                 ylabel('z [mm]');
                 set(gca,'YDir','reverse');
                 set(gca,'fontsize',16);
-                axis([min(h.scan.x_axis) max(h.scan.x_axis) min(h.scan.z_axis) max(h.scan.z_axis)]*1e3);
+                axis([x_lim z_lim]);
                 title(sprintf('Frame %d',f)); 
                 set(gcf,'Position',[200   100   figure_size(1) figure_size(2)]);
                 drawnow;
@@ -412,18 +430,16 @@ classdef reconstruction < handle
     methods
         function h=set.data(h,input_data)
             % column-based format
-            if(size(input_data,2)==1)
-                % check that the data format matches the specification
-                assert(size(input_data,1)==h.scan.pixels, 'The number of rows in the data does not match the scan specification!');
+            if(size(input_data,1)==h.scan.pixels)
                 h.frames=size(input_data,2);
             
                 % reshape beamformed image
-                h.data=reshape(input_data,[length(h.scan.z_axis) length(h.scan.x_axis) h.frames]);
+                h.data=reshape(input_data,[size(h.scan.x_matrix,1) size(h.scan.x_matrix,2) h.frames]);
                 h.envelope=[];
             % matrix format
             else
                 % check that the data format matches the specification
-                assert(size(input_data,1)==length(h.scan.z_axis)&&size(input_data,2)==length(h.scan.x_axis), 'The number of rows in the data does not match the scan specification!');
+                assert((size(input_data,1)==size(h.scan.x_matrix,1))&&(size(input_data,2)==size(h.scan.x_matrix,2)), 'The number of rows in the data does not match the scan specification!');
                 h.frames=size(input_data,3);
             
                 % copy beamformed image

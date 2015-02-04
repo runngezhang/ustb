@@ -1,14 +1,14 @@
-classdef linear_scan 
-%LINEAR_SCAN Class defining a linear scan area  
+classdef sector_scan 
+%LINEAR_SCAN Class defining a sector scan area  
 %
 %   See also RECONSTRUCTION
 
 %   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2015/01/28 $
+%   $Date: 2015/02/03 $
 
     properties  (SetAccess = public)
-        x_axis      % Vector defining the x coordinates of each row of pixels
-        z_axis      % Vector defining the z coordinates of each column of pixels
+        azimuth_axis    % Vector defining the azimuth coordinates of each row of pixels
+        depth_axis      % Vector defining the depth coordinates of each column of pixels
     end
     
     properties  (SetAccess = protected)
@@ -21,20 +21,21 @@ classdef linear_scan
     
     %% Constructor
     methods (Access = public)
-        function h = linear_scan(input_x,input_z)
-            %LINEAR_SCAN   Constructor of linear_scan class
+        function h = sector_scan(azimuth_input,depth_input)
+            %SECTOR_SCAN   Constructor of the sector_scan class
             %
             %   Syntax:
-            %   h = linear_scan(x_vector,z_vector)
-            %       x_vector    Vector defining the x coordinates of each row of pixels
-            %       z_vector    Vector defining the z coordinates of each column of pixels
+            %   h = sector_scan(azimuth_vector,depth_vector)
+            %       azimuth_vector    Vector defining the azimuth coordinates of each row of pixels
+            %       depth_vector      Vector defining the depth coordinates of each column of pixels
             %
-            %   See also LINEAR_SCAN
+            %   See also SECTOR_SCAN
+            
             if nargin>0
-                h.x_axis=input_x;
+                h.azimuth_axis=azimuth_input;
             end
             if nargin>1
-                h.z_axis=input_z;
+                h.depth_axis=depth_input;
             end
         end
     end
@@ -50,8 +51,8 @@ classdef linear_scan
             %       element_position    Vector containing the x coordinates of the probe elements (either real or virtual) [m]
             %       steering_angle      Steerin angle [rad]
             %
-            %   See also LINEAR_SCAN
-            xd=abs(x0-h.x+h.z*tan(steer_angle));
+            %   See also SECTOR_SCAN
+            xd=abs(x0+h.z*tan(steer_angle));
         end
     end
     
@@ -65,7 +66,7 @@ classdef linear_scan
             %       dz    Spatial step in the beam direction
             %
             %   See also LINEAR_SCAN
-            dz=mean(diff(h.z_axis)); % spatial step in the beam direction
+            dz=mean(diff(h.depth_axis)); % spatial step in the beam direction
         end
     end
     
@@ -91,7 +92,7 @@ classdef linear_scan
             space = H5S.create_simple (1,1,[]);
 
             attr = H5A.create (gid, 'scan_type', filetype, space, 'H5P_DEFAULT');
-            H5A.write (attr, filetype, uint32(0));          % <---  LINEAR SCAN
+            H5A.write (attr, filetype, uint32(1));          % <---  SECTOR SCAN
                     
             H5A.close (attr);
             H5G.close(gid);    
@@ -99,14 +100,14 @@ classdef linear_scan
             H5T.close (filetype);
             H5F.close (file);
                         
-            % add x-axis
+            % add azimuth axis
             dset_details.Location = location;
-            dset_details.Name = 'x_axis';
+            dset_details.Name = 'azimuth_axis';
             hdf5write(filename, dset_details, h.x_axis, 'WriteMode', 'append');
 
-            % add z-axis
+            % add depth axis
             dset_details.Location = location;
-            dset_details.Name = 'z_axis';
+            dset_details.Name = 'depth_axis';
             hdf5write(filename, dset_details, h.z_axis, 'WriteMode', 'append');
         end
         
@@ -123,33 +124,47 @@ classdef linear_scan
             
             % read signal format 
             scan_type=h5readatt(filename,location,'scan_type');
-            assert(strcmp(scan_type,'linear_scan'),'Scan format does not match!');
+            assert(strcmp(scan_type,'sector_scan'),'Scan format does not match!');
 
-            % x_axis
-            h.x_axis=h5read(filename,[location '/x_axis']);
+            % azimuth axis
+            h.x_axis=h5read(filename,[location '/azimuth_axis']);
             
-            % z_axis
-            h.z_axis=h5read(filename,[location '/z_axis']);            
+            % depth axis
+            h.z_axis=h5read(filename,[location '/depth_axis']);            
         end
     end
     
     %% Set methods
     methods
-        function h=set.x_axis(h,input_vector)
-            assert(size(input_vector,1)>size(input_vector,2), 'The x vector must be a column vector!')
-            h.x_axis=input_vector;
-            [h.x_matrix, h.z_matrix]=meshgrid(h.x_axis,h.z_axis); 
-            h.x=h.x_matrix(:);
-            h.z=h.z_matrix(:);
-            h.pixels=length(h.x);
+        function h=set.azimuth_axis(h,input_vector)
+            assert(size(input_vector,1)>size(input_vector,2), 'The azimuth vector must be a column vector!')
+            h.azimuth_axis=input_vector;
+            
+            if ~isempty(h.azimuth_axis)
+                [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
+            
+                h.x_matrix=dd.*sin(aa);
+                h.z_matrix=dd.*cos(aa);
+
+                h.x=h.x_matrix(:);
+                h.z=h.z_matrix(:);
+                h.pixels=length(h.x);
+            end
         end
-        function h=set.z_axis(h,input_vector)
-            assert(size(input_vector,1)>size(input_vector,2), 'The z vector must be a column vector!')
-            h.z_axis=input_vector;
-            [h.x_matrix, h.z_matrix]=meshgrid(h.x_axis,h.z_axis); 
-            h.x=h.x_matrix(:);
-            h.z=h.z_matrix(:);
-            h.pixels=length(h.x);
+        function h=set.depth_axis(h,input_vector)
+            assert(size(input_vector,1)>size(input_vector,2), 'The depth vector must be a column vector!')
+            h.depth_axis=input_vector;
+            
+            if ~isempty(h.azimuth_axis)
+                [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
+
+                h.x_matrix=dd.*sin(aa);
+                h.z_matrix=dd.*cos(aa);
+
+                h.x=h.x_matrix(:);
+                h.z=h.z_matrix(:);
+                h.pixels=length(h.x);
+            end
         end
     end
 end
