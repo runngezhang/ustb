@@ -344,30 +344,48 @@ classdef reconstruction < handle
             end
         end
         
-        function im=show(h,dynamic_range)
+        function im=show(h,compression_type,dynamic_range)
             %SHOW    Plots the envelope of the beamformed data and returns a copy of the image
             %
             %   Syntax:
-            %   image=show(dynamic_range)
-            %       image           Matrix with the envelope of the normalised bemformed signal on dB
-            %       dynamic_range   Desired dynamic range of the displayed images
+            %   image=show(compression_type,dynamic_range)
+            %       image               Matrix with the envelope of the normalised bemformed signal on dB
+            %       compression_type    'log' or 'sqrt'
+            %       dynamic_range       Desired dynamic range of the displayed images in dB
             %
             %   See also RECONSTRUCTION
        
+            if ~exist('compression_type') compression_type='log'; end
             if ~exist('dynamic_range') dynamic_range=60; end
             
             % computing envelope
             if isempty(h.envelope) h.envelope=h.calculate_envelope(); end
             
+            switch compression_type
+                case 'log'
+                    im=20*log10(h.envelope./max(h.envelope(:)));
+                    if(dynamic_range<1)
+                        dynamic_range=-20*log10(dynamic_range^2);
+                    end
+                    vrange=[-dynamic_range 0];
+                case 'sqrt'
+                    im=sqrt(h.envelope./max(h.envelope(:)));
+                    if(dynamic_range>1)
+                        dynamic_range=sqrt(10^(-dynamic_range/20));
+                    end
+                    vrange=[dynamic_range 1];
+                otherwise
+                    error('Unknown compression type');
+            end
+            
             % Ploting image reconstruction
-            im=20*log10(h.envelope./max(h.envelope(:)));
             figure; set(gca,'fontsize',16); 
             for f=1:h.frames
                 x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
                 z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
                 % black background
                 %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
-                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
+                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
                 axis equal manual;
                 xlabel('x [mm]');
                 ylabel('z [mm]');
