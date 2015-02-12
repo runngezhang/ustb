@@ -320,16 +320,19 @@ classdef reconstruction < handle
             
             switch(h.format)
                 case E.signal_format.RF
-                    dz=h.scan.depth_step();
-                    Fs=1540/2/dz;                   % effective sampling frequency (Hz)
-                    maximum_frequency=h.central_frequency+h.bandwidth;
-                    ratio=Fs/maximum_frequency;
-                    
-                    im=zeros(size(h.data));
-                    
-                    if(ratio<4)
-                        warning(sprintf('The spatial sampling in the beam direction does not allow to compute the Hilbert transform on pixel data. Displayed envelopes will be innacurate. To solve this issue please consider: working with demodulated signal (IQ), or increasing the sampling resolution in the beam direction by a factor of %0.2f',4/ratio));
+                    % checking limit for using hilbert transform
+                    if ~isempty(h.central_frequency)
+                        dz=h.scan.depth_step();
+                        Fs=1540/2/dz;                   % effective sampling frequency (Hz)
+                        maximum_frequency=h.central_frequency+h.bandwidth;
+                        ratio=Fs/maximum_frequency;
+                        if(ratio<4)
+                            warning(sprintf('The spatial sampling in the beam direction does not allow to compute the Hilbert transform on pixel data. Displayed envelopes will be innacurate. To solve this issue please consider: working with demodulated signal (IQ), or increasing the sampling resolution in the beam direction by a factor of %0.2f',4/ratio));
+                        end
                     end
+                    
+                    % computing envolvent through hilbert
+                    im=zeros(size(h.data));
                     for f=1:h.frames
                         im(:,:,f)=abs(hilbert(h.data(:,:,f)));
                     end
