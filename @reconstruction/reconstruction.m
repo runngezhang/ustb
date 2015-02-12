@@ -28,9 +28,8 @@ classdef reconstruction < handle
             %
             %   See also BEAM, LINEAR_SCAN
 
-            t_now=now;
-            h.creation_date=[date sprintf('-%d-%d-%d',hour(t_now),minute(t_now),round(second(t_now)))];
-
+            h.creation_date=sprintf('%d/%02d/%d %02d:%02d:%02.2f',clock);
+                      
             if exist('object') 
                 h.copy(object);
             end
