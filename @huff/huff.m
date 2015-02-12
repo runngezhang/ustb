@@ -67,7 +67,8 @@ classdef huff < handle
             %       dataset          Instance of a known dataset: (sta, cpw, vs, or reconstruction)
             %
             %   See also HUFF
-            if strcmp(class(dataset),'sta') | strcmp(class(dataset),'cpw') | strcmp(class(dataset),'vs')
+            known_datasets = {'sta', 'cpw', 'vs'};
+            if ismember(class(dataset),known_datasets)
                 n=length(h.ultrasound_signal);
                 h.ultrasound_signal{n+1}=dataset;
             elseif strcmp(class(dataset),'reconstruction') 
