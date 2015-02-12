@@ -11,8 +11,8 @@ recons.scan.z_axis=linspace(39e-3,41e-3,100).';                 % z vector [m]
 
 % define the transmit & receive beams
 %F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-recons.transmit_beam=beam(1.75,E.apodization_type.boxcar);
-recons.receive_beam=beam(1.75,E.apodization_type.boxcar);
+recons.transmit_beam=beam(1.75,E.apodization_type.boxcar,0*pi/180);
+recons.receive_beam=beam(1.75,E.apodization_type.boxcar,10*pi/180);
 
 %% Synthetic transmit aperture
 % format RF 
