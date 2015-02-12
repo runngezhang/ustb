@@ -38,8 +38,8 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
     if ~exist('bandpass_frequency_vector') 
         transition=bw/10;
         low_freq=max([0 fc-2*bw]);      
-        high_freq=min([h.sampling_frequency/2 fc+2*bw]);
-        bandpass_frequency_vector=[low_freq low_freq+transition high_freq high_freq+transition];
+        high_freq=min([h.sampling_frequency/2*0.99 fc+2*bw]);
+        bandpass_frequency_vector=[low_freq low_freq+transition high_freq-transition high_freq];
     end
     data = tools.band_pass(h.data,h.sampling_frequency,bandpass_frequency_vector);
 
