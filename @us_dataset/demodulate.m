@@ -1,5 +1,5 @@
 function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,downsample_frequency)
-  %DEMODULATE    Demodulates RF data in a dataset class
+% DEMODULATE    Demodulates RF data of signal_dataset class
 %
 %   Syntax:
 %   demodulate(plot_on,modulation_frequency,bandpass_frequency_vector)
@@ -11,7 +11,9 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
 %   See also DATASET
     
     assert(h.format==E.signal_format.RF,'Signal format is not RF. Only RF data can be demodulated.');
-
+    assert(isempty(h.data)||sum(abs(h.data(:)))>0,'Dataset is empty or zero');
+    disp('');
+    
     if ~exist('plot_on') plot_on=false; end
     
     %% computing central frequency and bandwidth
