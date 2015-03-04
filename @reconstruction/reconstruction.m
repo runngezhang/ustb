@@ -384,7 +384,7 @@ classdef reconstruction < handle
                 z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
                 % black background
                 %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
-                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
+                pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
                 axis equal manual;
                 xlabel('x [mm]');
                 ylabel('z [mm]');
