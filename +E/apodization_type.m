@@ -1,6 +1,6 @@
 classdef apodization_type
    enumeration
-      none, boxcar, hanning, tukey25, tukey50, tukey80
+      none, boxcar, hanning, hamming, tukey25, tukey50, tukey75
    end
 end
 

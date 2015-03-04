@@ -63,7 +63,9 @@ classdef beam
                 H5T.enum_insert (filetype, 'hanning', 2); 
                 H5T.enum_insert (filetype, 'tukey25', 3); 
                 H5T.enum_insert (filetype, 'tukey50', 4); 
-                H5T.enum_insert (filetype, 'tukey80', 5); 
+                H5T.enum_insert (filetype, 'tukey80', 5);
+                H5T.enum_insert (filetype, 'hamming', 6);
+                H5T.enum_insert (filetype, 'tukey75', 7);
             gid = H5G.open(file,location);
             space = H5S.create_simple (1,1,[]);
 
@@ -81,6 +83,10 @@ classdef beam
                     H5A.write (attr, filetype, uint32(4));  
                 case E.apodization_type.tukey80
                     H5A.write (attr, filetype, uint32(5));  
+                case E.apodization_type.hamming
+                    H5A.write (attr, filetype, uint32(6));  
+                case E.apodization_type.tukey75
+                    H5A.write (attr, filetype, uint32(7));  
                 otherwise
                     error('Unknown apodization type');
             end
