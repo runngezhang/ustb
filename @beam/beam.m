@@ -28,15 +28,19 @@ classdef beam
             %   See also BEAM
             
             if nargin>0
+                assert(length(input_apo)==1,'The F-number be an scalar, not a vector.');
                 h.f_number=input_f_number;
             end
             if nargin>1
+                assert(length(input_apo)==1,'The apodization type should be an scalar, not a vector.');
                 h.apodization=input_apo;
             end
             if nargin>2
+                assert(length(input_steer_angle)==1,'The beam steering angle should be an scalar, not a vector.');
                 h.steer_angle=input_steer_angle;
             end
             if nargin>3
+                assert(length(input_smooth)==1,'The edge smoothing area should be an scalar, not a vector.');
                 h.smoothing=input_smooth;
             end
         end
