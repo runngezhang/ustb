@@ -7,6 +7,7 @@ classdef sector_scan
 %   $Date: 2015/02/03 $
 
     properties  (SetAccess = public)
+        center          % location of the reference center from which the sector is defined
         azimuth_axis    % Vector defining the azimuth coordinates of each row of pixels
         depth_axis      % Vector defining the depth coordinates of each column of pixels
     end
@@ -99,7 +100,12 @@ classdef sector_scan
             H5S.close (space);
             H5T.close (filetype);
             H5F.close (file);
-                        
+
+            % add center
+            dset_details.Location = location;
+            dset_details.Name = 'center';
+            hdf5write(filename, dset_details, h.center, 'WriteMode', 'append');
+            
             % add azimuth axis
             dset_details.Location = location;
             dset_details.Name = 'azimuth_axis';
@@ -127,6 +133,9 @@ classdef sector_scan
             assert(strcmp(scan_type,'sector_scan'),'Scan format does not match!');
 
             % azimuth axis
+            h.center=h5read(filename,[location '/center']);
+            
+            % azimuth axis
             h.x_axis=h5read(filename,[location '/azimuth_axis']);
             
             % depth axis
@@ -143,8 +152,8 @@ classdef sector_scan
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
             
-                h.x_matrix=dd.*sin(aa);
-                h.z_matrix=dd.*cos(aa);
+                h.x_matrix=dd.*sin(aa)+h.center(1);
+                h.z_matrix=dd.*cos(aa)+h.center(3);
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);
@@ -158,8 +167,8 @@ classdef sector_scan
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
 
-                h.x_matrix=dd.*sin(aa);
-                h.z_matrix=dd.*cos(aa);
+                h.x_matrix=dd.*sin(aa)+h.center(1);
+                h.z_matrix=dd.*cos(aa)+h.center(3);
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);
