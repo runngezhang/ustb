@@ -134,20 +134,31 @@ classdef vs < us_dataset
             % initial time -> performance test
             tic; 
             
-            % precompute transmit and receive apodization
-            xT=recons.scan.x*ones(1,h.firings)-(recons.scan.z*ones(1,h.firings)).*(ones(recons.scan.pixels,1)*h.source(:,1).'-recons.scan.x*ones(1,h.firings))./(ones(recons.scan.pixels,1)*h.source(:,3).'-recons.scan.z*ones(1,h.firings)); % position of equivalent receive element -> Alfonso's equation 
-            valid_apodization=(xT>h.geom(1,1))&(xT<h.geom(end,1));            % check we don't get out of the aperture
-            h.transmit_apodization = valid_apodization.*recons.calculate_apodization(recons.transmit_beam,xT);
-            xR=ones(recons.scan.pixels,1)*(h.geom(:,1).');                    % position of receive element
-            h.receive_apodization = recons.calculate_apodization(recons.receive_beam,xR);
-            
-            % launch selected implementation
-            recons.data=h.launch_implementation(recons,implem);
+            % loop over orientations
+            total_data=zeros(size(recons.scan.x_matrix,1),size(recons.scan.x_matrix,2),length(recons.orientation),size(h.data,4));
+            temporal_data=zeros(recons.scan.pixels,size(h.data,4));
+            for o=1:length(recons.orientation)
+                % precompute transmit and receive apodization
+                xT=recons.scan.x*ones(1,h.firings)-(recons.scan.z*ones(1,h.firings)).*(ones(recons.scan.pixels,1)*h.source(:,1).'-recons.scan.x*ones(1,h.firings))./(ones(recons.scan.pixels,1)*h.source(:,3).'-recons.scan.z*ones(1,h.firings)); % position of equivalent receive element -> Alfonso's equation 
+                valid_apodization=(xT>h.geom(1,1))&(xT<h.geom(end,1));            % check we don't get out of the aperture
+                h.transmit_apodization = valid_apodization.*recons.calculate_apodization(recons.orientation(o).transmit_beam,xT);
+                xR=ones(recons.scan.pixels,1)*(h.geom(:,1).');                    % position of receive element
+                h.receive_apodization = recons.calculate_apodization(recons.orientation(o).receive_beam,xR);
+
+                % launch selected implementation
+                temporal_data=h.launch_implementation(recons,implem);
+
+                % reshape matrix to include orientation dimensions
+                total_data(:,:,o,:)=reshape(temporal_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) 1 size(temporal_data,2)]);
+            end
             
             % copy data to reconstruction
+            recons.data=total_data;
             recons.format=h.format;
-            [recons.central_frequency recons.bandwidth]=tools.estimate_frequency(h.time,h.data);
-                        
+            if(h.format==E.signal_format.RF)
+                [recons.central_frequency recons.bandwidth]=tools.estimate_frequency(h.time,h.data);
+            end
+            
             % elapsed time for performance test
             elapsed_time=toc; 
         end

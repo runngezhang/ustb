@@ -3,17 +3,24 @@ classdef reconstruction < handle
 %
 %   See also BEAM, SCAN
     properties  (SetAccess = public)
+        % administrative
         name=''                     % String containing the name of the reconstruction
         creation_date=''            % String containing the date the reconstruction was created
-        transmit_beam=beam()        % BEAM class defining transmit beam
-        receive_beam=beam()         % BEAM class defining receive beam            
-        scan                        % SCAN class defining the scan area 
-        format=E.signal_format.RF   % format of the signal
+        
+        % data
+        orientation                 % List of ORIENTATION objects            
+        scan                        % SCAN object defining the scan area 
         data                        % matrix containing the reconstructed raw signal
-        envelope                    % matrix containing the envelope of the reconstructed signal
-        frames                      % Number of frames in the reconstruction
+        
+        % informative
+        no_frames                   % Number of frames in the reconstruction
+        no_orientations             % Number of orientations in the reconstruction
+        format=E.signal_format.RF   % format of the signal
         central_frequency           % central frequency [Hz]
-        bandwidth                   % central frequency [Hz]
+        bandwidth                   % signal bandwidth [Hz]
+        
+        % temporal
+        envelope                    % matrix containing the envelope of the reconstructed signal
     end
     
     %% constructor
@@ -53,14 +60,16 @@ classdef reconstruction < handle
             assert(isa(object,class(h)),'Class of the input object is not identical'); 
 
             h.name=object.name;     
-            h.transmit_beam=object.transmit_beam;   % beam is not a handle class thus we can copy it
-            h.receive_beam=object.receive_beam;     % beam is not a handle class thus we can copy it       
+            for n=1:length(object.orientation)
+                h.orientation(n).copy(object.orientation(n)); 
+            end
             h.scan=object.scan;                     % scan is not a handle class thus we can copy it       
             
             h.format=object.format;                 
             h.data=object.data;
             h.envelope=object.envelope;
-            h.frames=object.frames;
+            if isprop(object,'no_frames') h.no_frames=object.no_frames; end
+            if isprop(object,'no_orientations') h.no_orientations=object.no_orientations; end
             h.central_frequency=object.central_frequency;     
             h.bandwidth=object.bandwidth;
         end
@@ -95,25 +104,37 @@ classdef reconstruction < handle
                     xd=h.scan.lateral_distance(x0(:,n),beam.steer_angle);
                     switch(beam.apodization)
                         case E.apodization_type.boxcar
+                            % boxcar apodization
                             apo(:,n)=double(xd<Aperture/2); 
                         case E.apodization_type.hanning
+                            % hanning apodization
                             apo(:,n)=double(xd<Aperture/2).*(0.5 + 0.5*cos(2*pi*xd./Aperture)); 
+                        case E.apodization_type.hamming
+                            % hamming apodization
+                            apo(:,n)=double(xd<Aperture/2).*(0.53836 + 0.46164*cos(2*pi*xd./Aperture)); 
                         case E.apodization_type.tukey25
+                            % Tukey 25% apodization
                             roll=0.25;
                             apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
                         case E.apodization_type.tukey50
+                            % Tukey 50% apodization
                             roll=0.5;
                             apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
-                        case E.apodization_type.tukey80
-                            roll=0.8;
+                        case E.apodization_type.tukey75
+                            % Tukey 75% apodization
+                            roll=0.75;
                             apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                               
+                        case E.apodization_type.tukey80
+                            % Tukey 80% apodization
+                            roll=0.80;
+                            apo(:,n)=(xd<(Aperture/2*(1-roll))) + (xd>(Aperture/2*(1-roll))).*(xd<(Aperture/2)).*0.5.*(1+cos(2*pi/roll*(xd./Aperture-roll/2-1/2)));                                                           
                         otherwise
                             error('Unknown apodization type!');
                     end
                 end
             end
             
-            % our implementation of edge smoothing -> inspired by tukey window
+            % our implementation of edge smoothing 
             if(size(apo,2)>(2*(beam.smoothing+1)))
                 % compute edge smoothing mask
                 mask=0.5-0.5*cos((0:beam.smoothing)/beam.smoothing*pi);  % vector mask
@@ -190,9 +211,16 @@ classdef reconstruction < handle
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
 
-            % add frames
-            attr = h.frames;
-            attr_details.Name = 'frames';
+            % add number if frames
+            attr = h.no_frames;
+            attr_details.Name = 'no_frames';
+            attr_details.AttachedTo = location;
+            attr_details.AttachType = 'group';
+            hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
+
+            % add number of orientations
+            attr = h.no_orientations;
+            attr_details.Name = 'no_orientations';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
@@ -236,8 +264,9 @@ classdef reconstruction < handle
             H5F.close(fid);
 
             % dump substructures
-            h.transmit_beam.huff_write(filename,[location '/transmit_beam']);
-            h.receive_beam.huff_write(filename,[location '/receive_beam']);
+            for o=1:length(h.orientation)
+                h.orientation(o).huff_write(filename,[location sprintf('/orientation%d',o)]);
+            end
             h.scan.huff_write(filename,[location '/scan']);
 
         end
@@ -267,10 +296,19 @@ classdef reconstruction < handle
                 otherwise
                     error('Unknown signal format!');
             end
+            
+            % read number of frames
+            h.no_frames=h5readatt(filename,location,'no_frames');
+            
+            % read number of orientations
+            h.no_orientations=h5readatt(filename,location,'no_orientation');
 
-            % read substructures
-            h.transmit_beam=h.transmit_beam.huff_read(filename,[location '/transmit_beam']);
-            h.receive_beam=h.receive_beam.huff_read(filename,[location '/transmit_beam']);
+            % read orientations
+            for o=1:h.no_orientations
+                h.orientation(n)=h.orientation(n).huff_read(filename,[location sprintf('/orientation%d',o)]);
+            end
+            
+            % read scan
             scan_type=h5readatt(filename,[location '/scan'],'scan_type');
             switch (scan_type{1})
                 case 'linear_scan'
@@ -283,9 +321,6 @@ classdef reconstruction < handle
                     warning('Unknown scan format!');
             end
             
-            % read frames
-            h.frames=h5readatt(filename,location,'frames');
-
             % read creation_date
             h.creation_date=h5readatt(filename,location,'creation_date');
             
@@ -332,8 +367,10 @@ classdef reconstruction < handle
                     
                     % computing envolvent through hilbert
                     im=zeros(size(h.data));
-                    for f=1:h.frames
-                        im(:,:,f)=abs(hilbert(h.data(:,:,f)));
+                    for f=1:h.no_frames
+                        for o=1:h.no_orientations
+                            im(:,:,o,f)=abs(hilbert(h.data(:,:,o,f)));
+                        end
                     end
                     
                 case E.signal_format.IQ
@@ -379,25 +416,27 @@ classdef reconstruction < handle
             
             % Ploting image reconstruction
             figure; set(gca,'fontsize',16); 
-            for f=1:h.frames
-                x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
-                z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
-                % black background
-                %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
-                pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
-                axis equal manual;
-                xlabel('x [mm]');
-                ylabel('z [mm]');
-                set(gca,'YDir','reverse');
-                set(gca,'fontsize',16);
-                axis([x_lim z_lim]);
-                title(sprintf('%s (%s)',char(h.name),char(h.format))); 
-                drawnow; hold off;
-                pause(0.05);
+            for f=1:h.no_frames
+                for o=1:h.no_orientations
+                    x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                    z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
+                    % black background
+                    %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
+                    pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,o,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
+                    axis equal manual;
+                    xlabel('x [mm]');
+                    ylabel('z [mm]');
+                    set(gca,'YDir','reverse');
+                    set(gca,'fontsize',16);
+                    axis([x_lim z_lim]);
+                    title(sprintf('%s (%s) orientation=%d frame=%d',char(h.name),char(h.format),o,f)); 
+                    drawnow; hold off;
+                    pause(0.05);
+                end
             end
         end
         
-        function write_video(h,filename,dynamic_range,figure_size)
+        function write_video(h,filename,dynamic_range,figure_size,video_framerate)
             %MAKE_VIDEO    Creates and stores a video with the beamformeddataset
             %
             %   Syntax:
@@ -405,15 +444,17 @@ classdef reconstruction < handle
             %       filename        Path and name where the video will be written
             %       dynamic_range   Desired dynamic range of the displayed images (optional)
             %       figure_size     Size of the exported video in pixels [horizontal, vertical] (optional)
+            %       video_framerate Frame rate in the exported video in [frames/s]
             %
             %   See also RECONSTRUCTION
        
             if ~exist('dynamic_range') dynamic_range=60; end
             if ~exist('figure_size') figure_size=[1024 768]; end
-            
+            if ~exist('video_framerate') video_framerate=50; end
             
             %% making a video -> envelope
             writerObj = VideoWriter(filename);
+            writerObj.FrameRate=video_framerate;
             open(writerObj);
             
             % computing envelope
@@ -421,24 +462,26 @@ classdef reconstruction < handle
             
             im=20*log10(h.envelope./max(h.envelope(:)));
             figure; set(gca,'fontsize',16); 
-            for f=1:h.frames
-                x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
-                z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
-                pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,f)); shading flat; colormap gray; caxis([-dynamic_range 0]);colorbar; hold on;
-                axis equal manual;
-                xlabel('x [mm]');
-                ylabel('z [mm]');
-                set(gca,'YDir','reverse');
-                set(gca,'fontsize',16);
-                axis([x_lim z_lim]);
-                title(sprintf('Frame %d',f)); 
-                set(gcf,'Position',[200   100   figure_size(1) figure_size(2)]);
-                drawnow;
+            for f=1:h.no_frames
+                for o=1:h.no_orientations
+                    x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                    z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
+                    pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,o,f)); shading flat; colormap gray; caxis([-dynamic_range 0]);colorbar; hold on;
+                    axis equal manual;
+                    xlabel('x [mm]');
+                    ylabel('z [mm]');
+                    set(gca,'YDir','reverse');
+                    set(gca,'fontsize',16);
+                    axis([x_lim z_lim]);
+                    title(sprintf('orientation=%d frame=%d',o,f)); 
+                    set(gcf,'Position',[200   100   figure_size(1) figure_size(2)]);
+                    drawnow;
 
-                frame = getframe(gcf,[0 0 figure_size(1) figure_size(2)]);
-                writeVideo(writerObj,frame);
+                    frame = getframe(gcf,[0 0 figure_size(1) figure_size(2)]);
+                    writeVideo(writerObj,frame);
 
-                hold off;
+                    hold off;
+                end
             end
 
             close(writerObj);
@@ -451,16 +494,18 @@ classdef reconstruction < handle
         function h=set.data(h,input_data)
             % column-based format
             if(size(input_data,1)==h.scan.pixels)
-                h.frames=size(input_data,2);
+                h.no_orientations=size(input_data,2);
+                h.no_frames=size(input_data,3);
             
                 % reshape beamformed image
-                h.data=reshape(input_data,[size(h.scan.x_matrix,1) size(h.scan.x_matrix,2) h.frames]);
+                h.data=reshape(input_data,[size(h.scan.x_matrix,1) size(h.scan.x_matrix,2) h.no_orientations h.no_frames]);
                 h.envelope=[];
             % matrix format
             else
                 % check that the data format matches the specification
                 assert((size(input_data,1)==size(h.scan.x_matrix,1))&&(size(input_data,2)==size(h.scan.x_matrix,2)), 'The number of rows in the data does not match the scan specification!');
-                h.frames=size(input_data,3);
+                h.no_orientations=size(input_data,3);
+                h.no_frames=size(input_data,4);
             
                 % copy beamformed image
                 h.data=input_data;
