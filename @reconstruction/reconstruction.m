@@ -8,7 +8,7 @@ classdef reconstruction < handle
         creation_date=''            % String containing the date the reconstruction was created
         
         % data
-        orientation                 % List of ORIENTATION objects            
+        orientation=orientation()   % List of ORIENTATION objects            
         scan                        % SCAN object defining the scan area 
         data                        % matrix containing the reconstructed raw signal
         
@@ -61,6 +61,7 @@ classdef reconstruction < handle
 
             h.name=object.name;     
             for n=1:length(object.orientation)
+                h.orientation(n)=orientation();
                 h.orientation(n).copy(object.orientation(n)); 
             end
             h.scan=object.scan;                     % scan is not a handle class thus we can copy it       
