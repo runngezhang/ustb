@@ -122,7 +122,7 @@ classdef sta < us_dataset
             
             % loop over orientations
             total_data=zeros(size(recons.scan.x_matrix,1),size(recons.scan.x_matrix,2),length(recons.orientation),size(h.data,4));
-            temporal_data=zeros(recons.scan.pixels,size(h.data,4))
+            temporal_data=zeros(recons.scan.pixels,size(h.data,4));
             for o=1:length(recons.orientation)
                 % precompute transmit and receive apodization
                 xT=ones(recons.scan.pixels,1)*(h.geom(:,1).');   % position of transmit and receive element
