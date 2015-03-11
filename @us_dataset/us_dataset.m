@@ -269,7 +269,6 @@ classdef us_dataset < handle
             h.initial_time=input_time(1);
         end
         function set.data(h,input_data)
-            assert(ndims(input_data)>=3, 'The dataset must have 4 dimensions [time_samples, channels, firings, frames]')
             h.channels=size(input_data,2);
             h.firings=size(input_data,3);
             h.frames=size(input_data,4);
