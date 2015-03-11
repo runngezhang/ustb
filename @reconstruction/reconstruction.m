@@ -211,7 +211,7 @@ classdef reconstruction < handle
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
 
-            % add number if frames
+            % add number of frames
             attr = h.no_frames;
             attr_details.Name = 'no_frames';
             attr_details.AttachedTo = location;
@@ -254,12 +254,12 @@ classdef reconstruction < handle
             % create new groups for substructures
             fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
             gid = H5G.open(fid,location);
-            gid2 = H5G.create(gid,'transmit_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
-            gid3 = H5G.create(gid,'receive_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            for o=1:length(h.orientation)
+                gido = H5G.create(gid,sprintf('/orientation%d',o),'H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+                H5G.close(gido);
+            end
             gid4 = H5G.create(gid,'scan','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
             H5G.close(gid4);
-            H5G.close(gid3);
-            H5G.close(gid2);
             H5G.close(gid);
             H5F.close(fid);
 
@@ -282,6 +282,9 @@ classdef reconstruction < handle
             %
             %   See also US_DATASET
             
+            % read version
+            vers=h5readatt(filename,'/','version');
+            
             % type
             dataset_type=h5readatt(filename,location,'type');
             assert(strcmp(dataset_type,'SR'),'Spatial reconstruction type does not match!');
@@ -298,14 +301,25 @@ classdef reconstruction < handle
             end
             
             % read number of frames
-            h.no_frames=h5readatt(filename,location,'no_frames');
+            if(strcmp(vers{1}(1:5),'0.0.1'))
+                h.no_frames=h5readatt(filename,location,'frames');    
+            else
+                h.no_frames=h5readatt(filename,location,'no_frames');
+            end
             
-            % read number of orientations
-            h.no_orientations=h5readatt(filename,location,'no_orientation');
-
             % read orientations
-            for o=1:h.no_orientations
-                h.orientation(n)=h.orientation(n).huff_read(filename,[location sprintf('/orientation%d',o)]);
+            if(strcmp(vers{1}(1:5),'0.0.1'))
+                h.no_orientations=1;
+                h.orientation=orientation();
+                h.orientation.transmit_beam.huff_read(filename,[location '/transmit_beam']);
+                h.orientation.receive_beam.huff_read(filename,[location '/receive_beam']);
+            else
+                h.no_orientations=h5readatt(filename,location,'no_orientation');
+
+                % read orientations
+                for o=1:h.no_orientations
+                    h.orientation(n)=h.orientation(n).huff_read(filename,[location sprintf('/orientation%d',o)]);
+                end
             end
             
             % read scan

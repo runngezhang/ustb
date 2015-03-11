@@ -58,8 +58,8 @@ classdef orientation < handle
             %
             %   See also ORIENTATION
 
-            h.transmit_beam=h.transmit_beam.huff_read(filename,[location '\transmit_beam']);
-            h.receive_beam=h.receive_beam.huff_read(filename,[location '\receive_beam']);
+            h.transmit_beam=h.transmit_beam.huff_read(filename,[location '/transmit_beam']);
+            h.receive_beam=h.receive_beam.huff_read(filename,[location '/receive_beam']);
         end
         
          function huff_write(h,filename,location)
@@ -72,6 +72,15 @@ classdef orientation < handle
             %
             %   See also ORIENTATION
          
+            fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
+            gid = H5G.open(fid,location);
+            gidtx = H5G.create(gid,'/transmit_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            gidrx = H5G.create(gid,'/receive_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            H5G.close(gidrx);
+            H5G.close(gidtx);
+            H5G.close(gid);
+            H5F.close(fid);
+            
             h.transmit_beam.huff_write(filename,[location '/transmit_beam']);
             h.receive_beam.huff_write(filename,[location '/receive_beam']);
          end

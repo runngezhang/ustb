@@ -1,10 +1,15 @@
 %% Using HUFF class to write 
 %
-% This example shows how to interact with the huff class to store data in a hdf5 
-% file according to the specification HUFF v0.0.1.
+% This example shows how to interact with the huff class to store data in a 
+% hdf5 file according to the specification HUFF v0.0.2. To run this example 
+% the following data file is needed
+%
+%       ps_sta_iq.mat
+%
+% which must be located within MATLAB's path.
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2015/02/03 $
+% date:     11.03.2015
+% authors:  Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
 
 %% create a huff object
 recording=huff('recording.h5','w');
@@ -18,9 +23,9 @@ sta_recons.scan.x_axis=linspace(-2e-3,2e-3,200).';                  % x vector [
 sta_recons.scan.z_axis=linspace(39e-3,41e-3,100).';                 % z vector [m]
 
 % define the transmit & receive beams
-%F-number, transmit apodization, steering angle [rad], length of the edge smoothing area [elements], order of the edge smoothing polynomial
-sta_recons.transmit_beam=beam(1.75,E.apodization_type.boxcar);
-sta_recons.receive_beam=beam(1.75,E.apodization_type.boxcar);
+sta_recons.orientation=orientation();
+sta_recons.orientation.transmit_beam=beam(1.75,E.apodization_type.boxcar);
+sta_recons.orientation.receive_beam=beam(1.75,E.apodization_type.boxcar);
 
 %% Synthetic transmit aperture
 % format IQ

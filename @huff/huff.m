@@ -14,7 +14,7 @@ classdef huff < handle
     end
     
     properties (SetAccess = protected)
-        version='0.0.1'         % version of the HUFF specification
+        version='0.0.2'         % version of the HUFF specification
     end
     
     %% constructor
