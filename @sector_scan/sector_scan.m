@@ -7,7 +7,7 @@ classdef sector_scan
 %   $Date: 2015/02/03 $
 
     properties  (SetAccess = public)
-        center          % location of the reference center from which the sector is defined
+        apex            % location of the apex from which the sector is defined
         azimuth_axis    % Vector defining the azimuth coordinates of each row of pixels
         depth_axis      % Vector defining the depth coordinates of each column of pixels
     end
@@ -152,8 +152,8 @@ classdef sector_scan
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
             
-                h.x_matrix=dd.*sin(aa)+h.center(1);
-                h.z_matrix=dd.*cos(aa)+h.center(3);
+                h.x_matrix=dd.*sin(aa)+h.apex(1);
+                h.z_matrix=dd.*cos(aa)+h.apex(3);
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);
@@ -167,8 +167,8 @@ classdef sector_scan
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
 
-                h.x_matrix=dd.*sin(aa)+h.center(1);
-                h.z_matrix=dd.*cos(aa)+h.center(3);
+                h.x_matrix=dd.*sin(aa)+h.apex(1);
+                h.z_matrix=dd.*cos(aa)+h.apex(3);
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);

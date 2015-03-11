@@ -100,7 +100,7 @@ classdef beam
             H5S.close (space);
             H5T.close (filetype);
             H5F.close (file);
-                        
+
             % write f_number
             attr = h.f_number;
             attr_details.Name = 'f_number';
