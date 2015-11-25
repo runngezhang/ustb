@@ -1,4 +1,4 @@
-function filtered_p = band_pass(p,Fs,F)
+function [filtered_p,h,w] = band_pass(p,Fs,F)
     % function filtered_p = band_pass(p,Fs,F)
     
     % filter specification
@@ -6,6 +6,8 @@ function filtered_p = band_pass(p,Fs,F)
     dev=[1e-3 1e-3 1e-3];     % ripple/attenuation spec
     [M,Wn,beta,typ]= kaiserord(F,A,dev,Fs);  % window parameters
     b=fir1(M,Wn,typ,kaiser(M+1,beta),'noscale'); % filter design
+    
+    [h,w] = freqz(b);
 
     % filtering
     filt_delay=round((length(b)-1)/2);
