@@ -69,7 +69,7 @@ s.image_reconstruction(recons,E.implementation.mex);            % request recons
 im_3=recons.show();                                           % show 
 
 % format IQ
-load('../../data/ps/ps_cpw_iq.mat');                            % load data; available at http://folk.ntnu.no/alfonsom/data/ps
+load('G:\begrenset\bmt\ustb_data\v1.9\psf\ps_cpw_iq.mat');                            % load data; available at http://folk.ntnu.no/alfonsom/data/ps
 s=cpw(s.name,s.format,s.c0,s.angle,s.time,s.data,s.geom,s.modulation_frequency); % define CPW dataset object
 
 recons.name='CPW, IQ, Matlab';                                  % reconstruction name (optional)

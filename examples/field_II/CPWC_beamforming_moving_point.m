@@ -1,8 +1,7 @@
-%% Computation of a STAI dataset with Field II and beamforming with USTB
+%% Computation of a CPWI dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% STA class, and then demodulate and beamform it with the USTB routines. It
-% compared the resulting PSF with the theoterical sinc function.
+% CPWI class, and then demodulate and beamform it with the USTB routines.
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
 % date:     11.03.2015
@@ -25,7 +24,7 @@ set_field('use_rectangles',1);  % use rectangular elements
 
 %% transducer definition L9-4/38 Ultrasonix
 f0=5e6;             % Transducer center frequency [Hz]
-bw=0.1;             % probe bandwidth [1]
+bw=0.65;            % probe bandwidth [1]
 lambda=c0/f0;       % Wavelength [m]
 height=6e-3;        % Height of element [m]
 pitch=0.3048e-3;    % pitch [m]
@@ -55,8 +54,8 @@ title('2-ways impulse response Field II');
 
 %% aperture objects
 % definition of the mesh geometry
-noSubAz=round(width/(lambda/8));        % number of subelements in the azimuth direction
-noSubEl=round(height/(lambda/8));       % number of subelements in the elevation direction
+noSubAz=2;              % number of subelements in the azimuth direction
+noSubEl=8;              % number of subelements in the elevation direction
 Th = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 Rh = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 
@@ -79,38 +78,54 @@ for n=1:N_elements
     x0(n)=mean(geo(1,n_ini:n_fin));
 end
 
+%% plane wave sequence
+alpha_max=15*pi/180;                        % maximum angle [rad]
+Na=5;                                       % number of plane waves 
+alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
+F=50;                                       % number of frames
+
 %% phantom
-sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
-amp=1;                       % list with the scatterers amplitudes
-cropat=round(2*40e-3/c0/dt); % maximum time sample, samples after this will be dumped
+PRF=1./(2*40e-3/c0);             % pulse repetition frequency [Hz]
+vz = c0*PRF/(8*f0*Na); vx=vz;   % velocity of the scatterer [m/s]
+point=[0 0 20e-3]-[vx 0 -vz].*F/2.*Na/PRF;  % point initial position [m] 
+cropat=round(2*2*40e-3/c0/dt);  % maximum time sample, samples after this will be dumped
 
 %% output data
-t_out=0:dt:((cropat-1)*dt);                 % output time vector
-STA=zeros(cropat,N_elements,N_elements);    % impulse response channel data
+t_out=0:dt:((cropat-1)*dt);         % output time vector
+CPW=zeros(cropat,N_elements,Na,F);  % impulse response channel data
 
-%% Compute STA signals
-disp('Field II: Computing STA dataset');
-wb = waitbar(0, 'Field II: Computing STA dataset');
-for n=1:N_elements
-    waitbar(n/N_elements, wb);
+%% Compute CPW signals
+time_index=0;
+disp('Field II: Computing CPW dataset');
+wb = waitbar(0, 'Field II: Computing CPW dataset');
+for f=1:F
+    waitbar(0, wb, sprintf('Field II: Computing CPW dataset, frame %d',f));
+    for n=1:Na
+        waitbar(n/Na, wb);
+        
+        % position of the scatterer
+        sca=point+[vx 0 -vz].*time_index/PRF;
+        
+        % transmit aperture
+        xdc_apodization(Th,0,ones(1,N_elements));
+        xdc_times_focus(Th,0,x0(:).'*sin(alpha(n))/c0);
 
-    % transmit aperture
-    xdc_apodization(Th, 0, [zeros(1,n-1) 1 zeros(1,N_elements-n)]);
-    xdc_focus_times(Th, 0, zeros(1,N_elements));
-    
-    % receive aperture    
-    xdc_apodization(Rh, 0, ones(1,N_elements));
-    xdc_focus_times(Rh, 0, zeros(1,N_elements));
-    
-    % do calculation
-    [v,t]=calc_scat_multi(Th, Rh, sca, amp);
-    
-    % lag compensation
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
-    v_aux=interp1(t_in,v,t_out,'linear',0);
+        % receive aperture
+        xdc_apodization(Rh, 0, ones(1,N_elements));
+        xdc_focus_times(Rh, 0, zeros(1,N_elements));
+        
+        % do calculation
+        [v,t]=calc_scat_multi(Th, Rh, sca, 1);
 
-    % build the dataset
-    STA(:,:,n)=v_aux;
+        % lag compensation
+        t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
+        v_aux=interp1(t_in,v,t_out,'linear',0);
+
+        % build the dataset
+        CPW(:,:,n,f)=v_aux;
+        
+        time_index=time_index+1;
+    end
 end
 close(wb);
 
@@ -118,48 +133,36 @@ close(wb);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% define a sta object
-sta_dataset=sta('Field II, STA, RF format',...    % name of the dataset
+%% Define a cpw dataset object
+cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
-      c0,...                            % reference speed of sound (m/s)
+      c0,...                             % reference speed of sound (m/s)
+      alpha.',...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
-      STA,...                           % matrix with the data [samples, channels, firings, frames]
+      CPW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
-% and demodulate  
-sta_dataset.demodulate(true,5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
+% convert to IQ data
+cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
 %% define a reconstruction
 
 % define a scan
 scan=linear_scan();
-scan.x_axis=linspace(-4e-3,4e-3,256).';               % x vector [m]
-scan.z_axis=linspace(16e-3,24e-3,256).';              % z vector [m]
+scan.x_axis=linspace(-5e-3,5e-3,256).';          % x vector [m]
+scan.z_axis=linspace(15e-3,25e-3,256).';         % z vector [m]
 
 % define a synthetic orientation
-F_number=2;
+F_number=1.75;
 orien=orientation();
-orien.transmit_beam=beam(F_number,E.apodization_type.boxcar);  
-orien.receive_beam=beam(F_number,E.apodization_type.boxcar);
+orien.transmit_beam=beam(F_number,E.apodization_type.none);  
+orien.receive_beam=beam(F_number,E.apodization_type.hamming);
 
 % define a reconstruction 
-sta_image=reconstruction();
-sta_image.scan=scan;
-sta_image.orientation=orien;
+cpw_image=reconstruction();
+cpw_image.scan=scan;
+cpw_image.orientation=orien;
 
 %% beamform and show
-sta_dataset.image_reconstruction(sta_image);
-im=sta_image.show();
-
-%% compare lateral profile to sinc
-lateral_profile=im(128,:);
-lateral_profile=lateral_profile-max(lateral_profile);
-theoretical_profile=20*log10(sinc(1/F_number/lambda*scan.x_axis).^2);
-
-figure;
-plot(scan.x_axis*1e3,lateral_profile); hold on; grid on; 
-plot(scan.x_axis*1e3,theoretical_profile,'r-'); 
-legend('Simulation','Theoretical');
-xlabel('x [mm]');
-ylabel('Amplitude [dB]');
-
+cpw_dataset.image_reconstruction(cpw_image);
+cpw_image.show();

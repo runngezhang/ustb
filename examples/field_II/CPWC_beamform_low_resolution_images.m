@@ -1,11 +1,17 @@
 %% Computation of a CPWI dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% CPWI class, and then demodulate and beamform it with the USTB routines.
-% The Field II simulation program (field-ii.dk) should be in MATLAB's path.
+% CPWI class, demodulate and beamform it with the USTB routines. The image
+% is selected to have 3 different synthetic orientations, that are shown
+% sequentially. The Field II simulation program (field-ii.dk) should be in 
+% MATLAB's path.
 %
 % date:     11.03.2015
+% updated:  01.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+
+clear all;
+close all;
 
 %% basic constants
 c0=1540;     % Speed of sound [m/s]
@@ -50,8 +56,8 @@ title('2-ways impulse response Field II');
 
 %% aperture objects
 % definition of the mesh geometry
-noSubAz=2;              % number of subelements in the azimuth direction
-noSubEl=8;              % number of subelements in the elevation direction
+noSubAz=round(width/(lambda/8));              % number of subelements in the azimuth direction
+noSubEl=round(height/(lambda/8));             % number of subelements in the elevation direction
 Th = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 Rh = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 
@@ -78,7 +84,7 @@ end
 alpha_max=15*pi/180;                        % maximum angle [rad]
 Na=5;                                       % number of plane waves 
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-F=50;                                       % number of frames
+F=10;                                       % number of frames
 
 %% phantom
 PRF=1./(2*40e-3/c0);             % pulse repetition frequency [Hz]
@@ -132,38 +138,77 @@ close(wb);
 %% Define a cpw dataset object
 cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
-      c0,...                             % reference speed of sound (m/s)
+      c0,...                            % reference speed of sound (m/s)
       alpha.',...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
       CPW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
-% convert to IQ data
-<<<<<<< HEAD
-cpw_dataset.demodulate();
-=======
-% tic,cpw_dataset.demodulate();toc
-tic,cpw_dataset.rf2iq();toc
->>>>>>> parent of 14da549... Changed example to use rf2iq.m instead of demodulate.m
+% demodulate signal
+cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
-%% define a reconstruction
-
-% define a scan
+%% Define a scan object
 scan=linear_scan();
-scan.x_axis=linspace(-5e-3,5e-3,256).';          % x vector [m]
-scan.z_axis=linspace(15e-3,25e-3,256).';         % z vector [m]
+scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';              % x vector [m]
+scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
 
-% define a synthetic orientation
+%% Define a vector of orientations
 F_number=1.75;
-orien=orientation();
-orien.transmit_beam=beam(F_number,E.apodization_type.none);  
-orien.receive_beam=beam(F_number,E.apodization_type.hamming);
+orientations=orientation();
+orientations.transmit_beam=beam(1,E.apodization_type.none); % None apodization on transmit should be applied to produce low res images
+orientations.receive_beam=beam(F_number,E.apodization_type.hamming,0);
 
-% define a reconstruction 
-cpw_image=reconstruction();
-cpw_image.scan=scan;
-cpw_image.orientation=orien;
+%% Define a reconstruction object
+recons=reconstruction();
+recons.scan=scan;
+recons.orientation=orientations;
 
-%% beamform and show
-cpw_dataset.image_reconstruction(cpw_image);
-cpw_image.show();
+%% Low res
+raw_data=cpw_dataset.low_res(recons);
+
+% double precision version
+raw_data=mex.cpwlr(cpw_dataset.data, ...                  % data
+                recons.scan.x.', recons.scan.z.',...      % pixel positions (m)
+                [cpw_dataset.geom(:,1) cpw_dataset.geom(:,3)],...   % probe geometry [x, z] (m,m)
+                cpw_dataset.c0,...                        % speed of sound (m/s)
+                cpw_dataset.angle.',...                   % angles of the plane waves (rad)
+                cpw_dataset.transmit_apodization,...      % transmit aperture [pixels, channels]
+                cpw_dataset.receive_apodization,...       % receive aperture [pixels, channels]
+                cpw_dataset.sampling_frequency,...        % sampling frequency [Hz]
+                cpw_dataset.initial_time,...              % initial time [s]
+                cpw_dataset.modulation_frequency,...      % modulation frequency [Hz]
+                1);                                       % verbose mode
+
+% single precision version
+raw_data=mex.cpwlr_single(single(cpw_dataset.data), ...                  % data
+                single(recons.scan.x.'), single(recons.scan.z.'),...      % pixel positions (m)
+                single([cpw_dataset.geom(:,1) cpw_dataset.geom(:,3)]),...   % probe geometry [x, z] (m,m)
+                single(cpw_dataset.c0),...                        % speed of sound (m/s)
+                single(cpw_dataset.angle.'),...                   % angles of the plane waves (rad)
+                single(cpw_dataset.transmit_apodization),...      % transmit aperture [pixels, channels]
+                single(cpw_dataset.receive_apodization),...       % receive aperture [pixels, channels]
+                single(cpw_dataset.sampling_frequency),...        % sampling frequency [Hz]
+                single(cpw_dataset.initial_time),...              % initial time [s]
+                single(cpw_dataset.modulation_frequency),...      % modulation frequency [Hz]
+                single(1));                                       % verbose mode
+
+            
+            
+reshaped_data=reshape(raw_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) size(cpw_dataset.data,3) size(cpw_dataset.data,4)]);
+
+% show data
+for f=1:size(reshaped_data,4)
+    for n=1:size(reshaped_data,3)
+        c_image=abs(reshaped_data(:,:,n,f));
+        c_image=20*log10(c_image/max(c_image(:)));
+        figure(101);
+        imagesc(recons.scan.x_axis*1e3,recons.scan.z_axis*1e3,c_image); colormap gray; axis equal; axis tight;
+        xlabel('x[mm]'); ylabel('z[mm]');
+        title(sprintf('angle=%d frame=%d',n,f)); colorbar;
+        caxis([-60 0])
+        pause(0.25);
+    end
+end
+
+
+

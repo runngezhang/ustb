@@ -15,6 +15,9 @@
 % date:     11.03.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 
+clear all;
+close all;
+
 %% Create a reconstruction object
 recons=reconstruction();
 
@@ -31,7 +34,7 @@ recons.orientation.receive_beam=beam(F_number,E.apodization_type.boxcar);
 
 %% Synthetic transmit aperture
 % format RF 
-load('../../data/ps/ps_sta_rf.mat');                               % load data; available at http://folk.ntnu.no/alfonsom/ps/
+load('../../data/ps/ps_sta_rf.mat');                            % load data; available at http://folk.ntnu.no/alfonsom/ps/
 sta_dataset=sta(s.name,s.format,s.c0,s.time,s.data,s.geom);     % define STA dataset object
 
 recons.name='STA, RF, Mex';                                     % reconstruction name (optional)

@@ -1,13 +1,14 @@
-%% Computation of a CPWI dataset with Field II and beamforming with USTB
+%% Computation of a CPWC dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% CPWI class, demodulate and beamform it with the USTB routines. The image
-% is selected to have 3 different synthetic orientations, that are shown
-% sequentially. The Field II simulation program (field-ii.dk) should be in 
-% MATLAB's path.
+% CPWC class, and then demodulate and beamform it with the USTB routines.
+% The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     11.03.2015
+% created:  02.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+
+clear all;
+close all;
 
 %% basic constants
 c0=1540;     % Speed of sound [m/s]
@@ -80,13 +81,16 @@ end
 alpha_max=15*pi/180;                        % maximum angle [rad]
 Na=5;                                       % number of plane waves 
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-F=10;                                       % number of frames
+F=1;                                        % number of frames
 
 %% phantom
-PRF=1./(2*40e-3/c0);             % pulse repetition frequency [Hz]
-vz = c0*PRF/(8*f0*Na); vx=vz;   % velocity of the scatterer [m/s]
-point=[0 0 20e-3]-[vx 0 -vz].*F/2.*Na/PRF;  % point initial position [m] 
-cropat=round(2*2*40e-3/c0/dt);  % maximum time sample, samples after this will be dumped
+x_point=-15e-3:5e-3:15e-3;                                  % x-coordinate of the scatterers [m]
+z_point=5e-3:5e-3:40e-3;                                    % z-coordinate of the scatterers [m]
+[xxp zzp]=meshgrid(x_point,z_point);
+N_sca=length(zzp(:));                                       % total number of scatterers
+sca=[xxp(:) zeros(N_sca,1) zzp(:)];                         % list with the scatterers coordinates [m]
+amp=ones(N_sca,1);                                          % list with the scatterers amplitudes
+cropat=round(2*sqrt((max(x_point)-min(x_point))^2+max(z_point)^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
 t_out=0:dt:((cropat-1)*dt);         % output time vector
@@ -101,9 +105,6 @@ for f=1:F
     for n=1:Na
         waitbar(n/Na, wb);
         
-        % position of the scatterer
-        sca=point+[vx 0 -vz].*time_index/PRF;
-        
         % transmit aperture
         xdc_apodization(Th,0,ones(1,N_elements));
         xdc_times_focus(Th,0,x0(:).'*sin(alpha(n))/c0);
@@ -113,7 +114,7 @@ for f=1:F
         xdc_focus_times(Rh, 0, zeros(1,N_elements));
         
         % do calculation
-        [v,t]=calc_scat_multi(Th, Rh, sca, 1);
+        [v,t]=calc_scat_multi(Th, Rh, sca, ones(size(sca,1),1));
 
         % lag compensation
         t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
@@ -134,46 +135,33 @@ close(wb);
 %% Define a cpw dataset object
 cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
-      c0,...                            % reference speed of sound (m/s)
+      c0,...                             % reference speed of sound (m/s)
       alpha.',...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
-      PW,...                            % matrix with the data [samples, channels, firings, frames]
+      CPW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
-% demodulate signal
-cpw_dataset.demodulate(true);
+% convert to IQ data
+cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
-%% Define a scan object
+%% define a reconstruction
+
+% define a scan
 scan=linear_scan();
-scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';              % x vector [m]
-scan.z_axis=linspace(15e-3,25e-3,256).';                 % z vector [m]
+scan.x_axis=linspace(-20e-3,20e-3,256).';               % x vector [m]
+scan.z_axis=linspace(2e-3,42e-3,512).';                 % z vector [m]
 
-%% Define a vector of orientations
-F_number=1.75;
-orientations=orientation();
-orientations.transmit_beam=beam(1,E.apodization_type.none); % None apodization on transmit should be applied to produce low res images
-orientations.receive_beam=beam(F_number,E.apodization_type.hamming,0);
+% define a synthetic orientation
+F_number=1.2;
+orien=orientation();
+orien.transmit_beam=beam(F_number,E.apodization_type.boxcar);  
+orien.receive_beam=beam(F_number,E.apodization_type.boxcar);
 
-%% Define a reconstruction object
-recons=reconstruction();
-recons.scan=scan;
-recons.orientation=orientations;
+% define a reconstruction 
+cpw_image=reconstruction();
+cpw_image.scan=scan;
+cpw_image.orientation=orien;
 
-%% Low res
-raw_data=cpw_dataset.low_res(recons);
-reshaped_data=reshape(raw_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) size(cpw_dataset.data,3) size(cpw_dataset.data,4)]);
-
-% show data
-for f=1:size(reshaped_data,4)
-    for n=1:size(reshaped_data,3)
-        figure(101);
-        imagesc(recons.scan.x_axis*1e3,recons.scan.z_axis*1e3,20*log10(abs(reshaped_data(:,:,n,f)))); colormap gray; axis equal; axis tight;
-        xlabel('x[mm]'); ylabel('z[mm]');
-        title(sprintf('angle=%d frame=%d',n,f));
-        caxis([min(20*log10(abs(reshaped_data(:)))) max(20*log10(abs(reshaped_data(:))))])
-        pause(0.25);
-    end
-end
-
-
-
+%% beamform and show
+cpw_dataset.image_reconstruction(cpw_image);
+cpw_image.show();

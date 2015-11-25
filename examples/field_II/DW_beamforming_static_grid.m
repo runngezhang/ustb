@@ -1,13 +1,14 @@
-%% Computation of a CPWI dataset with Field II and beamforming with USTB
+%% Computation of a diverging wave dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% CPWI class, demodulate and beamform it with the USTB routines. The image
-% is selected to have 3 different synthetic orientations, that are shown
-% sequentially. The Field II simulation program (field-ii.dk) should be in 
-% MATLAB's path.
+% VS class, and then demodulate and beamform it with the USTB routines.
+% The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     11.03.2015
+% created:  02.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+
+clear all;
+close all;
 
 %% basic constants
 c0=1540;     % Speed of sound [m/s]
@@ -76,51 +77,52 @@ for n=1:N_elements
     x0(n)=mean(geo(1,n_ini:n_fin));
 end
 
-%% plane wave sequence
-alpha_max=15*pi/180;                        % maximum angle [rad]
-Na=5;                                       % number of plane waves 
-alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-F=10;                                       % number of frames
+%% diverging wave sequence
+Na=15;
+source=[linspace(-20e-3,20e-3,Na).' zeros(Na,1) -10e-3*ones(Na,1)];
+F=1;                                        % number of frames
 
 %% phantom
-PRF=1./(2*40e-3/c0);             % pulse repetition frequency [Hz]
-vz = c0*PRF/(8*f0*Na); vx=vz;   % velocity of the scatterer [m/s]
-point=[0 0 20e-3]-[vx 0 -vz].*F/2.*Na/PRF;  % point initial position [m] 
-cropat=round(2*2*40e-3/c0/dt);  % maximum time sample, samples after this will be dumped
+x_point=-15e-3:5e-3:15e-3;                                  % x-coordinate of the scatterers [m]
+z_point=5e-3:5e-3:40e-3;                                    % z-coordinate of the scatterers [m]
+[xxp zzp]=meshgrid(x_point,z_point);
+N_sca=length(zzp(:));                                       % total number of scatterers
+sca=[xxp(:) zeros(N_sca,1) zzp(:)];                         % list with the scatterers coordinates [m]
+amp=ones(N_sca,1);                                          % list with the scatterers amplitudes
+cropat=round(2*sqrt((max(x_point)-min(x_point))^2+max(z_point)^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
 t_out=0:dt:((cropat-1)*dt);         % output time vector
-CPW=zeros(cropat,N_elements,Na,F);  % impulse response channel data
+DW=zeros(cropat,N_elements,Na,F);  % impulse response channel data
 
 %% Compute CPW signals
 time_index=0;
-disp('Field II: Computing CPW dataset');
-wb = waitbar(0, 'Field II: Computing CPW dataset');
+disp('Field II: Computing DW dataset');
+wb = waitbar(0, 'Field II: Computing DW dataset');
 for f=1:F
-    waitbar(0, wb, sprintf('Field II: Computing CPW dataset, frame %d',f));
+    waitbar(0, wb, sprintf('Field II: Computing DW dataset, frame %d',f));
     for n=1:Na
         waitbar(n/Na, wb);
         
-        % position of the scatterer
-        sca=point+[vx 0 -vz].*time_index/PRF;
+        dst=sqrt((source(n,1)-x0).^2+source(n,3).^2);
         
         % transmit aperture
         xdc_apodization(Th,0,ones(1,N_elements));
-        xdc_times_focus(Th,0,x0(:).'*sin(alpha(n))/c0);
+        xdc_times_focus(Th,0,dst/c0);
 
         % receive aperture
         xdc_apodization(Rh, 0, ones(1,N_elements));
         xdc_focus_times(Rh, 0, zeros(1,N_elements));
         
         % do calculation
-        [v,t]=calc_scat_multi(Th, Rh, sca, 1);
+        [v,t]=calc_scat_multi(Th, Rh, sca, ones(size(sca,1),1));
 
         % lag compensation
         t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
         v_aux=interp1(t_in,v,t_out,'linear',0);
 
         % build the dataset
-        CPW(:,:,n,f)=v_aux;
+        DW(:,:,n,f)=v_aux;
         
         time_index=time_index+1;
     end
@@ -132,38 +134,35 @@ close(wb);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Define a cpw dataset object
-cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
+vs_dataset=vs('Field II, DW, RF format',...    % name of the dataset
       E.signal_format.RF,...            % signal format: RF or IQ
       c0,...                             % reference speed of sound (m/s)
-      alpha.',...                       % angle vector [rad]
+      source,...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
-      CPW,...                            % matrix with the data [samples, channels, firings, frames]
+      DW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
 % convert to IQ data
-cpw_dataset.demodulate();
+vs_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
 %% define a reconstruction
 
 % define a scan
 scan=linear_scan();
-scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';          % x vector [m]
-scan.z_axis=linspace(15e-3,25e-3,256).';         % z vector [m]
+scan.x_axis=linspace(-20e-3,20e-3,256).';               % x vector [m]
+scan.z_axis=linspace(2e-3,42e-3,512).';                 % z vector [m]
 
 % define a synthetic orientation
-F_number=1.75;
-orientation_angle=[-5 0 5]*pi/180;         % synthetic orientation angles [rad]
-for n=1:3
-    orien(n)=orientation();
-    orien(n).transmit_beam=beam(F_number,E.apodization_type.hamming,orientation_angle(n));  
-    orien(n).receive_beam=beam(F_number,E.apodization_type.hamming,orientation_angle(n));
-end
+F_number=1.2;
+orien=orientation();
+orien.transmit_beam=beam(F_number,E.apodization_type.boxcar);  
+orien.receive_beam=beam(F_number,E.apodization_type.boxcar);
 
 % define a reconstruction 
-cpw_image=reconstruction();
-cpw_image.scan=scan;
-cpw_image.orientation=orien;
+vs_image=reconstruction();
+vs_image.scan=scan;
+vs_image.orientation=orien;
 
 %% beamform and show
-cpw_dataset.image_reconstruction(cpw_image);
-cpw_image.show();
+vs_dataset.image_reconstruction(vs_image);
+vs_image.show();

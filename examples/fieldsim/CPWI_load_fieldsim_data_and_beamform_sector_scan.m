@@ -13,6 +13,9 @@
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Joris Van Cauwenberge <Joris.VanCauwenberge@ugent.be>
 
+clear all;
+close all;
+
 load('../../data/joris/lv_neonatal_planewave.mat');
 
 %% converting FielsSim data to USTB format
@@ -51,10 +54,10 @@ recons.scan.azimuth_axis=linspace(-0.3,0.3,256).';      % azimuth vector [rad]
 recons.scan.depth_axis=linspace(20e-3,55e-3,512).';     % depth vector [m]    
 
 % define the transmit & receive beams
-F_number=1.2;
+F_number=1.1;
 recons.orientation=orientation();
-recons.orientation.transmit_beam=beam(1,E.apodization_type.none,0,0);
-recons.orientation.receive_beam=beam(1.2,E.apodization_type.hanning,0,20);
+recons.orientation.transmit_beam=beam(0,E.apodization_type.none,0,0);
+recons.orientation.receive_beam=beam(F_number,E.apodization_type.hanning,0,20);
 
 % request reconstruction 
 cpw_dataset.image_reconstruction(recons);

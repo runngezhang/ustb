@@ -5,7 +5,11 @@
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
 % date:     11.03.2015
+% updated:  01.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+
+clear all;
+close all;
 
 %% basic constants
 c0=1540;     % Speed of sound [m/s]
@@ -126,7 +130,7 @@ sta_dataset=sta('Field II, STA, RF format',...    % name of the dataset
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
 % and demodulate  
-sta_dataset.demodulate(true);
+sta_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
 %% define a reconstruction
 

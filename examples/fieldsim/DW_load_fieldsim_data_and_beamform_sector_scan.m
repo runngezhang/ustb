@@ -12,6 +12,8 @@
 % date:     11.03.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Joris Van Cauwenberge <Joris.VanCauwenberge@ugent.be>
+clear all;
+close all;
 
 load('../../data/joris/lv_neonatal_divergingwave.mat');
 
@@ -23,7 +25,7 @@ virtual_source_depth = (sim.probe.transducerSize_az/2) / tan(desired_opening_ang
 source=[0 0 -virtual_source_depth];
 
 % time vector
-time=((1:size(sim.data.channel_data,1)).'-1)/sim.fs+virtual_source_depth/c0; %% < - we must solve the problem of the origin convention
+time=((1:size(sim.data.channel_data,1)).'-1)/sim.fs+virtual_source_depth/sim.propagation.c; %% < - we must solve the problem of the origin convention
 
 % data
 data=reshape(sim.data.channel_data,[size(sim.data.channel_data,1) size(sim.data.channel_data,2) size(sim.data.channel_data,4) size(sim.data.channel_data,6)]);
@@ -50,14 +52,14 @@ recons.scan.azimuth_axis=linspace(-0.3,0.3,256).';      % azimuth vector [rad]
 recons.scan.depth_axis=linspace(20e-3,55e-3,512).';     % depth vector [m]    
 
 % define the transmit & receive beams
-F_number=1.2;
+F_number=1.1;
 recons.orientation=orientation();
-recons.orientation.transmit_beam=beam(1,E.apodization_type.none,0,0);
-recons.orientation.receive_beam=beam(1.2,E.apodization_type.hanning,0,20);
+recons.orientation.transmit_beam=beam(0,E.apodization_type.none,0,0);
+recons.orientation.receive_beam=beam(F_number,E.apodization_type.hanning,0,20);
 
 % request reconstruction 
-cpw_dataset.image_reconstruction(recons);
+dw_dataset.image_reconstruction(recons);
 
 % write a video to disk
 % filename, dynamic_range, video_size_in_pixels 
-recons.write_video('neonatal_dw_sector_scan.avi',40);
+recons.write_video('neonatal_dw_sector_scan.avi',40,[1280 800],10);

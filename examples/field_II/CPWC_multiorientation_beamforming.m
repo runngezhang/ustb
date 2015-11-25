@@ -1,11 +1,16 @@
 %% Computation of a CPWI dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% CPWI class, and then demodulate and beamform it with the USTB routines.
+% CPWI class, and then demodulate and beamform it with the USTB routines to 
+% generate a multiorientation dataset that can be used for image compounding.
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     11.03.2015
+% date:     19.03.2015
+% updated:  01.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+
+clear all;
+close all;
 
 %% basic constants
 c0=1540;     % Speed of sound [m/s]
@@ -50,8 +55,8 @@ title('2-ways impulse response Field II');
 
 %% aperture objects
 % definition of the mesh geometry
-noSubAz=2;              % number of subelements in the azimuth direction
-noSubEl=8;              % number of subelements in the elevation direction
+noSubAz=round(width/(lambda/8));              % number of subelements in the azimuth direction
+noSubEl=round(height/(lambda/8));             % number of subelements in the elevation direction
 Th = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 Rh = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 
@@ -78,7 +83,7 @@ end
 alpha_max=15*pi/180;                        % maximum angle [rad]
 Na=5;                                       % number of plane waves 
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-F=50;                                       % number of frames
+F=10;                                       % number of frames
 
 %% phantom
 PRF=1./(2*40e-3/c0);             % pulse repetition frequency [Hz]
@@ -139,25 +144,23 @@ cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
 % convert to IQ data
-<<<<<<< HEAD
-cpw_dataset.demodulate();
-=======
-% tic,cpw_dataset.demodulate();toc
-tic,cpw_dataset.rf2iq();toc
->>>>>>> parent of 14da549... Changed example to use rf2iq.m instead of demodulate.m
+cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
 
 %% define a reconstruction
 
 % define a scan
 scan=linear_scan();
-scan.x_axis=linspace(-5e-3,5e-3,256).';          % x vector [m]
+scan.x_axis=linspace(-5.1e-3,5.1e-3,256).';          % x vector [m]
 scan.z_axis=linspace(15e-3,25e-3,256).';         % z vector [m]
 
 % define a synthetic orientation
 F_number=1.75;
-orien=orientation();
-orien.transmit_beam=beam(F_number,E.apodization_type.none);  
-orien.receive_beam=beam(F_number,E.apodization_type.hamming);
+orientation_angle=[-5 0 5]*pi/180;         % synthetic orientation angles [rad]
+for n=1:3
+    orien(n)=orientation();
+    orien(n).transmit_beam=beam(F_number,E.apodization_type.hamming,orientation_angle(n));  
+    orien(n).receive_beam=beam(F_number,E.apodization_type.hamming,orientation_angle(n));
+end
 
 % define a reconstruction 
 cpw_image=reconstruction();
