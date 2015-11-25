@@ -140,10 +140,12 @@ classdef vs < us_dataset
             for o=1:length(recons.orientation)
                 % precompute transmit and receive apodization
                 xT=recons.scan.x*ones(1,h.firings)-(recons.scan.z*ones(1,h.firings)).*(ones(recons.scan.pixels,1)*h.source(:,1).'-recons.scan.x*ones(1,h.firings))./(ones(recons.scan.pixels,1)*h.source(:,3).'-recons.scan.z*ones(1,h.firings)); % position of equivalent receive element -> Alfonso's equation 
+                zT=recons.scan.x*zeros(1,h.firings);                             % position of transmit and receive element
                 valid_apodization=(xT>h.geom(1,1))&(xT<h.geom(end,1));            % check we don't get out of the aperture
-                h.transmit_apodization = valid_apodization.*recons.calculate_apodization(recons.orientation(o).transmit_beam,xT);
+                h.transmit_apodization = valid_apodization.*recons.calculate_apodization(recons.orientation(o).transmit_beam,xT,zT);
                 xR=ones(recons.scan.pixels,1)*(h.geom(:,1).');                    % position of receive element
-                h.receive_apodization = recons.calculate_apodization(recons.orientation(o).receive_beam,xR);
+                zR=ones(recons.scan.pixels,1)*(h.geom(:,3).');                   % position of transmit and receive element
+                h.receive_apodization = recons.calculate_apodization(recons.orientation(o).receive_beam,xR,zR);
 
                 % launch selected implementation
                 temporal_data=h.launch_implementation(recons,implem);

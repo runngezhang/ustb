@@ -126,9 +126,15 @@ classdef sta < us_dataset
             for o=1:length(recons.orientation)
                 % precompute transmit and receive apodization
                 xT=ones(recons.scan.pixels,1)*(h.geom(:,1).');   % position of transmit and receive element
-                h.transmit_apodization = recons.calculate_apodization(recons.orientation(o).transmit_beam,xT);
-                h.receive_apodization = recons.calculate_apodization(recons.orientation(o).receive_beam,xT);
+                zT=ones(recons.scan.pixels,1)*(h.geom(:,3).');   % position of transmit and receive element
+                h.transmit_apodization = recons.calculate_apodization(recons.orientation(o).transmit_beam,xT,zT);
+                h.receive_apodization = recons.calculate_apodization(recons.orientation(o).receive_beam,xT,zT);
 
+%                 figure;
+%                 values=reshape(h.transmit_apodization(:,100),128,512);
+%                 pcolor((recons.scan.x_matrix)*1e3,(recons.scan.z_matrix)*1e3,values); shading flat;
+%                 axis equal;
+                
                 % launch selected implementation
                 temporal_data=h.launch_implementation(recons,implem);
                 

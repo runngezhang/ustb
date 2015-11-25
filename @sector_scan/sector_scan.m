@@ -43,17 +43,27 @@ classdef sector_scan
     
     %% lateral_distance
     methods (Access = public)
-        function xd = lateral_distance(h,x0,steer_angle)
+        function xd = lateral_distance(h,x0,z0,steer_angle)
             %LATERAL_DISTANCE   Calculates the lateral distance from the center of
             %   the apodization window for a specific scanning mode
             %
             %   Syntax:
             %   h = lateral_distance(element_position,steering_angle)
             %       element_position    Vector containing the x coordinates of the probe elements (either real or virtual) [m]
-            %       steering_angle      Steerin angle [rad]
+            %       steering_angle      Steering angle [rad]
             %
             %   See also SECTOR_SCAN
-            xd=abs(x0+h.z*tan(steer_angle));
+            
+            % distance between a point (x0,z0) and a line (x1,z1) -- (x2,z2) 
+            x1=h.apex(1);
+            z1=h.apex(3);
+            x2=h.x;
+            z2=h.z;
+            
+            xd=abs((z2-z1).*x0-(x2-x1).*z0+x2.*z1-z2.*x1)./sqrt((z2-z1).^2+(x2-x1).^2);
+            
+            %natural_angle=atan2(x0-h.apex(1),z0-h.apex(3));            
+            %xd=abs(x0-h.x+h.z.*tan(steer_angle+natural_angle));
         end
     end
     
