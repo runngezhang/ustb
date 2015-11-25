@@ -41,13 +41,14 @@ classdef linear_scan
     
     %% lateral_distance
     methods (Access = public)
-        function xd = lateral_distance(h,x0,steer_angle)
+        function xd = lateral_distance(h,x0,z0,steer_angle)
             %LATERAL_DISTANCE   Calculates the lateral distance from the center of
             %   the apodization window for a specific scanning mode
             %
             %   Syntax:
             %   h = lateral_distance(element_position,steering_angle)
-            %       element_position    Vector containing the x coordinates of the probe elements (either real or virtual) [m]
+            %       x0                  Vector containing the x coordinates of the probe elements (either real or virtual) [m]
+            %       z0                  Vector containing the x coordinates of the probe elements (either real or virtual) [m]
             %       steering_angle      Steerin angle [rad]
             %
             %   See also LINEAR_SCAN
