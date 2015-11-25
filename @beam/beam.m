@@ -7,10 +7,11 @@ classdef beam
 %   $Date: 2015/01/28 $
 
     properties  (SetAccess = public)
-        f_number=1                              % F-number
-        apodization=E.apodization_type.none     % Apodization type as given by E.apodization_type
-        steer_angle=0                           % Steering angle of the beam (rad)
-        smoothing=0                             % Length of the edge smoothing function (0 = no edge smoothing)
+        f_number         % F-number
+        apodization      % Apodization type as given by E.apodization_type
+        steer_angle      % Steering angle of the beam (rad)
+        smoothing        % Length of the edge smoothing function (in pitch steps) 
+        minimum_aperture % minimum possible aperture(m)
     end
     
     %% constructor
@@ -26,6 +27,12 @@ classdef beam
             %       smoothing=0                             Length of the edge smoothing function (0 = no edge smoothing)
             %
             %   See also BEAM
+            
+            h.f_number=1;                              % F-number
+            h.apodization=E.apodization_type.none;     % Apodization type as given by E.apodization_type
+            h.steer_angle=0;                           % Steering angle of the beam (rad)
+            h.smoothing=0;                             % Length of the edge smoothing function (0 = no edge smoothing)
+            h.minimum_aperture=0;
             
             if nargin>0
                 assert(length(input_apo)==1,'The F-number be an scalar, not a vector.');
