@@ -8,7 +8,7 @@ classdef reconstruction < handle
         creation_date=''            % String containing the date the reconstruction was created
         
         % data
-        orientation=orientation()   % List of ORIENTATION objects            
+        orientation                 % List of ORIENTATION objects            
         scan                        % SCAN object defining the scan area 
         data                        % matrix containing the reconstructed raw signal
         
@@ -36,6 +36,7 @@ classdef reconstruction < handle
             %   See also BEAM, LINEAR_SCAN
 
             h.creation_date=sprintf('%d/%02d/%d %02d:%02d:%02.2f',clock);
+            h.orientation=orientation();
                       
             if exist('object') 
                 h.copy(object);
@@ -78,7 +79,7 @@ classdef reconstruction < handle
    
     %% calculate apodization
     methods (Access = public)
-        function [apo]= calculate_apodization(h,beam,x0)
+        function [apo]= calculate_apodization(h,beam,x0,z0)
             %CALCULATE_APODIZATION    Calculates apodization for a given set of elements
             %
             %   Syntax:
@@ -100,9 +101,10 @@ classdef reconstruction < handle
             else
                 apo=zeros(h.scan.pixels,number_transmitting_events);
                 Aperture=h.scan.z./beam.f_number;
+                Aperture(Aperture<beam.minimum_aperture)=beam.minimum_aperture;
                 for n=1:number_transmitting_events
                     %xd=abs(x0(:,n)-h.scan.x+h.scan.z*tan(beam.steer_angle));
-                    xd=h.scan.lateral_distance(x0(:,n),beam.steer_angle);
+                    xd=h.scan.lateral_distance(x0(:,n),z0(:,n),beam.steer_angle);
                     switch(beam.apodization)
                         case E.apodization_type.boxcar
                             % boxcar apodization
@@ -395,7 +397,7 @@ classdef reconstruction < handle
             end
         end
         
-        function im=show(h,compression_type,dynamic_range)
+        function im=show(h,compression_type,dynamic_range,title_string)
             %SHOW    Plots the envelope of the beamformed data and returns a copy of the image
             %
             %   Syntax:
@@ -413,18 +415,18 @@ classdef reconstruction < handle
             if isempty(h.envelope) h.envelope=h.calculate_envelope(); end
             
             switch compression_type
-                case 'log'
-                    im=20*log10(h.envelope./max(h.envelope(:)));
-                    if(dynamic_range<1)
-                        dynamic_range=-20*log10(dynamic_range^2);
-                    end
-                    vrange=[-dynamic_range 0];
                 case 'sqrt'
                     im=sqrt(h.envelope./max(h.envelope(:)));
                     if(dynamic_range>1)
                         dynamic_range=sqrt(10^(-dynamic_range/20));
                     end
                     vrange=[dynamic_range 1];
+                case 'log'
+                    im=20*log10(h.envelope./max(h.envelope(:)));
+                    if(dynamic_range<1)
+                        dynamic_range=-20*log10(dynamic_range^2);
+                    end
+                    vrange=[-dynamic_range 0];
                 otherwise
                     error('Unknown compression type');
             end
@@ -444,14 +446,18 @@ classdef reconstruction < handle
                     set(gca,'YDir','reverse');
                     set(gca,'fontsize',16);
                     axis([x_lim z_lim]);
-                    title(sprintf('%s (%s) orientation=%d frame=%d',char(h.name),char(h.format),o,f)); 
+                    if exist('title_string') 
+                        title(sprintf('%s frame=%d',title_string,f));
+                    else
+                        title(sprintf('%s (%s) orientation=%d frame=%d',char(h.name),char(h.format),o,f));
+                    end
                     drawnow; hold off;
                     pause(0.05);
                 end
             end
         end
         
-        function write_video(h,filename,dynamic_range,figure_size,video_framerate)
+        function write_video(h,filename,dynamic_range,figure_size,video_framerate,title_string)
             %MAKE_VIDEO    Creates and stores a video with the beamformeddataset
             %
             %   Syntax:
@@ -488,9 +494,14 @@ classdef reconstruction < handle
                     set(gca,'YDir','reverse');
                     set(gca,'fontsize',16);
                     axis([x_lim z_lim]);
-                    title(sprintf('orientation=%d frame=%d',o,f)); 
+                     if exist('title_string') 
+                        title(sprintf('%s frame=%d',title_string,f));
+                    else
+                        title(sprintf('orientation=%d frame=%d',o,f)); 
+                    end
                     set(gcf,'Position',[200   100   figure_size(1) figure_size(2)]);
                     drawnow;
+                    pause(0.2);
 
                     frame = getframe(gcf,[0 0 figure_size(1) figure_size(2)]);
                     writeVideo(writerObj,frame);
