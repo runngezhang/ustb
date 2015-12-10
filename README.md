@@ -18,9 +18,9 @@ An open source (although not just yet) MATLAB toolbox for beamforming, processin
 
 * Alfonso Rodriguez-Molares<alfonso.r.molares@ntnu.no> is the project manager,
 * Other collaborators are:
-   * Øyvind Krøvel-Velle Standal <oyvind.standal@inphase.no>,
-   * Jochen Rau <jochen.rau@inphase.no>,
-   * Lasse Løvstakken <lasse.lovstakken@ntnu.no>,
-   * Ingvild Kinn Ekroll <ingvild.k.ekroll@ntnu.no>, 
-   * Jørgen Avdal <jorgen.avdal@ntnu.no>,
-   * Ole Marius Hoel Rindal <omrindal@ifi.uio.no>
+    * Øyvind Krøvel-Velle Standal <oyvind.standal@inphase.no>,
+    * Jochen Rau <jochen.rau@inphase.no>,
+    * Lasse Løvstakken <lasse.lovstakken@ntnu.no>,
+    * Ingvild Kinn Ekroll <ingvild.k.ekroll@ntnu.no>, 
+    * Jørgen Avdal <jorgen.avdal@ntnu.no>,
+    * Ole Marius Hoel Rindal <omrindal@ifi.uio.no>
