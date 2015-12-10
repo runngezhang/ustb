@@ -8,9 +8,7 @@ An open source (although not just yet) MATLAB toolbox for beamforming, processin
 ### What is this repository for? ###
 
 * Beamforming, processing, and visualization of ultrasonic signals.
-* We have two concurrent versions (sorry):
-    * __v1.9.x__ is in beta and shows the basic functionality of USTB for STAI, CPWI, and DW
-    * __v2.0.x__ is in early alfa and redefines the paradigm of beamforming with an unified beamforming code. It also supports HUFF (HDF5 Ultrasound File Format).
+* Current version __v1.9.x__ is in beta and shows the basic functionality of USTB for STAI, CPWI, and DW
 
 ### How do I get set up? ###
 
@@ -18,4 +16,11 @@ An open source (although not just yet) MATLAB toolbox for beamforming, processin
 
 ### Who do I talk to? ###
 
-* Administrator: Alfonso Rodriguez-Molares: alfonso.r.molares@ntnu.no
+* Alfonso Rodriguez-Molares<alfonso.r.molares@ntnu.no> is the project manager,
+* Other collaborators are:
+   * Øyvind Krøvel-Velle Standal <oyvind.standal@inphase.no>,
+   * Jochen Rau <jochen.rau@inphase.no>,
+   * Lasse Løvstakken <lasse.lovstakken@ntnu.no>,
+   * Ingvild Kinn Ekroll <ingvild.k.ekroll@ntnu.no>, 
+   * Jørgen Avdal <jorgen.avdal@ntnu.no>,
+   * Ole Marius Hoel Rindal <omrindal@ifi.uio.no>
