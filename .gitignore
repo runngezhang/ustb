@@ -1,1 +1,8 @@
 *.asv
+*.fig
+*.mltbx
+*.avi
+*.pptx
+*.png
+development/
+data/
