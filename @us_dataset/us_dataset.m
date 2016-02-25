@@ -24,7 +24,7 @@ classdef us_dataset < handle
         modulation_frequency % value conatining the modulation frequency (Hz), only required for IQ format
     end
     
-    properties  (SetAccess = protected, Hidden = true)   
+    properties  (SetAccess = protected)   
         frames                  % number of frames in the dataset        
         channels                % number of channels in the transducer
         firings                 % number of firings in the sequence (i.e. number of plane waves in CPWI, virtual sources in VSI, or elements in STAI)
