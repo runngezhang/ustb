@@ -31,7 +31,7 @@ function [sig] = ir_simple_matlab(h,r)
             for nrx=1:h.channels
                 RF=sqrt((h.geom(nrx,1)-r.scan.x).^2+(h.geom(nrx,3)-r.scan.z).^2);
                 delay=(Da+RF)/h.c0;
-                phase_shift=exp(1i.*w0*delay); % <-- this is unnecessary in RF 
+                phase_shift=exp(1i.*w0*delay); 
                 sig(:,f)=sig(:,f)+phase_shift.*h.transmit_apodization(:,na).*h.receive_apodization(:,nrx).*interp1(h.time,h.data(:,nrx,na,f),delay,'linear',0);
             end
         end
