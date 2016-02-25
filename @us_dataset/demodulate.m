@@ -1,4 +1,4 @@
-function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,downsample_frequency, implementation)
+function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector, downsample_frequency, demodulation_algorithm)
 % DEMODULATE    Demodulates RF data of signal_dataset class
 %
 %   Syntax:
@@ -7,36 +7,61 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
 %       modulation_frequency        Modulation frequency in Hz. (Optional)
 %       bandpass_frequency_vector   Vector with the bandpass frequencies in Hz [low_f_off low_f_on high_f_on high_f_off] (optional)
 %       downsample_frequency        Sample frequency of the demodulated signal in Hz. (Optional) 
-%       demodulation_type           Enumeration type indicating the implementation code
+%       demodulation_algorithm      Enumeration type indicating the implementation code
 %
 %   See also DATASET
-%
-% date:     01.10.2015
+
+% date:     23.25.2016
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Øyvind Krøvel-Velle Standal <oyvind.standal@ntnu.no>
     
     assert(h.format==E.signal_format.RF,'Signal format is not RF. Only RF data can be demodulated.');
-    assert(~isempty(h.data),'Dataset is empty');
-    assert(any(h.data(:)>0),'Dataset is zero');
+    assert(~isempty(h.data),'The dataset is empty');
+    assert(any(h.data(:)>0),'The dataset is zero');
     
     if ~exist('plot_on') plot_on=false; end
-    if ~exist('implementation') implementation=E.demodulation_type.original; end
+    if ~exist('demodulation_algorithm') demodulation_algorithm=E.demodulation_algorithm.original; end
     
     % common
     fs=1/(h.time(2)-h.time(1));
-                
-    switch implementation
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% ORIGINAL
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        case E.demodulation_type.original
+    
+    % modulation frequency
+    if ~exist('modulation_frequency')||isempty(modulation_frequency)
+        warning('The modulation frequency is not specified. The estimated central frequency will be used.');
+        
+        % power spectrum
+        [fx pw] = tools.power_spectrum(h.data,h.sampling_frequency);
+        assert(sum(pw)>0,'Dataset is zero');
+            
+        % computing central frequency and bandwidth
+        disp('Estimating power spectrum');
+        fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)]; 
+        [dc ic]=max(fpw.*(fx>0).'); fc=fx(ic); 
+        bw_up=min(fx((fx>fc)&(fpw<dc/2).')); % -6dB upper limit
+        bw_do=max(fx((fx<fc)&(fpw<dc/2).')); % -6dB down limit
+        fc=(bw_up+bw_do)/2;                  % center frequency
+        bw=2*(bw_up-fc);
+        
+        modulation_frequency=fc; 
+    end
+    
+    % downsampling frequency
+    if ~exist('downsample_frequency')|| isempty(downsample_frequency) 
+        warning('The downsampling frequency is not specified. Using 4*modulation_frequency.'); 
+        downsample_frequency=4*modulation_frequency;
+    end
+                       
+    switch demodulation_algorithm
+        
+        %% ORIGINAL: band-pass + demodulation + low pass filter 
+        case E.demodulation_algorithm.original
             % 2015-05-15 Alfonso Rodriguez-Molares
             
-            %% power spectrum
+            % power spectrum
             [fx pw] = tools.power_spectrum(h.data,h.sampling_frequency);
             assert(sum(pw)>0,'Dataset is zero');
             
-            %% computing central frequency and bandwidth
+            % computing central frequency and bandwidth
             disp('Estimating power spectrum');
             fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)]; 
             [dc ic]=max(fpw.*(fx>0).'); fc=fx(ic); 
@@ -44,8 +69,6 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
             bw_do=max(fx((fx<fc)&(fpw<dc/2).')); % -6dB down limit
             fc=(bw_up+bw_do)/2;                  % center frequency
             bw=2*(bw_up-fc);
-
-            if ~exist('modulation_frequency') modulation_frequency=fc; end
 
             if(plot_on)
                 assert(sum(pw)>0,'Dataset is zero');
@@ -60,9 +83,9 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 title('Before demodulation');
             end
 
-            %% band pass filtering
+            % band pass filtering
             disp('Band Pass filtering');
-            if ~exist('bandpass_frequency_vector') 
+            if ~exist('bandpass_frequency_vector')||isempty(bandpass_frequency_vector) 
                 transition=bw/10;
                 low_freq=max([0 fc-2*bw]);      
                 high_freq=min([h.sampling_frequency/2*0.99 fc+2*bw]);
@@ -77,7 +100,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 plot([modulation_frequency modulation_frequency],[0 1],'m:');
             end
 
-            %% demodulation
+            % demodulation
             mod_sig=exp(-j*2*pi*modulation_frequency*h.time)*ones(1,size(data,2)); % demodulation sognal
             wb = waitbar(0, 'Demodulating...');
             for f=1:size(data,4)
@@ -98,7 +121,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 title('After demodulation');
             end
 
-            %% low pass filtering
+            % low pass filtering
             disp('Base Band filtering');
             baseband_frequency_vector=[0.9*modulation_frequency modulation_frequency];
             [data fre_res w]=tools.low_pass(data,h.sampling_frequency,baseband_frequency_vector);
@@ -111,11 +134,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 plot(-fs*w/2/pi*1e-6,abs(fre_res)/max(abs(fre_res)),'b-')
             end
 
-            %% resampling
-            if ~exist('downsample_frequency')
-                downsample_frequency=round(4*bw/1e6)*1e6; % new sampling frequency
-            end
-
+            % resampling
             dt=1/downsample_frequency;
             t=(h.time(1):dt:h.time(end));
             data=reshape(data,size(h.data)); % we get back singleton dimmensions
@@ -136,25 +155,23 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 plot(fx*1e-6,pw,'m:'); 
             end
 
-            %% write in the output 
+            % write in the output 
             h.format=E.signal_format.IQ;
             h.modulation_frequency=modulation_frequency;
             h.time=t.';
             h.data=downsample_data;
         
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% FASTFON
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        case E.demodulation_type.fastfon
+        %% FASTFON: Demodulation + low pass filter
+        case E.demodulation_algorithm.fastfon
             % 2015-09-14 Alfonso Rodriguez-Molares
             
             siz = size(h.data);
             N = prod(siz(3:end));        % collapse dimensions beyond 3
   
-            %% copy data
+            % copy data
             data = h.data(:,:,1:N);
             
-            %% show spectrum
+            % show spectrum
             if(plot_on)
                 [fx pw] = tools.power_spectrum(h.data,h.sampling_frequency);
                 assert(sum(pw)>0,'Dataset is zero');
@@ -169,8 +186,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 title('Before demodulation');
             end
             
-            %% demodulation
-            if ~exist('modulation_frequency') error('Modulation frequency must be provided'); end
+            % demodulation
             mod_sig=repmat(exp(-j*2*pi*modulation_frequency*h.time),1,size(data,2),size(data,3));
             data=data.*mod_sig;
             
@@ -186,8 +202,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 title('After demodulation');
             end
 
-            %% low pass filtering
-            %if ~exist('bandpass_frequency_vector') error('The bandpass filter frequency vector must be provided'); end
+            % low pass filtering
             disp('Base Band filtering');
             baseband_frequency_vector=[0.9*modulation_frequency modulation_frequency];
             [data fre_res w]=tools.low_pass(data,h.sampling_frequency,baseband_frequency_vector);
@@ -200,8 +215,7 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
                 plot(-fs*w/2/pi*1e-6,abs(fre_res)/max(abs(fre_res)),'b-')
             end
             
-            %% resampling
-            if ~exist('downsample_frequency') error('Downsampling frequency must be provided'); end
+            % resampling
             Ndown=round(fs/downsample_frequency);
             
             ind_new = 1:Ndown:siz(1);       % decimating vector
@@ -212,10 +226,10 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
             h.modulation_frequency=modulation_frequency;
                         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% ØYVIND'S
+        %% ØYVIND'S Hilbert tranform demodulation
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        case E.demodulation_type.oyvind
+        case E.demodulation_algorithm.oyvind
             % 2015-03-26 Øyvind K.-V. Standal
             % 2015-06-04 Alfonso Rodriguez-Molares
 
@@ -278,9 +292,9 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
             h.data=iq;
             
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% CHEAP
+        %% CHEAP 2-samples-per_wavelength demodulation
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        case E.demodulation_type.cheap
+        case E.demodulation_algorithm.cheap
             % 2015-09-14 Alfonso Rodriguez-Molares
             
             warning('The demodulation frequency in the "cheap" demodulation is Fs/4');
@@ -333,7 +347,44 @@ function demodulate(h,plot_on,modulation_frequency,bandpass_frequency_vector,dow
             h.data=reshape(demod_data,[L/4 siz(2:end)]);   % resampled data
             h.format=E.signal_format.IQ;
             h.modulation_frequency=fs/4;
-                
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Fieldsim Hilbert tranform demodulation
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        case E.demodulation_algorithm.fieldsim
+            % demodulation
+            if ~exist('modulation_frequency')|| isempty(modulation_frequency) 
+                    error('Modulation frequency must be provided'); 
+            end
+            
+            start_time = h.time(1);
+            fs         = 1/(h.time(2)-h.time(1));
+            data_in    = h.data;
+            size_in    = size(data_in);
+
+            % Find complex envelope (demodulate pre-env to zero)
+            data_out      = hilbert(data_in(:,:)); % Find pre-envelope
+            demodVect     = exp(-1i*2*pi*modulation_frequency*(start_time + (0:size(data_out,1)-1)*1/fs)).';
+            data_out      = reshape(bsxfun(@times, data_out, demodVect), size_in);
+
+            % downsampling
+            if ~exist('downsample_frequency')|| isempty(downsample_frequency) 
+               warning('The downsampling frequency is not specified. Using 4*modulation_frequency'); 
+               downsample_frequency=4*modulation_frequency;
+            end
+            t_new         = 0 : 1/downsample_frequency : h.time(end);
+            siz = size(data_out);
+            data_out      = interp1(h.time, data_out(:,:), t_new, 'linear',0);
+            data_out      = reshape(data_out, [size(data_out,1), siz(2:end)]);
+        
+            % update dataset
+            h.time=t_new.';
+            h.data=data_out;
+            h.format=E.signal_format.IQ;
+            h.modulation_frequency=modulation_frequency;
+        otherwise
+            error('Demodulation algorithm not available');
+    
     end
 
 end
