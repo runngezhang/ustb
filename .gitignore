@@ -6,3 +6,9 @@
 *.png
 development/
 data/
++mex/include/
++mex/lib/win64/microsoft/libmwcoder_connectivity_comm.lib
++mex/lib/
++mex/examples/
++mex/engines/python/dist/matlab/engine/win64/matlabengineforpython2_7.pyd
++mex/engines/
