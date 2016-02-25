@@ -1,4 +1,4 @@
-%% Backcompatibility
+%% Speedtest of CPWC mex implementations
 
 % date:     11.03.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
@@ -77,16 +77,16 @@ end
 
 %% plane wave sequence
 alpha_max=15*pi/180;                        % maximum angle [rad]
-Na=1;                                       % number of plane waves 
+Na=3;                                      % number of plane waves 
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-F=2;                                        % number of frames
+F=1;                                        % number of frames
 
 %% phantom
 PRF=1./(2*40e-3/c0);                                % pulse repetition frequency [Hz]
-x_point=0;%linspace(-20e-3,20e-3,80);                  
-z_point=linspace(5e-3,50e-3,46);
-[X Z]=meshgrid(x_point,z_point);
-point=[X(:) zeros(length(X(:)),1) Z(:)];            % point initial position [m] 
+x_point=[zeros(1,8) linspace(-20e-3,20e-3,9)];                  
+z_point=[linspace(5e-3,40e-3,8) 20e-3*ones(1,9)];
+%[X Z]=meshgrid(x_point,z_point);
+point=[x_point.' zeros(length(x_point),1) z_point.'];            % point initial position [m] 
 cropat=round(8*max(sqrt(sum(point.^2,2)))/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
@@ -126,6 +126,8 @@ for f=1:F
 end
 close(wb);
 
+%CPW=repmat(CPW,[1 1 1 100]);
+
 %% USTB 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,8 +146,8 @@ cpw_dataset.demodulate(true,[],[],[],E.demodulation_algorithm.fieldsim);
 
 % define a scan
 scan=linear_scan();
-scan.x_axis=0;%linspace(-2e-3,2e-3,3).';        % x vector [m]
-scan.z_axis=linspace(5e-3,50e-3,512).';        % z vector [m]
+scan.x_axis=linspace(-20e-3,20e-3,256).';        % x vector [m]
+scan.z_axis=linspace(0e-3,40e-3,256).';        % z vector [m]
 
 % define a synthetic orientation
 F_number=1.75;
@@ -154,10 +156,6 @@ orien.transmit_beam=beam(F_number,E.apodization_type.none);
 orien.receive_beam=beam(F_number,E.apodization_type.none);
 
 % define a reconstructions 
-cpw_image_ustb=reconstruction();
-cpw_image_ustb.scan=scan;
-cpw_image_ustb.orientation=orien;
-
 cpw_image_ustb_mex=reconstruction();
 cpw_image_ustb_mex.scan=scan;
 cpw_image_ustb_mex.orientation=orien;
@@ -170,52 +168,27 @@ cpw_image_lr=reconstruction();
 cpw_image_lr.scan=scan;
 cpw_image_lr.orientation=orien;
 
-%% beamform ustb matlab
-matlab_time=cpw_dataset.image_reconstruction(cpw_image_ustb,E.implementation.simple_matlab)
+for f=1:30
+    % convert to IQ data
+    cpw_dataset.data=repmat(cpw_dataset.data(:,:,:,1),[1 1 1 f]);
+    
+    %% beamform ustb mex
+    mex_time(f)=cpw_dataset.image_reconstruction(cpw_image_ustb_mex,E.implementation.mex);
 
-%% beamform ustb mex
-mex_time=cpw_dataset.image_reconstruction(cpw_image_ustb_mex,E.implementation.mex)
+    %% beamform thor-andreas code
+    ta_time(f)=cpw_dataset.image_reconstruction(cpw_image_ta,E.implementation.thor_andreas);
 
-%% beamform thor-andreas code
-ta_time=cpw_dataset.image_reconstruction(cpw_image_ta,E.implementation.thor_andreas)
+    %% beamform thor-andreas code
+    lr_time(f)=cpw_dataset.image_reconstruction(cpw_image_lr,E.implementation.low_resolution);
+    
+    figure(101);
+    plot(1:f,mex_time(1:f),'b'); hold on; grid on;
+    plot(1:f,ta_time(1:f),'r');
+    plot(1:f,lr_time(1:f),'g');
+    legend('ustb mex','thor-andreas','ustb low resolution');
+    drawnow;
+end
 
-%% beamform thor-andreas code
-lr_time=cpw_dataset.image_reconstruction(cpw_image_lr,E.implementation.low_resolution)
-
-%% Before beamforming
-[fff ppp]=tools.power_spectrum(cpw_dataset.data,cpw_dataset.sampling_frequency);
-figure(101);subplot(2,2,1);
-plot(fff*1e-6,ppp,'b'); grid on; hold on;
-
-%% After beamforming
-figure(101);subplot(2,2,2);
-
-sampling_frequency_z_axis=1/(scan.dz/cpw_dataset.c0*2);
-
-[fff ppp]=tools.power_spectrum(cpw_image_ustb.data,sampling_frequency_z_axis);plot(fff*1e-6,ppp,'b'); grid on; hold on;
-[fff ppp]=tools.power_spectrum(cpw_image_ustb_mex.data,sampling_frequency_z_axis);plot(fff*1e-6,ppp,'g--'); 
-[fff ppp]=tools.power_spectrum(cpw_image_ta.data,sampling_frequency_z_axis);plot(fff*1e-6,ppp,'r:');
-[fff ppp]=tools.power_spectrum(cpw_image_lr.data,sampling_frequency_z_axis);plot(fff*1e-6,ppp,'c-.');
-legend('USTB matlab','USTB mex','Thor-Andreas','Low resolution mex');
-title('After beamforming')
-
-%% Envelope
-figure(101);subplot(2,2,3);
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ustb.data(:)))),'b'); axis tight; hold on;
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ustb_mex.data(:)))),'g--'); 
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ta.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ta.data(:)))),'r:'); 
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_lr.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ta.data(:)))),'c-.'); 
-xlim([5 50])
-legend('USTB matlab','USTB mex','Thor-Andreas','Low resolution mex');
-title('Beamformed Envelope')
-
-%% Angle
-figure(101);subplot(2,2,4);
-plot(scan.z_axis*1e3,angle(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1)),'b'); axis tight; hold on;
-plot(scan.z_axis*1e3,angle(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1)),'g--'); 
-plot(scan.z_axis*1e3,angle(cpw_image_ta.data(:,ceil(scan.Nx/2),1,1)),'r:'); 
-plot(scan.z_axis*1e3,angle(cpw_image_lr.data(:,ceil(scan.Nx/2),1,1)),'c-.'); 
-xlim([5 50])
-legend('USTB matlab','USTB mex','Thor-Andreas','Low resolution mex');
-title('Beamformed Angle')
-
+cpw_image_ustb_mex.show();
+cpw_image_ta.show();
+cpw_image_lr.show();
