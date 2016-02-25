@@ -519,7 +519,7 @@ classdef reconstruction < handle
     methods
         function h=set.data(h,input_data)
             % column-based format
-            if(size(input_data,1)==h.scan.pixels)
+            if(size(input_data,1)==h.scan.pixels)&&ndims(input_data)==3
                 h.no_orientations=size(input_data,2);
                 h.no_frames=size(input_data,3);
             

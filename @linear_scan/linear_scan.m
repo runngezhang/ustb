@@ -158,19 +158,21 @@ classdef linear_scan
     %% Set methods
     methods
         function h=set.x_axis(h,input_vector)
-            assert(size(input_vector,1)>size(input_vector,2), 'The x vector must be a column vector!')
+            assert(iscolumn(input_vector), 'The x vector must be a column vector!')
             h.x_axis=input_vector;
             [h.x_matrix, h.z_matrix]=meshgrid(h.x_axis,h.z_axis); 
             h.x=h.x_matrix(:);
             h.z=h.z_matrix(:);
+            h.Nx=length(h.x_axis);
             h.pixels=length(h.x);
         end
         function h=set.z_axis(h,input_vector)
-            assert(size(input_vector,1)>size(input_vector,2), 'The z vector must be a column vector!')
+            assert(iscolumn(input_vector), 'The z vector must be a column vector!')
             h.z_axis=input_vector;
             [h.x_matrix, h.z_matrix]=meshgrid(h.x_axis,h.z_axis); 
             h.x=h.x_matrix(:);
             h.z=h.z_matrix(:);
+            h.Nz=length(h.z_axis);
             h.pixels=length(h.x);
         end
     end
