@@ -162,6 +162,27 @@ classdef cpw < us_dataset
             elapsed_time=toc; 
         end
     end
+    
+    %% Relaunching method
+    methods (Access = public)
+        function sig=launch_implementation(h,r,imp)
+            % Launches appropriate implementation
+            switch(imp)
+                case E.implementation.simple_matlab
+                    sig=h.ir_simple_matlab(r);
+                case E.implementation.optimized_matlab
+                    sig=h.ir_optimized_matlab(r);
+                case E.implementation.mex
+                    sig=h.ir_mex(r);
+                case E.implementation.mex_gpu
+                    sig=h.ir_mex_gpu(r);
+                case E.implementation.thor_andreas
+                    sig=h.ir_thor_andreas(r);                    
+                otherwise
+                    error('Selected implementation is not supported');
+            end
+        end
+    end
 
     %% set methods
     methods  
