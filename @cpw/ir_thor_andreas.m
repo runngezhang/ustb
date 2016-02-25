@@ -24,31 +24,24 @@ function [sig] = ir_thor_andreas(h,r)
     p.f_demod   = single(h.modulation_frequency);
     p.FN        = single(1); % needed?
 
-%     keyboard
-%     % coincident z-axis condition
-%     ta_z_axis=h.time*h.c0/2;
-%     n_end=2*r.scan.z_axis(end)/h.c0*h.sampling_frequency;
-%     ta_z_axis=ta_z_axis(1:n_end);
-
     % call mex
-    sig=zeros(r.scan.pixels,h.frames);
+    sig=zeros(r.scan.pixels,h.firings,h.frames);
     for n=1:h.frames
         sig_temporal = mex.planewave_beamforming2(single(h.data),p,single(r.scan.x_axis),single(r.scan.z_axis),single(reshape(h.receive_apodization,[r.scan.Nz r.scan.Nx h.channels])));  % beamforming procedure
         sig_temporal(isnan(sig_temporal)) = 0;
         
         % compound
-        sig_temporal = sum(sig_temporal,3);
+        % sig_temporal = sum(sig_temporal,3);
 
         % undo the distance correction factor
         ta_z_axis=h.time*h.c0/2;
         corr_factor=exp(j*2*pi*h.modulation_frequency*h.time);
-        sig_temporal=bsxfun(@times,sig_temporal,corr_factor(1:length(r.scan.z_axis)));
+        sig_temporal=bsxfun(@times,sig_temporal,corr_factor(1:r.scan.Nz));
         
         % reshape
-        sig(:,n) = sig_temporal(:);
+        sig(:,:,n) = reshape(sig_temporal,[r.scan.pixels h.firings]);
     end
-    
-    % correct TA distance factor
-    %sig = sig.*
+   
+
 end
 
