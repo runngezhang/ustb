@@ -20,6 +20,10 @@ classdef sector_scan
         pixels      % total number of pixels in the matrix
     end
     
+    properties (Dependent)
+        axial_distance 
+    end
+    
     %% Constructor
     methods (Access = public)
         function h = sector_scan(azimuth_input,depth_input)
@@ -78,6 +82,13 @@ classdef sector_scan
             %
             %   See also LINEAR_SCAN
             dz=mean(diff(h.depth_axis)); % spatial step in the beam direction
+        end
+    end
+    
+    %% return the axial distance
+    methods
+        function dst = get.axial_distance(h)
+            dst = sqrt((h.x-h.apex(1)).^2+ (h.z-h.apex(3)).^2);
         end
     end
     

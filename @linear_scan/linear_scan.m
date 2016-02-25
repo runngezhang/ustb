@@ -16,7 +16,15 @@ classdef linear_scan
         z_matrix    % Matrix containing the z coordinate of each pixel in the matrix
         x           % Vector containing the x coordinate of each pixel in the matrix
         z           % Vector containing the z coordinate of each pixel in the matrix
+        Nx          % Number of pixels in the x-axis
+        Nz          % Number of pixels in the x-axis
         pixels      % total number of pixels in the matrix
+    end
+    
+    properties (Dependent)
+        axial_distance
+        dx
+        dz
     end
     
     %% Constructor
@@ -67,6 +75,19 @@ classdef linear_scan
             %
             %   See also LINEAR_SCAN
             dz=mean(diff(h.z_axis)); % spatial step in the beam direction
+        end
+    end
+    
+    %% Dependent variables
+    methods
+        function dst = get.axial_distance(h)
+            dst = h.z;
+        end
+        function dx = get.dx(h)
+            dx = h.x_axis(2)-h.x_axis(1);
+        end
+        function dz = get.dz(h)
+            dz = h.z_axis(2)-h.z_axis(1);
         end
     end
     

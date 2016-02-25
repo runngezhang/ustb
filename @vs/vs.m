@@ -150,6 +150,9 @@ classdef vs < us_dataset
                 % launch selected implementation
                 temporal_data=h.launch_implementation(recons,implem);
 
+                % correct for the reference distance factor
+                temporal_data=bsxfun(@times,temporal_data,exp(-j*2*pi*h.modulation_frequency*2*recons.scan.axial_distance/h.c0));
+                
                 % reshape matrix to include orientation dimensions
                 total_data(:,:,o,:)=reshape(temporal_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) 1 size(temporal_data,2)]);
             end
