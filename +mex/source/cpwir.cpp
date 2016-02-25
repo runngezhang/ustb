@@ -1,13 +1,12 @@
-#include "stdafx.h"
 #include <math.h>
-#include "C:\Program Files\MATLAB\R2014b\extern\include\matrix.h"
-#include "C:\Program Files\MATLAB\R2014b\extern\include\mex.h"
+#include <matrix.h>
+#include <mex.h>
 #include <vector>
 #include <concurrent_vector.h>
 #include <tuple>
 #include <valarray>
 #include <set>
-#include <ppl.h>
+#include <ppl.h>            // parallel processing library
 
 // compulsory input
 #define	M_P			prhs[0]	// CPW dataset [samples, channels, firings, frames]
@@ -36,51 +35,44 @@
 #define T_c_pw_tuple  std::tuple<int,std::vector<std::vector<double>>>
 
 // types
-typedef std::vector<double*> vec_p_double;
+typedef std::vector<float*> vec_p_float;
 
 //-----------------------------------------------------------------------------
 
 void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 		
-	///////////////////////////////////////////////////
-	// measurement of elapsed time
-	LARGE_INTEGER ticks_second;    // ticks per second
-	LARGE_INTEGER start_time, stop_time;    // ticks
-	QueryPerformanceFrequency(&ticks_second);
-
 	///////////////////////////////
 	// CHECKING ARGUMENTS
 	///////////////////////////////////////
 	// number of inputs
 	if (nrhs<11) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:nrhs", "Too few input arguments");
-	//if (nrhs>11) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:nrhs", "Too many input arguments");
 	if (nlhs>1) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:nlhs", "Too many output arguments");
 
 	///////////////////////////////////////
 	// VERBOSE
 	///////////////////////////////////////
 	bool verbose = true;
-	if (nrhs==12)  verbose = (*((double*)mxGetData(M_VERBOSE)))>EPS;
+	if (nrhs==12)  verbose = (*((float*)mxGetData(M_VERBOSE)))>EPS;
 
 	if (verbose) {
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" Coherent Plane Wave Compunding Beamformer \n");
 		mexPrintf("---------------------------------------------------------------\n");
-		mexPrintf(" Vers:  0.8\n");
-		mexPrintf(" Auth:  Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)\n");
+		mexPrintf(" Vers:  0.9\n");
+		mexPrintf(" Auth:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>\n");
 		mexPrintf(" Dept:  ISB (NTNU)\n");
-		mexPrintf(" Date:  19/11/2015\n");
+		mexPrintf(" Date:  25/25/2016\n");
 		mexPrintf("---------------------------------------------------------------\n");
 	}
 	
 	///////////////////////////////////////
 	// IQ or RF -> modulation frequency
 	///////////////////////////////////////
-	double wd = 0;
+	float wd = 0;
 	bool IQ_version=false;
 	const size_t len_fd = mxGetNumberOfElements(M_FD);
 	if (len_fd != 1) mexErrMsgTxt("Modulation frequency 'fd' should be an escalar");
-	const double fd = *((double*)mxGetData(M_FD));
+	const float fd = *((float*)mxGetData(M_FD));
 	if (fd > EPS) {
 		if(verbose) mexPrintf("Modulation frequency:			%0.2f MHz\n", fd / 1e6);
 		wd = 2 * PI*fd;
@@ -113,12 +105,12 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	}
 
 	// build the real 4D matrix as a vector of vectors of pointers
-	double* Pr = mxGetPr(M_P);	// real part of STA signals
-	std::vector<std::vector<vec_p_double>> pr;
+	float* Pr = (float*)mxGetData(M_P);	// real part of STA signals
+	std::vector<std::vector<vec_p_float>> pr;
 	for (int f = 0; f < F; f++) {
-		std::vector<vec_p_double> temp_temp_r;
+		std::vector<vec_p_float> temp_temp_r;
 		for (int i = 0; i < NA; i++) {
-			vec_p_double temp_r; // create an array, don't work directly on buff yet.
+			vec_p_float temp_r; // create an array, don't work directly on buff yet.
 			for (int j = 0; j < N; j++) temp_r.push_back(Pr + L*j + N*L*i + NA*N*L*f);
 			temp_temp_r.push_back(temp_r); // Store the array in the buffer
 		}
@@ -126,12 +118,12 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	}
 
 	// build imaginary 4D matrix as a vector of vectors of pointers
-	double* Pi = mxGetPi(M_P);					// imaginary part of STA signals
-	std::vector<std::vector<vec_p_double>> pi;
+	float* Pi = (float*)mxGetImagData(M_P);					// imaginary part of STA signals
+	std::vector<std::vector<vec_p_float>> pi;
 	if (IQ_version) for (int f = 0; f < F; f++) {
-		std::vector<vec_p_double> temp_temp_i;
+		std::vector<vec_p_float> temp_temp_i;
 		for (int i = 0; i < NA; i++) {
-			vec_p_double temp_i;
+			vec_p_float temp_i;
 			for (int j = 0; j < N; j++) temp_i.push_back(Pi + L*j + N*L*i + NA*N*L*f);
 			temp_temp_i.push_back(temp_i);
 		}
@@ -149,7 +141,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	const int P = (int)f_dim[1];
 	//mexPrintf("x length %i \n",Lx);
 	if (P < 1) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "The x vector should have length > 0");
-	double* x = (double*)mxGetData(M_X);
+	float* x = (float*)mxGetData(M_X);
 
 	///////////////////////////////////////
 	// z vector
@@ -159,7 +151,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	if (ndim != 2) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "The z vector should have 2 dimensions");
 	f_dim = mxGetDimensions(M_Z);
 	if (P != f_dim[1]) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "The dimensions of x and z vectors should agree");
-	double* z = (double*)mxGetData(M_Z);
+	float* z = (float*)mxGetData(M_Z);
 	//for(int i=0;i<Lz;i++) mexPrintf("z %i -> %0.2f\n",i+1,z[i]*1e3);
 	if(verbose) mexPrintf("Pixels							%i\n", P);
 
@@ -170,7 +162,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	if (ndim != 2) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "The angles vector should have 2 dimensions");
 	f_dim = mxGetDimensions(M_ANGLES);
 	if (NA != f_dim[1]) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "The length of the angles vector should agree with the dataset size");
-	double* ang = (double*)mxGetData(M_ANGLES);
+	float* ang = (float*)mxGetData(M_ANGLES);
 
 	///////////////////////////////////////
 	// elements
@@ -180,9 +172,9 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	const mwSize* ele_dim = mxGetDimensions(M_ELE);
 	if (ele_dim[1] != 2) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Wrong dimensions of probe geometry matrix. [x y] coordinates are expected.");
 	if (ele_dim[0] != N) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Wrong dimensions of probe geometry matrix. It does not agree with dataset.");
-	double* ele = (double*)mxGetData(M_ELE);
-	double* x0 = ele;
-	double* z0 = ele + N;
+	float* ele = (float*)mxGetData(M_ELE);
+	float* x0 = ele;
+	float* z0 = ele + N;
 
 	///////////////////////////////////////
 	// Apodization
@@ -192,18 +184,18 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	const mwSize* tx_apo_dim = mxGetDimensions(M_TX_APO);
 	if (tx_apo_dim[0] != P) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Transmit apodization pixels should agree, %i != %i\n", tx_apo_dim[0], P);
 	if (tx_apo_dim[1] != NA) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Transmit apodization angles should agree, %i != %i\n", tx_apo_dim[1], NA);
-	double* P_an_apo = (double*)mxGetData(M_TX_APO);
+	float* P_an_apo = (float*)mxGetData(M_TX_APO);
 
 	ndim = (int)mxGetNumberOfDimensions(M_RX_APO);
 	if (ndim != 2) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown receive apodization format. Expected [pixels, channels]");
 	const mwSize* rx_apo_dim = mxGetDimensions(M_RX_APO);
 	if (rx_apo_dim[0] != P) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Receive apodization pixels should agree, %i != %i\n", rx_apo_dim[0], P);
 	if (rx_apo_dim[1] != N) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Receive apodization channels should agree, %i != %i\n", rx_apo_dim[1], N);
-	double* P_rx_apo = (double*)mxGetData(M_RX_APO);
+	float* P_rx_apo = (float*)mxGetData(M_RX_APO);
 
 	// build the transmit and receive apodization 2D matrices as vectors of pointers
-	vec_p_double an_apo;
-	vec_p_double rx_apo;
+	vec_p_float an_apo;
+	vec_p_float rx_apo;
 	for (int j = 0; j < NA; j++) an_apo.push_back(P_an_apo + P*j);
 	for (int j = 0; j < N; j++) rx_apo.push_back(P_rx_apo + P*j);
 
@@ -214,39 +206,38 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	// Sampling frequency
 	const size_t len_Fs = mxGetNumberOfElements(M_FS);
 	if (len_Fs != 1) mexErrMsgTxt("The sampling frequency should be an escalar");
-	const double Fs = *((double*)mxGetData(M_FS));
-	const double dt = 1 / Fs;
+	const float Fs = *((float*)mxGetData(M_FS));
+	const float dt = 1 / Fs;
 	if(verbose) mexPrintf("Sampling frequency				%0.2f MHz\n", Fs / 1e6);
 
 	// Initial time
 	const size_t len_t0 = mxGetNumberOfElements(M_T0);
 	if (len_t0 != 1) mexErrMsgTxt("The initial time should be an escalar");
-	const double t0 = *((double*)mxGetData(M_T0));
+	const float t0 = *((float*)mxGetData(M_T0));
 	if(verbose) mexPrintf("Initial time					%0.2f us\n", t0*1e6);
 
 	// speed of sound
 	const size_t len_c = mxGetNumberOfElements(M_C);
 	if (len_c != 1) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:size", "Sound speed 'c' should be an escalar");
-	const double c0 = *((double*)mxGetData(M_C));
+	const float c0 = *((float*)mxGetData(M_C));
 	if(verbose) mexPrintf("Speed of sound:					%0.2f m/s\n", c0);
 
 	///////////////////////////////////////////////////////
 	//// Creating data structures
 	if (verbose) {
 		mexPrintf("1.- Creating concurrent data structures\n"); mexEvalString("drawnow;");
-		QueryPerformanceCounter(&start_time);
 	}
 
 	// creating concurrent structures for real data
-	Concurrency::concurrent_vector<std::vector<double>> c_im_r;
+	Concurrency::concurrent_vector<std::vector<float>> c_im_r;
 	for (int f = 0; f < F; f++) {
-		std::vector<double> im_r(P, 0.0); // vector of doubles
+		std::vector<float> im_r(P, 0.0); // vector of floats
 		c_im_r.push_back(im_r);
 	}
 	// creating concurrent structures for imag data
-	Concurrency::concurrent_vector<std::vector<double>> c_im_i;
+	Concurrency::concurrent_vector<std::vector<float>> c_im_i;
 	if (IQ_version) for (int f = 0; f < F; f++) {
-		std::vector<double> im_i(P, 0.0);
+		std::vector<float> im_i(P, 0.0);
 		c_im_i.push_back(im_i);
 	}
 
@@ -255,33 +246,33 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	if (verbose) { mexPrintf("2.- Beamforming (multi-CPU)\n"); mexEvalString("drawnow;"); }
 	Concurrency::parallel_for(0, P, [&](int pp) {
 		// for(int nz=0; nz<Lz; nz++) { // z vector
-		double& zz = z[pp];
-		double& xx = x[pp];
+		float& zz = z[pp];
+		float& xx = x[pp];
 
 		for (int an = 0; an < NA; an++) { // na plane wave
-			double Da = (zz*cos(ang[an]) + xx*sin(ang[an])) / c0;
+			float Da = (zz*cos(ang[an]) + xx*sin(ang[an])) / c0;
 
 			for (int rx = 0; rx<N; rx++) { // rx channel
-				double apo = an_apo[an][pp] * rx_apo[rx][pp];
+				float apo = an_apo[an][pp] * rx_apo[rx][pp];
 				if (apo>1e-3) {
-					double xx2 = xx - x0[rx]; xx2 *= xx2;
-					double zz2 = zz - z0[rx]; zz2 *= zz2;
-					double delay = Da + sqrt(xx2 + zz2) / c0;
+					float xx2 = xx - x0[rx]; xx2 *= xx2;
+					float zz2 = zz - z0[rx]; zz2 *= zz2;
+					float delay = Da + sqrt(xx2 + zz2) / c0;
 
-					double denay = (delay - t0)*Fs;		// untruncated sample number 
+					float denay = (delay - t0)*Fs;		// untruncated sample number 
 					int n0 = (int)floor(denay);		// truncated sample number
-					double b = denay - n0;				// linear interpolation coefficient 2
-					double a = 1 - b;					// linear interpolation coefficient 1
+					float b = denay - n0;				// linear interpolation coefficient 2
+					float a = 1 - b;					// linear interpolation coefficient 1
 
 					if (n0 > 0 && n0 < (L - 1)) {
 						if (IQ_version) {
-							double phase = wd*delay;
-							double coswt = cos(phase);
-							double sinwt = sin(phase);
+							float phase = wd*delay;
+							float coswt = cos(phase);
+							float sinwt = sin(phase);
 							for (int f = 0; f < F; f++) { // frame vector
 								// fractional part of the delay -> linear interpolation
-								double re = a*pr[f][an][rx][n0] + b*pr[f][an][rx][n0 + 1];
-								double im = a*pi[f][an][rx][n0] + b*pi[f][an][rx][n0 + 1];
+								float re = a*pr[f][an][rx][n0] + b*pr[f][an][rx][n0 + 1];
+								float im = a*pi[f][an][rx][n0] + b*pi[f][an][rx][n0 + 1];
 								// apply phase change and delay
 								c_im_r[f][pp] += apo*(re*coswt - im*sinwt);
 								c_im_i[f][pp] += apo*(im*coswt + re*sinwt);
@@ -289,7 +280,7 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 						}
 						else {
 							for (int f = 0; f < F; f++) { // frame vector
-								double re = a*pr[f][an][rx][n0] + b*pr[f][an][rx][n0 + 1];
+								float re = a*pr[f][an][rx][n0] + b*pr[f][an][rx][n0 + 1];
 								c_im_r[f][pp] += apo*re;
 							}
 						}
@@ -298,7 +289,6 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 			} // end rx loop
 		} // end tx loop
 	}); // end pixel loop <- concurrent
-	if(verbose) QueryPerformanceCounter(&stop_time);
 
 	if (verbose) {
 		mexPrintf("3.- Copying results to output structures\n");
@@ -315,9 +305,9 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	mwSize out_size2[2];
 	out_size2[0] = P; // samples
 	out_size2[1] = F;  // frames
-	M_D = mxCreateNumericArray(2, (const mwSize*)&out_size2, mxDOUBLE_CLASS, mxCOMPLEX);
-	double* Dr = mxGetPr(M_D);
-	double* Di = mxGetPi(M_D);
+	M_D = mxCreateNumericArray(2, (const mwSize*)&out_size2, mxSINGLE_CLASS, mxCOMPLEX);
+	float* Dr = (float*)mxGetData(M_D);
+	float* Di = (float*)mxGetImagData(M_D);
 
 	////////////////////////////////////////
 	// transfer results to output matrices
@@ -328,7 +318,6 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	c_im_i.clear();
 
 	if (verbose) {
-		mexPrintf("Done in %0.2fs\n", (float)(stop_time.QuadPart - start_time.QuadPart) / (float)ticks_second.QuadPart);
 		mexPrintf("---------------------------------------------------\n");
 		mexEvalString("drawnow;");
 	}

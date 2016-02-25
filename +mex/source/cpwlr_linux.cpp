@@ -1,12 +1,15 @@
+//#include "stdafx.h"
 #include <math.h>
-#include <matrix.h>
-#include <mex.h>
+#include "/usr/local/MATLAB/R2015b/extern/include/matrix.h"
+#include "/usr/local/MATLAB/R2015b/extern/include/mex.h"
 #include <vector>
-#include <concurrent_vector.h>
+//#include </media/Data/ingvilek/ustb2/Source Code/CPWI_LR/Mex/tbb/concurrent_vector.h>
+#include <tbb/concurrent_vector.h>
 #include <tuple>
 #include <valarray>
 #include <set>
-#include <ppl.h>             // parallel processing library
+#include <tbb/parallel_for.h>
+//#include <ppl.h>
 
 // compulsory input
 #define	M_P			prhs[0]	// CPW dataset [samples, channels, firings, frames]
@@ -15,7 +18,7 @@
 #define	M_ELE		prhs[3]	// geometry of the probe [x, z] (m, m)
 #define	M_C			prhs[4] // speed of sound (m/s)
 #define	M_ANGLES    prhs[5] // vector or angles [rad]
-#define	M_TX_APO	prhs[6] // Transmitting apodization [pixels, angles] 
+#define	M_TX_APO	prhs[6] // Transmitting apodization [pixels, angles]
 #define	M_RX_APO	prhs[7] // Receiving apodization [pixels, channels]
 #define	M_FS		prhs[8] // sampling frequency (Hz)
 #define M_T0		prhs[9]	// initial time (s)
@@ -38,6 +41,12 @@ typedef std::vector<float*> vec_p_float; // change to single
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
+	///////////////////////////////////////////////////
+	// measurement of elapsed time
+	long ticks_second;    // ticks per second
+	long start_time, stop_time;    // ticks
+	//QueryPerformanceFrequency(&ticks_second);
+
 	///////////////////////////////
 	// CHECKING ARGUMENTS
 	///////////////////////////////////////
@@ -54,12 +63,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	if (verbose) {
 		mexPrintf("---------------------------------------------------------------\n");
-		mexPrintf(" Coherent Plane Wave Imaging Low resolution images) \n");
+		mexPrintf(" cpwi_lr (Coherent Plane Wave Imaging - low resolution images) \n");
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" Single precision\n");
-		mexPrintf(" Vers:  0.4\n");
-		mexPrintf(" Auth:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>\n");
-		mexPrintf(" Date:  25/02/2016\n");
+		mexPrintf(" Vers:  0.3\n");
+		mexPrintf(" Auth:  Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)\n");
+		mexPrintf(" Date:  20/11/2015\n");
 		mexPrintf("---------------------------------------------------------------\n");
 	}
 
@@ -73,10 +82,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	const float fd = *((float*)mxGetData(M_FD));
 	if (fd > EPS) {
 		if (verbose) mexPrintf("Modulation frequency:			%0.2f MHz\n", fd / 1e6);
-		wd = 2 * PI*fd;
+		wd = float(2 * PI*fd);
 		IQ_version = true;
 	}
-	
+
 	/////////////////////////////////////
 	// DATASET
 	///////////////////////////////////////
@@ -84,8 +93,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	if (ndim<3 || ndim>4) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown STA dataset format. Expected [samples, channels, firings, frames]");
 	const mwSize* p_dim = mxGetDimensions(M_P);
 	const int L = (int)p_dim[0];	// number of time samples
-	const int N = (int)p_dim[1];	// number of channels 
-	const int NA = (int)p_dim[2];	// number of angles  
+	const int N = (int)p_dim[1];	// number of channels
+	const int NA = (int)p_dim[2];	// number of angles
 	int F = (int)1;
 	if (ndim == 4) F = (int)p_dim[3]; // number of frames
 
@@ -108,7 +117,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		}
 		pr.push_back(temp_temp_r); // Store the array in the buffer
 	}
-	
+
+	/*// write input data to binary memory
+	for (int i = 0; i < NA; i++)
+		for (int j = 0; j < N; j++)
+			pr[f][an][i][j]*/
+
+
 	// build imaginary 4D matrix as a vector of vectors of pointers
 	float* Pi = (float*)mxGetImagData(M_P);					// imaginary part of STA signals
 	std::vector<std::vector<vec_p_float>> pi;
@@ -217,6 +232,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	//// Creating data structures
 	if (verbose) {
 		mexPrintf("1.- Creating concurrent data structures\n"); mexEvalString("drawnow;");
+		//QueryPerformanceCounter(&start_time);
 	}
 
 	const unsigned int PNA = P*NA;
@@ -234,7 +250,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	//////////////////////////////////////////////////////
 	// Beamforming loop
 	if (verbose) { mexPrintf("2.- Beamforming (multicore)\n"); mexEvalString("drawnow;"); }
-	Concurrency::parallel_for(0, P, [&](int pp) {
+	//	Concurrency::parallel_for(0, P, [&](int pp) {
+            tbb::strict_ppl::parallel_for(0, P, 1, [=](int pp) {
 		// for(int nz=0; nz<Lz; nz++) { // z vector
 		float& zz = z[pp];
 		float& xx = x[pp];
@@ -249,14 +266,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 					float zz2 = zz - z0[rx]; zz2 *= zz2;
 					float delay = Da + sqrt(xx2 + zz2) / c0;
 
-					float denay = (delay - t0)*Fs;		// untruncated sample number 
+					float denay = (delay - t0)*Fs;		// untruncated sample number
 					int n0 = (int)floor(denay);			// truncated sample number
 					float b = denay - n0;				// linear interpolation coefficient 2
 					float a = 1 - b;					// linear interpolation coefficient 1
 
 					if (n0>0 && n0<(L - 1)) {
-						if (IQ_version) {
-							float phase = wd*delay;
+						if (IQ_version) {	
+						float phase = wd*delay;
 							float coswt = cos(phase);
 							float sinwt = sin(phase);
 							for (int f = 0; f<F; f++) { // frame vector
@@ -279,6 +296,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			} // end rx loop
 		} // end tx loop
 	}); // end pixel loop <- concurrent
+	//if (verbose) QueryPerformanceCounter(&stop_time);
 
 	if (verbose) {
 		mexPrintf("3.- Copying results to output structures\n");
@@ -290,13 +308,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	pr.clear();
 	pi.clear();
 
-	if (verbose) {
-		mexPrintf("---------------------------------------------------\n");
-		mexEvalString("drawnow;");
-	}
+	//if (verbose) {
+	//	mexPrintf("Done in %0.2fs\n", (float)(stop_time.QuadPart - start_time.QuadPart) / (float)ticks_second.QuadPart);
+	//	mexPrintf("---------------------------------------------------\n");
+	//	mexEvalString("drawnow;");
+	//}
 
 	return;
-	
+
 }
 
 
