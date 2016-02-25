@@ -133,8 +133,14 @@ classdef cpw < us_dataset
             % initial time -> performance test
             tic; 
             
+            % reserving space
+            if (implem==E.implementation.thor_andreas||implem==E.implementation.low_resolution)
+                total_data=zeros(recons.scan.Nz,recons.scan.Nx,h.firings,length(recons.orientation),h.frames);
+            else
+                total_data=zeros(recons.scan.Nz,recons.scan.Nx,length(recons.orientation),h.frames);
+            end
+            
             % loop over orientations
-            total_data=zeros(size(recons.scan.x_matrix,1),size(recons.scan.x_matrix,2),length(recons.orientation),size(h.data,4));
             for o=1:length(recons.orientation)
                 % precompute transmit and receive apodization
                 xT=recons.scan.x*ones(1,h.firings)-recons.scan.z*tan(h.angle.'); % position of equivalent receive element -> Alfonso's equation 
@@ -151,8 +157,11 @@ classdef cpw < us_dataset
                 temporal_data=bsxfun(@times,temporal_data,exp(-j*2*pi*h.modulation_frequency*2*recons.scan.axial_distance/h.c0));
                 
                 % reshape matrix to include orientation dimensions
-                total_data(:,:,o,:)=reshape(temporal_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) 1 size(temporal_data,2)]);
-                
+                if (implem==E.implementation.thor_andreas||implem==E.implementation.low_resolution)
+                    total_data(:,:,:,o,:)=reshape(temporal_data,[recons.scan.Nz recons.scan.Nx h.firings 1 h.frames]);
+                else
+                    total_data(:,:,o,:)=reshape(temporal_data,[recons.scan.Nz recons.scan.Nx 1 h.frames]);
+                end                
             end
             
             % copy data to reconstruction
@@ -181,7 +190,9 @@ classdef cpw < us_dataset
                 case E.implementation.mex_gpu
                     sig=h.ir_mex_gpu(r);
                 case E.implementation.thor_andreas
-                    sig=h.ir_thor_andreas(r);                    
+                    sig=h.ir_thor_andreas(r);    
+                case E.implementation.low_resolution
+                    sig=h.ir_low_resolution(r);                        
                 otherwise
                     error('Selected implementation is not supported');
             end
