@@ -145,7 +145,7 @@ cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
 % demodulate signal
-cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
+cpw_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_algorithm.fastfon);
 
 %% Define a scan object
 scan=linear_scan();
@@ -165,36 +165,6 @@ recons.orientation=orientations;
 
 %% Low res
 raw_data=cpw_dataset.low_res(recons);
-
-% double precision version
-raw_data=mex.cpwlr(cpw_dataset.data, ...                  % data
-                recons.scan.x.', recons.scan.z.',...      % pixel positions (m)
-                [cpw_dataset.geom(:,1) cpw_dataset.geom(:,3)],...   % probe geometry [x, z] (m,m)
-                cpw_dataset.c0,...                        % speed of sound (m/s)
-                cpw_dataset.angle.',...                   % angles of the plane waves (rad)
-                cpw_dataset.transmit_apodization,...      % transmit aperture [pixels, channels]
-                cpw_dataset.receive_apodization,...       % receive aperture [pixels, channels]
-                cpw_dataset.sampling_frequency,...        % sampling frequency [Hz]
-                cpw_dataset.initial_time,...              % initial time [s]
-                cpw_dataset.modulation_frequency,...      % modulation frequency [Hz]
-                1);                                       % verbose mode
-
-% single precision version
-raw_data=mex.cpwlr_single(single(cpw_dataset.data), ...                  % data
-                single(recons.scan.x.'), single(recons.scan.z.'),...      % pixel positions (m)
-                single([cpw_dataset.geom(:,1) cpw_dataset.geom(:,3)]),...   % probe geometry [x, z] (m,m)
-                single(cpw_dataset.c0),...                        % speed of sound (m/s)
-                single(cpw_dataset.angle.'),...                   % angles of the plane waves (rad)
-                single(cpw_dataset.transmit_apodization),...      % transmit aperture [pixels, channels]
-                single(cpw_dataset.receive_apodization),...       % receive aperture [pixels, channels]
-                single(cpw_dataset.sampling_frequency),...        % sampling frequency [Hz]
-                single(cpw_dataset.initial_time),...              % initial time [s]
-                single(cpw_dataset.modulation_frequency),...      % modulation frequency [Hz]
-                single(1));                                       % verbose mode
-
-            
-            
-reshaped_data=reshape(raw_data,[size(recons.scan.x_matrix,1) size(recons.scan.x_matrix,2) size(cpw_dataset.data,3) size(cpw_dataset.data,4)]);
 
 % show data
 for f=1:size(reshaped_data,4)
