@@ -6,7 +6,15 @@
 #include <tuple>
 #include <valarray>
 #include <set>
-#include <ppl.h>             // parallel processing library
+
+// parallel processing library
+#if defined(_WIN_) 
+    #include <ppl.h> // requires VS2010+
+#endif
+        
+#if defined (_UNIX_) 
+    #include <omp.h>        
+#endif    
 
 // compulsory input
 #define	M_P			prhs[0]	// CPW dataset [samples, channels, firings, frames]
@@ -81,14 +89,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// DATASET
 	///////////////////////////////////////
 	int ndim = (int)mxGetNumberOfDimensions(M_P);
-	if (ndim<3 || ndim>4) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown STA dataset format. Expected [samples, channels, firings, frames]");
+	if (ndim<2 || ndim>4) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown STA dataset format. Expected [samples, channels, firings, frames]");
 	const mwSize* p_dim = mxGetDimensions(M_P);
-	const int L = (int)p_dim[0];	// number of time samples
-	const int N = (int)p_dim[1];	// number of channels 
-	const int NA = (int)p_dim[2];	// number of angles  
-	int F = (int)1;
-	if (ndim == 4) F = (int)p_dim[3]; // number of frames
-
+	int L = (int)p_dim[0];	// number of time samples
+	int N = (int)p_dim[1];	// number of channels 
+	int NA = (int)1;		// number of angles 
+	int F = (int)1;			// number of frames
+	if (ndim == 4) {
+		NA = (int)p_dim[2]; // number of angles
+		F = (int)p_dim[3];	// number of frames
+	}
+	if (ndim == 3) {
+		NA = (int)p_dim[2]; // number of angles
+	}
+    
 	if (verbose) {
 		mexPrintf("Samples							%i\n", L);
 		mexPrintf("Channels						%i\n", N);
@@ -234,8 +248,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	//////////////////////////////////////////////////////
 	// Beamforming loop
 	if (verbose) { mexPrintf("2.- Beamforming (multicore)\n"); mexEvalString("drawnow;"); }
-	Concurrency::parallel_for(0, P, [&](int pp) {
-		// for(int nz=0; nz<Lz; nz++) { // z vector
+
+#if defined (_WIN_)    
+	Concurrency::parallel_for(0, P, [&](int pp) 
+#else
+    #if defined (_UNIX_) 
+        int pp;    
+        #pragma omp parallel num_threads(omp_get_num_procs())
+        {
+        #pragma omp for
+        for(pp = 0; pp < P; ++pp)
+    #else          
+        for(int pp = 0; pp < P; pp++)
+    #endif
+#endif          
+    {            
 		float& zz = z[pp];
 		float& xx = x[pp];
 
@@ -278,8 +305,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 				}
 			} // end rx loop
 		} // end tx loop
-	}); // end pixel loop <- concurrent
+	} // end pixel loop 
 
+ #if defined (_WIN_) 
+        );
+ #else
+    #if defined (_UNIX_) 
+    }
+    #endif
+ #endif    
+    
 	if (verbose) {
 		mexPrintf("3.- Copying results to output structures\n");
 		mexPrintf("---------------------------------------------------\n");

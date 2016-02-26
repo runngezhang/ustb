@@ -12,3 +12,8 @@ data/
 +mex/examples/
 +mex/engines/python/dist/matlab/engine/win64/matlabengineforpython2_7.pyd
 +mex/engines/
++mex/.mex/examples/
++mex/.mex/include/libmatlbmx.mlib
++mex/.mex/include/
++mex/.mex/lib/
++mex/.mex/engines/
