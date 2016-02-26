@@ -13,8 +13,9 @@ classdef reconstruction < handle
         data                        % matrix containing the reconstructed raw signal
         
         % informative
-        no_frames                   % Number of frames in the reconstruction
-        no_orientations             % Number of orientations in the reconstruction
+        frames                      % Number of frames in the reconstruction
+        orientations                % Number of orientations in the reconstruction
+        firings                     % Number of firings in the reconstruction, only for low resolution images        
         format=E.signal_format.RF   % format of the signal
         central_frequency           % central frequency [Hz]
         bandwidth                   % signal bandwidth [Hz]
@@ -70,8 +71,8 @@ classdef reconstruction < handle
             h.format=object.format;                 
             h.data=object.data;
             h.envelope=object.envelope;
-            if isprop(object,'no_frames') h.no_frames=object.no_frames; end
-            if isprop(object,'no_orientations') h.no_orientations=object.no_orientations; end
+            if isprop(object,'frames') h.frames=object.frames; end
+            if isprop(object,'orientations') h.orientations=object.orientations; end
             h.central_frequency=object.central_frequency;     
             h.bandwidth=object.bandwidth;
         end
@@ -215,15 +216,15 @@ classdef reconstruction < handle
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
 
             % add number of frames
-            attr = h.no_frames;
-            attr_details.Name = 'no_frames';
+            attr = h.frames;
+            attr_details.Name = 'frames';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
 
             % add number of orientations
-            attr = h.no_orientations;
-            attr_details.Name = 'no_orientations';
+            attr = h.orientations;
+            attr_details.Name = 'orientations';
             attr_details.AttachedTo = location;
             attr_details.AttachType = 'group';
             hdf5write(filename, attr_details, attr, 'WriteMode', 'append');
@@ -305,22 +306,22 @@ classdef reconstruction < handle
             
             % read number of frames
             if(strcmp(vers{1}(1:5),'0.0.1'))
-                h.no_frames=h5readatt(filename,location,'frames');    
+                h.frames=h5readatt(filename,location,'frames');    
             else
-                h.no_frames=h5readatt(filename,location,'no_frames');
+                h.frames=h5readatt(filename,location,'frames');
             end
             
             % read orientations
             if(strcmp(vers{1}(1:5),'0.0.1'))
-                h.no_orientations=1;
+                h.orientations=1;
                 h.orientation=orientation();
                 h.orientation.transmit_beam.huff_read(filename,[location '/transmit_beam']);
                 h.orientation.receive_beam.huff_read(filename,[location '/receive_beam']);
             else
-                h.no_orientations=h5readatt(filename,location,'no_orientation');
+                h.orientations=h5readatt(filename,location,'no_orientation');
 
                 % read orientations
-                for o=1:h.no_orientations
+                for o=1:h.orientations
                     h.orientation(n)=h.orientation(n).huff_read(filename,[location sprintf('/orientation%d',o)]);
                 end
             end
@@ -384,8 +385,8 @@ classdef reconstruction < handle
                     
                     % computing envolvent through hilbert
                     im=zeros(size(h.data));
-                    for f=1:h.no_frames
-                        for o=1:h.no_orientations
+                    for f=1:h.frames
+                        for o=1:h.orientations
                             im(:,:,o,f)=abs(hilbert(h.data(:,:,o,f)));
                         end
                     end
@@ -433,27 +434,39 @@ classdef reconstruction < handle
             
             % Ploting image reconstruction
             figure; set(gca,'fontsize',16); 
-            for f=1:h.no_frames
-                for o=1:h.no_orientations
-                    x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
-                    z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
-                    % black background
-                    %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
-                    pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,o,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
-                    axis equal manual;
-                    xlabel('x [mm]');
-                    ylabel('z [mm]');
-                    set(gca,'YDir','reverse');
-                    set(gca,'fontsize',16);
-                    axis([x_lim z_lim]);
-                    if exist('title_string') 
-                        title(sprintf('%s frame=%d',title_string,f));
-                    else
-                        title(sprintf('%s (%s) orientation=%d frame=%d',char(h.name),char(h.format),o,f));
+            if(h.firings>1)
+                set(gcf,'Position',[0    0     400*h.firings  400*h.orientations]);
+            else
+                set(gcf,'Position',[0    0     400*h.orientations 400]);
+            end
+            for f=1:h.frames
+                for o=1:h.orientations
+                    for n=1:h.firings
+                        if(h.firings>1)
+                            subplot(h.orientations,h.firings,(o-1)*h.orientations+n);
+                        else
+                            subplot(1,h.orientations,o);
+                        end
+                        x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                        z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
+                        % black background
+                        %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
+                        pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,n,o,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
+                        axis equal manual;
+                        xlabel('x [mm]');
+                        ylabel('z [mm]');
+                        set(gca,'YDir','reverse');
+                        set(gca,'fontsize',16);
+                        axis([x_lim z_lim]);
+                        if exist('title_string') 
+                            title(sprintf('%s frame=%d',title_string,f));
+                        else
+                            title(sprintf('F%d,O%d,Fr%d',n,o,f));
+                        end
                     end
-                    drawnow; hold off;
-                    pause(0.05);
                 end
+                drawnow; hold off;
+                pause(0.05);
             end
         end
         
@@ -483,31 +496,38 @@ classdef reconstruction < handle
             
             im=20*log10(h.envelope./max(h.envelope(:)));
             figure; set(gca,'fontsize',16); 
-            for f=1:h.no_frames
-                for o=1:h.no_orientations
-                    x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
-                    z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
-                    pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,o,f)); shading flat; colormap gray; caxis([-dynamic_range 0]);colorbar; hold on;
-                    axis equal manual;
-                    xlabel('x [mm]');
-                    ylabel('z [mm]');
-                    set(gca,'YDir','reverse');
-                    set(gca,'fontsize',16);
-                    axis([x_lim z_lim]);
-                     if exist('title_string') 
-                        title(sprintf('%s frame=%d',title_string,f));
-                    else
-                        title(sprintf('orientation=%d frame=%d',o,f)); 
+            for f=1:h.frames
+                for o=1:h.orientations
+                    for n=1:h.firings
+                        if(h.firings>1)
+                            subplot(h.orientations,h.firings,(o-1)*h.orientations+n);
+                        else
+                            subplot(1,h.orientations,o);
+                        end              
+                        x_lim=[min(h.scan.x_matrix(:)) max(h.scan.x_matrix(:))]*1e3;
+                        z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
+                        pcolor(h.scan.x_matrix*1e3,h.scan.z_matrix*1e3,im(:,:,n,o,f)); shading flat; colormap gray; caxis([-dynamic_range 0]);colorbar; hold on;
+                        axis equal manual;
+                        xlabel('x [mm]');
+                        ylabel('z [mm]');
+                        set(gca,'YDir','reverse');
+                        set(gca,'fontsize',16);
+                        axis([x_lim z_lim]);
+                        if exist('title_string') 
+                            title(sprintf('%s frame=%d',title_string,f));
+                        else
+                            title(sprintf('F%d,O%d,Fr%d',n,o,f));
+                        end
+                        set(gcf,'Position',[200   200   figure_size(1) figure_size(2)]);
                     end
-                    set(gcf,'Position',[200   100   figure_size(1) figure_size(2)]);
-                    drawnow;
-                    pause(0.2);
-
-                    frame = getframe(gcf,[0 0 figure_size(1) figure_size(2)]);
-                    writeVideo(writerObj,frame);
-
-                    hold off;
                 end
+                drawnow;
+                pause(0.2);
+
+                frame = getframe(gcf,[0 0 figure_size(1) figure_size(2)]);
+                writeVideo(writerObj,frame);
+
+                hold off;
             end
 
             close(writerObj);
@@ -518,27 +538,16 @@ classdef reconstruction < handle
     %% Set methods
     methods
         function h=set.data(h,input_data)
-            % column-based format
-            if(size(input_data,1)==h.scan.pixels)&&ndims(input_data)==3
-                h.no_orientations=size(input_data,2);
-                h.no_frames=size(input_data,3);
+            % check that the data format matches the specification
+            assert((size(input_data,1)==h.scan.Nz)&&(size(input_data,2)==h.scan.Nx), 'The number of rows in the data does not match the scan specification!');
+            h.firings=size(input_data,3);
+            h.orientations=size(input_data,4);
+            h.frames=size(input_data,5);
             
-                % reshape beamformed image
-                h.data=reshape(input_data,[size(h.scan.x_matrix,1) size(h.scan.x_matrix,2) h.no_orientations h.no_frames]);
-                h.envelope=[];
-            % matrix format
-            else
-                % check that the data format matches the specification
-                assert((size(input_data,1)==size(h.scan.x_matrix,1))&&(size(input_data,2)==size(h.scan.x_matrix,2)), 'The number of rows in the data does not match the scan specification!');
-                h.no_orientations=size(input_data,3);
-                h.no_frames=size(input_data,4);
-            
-                % copy beamformed image
-                h.data=input_data;
-                h.envelope=[];
-            end
+            % copy beamformed image
+            h.data=input_data;
+            h.envelope=[];
         end
     end
-
 end
 

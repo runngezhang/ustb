@@ -135,9 +135,11 @@ classdef cpw < us_dataset
             
             % reserving space
             if (implem==E.implementation.thor_andreas||implem==E.implementation.low_resolution)
+                % low resolution methods
                 total_data=zeros(recons.scan.Nz,recons.scan.Nx,h.firings,length(recons.orientation),h.frames);
             else
-                total_data=zeros(recons.scan.Nz,recons.scan.Nx,length(recons.orientation),h.frames);
+                % compounded methods
+                total_data=zeros(recons.scan.Nz,recons.scan.Nx,1,length(recons.orientation),h.frames);
             end
             
             % loop over orientations
@@ -160,7 +162,7 @@ classdef cpw < us_dataset
                 if (implem==E.implementation.thor_andreas||implem==E.implementation.low_resolution)
                     total_data(:,:,:,o,:)=reshape(temporal_data,[recons.scan.Nz recons.scan.Nx h.firings 1 h.frames]);
                 else
-                    total_data(:,:,o,:)=reshape(temporal_data,[recons.scan.Nz recons.scan.Nx 1 h.frames]);
+                    total_data(:,:,1,o,:)=reshape(temporal_data,[recons.scan.Nz recons.scan.Nx 1 1 h.frames]);
                 end                
             end
             
