@@ -77,7 +77,7 @@ end
 
 %% plane wave sequence
 alpha_max=15*pi/180;                        % maximum angle [rad]
-Na=1;                                       % number of plane waves 
+Na=3;                                       % number of plane waves 
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
 F=2;                                        % number of frames
 
@@ -201,20 +201,23 @@ title('After beamforming')
 
 %% Envelope
 figure(101);subplot(2,2,3);
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ustb.data(:)))),'b'); axis tight; hold on;
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ustb_mex.data(:)))),'g--'); 
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ta.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ta.data(:)))),'r:'); 
-plot(scan.z_axis*1e3,20*log10(abs(cpw_image_lr.data(:,ceil(scan.Nx/2),1,1))/max(abs(cpw_image_ta.data(:)))),'c-.'); 
+plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1,1))/max(abs(cpw_image_ustb.data(:)))),'b'); axis tight; hold on;
+plot(scan.z_axis*1e3,20*log10(abs(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1,1))/max(abs(cpw_image_ustb_mex.data(:)))),'g--'); 
+ta_compound=sum(cpw_image_ta.data(:,ceil(scan.Nx/2),:,1,1),3);
+plot(scan.z_axis*1e3,20*log10(abs(ta_compound)/max(abs(ta_compound(:)))),'r:'); 
+lr_compound=sum(cpw_image_lr.data(:,ceil(scan.Nx/2),:,1,1),3);
+plot(scan.z_axis*1e3,20*log10(abs(lr_compound)/max(abs(lr_compound(:)))),'c-.'); 
+
 xlim([5 50])
 legend('USTB matlab','USTB mex','Thor-Andreas','Low resolution mex');
 title('Beamformed Envelope')
 
 %% Angle
 figure(101);subplot(2,2,4);
-plot(scan.z_axis*1e3,angle(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1)),'b'); axis tight; hold on;
-plot(scan.z_axis*1e3,angle(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1)),'g--'); 
-plot(scan.z_axis*1e3,angle(cpw_image_ta.data(:,ceil(scan.Nx/2),1,1)),'r:'); 
-plot(scan.z_axis*1e3,angle(cpw_image_lr.data(:,ceil(scan.Nx/2),1,1)),'c-.'); 
+plot(scan.z_axis*1e3,angle(cpw_image_ustb.data(:,ceil(scan.Nx/2),1,1,1)),'b'); axis tight; hold on;
+plot(scan.z_axis*1e3,angle(cpw_image_ustb_mex.data(:,ceil(scan.Nx/2),1,1,1)),'g--'); 
+plot(scan.z_axis*1e3,angle(ta_compound),'r:'); 
+plot(scan.z_axis*1e3,angle(lr_compound),'c-.'); 
 xlim([5 50])
 legend('USTB matlab','USTB mex','Thor-Andreas','Low resolution mex');
 title('Beamformed Angle')

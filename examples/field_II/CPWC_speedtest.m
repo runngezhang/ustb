@@ -126,8 +126,6 @@ for f=1:F
 end
 close(wb);
 
-%CPW=repmat(CPW,[1 1 1 100]);
-
 %% USTB 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -168,9 +166,10 @@ cpw_image_lr=reconstruction();
 cpw_image_lr.scan=scan;
 cpw_image_lr.orientation=orien;
 
-for f=1:30
+frames=1:5:100
+for f=1:length(frames)
     % convert to IQ data
-    cpw_dataset.data=repmat(cpw_dataset.data(:,:,:,1),[1 1 1 f]);
+    cpw_dataset.data=repmat(cpw_dataset.data(:,:,:,1),[1 1 1 frames(f)]);
     
     %% beamform ustb mex
     mex_time(f)=cpw_dataset.image_reconstruction(cpw_image_ustb_mex,E.implementation.mex);
@@ -178,13 +177,13 @@ for f=1:30
     %% beamform thor-andreas code
     ta_time(f)=cpw_dataset.image_reconstruction(cpw_image_ta,E.implementation.thor_andreas);
 
-    %% beamform thor-andreas code
+    %% beamform low resolution code
     lr_time(f)=cpw_dataset.image_reconstruction(cpw_image_lr,E.implementation.low_resolution);
     
     figure(101);
-    plot(1:f,mex_time(1:f),'b'); hold on; grid on;
-    plot(1:f,ta_time(1:f),'r');
-    plot(1:f,lr_time(1:f),'g');
+    plot(frames(1:f),mex_time(1:f),'b'); hold on; grid on;
+    plot(frames(1:f),ta_time(1:f),'r');
+    plot(frames(1:f),lr_time(1:f),'g');
     legend('ustb mex','thor-andreas','ustb low resolution');
     drawnow;
 end

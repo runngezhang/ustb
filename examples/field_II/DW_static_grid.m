@@ -1,11 +1,10 @@
-%% Computation of a STAI dataset with Field II and beamforming with USTB
+%% Computation of a diverging wave dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into a
-% STA class, and then demodulate and beamform it with the USTB routines.
+% VS class, and then demodulate and beamform it with the USTB routines.
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     11.03.2015
-% updated:  01.10.2015
+% created:  02.10.2015
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 
 clear all;
@@ -54,8 +53,8 @@ title('2-ways impulse response Field II');
 
 %% aperture objects
 % definition of the mesh geometry
-noSubAz=2;              % number of subelements in the azimuth direction
-noSubEl=8;              % number of subelements in the elevation direction
+noSubAz=round(width/(lambda/8));              % number of subelements in the azimuth direction
+noSubEl=round(height/(lambda/8));             % number of subelements in the elevation direction
 Th = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 Rh = xdc_linear_array (N_elements, width, height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 
@@ -78,6 +77,11 @@ for n=1:N_elements
     x0(n)=mean(geo(1,n_ini:n_fin));
 end
 
+%% diverging wave sequence
+Na=15;
+source=[linspace(-20e-3,20e-3,Na).' zeros(Na,1) -10e-3*ones(Na,1)];
+F=1;                                        % number of frames
+
 %% phantom
 x_point=-15e-3:5e-3:15e-3;                                  % x-coordinate of the scatterers [m]
 z_point=5e-3:5e-3:40e-3;                                    % z-coordinate of the scatterers [m]
@@ -88,32 +92,40 @@ amp=ones(N_sca,1);                                          % list with the scat
 cropat=round(2*sqrt((max(x_point)-min(x_point))^2+max(z_point)^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
-t_out=0:dt:((cropat-1)*dt);                 % output time vector
-STA=zeros(cropat,N_elements,N_elements);    % impulse response channel data
+t_out=0:dt:((cropat-1)*dt);         % output time vector
+DW=zeros(cropat,N_elements,Na,F);  % impulse response channel data
 
-%% Compute STA signals
-disp('Field II: Computing STA dataset');
-wb = waitbar(0, 'Field II: Computing STA dataset');
-for n=1:N_elements
-    waitbar(n/N_elements, wb);
+%% Compute CPW signals
+time_index=0;
+disp('Field II: Computing DW dataset');
+wb = waitbar(0, 'Field II: Computing DW dataset');
+for f=1:F
+    waitbar(0, wb, sprintf('Field II: Computing DW dataset, frame %d',f));
+    for n=1:Na
+        waitbar(n/Na, wb);
+        
+        dst=sqrt((source(n,1)-x0).^2+source(n,3).^2);
+        
+        % transmit aperture
+        xdc_apodization(Th,0,ones(1,N_elements));
+        xdc_times_focus(Th,0,dst/c0);
 
-    % transmit aperture
-    xdc_apodization(Th, 0, [zeros(1,n-1) 1 zeros(1,N_elements-n)]);
-    xdc_focus_times(Th, 0, zeros(1,N_elements));
-    
-    % receive aperture    
-    xdc_apodization(Rh, 0, ones(1,N_elements));
-    xdc_focus_times(Rh, 0, zeros(1,N_elements));
-    
-    % do calculation
-    [v,t]=calc_scat_multi(Th, Rh, sca, amp);
-    
-    % lag compensation
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
-    v_aux=interp1(t_in,v,t_out,'linear',0);
+        % receive aperture
+        xdc_apodization(Rh, 0, ones(1,N_elements));
+        xdc_focus_times(Rh, 0, zeros(1,N_elements));
+        
+        % do calculation
+        [v,t]=calc_scat_multi(Th, Rh, sca, ones(size(sca,1),1));
 
-    % build the dataset
-    STA(:,:,n)=v_aux;
+        % lag compensation
+        t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
+        v_aux=interp1(t_in,v,t_out,'linear',0);
+
+        % build the dataset
+        DW(:,:,n,f)=v_aux;
+        
+        time_index=time_index+1;
+    end
 end
 close(wb);
 
@@ -121,16 +133,17 @@ close(wb);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% define a sta object
-sta_dataset=sta('Field II, STA, RF format',...    % name of the dataset
-      E.signal_format.RF,...            % signal format: RF or IQ
-      c0,...                            % reference speed of sound (m/s)
+%% Define a cpw dataset object
+vs_dataset=vs('Field II, DW, RF format',...    % name of the dataset
+      E.signal_format.RF,...                   % signal format: RF or IQ
+      c0,...                             % reference speed of sound (m/s)
+      source,...                       % angle vector [rad]
       t_out.',...                       % time vector (s)
-      STA,...                           % matrix with the data [samples, channels, firings, frames]
+      DW,...                            % matrix with the data [samples, channels, firings, frames]
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
-% and demodulate  
-sta_dataset.demodulate(true,4.5e6,[0 1 9 10]*1e6,12e6,E.demodulation_type.fastfon);
+% convert to IQ data
+vs_dataset.demodulate(true,[],[],[],E.demodulation_algorithm.fieldsim);
 
 %% define a reconstruction
 
@@ -146,12 +159,10 @@ orien.transmit_beam=beam(F_number,E.apodization_type.boxcar);
 orien.receive_beam=beam(F_number,E.apodization_type.boxcar);
 
 % define a reconstruction 
-sta_image=reconstruction();
-sta_image.scan=scan;
-sta_image.orientation=orien;
+vs_image=reconstruction();
+vs_image.scan=scan;
+vs_image.orientation=orien;
 
 %% beamform and show
-sta_dataset.image_reconstruction(sta_image);
-sta_image.show();
-
-
+vs_dataset.image_reconstruction(vs_image);
+vs_image.show('log',40);
