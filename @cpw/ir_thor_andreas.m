@@ -17,30 +17,26 @@ function [sig] = ir_thor_andreas(h,r)
     p.dx        = p.pitch;
     p.t0        = single(h.time(1));
     p.kerf      = single(0); % needed?
-    p.tx_angle  = single(h.angle);
-    p.rx_angle  = single(zeros(length(h.angle),1));
     p.fs_in     = single(h.sampling_frequency);
     p.fs_out    = single(p.fs_in);
     p.f_demod   = single(h.modulation_frequency);
     p.FN        = single(1); % needed?
-
+    p.tx_angle  = single(repmat(h.angle,[h.frames]));
+    p.rx_angle  = single(zeros(h.firings*h.frames,1));
+    
     % call mex
     sig=zeros(r.scan.pixels,h.firings,h.frames);
-    for n=1:h.frames
-        sig_temporal = mex.planewave_beamforming2(single(h.data),p,single(r.scan.x_axis),single(r.scan.z_axis),single(reshape(h.receive_apodization,[r.scan.Nz r.scan.Nx h.channels])));  % beamforming procedure
-        sig_temporal(isnan(sig_temporal)) = 0;
-        
-        % compound
-        % sig_temporal = sum(sig_temporal,3);
 
-        % undo the distance correction factor
-        ta_z_axis=h.time*h.c0/2;
-        corr_factor=exp(j*2*pi*h.modulation_frequency*h.time);
-        sig_temporal=bsxfun(@times,sig_temporal,corr_factor(1:r.scan.Nz));
+    sig_temporal = mex.planewave_beamforming2(single(h.data(:,:,:)),p,single(r.scan.x_axis),single(r.scan.z_axis),single(reshape(h.receive_apodization,[r.scan.Nz r.scan.Nx h.channels])));  % beamforming procedure
+    sig_temporal(isnan(sig_temporal)) = 0;
+
+    % undo the distance correction factor
+    ta_z_axis=h.time*h.c0/2;
+    corr_factor=exp(j*2*pi*h.modulation_frequency*h.time);
+    sig_temporal=bsxfun(@times,sig_temporal,corr_factor(1:r.scan.Nz));
         
-        % reshape
-        sig(:,:,n) = reshape(sig_temporal,[r.scan.pixels h.firings]);
-    end
+    % reshape
+    sig = reshape(sig_temporal,[r.scan.pixels h.firings h.frames]);
    
 
 end
