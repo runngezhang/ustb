@@ -17,6 +17,8 @@ classdef sector_scan
         z_matrix    % Matrix containing the z coordinate of each pixel in the matrix
         x           % Vector containing the x coordinate of each pixel in the matrix
         z           % Vector containing the z coordinate of each pixel in the matrix
+        Nx          % Number of pixels in the x-axis
+        Nz          % Number of pixels in the x-axis
         pixels      % total number of pixels in the matrix
     end
     
@@ -26,7 +28,7 @@ classdef sector_scan
     
     %% Constructor
     methods (Access = public)
-        function h = sector_scan(azimuth_input,depth_input)
+        function h = sector_scan(azimuth_input,depth_input,apex_input)
             %SECTOR_SCAN   Constructor of the sector_scan class
             %
             %   Syntax:
@@ -35,12 +37,18 @@ classdef sector_scan
             %       depth_vector      Vector defining the depth coordinates of each column of pixels
             %
             %   See also SECTOR_SCAN
-            
-            if nargin>0
-                h.azimuth_axis=azimuth_input;
+
+            h.apex=[0 0 0];
+            if nargin>2
+                h.apex=apex_input;
             end
+            h.depth_axis=linspace(0,100e-3,256).';
             if nargin>1
                 h.depth_axis=depth_input;
+            end           
+            h.azimuth_axis=linspace(-30*pi/180,30*pi/180,256).';
+            if nargin>0
+                h.azimuth_axis=azimuth_input;
             end
         end
     end
@@ -170,6 +178,10 @@ classdef sector_scan
             assert(size(input_vector,1)>size(input_vector,2), 'The azimuth vector must be a column vector!')
             h.azimuth_axis=input_vector;
             
+            if isempty(h.apex)
+                h.apex=[0 0 0];
+            end
+            
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
             
@@ -178,13 +190,19 @@ classdef sector_scan
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);
+                h.Nx=length(h.azimuth_axis);   
+                h.Nz=length(h.depth_axis);                
                 h.pixels=length(h.x);
             end
         end
         function h=set.depth_axis(h,input_vector)
             assert(size(input_vector,1)>size(input_vector,2), 'The depth vector must be a column vector!')
             h.depth_axis=input_vector;
-            
+
+            if isempty(h.apex)
+                h.apex=[0 0 0];
+            end
+
             if ~isempty(h.azimuth_axis)
                 [aa, dd]=meshgrid(h.azimuth_axis,h.depth_axis); 
 
@@ -193,6 +211,8 @@ classdef sector_scan
 
                 h.x=h.x_matrix(:);
                 h.z=h.z_matrix(:);
+                h.Nx=length(h.azimuth_axis);   
+                h.Nz=length(h.depth_axis);                
                 h.pixels=length(h.x);
             end
         end
