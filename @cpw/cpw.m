@@ -43,6 +43,8 @@ classdef cpw < us_dataset
 
                 if(h.format==E.signal_format.IQ) 
                     h.modulation_frequency=input_modulation_frequency;
+                else
+                    h.modulation_frequency=0;
                 end
 
                 % checks
@@ -126,7 +128,9 @@ classdef cpw < us_dataset
             %       implementation          Enumeration specifying the algorithm 
             %
             %   See also RECONSTRUCTION, CPW
-             
+            
+            if isempty(recons.scan) error('No scan provided'); end
+            
             % default implementation
             if ~exist('implem') implem=E.implementation.mex; end
             

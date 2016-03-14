@@ -34,8 +34,11 @@ classdef sta < us_dataset
                 h.time = input_time;
                 h.data = input_data;
                 h.geom = input_geom;
+                
                 if(h.format==E.signal_format.IQ) 
                     h.modulation_frequency=input_modulation_frequency;
+                else
+                    h.modulation_frequency=0;
                 end
 
                 % checks
@@ -114,6 +117,8 @@ classdef sta < us_dataset
             %
             %   See also RECONSTRUCTION, STA
                         
+            if isempty(recons.scan) error('No scan provided'); end
+            
             % default implementation
             if ~exist('implem') implem=E.implementation.mex; end
             

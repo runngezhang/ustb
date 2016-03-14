@@ -40,9 +40,11 @@ classdef vs < us_dataset
                 h.data = input_data;
                 h.geom = input_geom;
                 h.source = input_source;
-
+                
                 if(h.format==E.signal_format.IQ) 
                     h.modulation_frequency=input_modulation_frequency;
+                else
+                    h.modulation_frequency=0;
                 end
 
                 % checks
@@ -128,6 +130,8 @@ classdef vs < us_dataset
             %
             %   See also RECONSTRUCTION, VS
              
+            if isempty(recons.scan) error('No scan provided'); end
+            
             % default implementation
             if ~exist('implem') implem=E.implementation.mex; end
             

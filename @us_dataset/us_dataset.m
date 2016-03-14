@@ -220,6 +220,8 @@ classdef us_dataset < handle
             % read modulation frequency
             if h.format==E.signal_format.IQ
                 h.modulation_frequency=h5readatt(filename,location,'modulation_frequency');
+            else
+                h.modulation_frequency=0;
             end
 
             % read data
