@@ -398,7 +398,7 @@ classdef reconstruction < handle
             end
         end
         
-        function im=show(h,compression_type,dynamic_range,title_string)
+        function im=show(h,compression_type,dynamic_range,title_string,frames)
             %SHOW    Plots the envelope of the beamformed data and returns a copy of the image
             %
             %   Syntax:
@@ -411,6 +411,7 @@ classdef reconstruction < handle
        
             if ~exist('compression_type') compression_type='log'; end
             if ~exist('dynamic_range') dynamic_range=60; end
+            if ~exist('frames') frames=1:h.frames; end
             
             % computing envelope
             if isempty(h.envelope) h.envelope=h.calculate_envelope(); end
@@ -439,7 +440,7 @@ classdef reconstruction < handle
             else
                 set(gcf,'Position',[0    0     400*h.orientations 400]);
             end
-            for f=1:h.frames
+            for f=1:length(frames)
                 for o=1:h.orientations
                     for n=1:h.firings
                         if(h.firings>1)
@@ -451,7 +452,7 @@ classdef reconstruction < handle
                         z_lim=[min(h.scan.z_matrix(:)) max(h.scan.z_matrix(:))]*1e3;
                         % black background
                         %pcolor(x_lim,z_lim,[-dynamic_range -dynamic_range; -dynamic_range -dynamic_range]); shading flat; colormap gray; caxis([-dynamic_range 0]); colorbar; hold on;
-                        pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,n,o,f)); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
+                        pcolor((h.scan.x_matrix)*1e3,(h.scan.z_matrix)*1e3,im(:,:,n,o,frames(f))); shading flat; colormap gray; caxis(vrange); colorbar; hold on;
                         axis equal manual;
                         xlabel('x [mm]');
                         ylabel('z [mm]');
@@ -459,9 +460,9 @@ classdef reconstruction < handle
                         set(gca,'fontsize',16);
                         axis([x_lim z_lim]);
                         if exist('title_string') 
-                            title(sprintf('%s frame=%d',title_string,f));
+                            title(sprintf('%s frame=%d',title_string,frames(f)));
                         else
-                            title(sprintf('F%d,O%d,Fr%d',n,o,f));
+                            title(sprintf('F%d,O%d,Fr%d',n,o,frames(f)));
                         end
                     end
                 end
