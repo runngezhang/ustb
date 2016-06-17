@@ -11,5 +11,8 @@ mex source/cpwir.cpp
 %% CPWC Low resolution images
 mex.build_mex('cpwlr');
 
+%% CPWC Low-Low resolution images
+mex.build_mex('cpwllr');
+
 %% compile thor-andreas code
 mex.build_bf(1,1,1,1)
