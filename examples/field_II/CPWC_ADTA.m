@@ -78,24 +78,15 @@ alpha_max=15*pi/180;                        % maximum angle [rad]
 Na=3;                                       % number of plane waves 
 angles=linspace(-alpha_max,alpha_max,Na);   % vector of angles [rad]
 F=1;                                        % number of frames
-%angles=repmat(angles,[1 3]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ADA (Angle Dependent Apodization)
-P=cycles/f0;     % pulse duration
-
+P=8*cycles/f0;     % pulse duration
 
 % writing sequence angles
 apo=zeros(length(angles),N_elements);
 for n = 1:length(angles);
-    switch round((1+n)/3)
-        case 1
-            xc=-10e-3; zc=20e-3;     % sweet point (center of the image)
-        case 2
             xc=0; zc=20e-3;     % sweet point (center of the image)
-        case 3
-            xc=10e-3; zc=20e-3;     % sweet point (center of the image)
-    end
     % lateral distance
     xd=x0-(xc-zc*tan(angles(n)));
     % theoretical limit
@@ -117,14 +108,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% phantom
-x_point=0;%-15e-3:1e-4:15e-3;                                      % x-coordinate of the scatterers [m]
-z_point=15e-3;%[13e-3:1e-4:14e-3 22e-3:1e-4:23e-3];%5e-3:5e-3:40e-3;   % z-coordinate of the scatterers [m]
+x_point=-15e-3:5e-3:15e-3;                                      % x-coordinate of the scatterers [m]
+z_point=5e-3:5e-3:40e-3;   % z-coordinate of the scatterers [m]
 [xxp zzp]=meshgrid(x_point,z_point);
 N_sca=length(zzp(:));                                       % total number of scatterers
 sca=[xxp(:) zeros(N_sca,1) zzp(:)];                         % list with the scatterers coordinates [m]
 amp=ones(N_sca,1);                                          % list with the scatterers amplitudes
-cropat=round(2*sqrt((max(x_point)-min(x_point))^2+max(z_point)^2)/c0/dt);   % maximum time sample, samples after this will be dumped
-amp=random('unif',0,1,size(sca,1),1);
+cropat=2*round(2*sqrt((max(x_point)-min(x_point))^2+max(z_point)^2)/c0/dt);   % maximum time sample, samples after this will be dumped
+%amp=1;%random('unif',0,1,size(sca,1),1);
 
 %% output data
 t_out=0:dt:((cropat-1)*dt);         % output time vector
@@ -140,8 +131,8 @@ for f=1:F
         waitbar(n/length(angles), wb);
         
         % transmit aperture
-        %xdc_apodization(Th,0,apo(n,:));
-        xdc_apodization(Th,0,ones(1,N_elements));
+        xdc_apodization(Th,0,apo(n,:));
+        %xdc_apodization(Th,0,ones(1,N_elements));
         xdc_times_focus(Th,0,x0(:).'*sin(angles(n))/c0);
 
         % receive aperture
@@ -177,18 +168,16 @@ cpw_dataset=cpw('Field II, CPW, RF format',...    % name of the dataset
       [x0.' zeros(N_elements,2)]);      % probe geometry [x, y, z] (m)
 
 % convert to IQ data
-cpw_dataset.demodulate(true,[],[],[],E.demodulation_algorithm.oyvind);
-
-%data_1=cpw_dataset.data(:,:,1:3);
-%data_2=cpw_dataset.data(:,:,4:6);
-%data_3=cpw_dataset.data(:,:,7:9);
+cpw_dataset.demodulate(true,[],[],[]);
 
 %% define a reconstruction
 
 % define a scan
 scan=linear_scan();
-scan.x_axis=linspace(-15e-3,15e-3,1024).';               % x vector [m]
-scan.z_axis=linspace(7e-3,27e-3,512).';                 % z vector [m]
+%scan.x_axis=linspace(-18e-3,18e-3,4*256).';
+%scan.z_axis=linspace(0e-3,45e-3,4*256).';
+scan.x_axis=linspace(-7e-3,7e-3,4*256).';
+scan.z_axis=linspace(8e-3,22e-3,4*256).';
 
 % define a synthetic orientation
 F_number=1.7;
@@ -202,39 +191,60 @@ cpw_image.scan=scan;
 cpw_image.orientation=orien;
 
 %% beamform and show
-cpw_dataset.angle=cpw_dataset.angle(1:3)
-
-cpw_dataset.data=data_1;
-cpw_dataset.image_reconstruction(cpw_image);
+cpw_dataset.image_reconstruction(cpw_image,E.implementation.low_resolution);
 image_1=cpw_image.show();
 
-cpw_dataset.data=data_2;
-cpw_dataset.image_reconstruction(cpw_image);
-image_2=cpw_image.show();
-
-cpw_dataset.data=data_3;
-cpw_dataset.image_reconstruction(cpw_image);
-image_3=cpw_image.show();
-
-
-mask_1=abs(scan.x_axis+10e-3)<6e-3; mask_1=filtfilt(ones(1,40)/40,1,double(mask_1)); mask_1=mask_1*60-60;
-mask_2=(abs(scan.x_axis+0e-3)<6e-3); mask_2=filtfilt(ones(1,40)/40,1,double(mask_2)); mask_2=mask_2*60-60;
-mask_3=(abs(scan.x_axis-10e-3)<6e-3); mask_3=filtfilt(ones(1,40)/40,1,double(mask_3)); mask_3=mask_3*60-60;
-figure;
-plot(mask_1); hold on;
-plot(mask_2);
-plot(mask_3);
-final_image=log10(bsxfun(@times,10.^image_1,10.^mask_1.')+bsxfun(@times,10.^image_2,10.^mask_2.')+bsxfun(@times,10.^image_3,10.^mask_3.'));
-final_image=image_1;
+% crazy filtering
+mask=scan.z_matrix>17e-3;
+kspace=fftshift(fft2(cpw_image.data));
+fkspace=filtfilt(ones(1,15)/15,1,kspace);
+fimage=ifft2(fftshift(fkspace));
+fimage=20*log10(abs(fimage)./max(abs(fimage(:))));
 
 figure;
-imagesc(scan.x_axis*1e3,scan.z_axis*1e3,final_image);
+subplot(1,2,1);
+imagesc(scan.x_axis*1e3,scan.z_axis*1e3,image_1(:,:,1));
+%imagesc(scan.x_axis*1e3,scan.z_axis*1e3,image_1);
 colormap gray; caxis([-50 0]); 
 colorbar;
 axis equal tight;  
 xlabel('x[mm]');
 ylabel('z[mm]');
 set(gca,'fontsize', 18);
-title('FLAT');
+
+subplot(1,2,2);
+imagesc([-1 1],[-1 1],abs(kspace(:,:,1)));
+colormap gray; 
+colorbar;
+axis equal tight;  
+xlabel('kx');
+ylabel('kz');
+set(gca,'fontsize', 18);
+xlim([-0.1 0.1]);
+ylim([-0.1 0.1]);
+
+% subplot(2,2,2);
+% imagesc(scan.x_axis*1e3,scan.z_axis*1e3,fimage(:,:,3));
+% %imagesc(scan.x_axis*1e3,scan.z_axis*1e3,image_1);
+% colormap gray; caxis([-50 0]); 
+% colorbar;
+% axis equal tight;  
+% xlabel('x[mm]');
+% ylabel('z[mm]');
+% set(gca,'fontsize', 18);
+% 
+% subplot(2,2,4);
+% imagesc([-1 1],[-1 1],abs(fkspace(:,:,1)));
+% colormap gray; 
+% colorbar;
+% axis equal tight;  
+% xlabel('x[mm]');
+% ylabel('z[mm]');
+% set(gca,'fontsize', 18);
+% xlim([-0.2 0.2]);
+% ylim([-0.2 0.2]);
+
+
 drawnow;
+
 
