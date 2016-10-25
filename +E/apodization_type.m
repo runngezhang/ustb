@@ -1,6 +1,11 @@
-classdef apodization_type
+classdef apodization_type < int32
    enumeration
-      none, boxcar, hanning, hamming, tukey25, tukey50, tukey75
+      none(0)
+      boxcar(1)
+      hanning(2) 
+      hamming(3)
+      tukey25(4) 
+      tukey50(5) 
+      tukey75(6)
    end
 end
-
