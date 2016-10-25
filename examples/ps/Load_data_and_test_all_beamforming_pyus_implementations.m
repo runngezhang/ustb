@@ -29,8 +29,8 @@ recons.scan.z_axis=linspace(39e-3,41e-3,100).';                 % z vector [m]
 % define the transmit & receive beams
 F_number=1.75;
 recons.orientation=orientation();
-recons.orientation.transmit_beam=beam(F_number, pyus.apodization_type.boxcar);
-recons.orientation.receive_beam=beam(F_number, pyus.apodization_type.boxcar);
+recons.orientation.transmit_beam=beam(F_number, E.apodization_type.boxcar);
+recons.orientation.receive_beam=beam(F_number, E.apodization_type.boxcar);
 
 
 %% Synthetic transmit aperture
@@ -39,7 +39,7 @@ load('ps_sta_iq.mat');                                      % load data; availab
 s=sta(s.name,s.format,s.c0,s.time,s.data,s.geom,s.modulation_frequency);  % define STA dataset object
 
 recons.name='STA, IQ, Matlab';                                  % reconstruction name (optional)
-pyus.image_reconstruction('ps_sta_iq.mat', recons, pyus.implementation.pyus, 'sta'); % request reconstruction
+pyus.image_reconstruction('ps_sta_iq.mat', recons, E.implementation.pyus, 'sta'); % request reconstruction
 im_1=recons.show();                                                % show 
 
 %% Coherent plane wave 
@@ -48,7 +48,7 @@ load('ps_cpw_iq.mat');                            % load data; available at http
 s=cpw(s.name,s.format,s.c0,s.angle,s.time,s.data,s.geom,s.modulation_frequency); % define CPW dataset object
 recons.name='CPW, IQ, PyUS'; % reconstruction name (optional)   
 
-pyus.image_reconstruction('ps_cpw_iq.mat', recons, pyus.implementation.pyus, 'cpw');
+pyus.image_reconstruction('ps_cpw_iq.mat', recons, E.implementation.pyus, 'cpw');
 im_2=recons.show();  % show 
 
 %% Virtual Source
@@ -57,6 +57,6 @@ load('ps_vs_iq.mat');                             % load data; available at http
 s=vs(s.name,s.format,s.c0,s.source,s.time,s.data,s.geom,s.modulation_frequency); % define VS dataset object
 
 recons.name='VS, IQ, PyUS';                                   % reconstruction name (optional)
-pyus.image_reconstruction('ps_vs_iq.mat', recons, pyus.implementation.pyus, 'vs');  % request reconstruction
+pyus.image_reconstruction('ps_vs_iq.mat', recons, E.implementation.pyus, 'vs');  % request reconstruction
 im_3 = recons.show();                                                % show 
 
