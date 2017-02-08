@@ -27,6 +27,7 @@
 // output
 #define	M_D			plhs[0] // output data [pixels, frames]
 
+// constants
 #define EPS 1e-6
 #define PI 3.14159265359
 
@@ -38,7 +39,6 @@
 typedef std::vector<float*> vec_p_float;
 
 //-----------------------------------------------------------------------------
-
 void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 		
 	///////////////////////////////
