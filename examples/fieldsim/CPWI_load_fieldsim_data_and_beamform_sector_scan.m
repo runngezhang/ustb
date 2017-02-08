@@ -16,7 +16,7 @@
 clear all;
 close all;
 
-load('../../data/joris/lv_neonatal_planewave.mat');
+load('E:\DATA\joris/lv_neonatal_planewave.mat');
 
 %% converting FielsSim data to USTB format
 
