@@ -17,6 +17,8 @@ close all
 %tag                 = '20161205-163945Angles29HyperCyst';
 tag                 = '20161205-161341Angles29';
 
+saveToHuff = 1;        %Do you want to save this dataset to Huff file?
+
 parameter_filename  = ['data/Alpinion/CPW/',tag,'/Sequence.mat'];
 data_filename       = ['data/Alpinion/CPW/',tag,'/40_layer0_idx40_BDATA_RF.mat']
 
@@ -55,12 +57,14 @@ cpw_image.orientation=orien;
 cpw_dataset.image_reconstruction(cpw_image,E.implementation.simple_matlab);
 cpw_image.show();
 
-%% create a huff object
-%recording=huff('recording_test.h5','w');
+if saveToHuff
+    %% create a huff object
+    recording=huff('alpinion_pw.h5','w');
 
-% adding datasets to staging area
-%recording.stage(cpw_image);
-%recording.stage(cpw_dataset); 
+    % adding datasets to staging area
+    recording.stage(cpw_image);
+    recording.stage(cpw_dataset); 
 
-%%
-%recording.write();
+    
+    recording.write();
+end
