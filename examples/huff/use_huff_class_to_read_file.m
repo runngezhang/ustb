@@ -3,7 +3,7 @@
 % This example shows how to interact with the huff class to read data from a hdf5 
 % file according to the specification HUFF v0.0.1.
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %   $Date: 2015/02/03 $
 
 %% create a huff object
