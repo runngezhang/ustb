@@ -1,4 +1,4 @@
-%% Adquire and record a STA dataset with L11-4v probe
+%% Adquire and record a CPWC dataset with L11-4v probe
 
 % date:     21.02.2017
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
@@ -24,7 +24,7 @@ close all;
 filename='a.mat';
 folderdata=['data\' datestr(now,'yyyymmdd')];
 mkdir(folderdata);            
-filedata=['L11_STA_' datestr(now,'HHMMSS') '.h5'];
+filedata=['L11_CPW_' datestr(now,'HHMMSS') '.h5'];
 hufffile=[folderdata '\' filedata];
 
 % scan area in live view
@@ -32,31 +32,39 @@ scan_area=[-19e-3 0e-3 19e-3 40e-3];
 pixels=[256 256];
 
 %% SI units
-c0=1540;                  % reference speed of sound [m/s]
-f0=5.2e6;                 % central frequency [Hz]
+c0=1540;                % reference speed of sound [m/s]
+f0=5.2e6;               % central frequency [Hz]
 
-ex_cycles = 2.5;          % number of cycles of the excitation signal (NOT half-cyles)
-ex_power = 0.67;          % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
-ex_polarity = 1;          % easy way of changing the polarity
+ex_cycles = 2.5;        % number of cycles of the excitation signal (NOT half-cycles)
+ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
+ex_polarity = 1;        % easy way of changing the polarity
 
-no_frames = 1;            % number of frames to be acquired
-no_packets = 1;           % number of repetitions per plane wave (mostly for Doppler)
-no_transmits = 128;       % number of transmissions (one per element) 
-buffer_size = 4096;       % number of samples in the buffer
-end_depth = 128;          % number of times samples to be acquired
+no_frames = 1;          % number of frames to be acquired
+no_packets = 1;         % number of apertures per plane wave
+no_planes = 15;         % number of acquisitions (ergo plane waves)
+buffer_size = 4096;     % number of samples in the buffer
+end_depth = 128;        % number of times samples to be acquired
 
-PRF=5000;                 % Pulse repetition frequency [pulses/s]
-framerate=PRF/no_packets/no_transmits/no_frames; % frame rate [frames/second]
+PRF=9000;                           % Pulse repetition frequency [pulses/s]
+framerate=PRF/no_packets/no_planes; % frame rate [frames/second]
 
 %% dependent values
-lambda=c0/f0;             % wavelength [m]
-Fs=4*f0;                  % sampling frequency
+lambda=c0/f0;           % wavelength [m]
+Fs=4*f0;                % sampling frequency
 
-%% System parameters
-Resource.Parameters.numTransmit = 128;      % number of transmit channels.
-Resource.Parameters.numRcvChannels = 128;   % number of receive channels.
-Resource.Parameters.speedOfSound = c0;      % set speed of sound in m/sec before calling computeTrans
-Resource.Parameters.simulateMode = 1;       % 1 forces simulate mode, even if hardware is present.
+%% angle sequence
+maximun_angle=16*pi/180;    % maximum angle [rad]
+if no_planes<2
+    angles=0;
+else
+    angles=linspace(-maximun_angle,maximun_angle,no_planes); % angle vector [rad]
+end
+
+%% System parameters.
+Resource.Parameters.numTransmit = 128;    % number of transmit channels.
+Resource.Parameters.numRcvChannels = 128; % number of receive channels.
+Resource.Parameters.speedOfSound = c0;    % set speed of sound in m/sec before calling computeTrans
+Resource.Parameters.simulateMode = 1;     % 0 means no simulation, if hardware is present.
 
 %% Specify Trans structure array.
 Trans.name = 'L11-4v';
@@ -74,13 +82,13 @@ SFormat.numRays = 1;             % no. of Rays (1 for Flat Focus)
 SFormat.FirstRayLoc = [0,0,0];   % x,y,z
 SFormat.rayDelta = Trans.numelements*Trans.spacing;  % spacing in radians(sector) or dist. between rays (wvlnghts)
 SFormat.startDepth = 2;          % Acquisition depth in wavelengths
-SFormat.endDepth = end_depth;    % This should preferrably be a multiple of 128 samples.
+SFormat.endDepth = end_depth;    % This should preferrably be a multiple of 128 samples.  
 
 %% Specify PData structure array.
 PData.sFormat = 1;      % use first SFormat structure.
 PData.Size(1) = pixels(2);  % Z
 PData.Size(2) = pixels(1);  % X
-PData.Size(3) = 1;          % single image page 
+PData.Size(3) = 1;          % single image page
 PData.pdeltaX = ((Trans.ElementPos(end,1)-Trans.ElementPos(1,1))*1e-3 /PData.Size(2))/lambda;
 PData.pdeltaZ = (end_depth*lambda/PData.Size(1))/lambda;
 PData.Origin = [Trans.ElementPos(1,1)*1e-3/lambda, 0, 0e-3/lambda]; % x,y,z of upper lft crnr.
@@ -90,7 +98,7 @@ Media.MP=[0, 0, 20e-3/lambda, 1; Trans.ElementPos];
 
 %% Specify Resources.
 Resource.RcvBuffer(1).datatype = 'int16';
-Resource.RcvBuffer(1).rowsPerFrame = no_packets*no_transmits*buffer_size; 
+Resource.RcvBuffer(1).rowsPerFrame = no_packets*no_planes*buffer_size; 
 Resource.RcvBuffer(1).colsPerFrame = Resource.Parameters.numRcvChannels;
 Resource.RcvBuffer(1).numFrames = no_frames;     % 40 frames used for RF cineloop.
 Resource.InterBuffer(1).datatype = 'complex';
@@ -100,8 +108,8 @@ Resource.InterBuffer(1).numFrames = 1;          % one intermediate buffer needed
 Resource.ImageBuffer(1).datatype = 'double';
 Resource.ImageBuffer(1).rowsPerFrame = 1024;
 Resource.ImageBuffer(1).colsPerFrame = PData.Size(2);
-Resource.ImageBuffer(1).numFrames = no_frames;   % image buffer 
-Resource.DisplayWindow(1).Title = 'L11-4v STAI';
+Resource.ImageBuffer(1).numFrames = no_frames;         % image buffer 
+Resource.DisplayWindow(1).Title = 'L11-4v CPWC';
 Resource.DisplayWindow(1).AxesUnits = 'mm';
 Resource.DisplayWindow(1).pdelta = PData.pdeltaX;
 Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner position
@@ -118,16 +126,16 @@ TW.Parameters = [f0/1e6, ex_power, ex_cycles*2, ex_polarity];
 %% Specify TX structure array.  
 TX = repmat(struct('waveform', 1, ...
                    'Origin', [0.0,0.0,0.0], ...
-                   'Apod', zeros(1,Resource.Parameters.numTransmit), ...
+                   'Apod', ones(1,Resource.Parameters.numTransmit), ...
                    'focus', 0.0, ...
                    'Steer', [0.0,0.0], ...
-                   'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_transmits); % number of apertures + 2 extra dummy transmits
+                   'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_planes);
 % writing sequence angles
-for n = 1:no_transmits
-    TX(n).Apod(n) = 1.0;
-    TX(n).Delay = computeTXDelays(TX(n)); 
+for n = 1:no_planes 
+    TX(n).Steer = [angles(n), 0.0];
+    TX(n).Delay = computeTXDelays(TX(n),'TOAE'); % use 'TransmitOnAllElements' flag 
 end
-              
+
 %% Specify TGC Waveform structure.
 TGC.CntrlPts = [139,535,650,710,770,932,992,1012];
 TGC.rangeMax = SFormat.endDepth;
@@ -149,15 +157,15 @@ Receive = repmat(struct('Apod', ones(1,128), ...
                         'acqNum', 1, ...
                         'samplesPerWave', 4, ...
                         'mode', 0, ...
-                        'callMediaFunc', 0),1,no_packets*no_transmits*no_frames);
-                    
+                        'callMediaFunc', 0),1,no_packets*no_planes*no_frames);
+
 %% - Set event specific Receive attributes.
 for i = 1:Resource.RcvBuffer(1).numFrames  % no_Apert*no_planes acquisitions per frame
-    I = no_packets*no_transmits*(i-1);
+    I = no_packets*no_planes*(i-1);
     Receive(I+1).callMediaFunc = 1;
     for j = 1:no_packets; 
-        J=no_transmits*(j-1);
-        for k = 1:no_transmits; % for each aperture acquire all angles    
+        J=no_planes*(j-1);
+        for k = 1:no_planes; % for each aperture acquire all angles    
             Receive(I+J+k).framenum = i;
             Receive(I+J+k).acqNum = J+k;
         end
@@ -170,21 +178,21 @@ Recon = struct('senscutoff', 0.6, ...
                'rcvBufFrame', -1, ...     % use most recently transferred frame
                'IntBufDest', [1,1], ...
                'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
-               'RINums', (1:no_transmits)');  %'newFrameTimeout',5000, ...
+               'RINums', (1:no_planes)');
 
 ReconInfo = repmat(struct('mode', 4, ...  % default is to accumulate IQ data.
                    'txnum', 1, ...
                    'rcvnum', 1, ...
-                   'regionnum', 0), 1, no_transmits);
+                   'regionnum', 0), 1, no_planes);
 
 % Set specific ReconInfo attributes.
 ReconInfo(1).mode = 3;
-for n=1:no_transmits
+for n=1:no_planes
     ReconInfo(n).rcvnum = n;
     ReconInfo(n).txnum = n;  
 end
-ReconInfo(no_transmits).mode = 5;
-
+ReconInfo(no_planes).mode = 5;               
+               
 %% Specify Process structure array.
 Process(1).classname = 'Image';
 Process(1).method = 'imageDisplay';
@@ -208,7 +216,7 @@ SeqControl(1).argument = 1;
 SeqControl(2).command = 'timeToNextAcq';  % time between synthetic aperture acquisitions
 SeqControl(2).argument = 1/PRF*1e6;       % PRF
 SeqControl(3).command = 'timeToNextAcq';  % time between frames
-SeqControl(3).argument = max([1/PRF*1e6 1/framerate*1e6 - no_transmits/PRF*1e6]);       % framerate
+SeqControl(3).argument = max([1/PRF*1e6 1/framerate*1e6 - no_planes/PRF*1e6]); % framerate = PRF
 SeqControl(4).command = 'returnToMatlab';
 SeqControl(5).command = 'triggerOut';
 SeqControl(5).condition = 'syncADC_CLK'; 
@@ -217,11 +225,11 @@ nsc = 6; % nsc is count of SeqControl objects
 %% Specify Event structure arrays.
 n = 1; % n is count of Events
 for i = 1:no_frames
-    I = no_packets*no_transmits*(i-1);
+    I = no_packets*no_planes*(i-1);
     for j = 1:no_packets
-        J = no_transmits*(j-1);
-        for k= 1:no_transmits
-            % transmit/receive event 
+        J = no_planes*(j-1);
+        for k= 1:no_planes
+            % transmit/receive event & trigger
             Event(n).info = 'Transmit & receive event';
             Event(n).tx = k;         % use 1st TX structure.
             Event(n).rcv = I+J+k;    % use 1st Rcv structure.
@@ -231,7 +239,7 @@ for i = 1:no_frames
             n = n+1;
         end
     end
-    
+
     % Replace last event seqControl value.
     Event(n-1).seqControl = [3,nsc]; % time between frames, SeqControl struct defined below.
     SeqControl(nsc).command = 'transferToHost';
@@ -272,7 +280,7 @@ UI(2).Control = {'UserA1','Style','VsSlider','Label','Range',...
 UI(2).Callback = text2cell('%-UI#2Callback');
 
 % Specify factor for converting sequenceRate to frameRate.
-frameRateFactor = no_transmits;
+frameRateFactor = no_planes;
 
 % Save all the structures to a .mat file.
 save('a');
@@ -285,7 +293,7 @@ VSX;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Saving data into USTB dataset');
 no_samples=Receive(1).endSample;
-data=zeros(no_samples, 128, 128, Resource.RcvBuffer(1).numFrames);
+data=zeros(no_samples, 128, no_planes, Resource.RcvBuffer(1).numFrames);
 geom=Trans.ElementPos(1:128,1:3)*1e-3;     
 delay_x0=sqrt(sum((geom-ones(128,1)*[0 0 20e-3]).^2,2))/c0;
 
@@ -298,17 +306,23 @@ elseif strcmp(Trans.units,'wavelengths')
 end
 offset_time=offset_distance/Resource.Parameters.speedOfSound;   % in [s]
 
+% plane wave delay
+t0_1=zeros(1,no_planes);
+for n=1:no_planes
+    t0_1(n)=mean(TX(n).Delay)*lambda/Resource.Parameters.speedOfSound;
+end
+
 % convert data
 n=1;
 t_out=0:(1/Fs):((no_samples-1)/Fs);
 plot_delayed_signal=0;
 for n_frame = 1:Resource.RcvBuffer(1).numFrames
-    for n_tx = 1:no_transmits
+    for n_tx = 1:no_planes
         % compute time vector for this line
         t_ini=2*Receive(n).startDepth*lambda/c0;
         t_end=2*Receive(n).endDepth*lambda/c0;
         no_t=(Receive(n).endSample-Receive(n).startSample+1);
-        t_in=linspace(t_ini,t_end,no_t)-offset_time;
+        t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1(n_tx);
         
         % read data
         data(:,:,n_tx,n_frame)=interp1(t_in,double(RcvData{1}(Receive(n).startSample:Receive(n).endSample,:,n_frame)),t_out,'linear',0);
@@ -316,10 +330,10 @@ for n_frame = 1:Resource.RcvBuffer(1).numFrames
 
         % to check delay calculation
         if plot_delayed_signal
-            delay= delay_x0+delay_x0(n_tx);
+            delay= 20e-3*cos(angles(n_tx))/c0+delay_x0;
 
             figure(101); hold off;
-            pcolor(1:Trans.numelements,t_out,real(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
+            pcolor(1:Trans.numelements,t_out,abs(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
             plot(1:Trans.numelements,delay,'r');
             title(n_tx);
             ylim([0.95*min(delay) 1.05*max(delay)]);
@@ -329,36 +343,35 @@ for n_frame = 1:Resource.RcvBuffer(1).numFrames
 end
 
 %% create USTB data class structure
-sta_dataset=sta('STA Verasonics',E.signal_format.RF,c0,t_out.',double(data),geom);
+cpw_dataset=cpw('CPW Verasonics',E.signal_format.RF,c0,angles.',t_out.',double(data),geom);
 
 %% save RF as huff
 disp('Writting HUFF file');
 huff_file=huff(hufffile,'w');
-huff_file.stage(sta_dataset); 
+huff_file.stage(cpw_dataset); 
 huff_file.write();
 
 %% demodulate data
-sta_dataset.demodulate(true,[],[0 1e6 1.9*f0 2*f0],[],E.demodulation_algorithm.fastfon);
+cpw_dataset.demodulate(true,[],[0 1e6 1.9*f0 2*f0],[],E.demodulation_algorithm.fastfon);
 
 %% image reconstruction with USTB 
-sta_image=reconstruction();
+cpw_image=reconstruction();
 
 % define the scan 
-sta_image.scan=linear_scan();
-sta_image.scan.x_axis=linspace(-5e-3,5e-3,256).';                % x vector [m]
-sta_image.scan.z_axis=linspace(15e-3,25e-3,256).';               % z vector [m]
+cpw_image.scan=linear_scan();
+cpw_image.scan.x_axis=linspace(-5e-3,5e-3,256).';           % x vector [m]
+cpw_image.scan.z_axis=linspace(15e-3,25e-3,256).';          % z vector [m]
 
 % define the transmit & receive beams
-sta_image.orientation=orientation();
-sta_image.orientation.transmit_beam=beam(1.7,E.apodization_type.boxcar);
-sta_image.orientation.receive_beam=beam(1.2,E.apodization_type.boxcar);
+cpw_image.orientation=orientation();
+cpw_image.orientation.transmit_beam=beam(1.7,E.apodization_type.boxcar);
+cpw_image.orientation.receive_beam=beam(1.2,E.apodization_type.boxcar);
 
-sta_image.name='STA L11 example';                               % reconstruction name (optional)
-sta_dataset.image_reconstruction(sta_image);                    % request reconstruction
-im_1=sta_image.show();                                          % show 
-    
+cpw_image.name='CPW L11 example';                           % reconstruction name (optional)
+cpw_dataset.image_reconstruction(cpw_image);                % request reconstruction
+im_1=cpw_image.show();                                      % show 
+
 return
-
 
 % **** Callback routines to be converted by text2cell function. ****
 %-UI#1Callback - Sensitivity cutoff change
