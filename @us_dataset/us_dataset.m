@@ -21,6 +21,7 @@ classdef us_dataset < handle
                             % dimensions are [pixels, frames]
         time                % vector containing fast time (s)
         c0                  % reference speed of sound (m/s)
+        center_frequency    % transmitted center frequency (Hz)
         modulation_frequency % value conatining the modulation frequency (Hz), only required for IQ format
     end
     
@@ -282,5 +283,18 @@ classdef us_dataset < handle
         end
     end
     
+    %% estimate center frequency
+    methods
+        function estimate_center_frequency(h)
+            switch(h.format)
+                case E.signal_format.RF
+                    h.center_frequency = tools.estimate_frequency(h.time,h.data);
+                case E.signal_format.IQ
+                    warning('Cannot estimate center frequency from IQ data, do you want to use the modulation frequency?')
+                otherwise
+                    error('Unknown signal format!');
+            end
+        end
+    end
 end
 
