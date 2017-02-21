@@ -74,8 +74,8 @@ classdef orientation < handle
          
             fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
             gid = H5G.open(fid,location);
-            gidtx = H5G.create(gid,'/transmit_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
-            gidrx = H5G.create(gid,'/receive_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            gidtx = H5G.create(gid,'transmit_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+            gidrx = H5G.create(gid,'receive_beam','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
             H5G.close(gidrx);
             H5G.close(gidtx);
             H5G.close(gid);

@@ -259,7 +259,7 @@ classdef reconstruction < handle
             fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
             gid = H5G.open(fid,location);
             for o=1:length(h.orientation)
-                gido = H5G.create(gid,sprintf('/orientation%d',o),'H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
+                gido = H5G.create(gid,sprintf('orientation%d',o),'H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
                 H5G.close(gido);
             end
             gid4 = H5G.create(gid,'scan','H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
@@ -312,17 +312,17 @@ classdef reconstruction < handle
             end
             
             % read orientations
-            if(strcmp(vers{1}(1:5),'0.0.1'))
+            if strcmp(vers{1}(1:5),'0.0.1')
                 h.orientations=1;
                 h.orientation=orientation();
                 h.orientation.transmit_beam.huff_read(filename,[location '/transmit_beam']);
                 h.orientation.receive_beam.huff_read(filename,[location '/receive_beam']);
             else
-                h.orientations=h5readatt(filename,location,'no_orientation');
+                h.orientations=h5readatt(filename,location,'orientations');
 
                 % read orientations
                 for o=1:h.orientations
-                    h.orientation(n)=h.orientation(n).huff_read(filename,[location sprintf('/orientation%d',o)]);
+                    h.orientation(o).huff_read(filename,[location sprintf('/orientation%d',o)]);
                 end
             end
             
@@ -343,10 +343,10 @@ classdef reconstruction < handle
             h.creation_date=h5readatt(filename,location,'creation_date');
             
             % read central_frequency
-            h.central_frequency=h5readatt(filename,location,'central_frequency');
+            %h.central_frequency=h5readatt(filename,location,'central_frequency');
 
             % read bandwidth
-            h.bandwidth=h5readatt(filename,location,'bandwidth');
+            %h.bandwidth=h5readatt(filename,location,'bandwidth');
 
             % read data
             real_part=h5read(filename,[location '/data/real']);
