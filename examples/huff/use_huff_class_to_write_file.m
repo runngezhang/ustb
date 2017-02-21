@@ -8,8 +8,12 @@
 %
 % which must be located within MATLAB's path.
 
-% date:     11.03.2015
-% authors:  Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+% date:     120.02.2017
+% authors:  Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+
+% data location
+url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
+local_path='data/ps/';                              % location of example data in this computer                      
 
 %% create a huff object
 recording=huff('recording.h5','w');
@@ -27,9 +31,19 @@ sta_recons.orientation=orientation();
 sta_recons.orientation.transmit_beam=beam(1.75,E.apodization_type.boxcar);
 sta_recons.orientation.receive_beam=beam(1.75,E.apodization_type.boxcar);
 
-%% Synthetic transmit aperture
-% format IQ
-load('../../data/ps/ps_sta_iq.mat');                            % load data; available at http://folk.ntnu.no/alfonsom/data/ps/
+%% Synthetic transmit aperture (IQ format)
+
+% check if data is available & download
+filename='ps_sta_iq.mat';
+a=dir([local_path filename]);
+if not(numel(a))
+    disp(['Downloading example data from ' url '. This may take a bit.']);
+    mkdir(local_path);
+    urlwrite([url filename],[local_path filename]);
+end
+
+% load data
+load([local_path filename]);    
 sta_dataset=sta(s.name,s.format,s.c0,s.time,s.data,s.geom,s.modulation_frequency);  % define STA dataset object
 
 % reconstruction
@@ -40,9 +54,19 @@ sta_recons.show();
 recording.stage(sta_dataset); 
 recording.stage(sta_recons);
 
-%% Coherent Plane Wave
-% format IQ
-load('../../data/ps/ps_cpw_iq.mat');                              % load data; available at http://folk.ntnu.no/alfonsom/data/ps/
+%% Coherent Plane Wave (IQ format)
+
+% check if data is available & download
+filename='ps_cpw_iq.mat';
+a=dir([local_path filename]);
+if not(numel(a))
+    disp(['Downloading example data from ' url '. This may take a bit.']);
+    mkdir(local_path);
+    urlwrite([url filename],[local_path filename]);
+end
+
+% load data
+load([local_path filename]);   
 cpw_dataset=cpw(s.name,s.format,s.c0,s.angle,s.time,s.data,s.geom,s.modulation_frequency);  % define CPW dataset object
 
 cpw_recons = reconstruction('CPW, IQ, Mex',sta_recons);           % new reconstruction, copy template from previous
@@ -53,9 +77,19 @@ cpw_recons.show();                                                % show
 recording.stage(cpw_dataset);
 recording.stage(cpw_recons);
 
-%% Virtual source
-% format RF
-load('../../data/ps/ps_vs_rf.mat');                                 % load data; available at http://folk.ntnu.no/alfonsom/data/ps/
+%% Virtual source (RF format)
+
+% check if data is available & download
+filename='ps_vs_rf.mat';
+a=dir([local_path filename]);
+if not(numel(a))
+    disp(['Downloading example data from ' url '. This may take a bit.']);
+    mkdir(local_path);
+    urlwrite([url filename],[local_path filename]);
+end
+
+% load
+load([local_path filename]);                                        
 vs_dataset=vs(s.name,s.format,s.c0,s.source,s.time,s.data,s.geom);  % define VS dataset object
 
 vs_recons=reconstruction('VS, RF, Mex',sta_recons);                 % new reconstruction, copy template from previous
