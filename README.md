@@ -21,5 +21,4 @@ Collaborators:
 * Øyvind Krøvel-Velle Standal <oyvind.standal@inphase.no>
 * Jochen Rau <jochen.rau@inphase.no>
 * Lasse Løvstakken <lasse.lovstakken@ntnu.no>
-* Ingvild Kinn Ekroll <ingvild.k.ekroll@ntnu.no>
-* Jørgen Avdal <jorgen.avdal@ntnu.no>
+* Stefano Fiorentini <stefano.fiorentini@ntnu.no>
