@@ -35,6 +35,7 @@ classdef alpinion < handle
                 dataset.c0 = double(Parameter{1}.speedOfSoundMps);
                 dataset.angle = deg2rad(double(Roi{1}.steerAngleDegA));
                 dataset.format = E.signal_format.RF;
+                dataset.center_frequency = double(System.Transducer.frequencyMHz*10^6); %center frequency in Hz 
                 
                 % Calculate element positions
                 nbr_elements = double(System.Transducer.elementCnt);
