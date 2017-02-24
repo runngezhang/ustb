@@ -4,7 +4,7 @@ classdef simulator
 %   See also PULSE, BEAM, PHANTOM, PROBE
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2016/09/01 $
+%   $Date: 2017/02/24 $
 
     %% public properties
     properties  (SetAccess = public)
@@ -22,13 +22,18 @@ classdef simulator
         N_beams            % number of beams 
     end
     
+    %% private properties
+    properties  (Access = private)   
+        version='v1.0.2';  % simulator version
+    end
+    
     %% constructor
     methods (Access = public)
-        function h=model()
-            %MODEL   Constructor of MODEL class
+        function h=simulator()
+            %simulator   Constructor of simulator class
             %
             %   Syntax:
-            %   h = model()
+            %   h = simulator()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE                      
             
@@ -37,8 +42,9 @@ classdef simulator
     
     %% set methods
     methods  
-        function out_dataset=simulate(h)
-            disp('SLITsim example model by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>');
+        function out_dataset=go(h)
+            disp(sprintf('USTB Fresnel linear impulse response simulator (%s)',h.version));
+            disp('---------------------------------------------------------------');
             
             %% checking we have all we need
             assert(numel(h.probe)>0,'The PROBE parameter is not set.');
@@ -112,13 +118,14 @@ classdef simulator
             end
             delete(wb);
             
-            % save the data into a dataset structure
-            out_dataset=dataset();
+            % save the data into a RAW_DATA structure
+            out_dataset=raw_data();
             out_dataset.probe=h.probe();
             out_dataset.pulse=h.pulse();
             out_dataset.phantom=h.phantom();
             out_dataset.sequence=h.sequence();
             out_dataset.sampling_frequency=h.sampling_frequency();
+            out_dataset.sound_speed=h.phantom.sound_speed;
             out_dataset.initial_time=time_2w(1);
             out_dataset.data=data;
             
@@ -128,19 +135,19 @@ classdef simulator
     %% set methods
     methods  
         function h=set.phantom(h,in_phantom)
-            assert(strcmp(class(in_phantom),'phantom'), 'The phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
+            assert(strcmp(class(in_phantom),'phantom'), 'The phantom is not a PHANTOM class. Check HELP PHANTOM.');
             h.phantom=in_phantom;
         end
         function h=set.pulse(h,in_pulse)
-            assert(strcmp(class(in_pulse),'pulse'), 'The pulse_ is not a PULSE class. Check HELP PULSE.');
+            assert(strcmp(class(in_pulse),'pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
             h.pulse=in_pulse;
         end
         function h=set.probe(h,in_probe)
-            assert(strcmp(class(in_probe),'probe'), 'The probe_ is not a PROBE class. Check HELP PROBE.');
+            assert(strcmp(class(in_probe),'probe'), 'The probe is not a PROBE class. Check HELP PROBE.');
             h.probe=in_probe;
         end
         function h=set.sequence(h,in_sequence)
-            assert(strcmp(class(in_sequence),'beam'), 'The sequence_ is not a BEAM class. Check HELP BEAM.');
+            assert(strcmp(class(in_sequence),'wave'), 'The sequence members are not a WAVE class. Check HELP WAVE.');
             h.sequence=in_sequence;
         end
         function h=set.sampling_frequency(h,in_sampling_frequency)

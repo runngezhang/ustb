@@ -67,14 +67,23 @@ classdef phantom
     
     %% plot methods
     methods
-        function plot(h)
+        function figure_handle=plot(h,figure_handle_in,title_in)
             % plotting phantom
-            figure;
-            plot3(h.points(:,1)*1e3,h.points(:,2)*1e3,h.points(:,3)*1e3,'r.'); grid on; axis equal;
+            if (nargin>1) && ~isempty(figure_handle_in)
+                figure_handle=figure(figure_handle_in);
+            else
+                figure_handle=figure();
+            end
+
+            plot3(h.points(:,1)*1e3,h.points(:,2)*1e3,h.points(:,3)*1e3,'r.'); grid on; axis equal; hold on;
+            zlim([0 1.1*max(h.points(:,3))*1e3]);
             xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
-            title('Phantom');
+            
+            if nargin>2
+                title(title_in);
+            end
         end
     end
     

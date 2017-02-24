@@ -46,15 +46,25 @@ classdef pulse
     
     %% plot methods
     methods
-        function plot(h)
+        function figure_handle=plot(h,figure_handle_in,title_in)
           t0=linspace(-2/h.center_frequency/h.fractional_bandwidth,2/h.center_frequency/h.fractional_bandwidth,256);
 
-          figure; 
+          % plotting pulse
+          if (nargin>1) && ~isempty(figure_handle_in)
+            figure_handle=figure(figure_handle_in); hold on;
+          else
+            figure_handle=figure(); 
+            title('Pulse'); hold on;
+          end
+          
           plot(t0*1e6,h.signal(t0)); grid on; axis tight;
           xlabel('time [mus]');
           set(gca,'ZDir','Reverse');
           set(gca,'fontsize',14);
-          title('Pulse');
+
+          if nargin>2
+            title(title_in);
+          end
         end
     end
     

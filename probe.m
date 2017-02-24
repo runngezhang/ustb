@@ -43,19 +43,29 @@ classdef probe
     
     %% plot methods
     methods
-        function plot(h)
-            % plotting probe
+        function figure_handle=plot(h,figure_handle_in,title_in)
             x = [(h.x-h.width/2.*cos(h.theta)).'; (h.x+h.width/2.*cos(h.theta)).'; (h.x+h.width/2.*cos(h.theta)).'; (h.x-h.width/2.*cos(h.theta)).'];
             y = [(h.y-h.height/2.*cos(h.phi)).'; (h.y-h.height/2.*cos(h.phi)).'; (h.y+h.height/2.*cos(h.phi)).'; (h.y+h.height/2.*cos(h.phi)).'; ];
             z = [(h.z+h.width/2.*sin(h.theta)+h.height/2.*sin(h.phi)).'; (h.z-h.width/2.*sin(h.theta)+h.height/2.*sin(h.phi)).'; (h.z-h.width/2.*sin(h.theta)-h.height/2.*sin(h.phi)).'; (h.z+h.width/2.*sin(h.theta)-h.height/2.*sin(h.phi)).'];
             c = linspace(0,1,h.N_elements);
-            figure;
+            
+            % plotting probe
+            if (nargin>1) && ~isempty(figure_handle_in)
+                figure_handle=figure(figure_handle_in); hold on;
+            else
+                figure_handle=figure();
+                title('Probe');
+            end
+
             fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
             %plot3(h.x*1e3,h.y*1e3,h.z*1e3,'kx');
             xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
-            title('Probe');
+            
+            if nargin>2
+                title(title_in);
+            end
         end
     end
     

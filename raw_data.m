@@ -1,41 +1,70 @@
-classdef dataset
-%dataset   Dataset definition
+classdef raw_data < handle
+%raw_data   raw_data definition. Children of HANDLE class
 %
 %   See also PULSE, BEAM, PHANTOM, PROBE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2016/09/01 $
+%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+%   $Date: 2017/02/24 $
 
-    %% public properties
+    %% compulsory properties
     properties  (SetAccess = public)
         sampling_frequency         % sampling frequency [Hz]
         initial_time               % time of the initial sample [s]
-        probe                      % probe class
-        pulse                      % pulse class
-        phantom                    % phantom class
-        sequence                   % collection of beam class
+        sound_speed                % reference sound speed [m/s]        
+        sequence                   % collection of WAVE classes
+        probe                      % PROBE class
         data                       % data
+    end
+    
+    %% optional properties
+    properties  (SetAccess = public)
+        phantom                    % PHANTOM class [optional]
+        pulse                      % PULSE class [optional]
     end
     
     %% dependent properties
     properties  (Dependent)   
-        N_elements         % number of elements in the probe
         N_samples          % number of samples in the data
-        N_beams            % number of beams 
+        N_elements         % number of elements in the probe
+        N_waves            % number of transmitted waves
         time
     end
     
     
     %% constructor
     methods (Access = public)
-        function h=dataset()
-            %dataset   Constructor of dataset class
+        function h=raw_data()
+            %raw_data   Constructor of raw_data class
             %
             %   Syntax:
-            %   h = dataset()
+            %   h = raw_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
                       
+        end
+    end
+    
+    %% copy
+    methods (Access = public)
+        function copy(h,object)
+            %COPY    Copy the values from another RAW_DATA
+            %
+            %   Syntax:
+            %   COPY(object) 
+            %       object       Instance of a RAW_DATA class
+            %
+            %   See also SCAN, WAVE, SOURCE
+            assert(isa(object,class(h)),'Class of the input object is not identical'); 
+            
+            % we copy all non-dependent public properties
+            list_properties=properties(object);
+            for n=1:numel(list_properties)
+                property_name=list_properties{n};
+                mp = findprop(h,property_name);
+                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
+                    eval(sprintf('h.%s = object.%s',property_name,property_name));
+                end
+            end
         end
     end
     
@@ -46,10 +75,8 @@ classdef dataset
                n_beam=1;
             end
             
-          t=h.initial_time+(0:h.N_samples-1)/h.sampling_frequency;
-          
           figure; 
-          imagesc(1:h.N_elements,t*1e6,h.data(:,:,n_beam)); grid on; axis tight;
+          imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_beam)); grid on; axis tight;
           xlabel('Channel');
           ylabel('time [\mus]');
           set(gca,'fontsize',14);
@@ -60,24 +87,28 @@ classdef dataset
     %% set methods
     methods  
         function h=set.phantom(h,in_phantom)
-            assert(strcmp(class(in_phantom),'phantom'), 'The phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
+            assert(strcmp(class(in_phantom),'phantom'), 'The _phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
             h.phantom=in_phantom;
         end
         function h=set.pulse(h,in_pulse)
-            assert(strcmp(class(in_pulse),'pulse'), 'The pulse_ is not a PULSE class. Check HELP PULSE.');
+            assert(strcmp(class(in_pulse),'pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
             h.pulse=in_pulse;
         end
         function h=set.probe(h,in_probe)
-            assert(strcmp(class(in_probe),'probe'), 'The probe_ is not a PROBE class. Check HELP PROBE.');
+            assert(strcmp(class(in_probe),'probe'), 'The probe is not a PROBE class. Check HELP PROBE.');
             h.probe=in_probe;
         end
         function h=set.sequence(h,in_sequence)
-            assert(strcmp(class(in_sequence),'beam'), 'The sequence_ is not a BEAM class. Check HELP BEAM.');
+            assert(strcmp(class(in_sequence),'wave'), 'The sequence is not a WAVE class. Check HELP WAVE.');
             h.sequence=in_sequence;
         end
         function h=set.sampling_frequency(h,in_sampling_frequency)
             assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a escalar');
             h.sampling_frequency=in_sampling_frequency;
+        end 
+        function h=set.sound_speed(h,in_sound_speed)
+            assert(numel(in_sound_speed)==1, 'The sound speed must be a escalar');
+            h.sound_speed=in_sound_speed;
         end 
         function h=set.initial_time(h,in_initial_time)
             assert(numel(in_initial_time)==1, 'The sampling frequency must be a escalar');
@@ -92,7 +123,7 @@ classdef dataset
             assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
             
             assert(size(in_data,2)==h.N_elements, 'The N_elements in the probe does not match the channels in the inserted data (2nd dimension).');
-            assert(size(in_data,3)==h.N_beams, 'The N_beams in the sequence does not match the beams in the inserted data (3th dimension).');
+            assert(size(in_data,3)==h.N_waves, 'The N_beams in the sequence does not match the beams in the inserted data (3th dimension).');
             
             h.data=in_data;
         end 
@@ -106,7 +137,7 @@ classdef dataset
         function value=get.N_samples(h)
             value=size(h.data,1);
         end
-        function value=get.N_beams(h)
+        function value=get.N_waves(h)
             value=numel(h.sequence);
         end
         function value=get.time(h)

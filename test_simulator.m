@@ -1,119 +1,127 @@
+% Script to develop simulator & general beamformer
+
+%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+%   $Date: 2017/02/23$
+
+clear all;
+close all;
+
 %% PHANTOM
 pha=phantom();
-pha.sound_speed=1540;               % speed of sound [m/s]
-pha.points=[0,  0,  0, 0;
-                0,  0, 20e-3, 1;    % point scatterer position [m]
-            -5e-3,  0, 20e-3, 1; 
-             5e-3,  0, 20e-3, 1; 
-            -10e-3, 0, 20e-3, 1;
-             10e-3, 0, 20e-3, 1;
-                 0, 0,  5e-3, 1;
-                 0, 0, 10e-3, 1;
-                 0, 0, 15e-3, 1;
-                 0, 0, 25e-3, 1;
-                 0, 0, 30e-3, 1;
-                 0, 0, 35e-3, 1];
-
-% checking phantom
-pha.plot();             
+pha.sound_speed=1540;            % speed of sound [m/s]
+pha.points=[0,  0, 20e-3, 1];    % point scatterer position [m]
+fig_handle=pha.plot();             
              
 %% PROBE
-prob=probe();
-N_elements=128;                              % number of elements in the array
-pitch=300e-6;                                % probe pitch
-a=270e-6;                                    % element width [m]
-b=5e-3;                                      % element height [m]
-x0=((1:N_elements)*pitch).'; x0=x0-mean(x0); % element position in the x_axis (m)
-y0=zeros(N_elements,1);                      % element position in the y_axis [m]
-z0=zeros(N_elements,1);                      % element position in the z_axis [m]
-theta=zeros(N_elements,1);                   % element orientation in the azimuth direction [rad]
-phi=zeros(N_elements,1);                     % element orientation in the elevation direction [rad]
-prob.geometry=[x0 y0 z0 theta phi a*ones(N_elements,1) b*ones(N_elements,1)]; % probe geometry
-  
-% checking probe
-prob.plot();
-
-%% Pulse
 %
-% The pulse class implements a Gaussian-modulated RF pulse of known center
-% frequency and fractional bandsidth.
+% This is the generic probe class. Handling will be simplified with children classes for
+% linear_array, curvilinear_array, 2D_matrix, etc.
+prb=probe();
+Nx=128;                                 % number of elements in each row
+Ny=1;                                   % number of rows
+az_pitch=300e-6;                        % probe pitch in azimuth [m]
+el_pitch=1500e-6;                       % probe pitch in elevation [m]
+az_w=270e-6;                            % element width [m]
+%el_w=1470e-6;                           % element height [m]
+el_w=5000e-6;                           % element height [m]
 
-tx_pulse=pulse();
-tx_pulse.center_frequency=5.2e6;                           % transducer frequency [MHz]
-tx_pulse.fractional_bandwidth=0.6;                         % fractional bandwidth [unitless]
+[X,Y] = meshgrid((1:Nx)*az_pitch,(1:Ny)*el_pitch);
 
-% checking pulse
-tx_pulse.plot();
+x0=X(:);                    % element position in the x_axis (m)
+y0=Y(:);                    % element position in the y_axis [m]
+z0=zeros(Nx*Ny,1);          % element position in the z_axis [m]
 
-%% The beam sequence
-sou=source();
-source.xyz=
+x0=x0-mean(x0);
+y0=y0-mean(y0);
+z0=z0-mean(z0);
 
+theta=zeros(Nx*Ny,1);       % element orientation in the azimuth direction [rad]
+phi=zeros(Nx*Ny,1);         % element orientation in the elevation direction [rad]
 
-N_active_elements=32;                                   % number of active elements
-number_beams = N_elements - (N_active_elements-1);      % number of beams
-focus_length=20e-3;                                     % focus length
+prb.geometry=[x0 y0 z0 theta phi az_w*ones(Nx*Ny,1) el_w*ones(Nx*Ny,1)]; % probe geometry
+prb.plot(fig_handle);
 
-sequence=repmat(beam(),1,number_beams);
-for n_beam=1:number_beams 
-    
-    % select active channels
-    sequence(n_beam).apodization=[zeros(1,n_beam-1) ones(1,N_active_elements) zeros(1,N_elements-(n_beam+N_active_elements)+1,1)].';
-  
-    % compute transmit delays
-    beam_center_x=prob.x.'*sequence(n_beam).apodization/sum(sequence(n_beam).apodization);
-    sequence(n_beam).delay=(focus_length-sqrt(sum((prob.geometry(:,1:3)-ones(N_elements,1)*[beam_center_x 0 focus_length]).^2,2)))/pha.sound_speed;
-    
-    % show
-    sequence(n_beam).plot();
+%% PULSE
+pul=pulse();
+pul.center_frequency=5.2e6;                           % transducer frequency [MHz]
+pul.fractional_bandwidth=0.6;                         % fractional bandwidth [unitless]
+pul.plot([],'2-way pulse');
+
+%% SEQUENCE GENERATION
+N=10;                           % number of waves
+x=linspace(-10e-3,10e-3,N);
+for n=1:N 
+    seq(n)=wave();
+    seq(n).probe=prb;
+    seq(n).source=source();
+    seq(n).source.xyz=[x(n) 0 -10e-3];
+    seq(n).sound_speed=pha.sound_speed;
+    seq(n).source.plot(fig_handle,'Scenario');
 end
+seq(1).plot(); % plot one of the delay profiles
 
-
-%% The model
-%
-% Here comes the model.
-
-my_model=model();
+%% SIMULATOR
+sim=simulator();
 
 % setting input data 
-my_model.phantom=pha;               % phantom
-my_model.pulse=tx_pulse;                    % transmitted pulse
-my_model.probe=prob;                % probe
-my_model.sequence=sequence;                 % beam sequence
-my_model.sampling_frequency=41.6e6;        % sampling frequency [Hz]
+sim.phantom=pha;                   % phantom
+sim.pulse=pul;                % transmitted pulse
+sim.probe=prb;                    % probe
+sim.sequence=seq;             % beam sequence
+sim.sampling_frequency=41.6e6;     % sampling frequency [Hz]
 
 % we launch the simulation
-my_dataset=my_model.simulate();
-
+raw=sim.go();
+ 
 % check how does it look
-my_dataset.plot(48);
+% for n=1:N 
+%     raw.plot(n);
+%     pause();
+% end
 
-%% Beamforming the dataset
+%% SCAN
 %
-% This is not part of this assignment, but it would be silly not to check
-% the image
+% This is the generic scan class. Handling will be simplified with children classes for
+% linear_scan, sector_scan, volumetric_scan, or so on.
+sca=scan();
+x_axis=linspace(min(prb.x),max(prb.x),128);
+z_axis=linspace(0e-3,40e-3,128);
+[X Z]=meshgrid(x_axis,z_axis);
 
-% DRF beamforming
-sr_image=zeros(my_dataset.N_samples,my_dataset.N_beams);
-x_axis=zeros(my_dataset.N_beams,1);
-for n_beam=1:my_dataset.N_beams
-    x_axis(n_beam)=sum(my_dataset.sequence(n_beam).apodization.*prob.x)/sum(my_dataset.sequence(n_beam).apodization);
-    % computing the receive signal
-    for n_rx=1:my_dataset.N_elements
-        if(sequence(n_beam).apodization(n_rx)>0)
-            focus_vector=[x_axis(n_beam)*ones(my_dataset.N_samples,1) zeros(my_dataset.N_samples,1) my_dataset.phantom.sound_speed*my_dataset.time.'/2];
-            rx_focusing_delay=(focus_vector(:,3)-sqrt(sum((ones(size(my_dataset.time,2),1)*prob.geometry(n_rx,1:3)-focus_vector).^2,2)))/pha.sound_speed;  % dynamic focussing delay
-            sr_image(:,n_beam)=sr_image(:,n_beam)+interp1(my_dataset.time,my_dataset.data(:,n_rx,n_beam),my_dataset.time-rx_focusing_delay.','linear',0).';           % signal
-        end
+sca.x=X(:);
+sca.y=0.*X(:);
+sca.z=Z(:);
+
+sca.plot(fig_handle,'Scenario');    % show mesh
+ 
+%% BEAMFORMER
+%
+% First approximation to the general beamformer
+w0=0;
+
+%% beamforming
+sig=zeros(sca.N_pixels,numel(seq));
+wb=waitbar(0,'Beamforming');
+for ntx=1:numel(seq)
+    waitbar(ntx/numel(seq));
+    TF=sqrt((seq(ntx).source.x-sca.x).^2+(seq(ntx).source.y-sca.y).^2+(seq(ntx).source.z-sca.z).^2)-seq(ntx).source.distance;
+    for nrx=1:prb.N_elements
+        RF=sqrt((prb.x(nrx)-sca.x).^2+(prb.y(nrx)-sca.y).^2+(prb.z(nrx)-sca.z).^2);
+        delay=(RF+TF)/raw.sound_speed;
+        phase_shift=exp(1i.*w0*delay);
+        sig(:,ntx)=phase_shift.*interp1(raw.time,raw.data(:,nrx,ntx),delay,'linear',0);
     end
 end
+close(wb);
+
+
 
 % convert to intensity values
 envelope_drf=abs(hilbert(sr_image));
 envelope_drf_dB=20*log10(envelope_drf./max(envelope_drf(:)));
 
 figure3 = figure('Color',[1 1 1]); 
-imagesc(x_axis*1e3,my_dataset.time*pha.sound_speed/2*1e3,envelope_drf_dB); axis tight equal; 
+imagesc(x_axis*1e3,raw.time*pha.sound_speed/2*1e3,envelope_drf_dB); axis tight equal; 
 box('on'); 
 xlabel('x [mm]');
 ylabel('z [mm]')

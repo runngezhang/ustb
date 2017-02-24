@@ -7,18 +7,18 @@ classdef source
 
     %% public properties
     properties  (SetAccess = public)
-        distance     % distance from the source location to the origin of coordinates [m]
-        azimuth      % angle from the source location to the plane YZ [rad]
-        elevation    % angle from the source location to the plane XZ [rad]
+        distance=0     % distance from the source location to the origin of coordinates [m]
+        azimuth=0      % angle from the source location to the plane YZ [rad]
+        elevation=0    % angle from the source location to the plane XZ [rad]
     end
     
     %% dependent properties
-    properties  (Dependent)
+    properties  (Dependent)   
         xyz          % location of the source [m m m] if the source is not at infinity        
         x
         y
         z
-    end
+    end    
     
     %% constructor
     methods (Access = public)
@@ -50,19 +50,6 @@ classdef source
         end
     end
     
-    %% plot methods
-    methods
-        function plot(h)
-%           figure; 
-%           plot3(1:numel(h.delay),h.delay*1e6); grid on; axis tight;
-%           xlabel('element');
-%           ylabel('delay [\mus]');
-%           set(gca,'fontsize',14);
-%           ylim([min([h.delay*1e6; -1]) max([1; h.delay*1e6])]);
-%           title('Delays');
-        end
-    end
-    
     %% set methods
     methods  
          function h=set.distance(h,in_distance)
@@ -79,65 +66,110 @@ classdef source
          end
          function h=set.xyz(h,in_xyz)
              assert(size(in_xyz,2)==3, 'The xyz must be an array [x y z] - [m m m]');
-             h.x=in_xyz(1);
-             h.y=in_xyz(2);
-             h.z=in_xyz(3);
-             
-             h.distance=norm(h.xyz,2);
-             h.azimuth=atan2(h.x,h.z);
-             h.elevation=atan2(h.y,h.z);
+             h.distance=norm(in_xyz,2);
+             h.azimuth=atan2(in_xyz(1),in_xyz(3));
+             if(h.distance>0)
+                h.elevation=asin(in_xyz(2)/h.distance);
+             else
+                h.elevation=0;
+             end
          end
          function h=set.x(h,in_x)
              assert(numel(in_x)==1, 'The x must be an scalar in [m]');
-             h.x=in_x;
-             h.distance=norm(h.xyz,2);
-             h.azimuth=atan2(h.x,h.z);
-             h.elevation=atan2(h.y,h.z);
+              % update spherical
+              y=h.y;
+              z=h.z;
+              h.distance=norm([in_x y z],2);
+              h.azimuth=atan2(in_x,z);
+              if(h.distance>0)
+                h.elevation=asin(y/h.distance);
+              else
+                h.elevation=0;
+              end
          end
          function h=set.y(h,in_y)
              assert(numel(in_y)==1, 'The y must be an scalar in [m]');
-             h.x=in_y;
-             h.distance=norm(h.xyz,2);
-             h.azimuth=atan2(h.x,h.z);
-             h.elevation=atan2(h.y,h.z);
+              x=h.x;
+              z=h.z;
+              h.distance=norm([x in_y z],2);
+              if(h.distance>0)
+                h.elevation=asin(in_y/h.distance);
+              else
+                h.elevation=0;
+              end
          end
          function h=set.z(h,in_z)
              assert(numel(in_z)==1, 'The z must be an scalar in [m]');
-             h.z=in_z;
-             h.distance=norm(h.xyz,2);
-             h.azimuth=atan2(h.x,h.z);
-             h.elevation=atan2(h.y,h.z);
+              x=h.x;
+              y=h.y;
+              h.distance=norm([x y in_z],2);
+              h.azimuth=atan2(x,in_z);
+              if(h.distance>0)
+                h.elevation=asin(y/h.distance);
+              else
+                h.elevation=0;
+              end
          end         
     end
     
     %% get methods
     methods  
-        function value=get.x(h)
-            value=h.distance*cos(h.azimuth)*sin(h.elevation);
-        end
-        function value=get.y(h)
-            value=h.distance*sin(h.azimuth)*sin(h.elevation);
-        end
-        function value=get.z(h)
-            value=h.distance*cos(h.elevation);
-        end
-        function value=get.xyz(h)
-            value=[h.x h.y h.z];
-        end
+         function value=get.xyz(h)
+             value=[h.x h.y h.z];
+         end
+         function value=get.x(h)
+             if isinf(h.distance)
+                value=Inf;
+             else
+                value=h.distance.*sin(h.azimuth).*cos(h.elevation);
+             end
+         end
+         function value=get.y(h)
+             if isinf(h.distance)
+                value=Inf;
+             else
+                value=h.distance.*sin(h.elevation);
+             end
+         end
+         function value=get.z(h)
+             if isinf(h.distance)
+                value=Inf;
+             else
+                %value=h.distance.*cos(h.azimuth).*cos(h.elevation);
+                value=h.distance.*cosd(h.azimuth*180/pi).*cosd(h.elevation*180/pi); % trick to get exact representation
+             end
+         end
     end
     
     %% plot methods
     methods
-        function plot(h)
-            % plotting phantom
-            if isInf(h.distance)
+        function figure_handle=plot(h,figure_handle_in,in_title)
+            % plotting source
+            if (nargin>1) && ~isempty(figure_handle_in)
+                figure_handle=figure(figure_handle_in);
             else
-                figure;
-                plot3(h.x*1e3,h.y*1e3,h.z*1e3,'r.'); grid on; axis equal;
+                figure_handle=figure();
+                title('Source');
+            end            
+            
+            if isinf(h.distance)
+                x=sin(h.azimuth).*cos(h.elevation);
+                y=sin(h.elevation);
+                z=cos(h.azimuth).*cos(h.elevation);
+                
+                quiver3(0,0,0,x,y,z,10,'b'); grid on; axis equal;
                 xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
                 set(gca,'ZDir','Reverse');
                 set(gca,'fontsize',14);
-                title('Source');
+            else
+                plot3(h.x*1e3,h.y*1e3,h.z*1e3,'bo'); grid on; axis equal;
+                xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
+                set(gca,'ZDir','Reverse');
+                set(gca,'fontsize',14);
+            end
+            
+            if nargin>2
+                title(in_title);
             end
         end
     end
