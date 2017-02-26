@@ -61,10 +61,12 @@ classdef alpinion < handle
                    % end
                    % rfDataAllFramesAnalytical(:,:,transmission) = rfDataAnalytical;
                     
+                   
                    %Compensate for steering regarding t0
                     D = abs(dataset.geom(1,1)-dataset.geom(end,1));
                     q = abs((D/2)*sin(dataset.angle(transmission)));
-                    t_in=dataset.time-q/(dataset.c0);
+
+                    t_in=dataset.time-q/(dataset.c0)-System.Transducer.delayOffsetUsec*10^-6;
                     v_aux=interp1(t_in,rfData,dataset.time,'linear',0);
                     
                     % build the dataset
