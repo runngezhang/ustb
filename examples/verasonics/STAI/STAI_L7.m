@@ -38,7 +38,7 @@ ex_cycles = 2.5;        % number of cycles of the excitation signal
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
 ex_polarity = 1;        % easy way of changing the polarity
 no_Frame = 1;           % number of frames to be acquired
-no_Apert = 128;         % number of apertures per plane wave
+no_Apert = 128;         % number of apertures per image
 PRF=9000;               % Pulse repetition frequency [pulses/s]
 FN=1.2;                 % F-number
 Fs=4*f0;                % sampling frequency
@@ -266,52 +266,20 @@ VSX;
 %% converting the format to USTB 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Converting data format to USTB');
-no_samples=Receive(1).endSample;
-data=zeros(no_samples, 128, 128, Resource.RcvBuffer(1).numFrames);
-geom=Trans.ElementPos(1:128,1:3)*1e-3;     
-delay_x0=sqrt(sum((geom-ones(128,1)*[0 0 20e-3]).^2,2))/c0;
+%% create USTB data class structure with Verasonics class
+ver = verasonics();
+% The Verasonics class needs these structs to create a USTB dataset
+% NB! The Trans struct should be given first.
+ver.Trans = Trans;
+ver.RcvData = RcvData;          
+ver.Receive = Receive;
+ver.Resource = Resource;
+ver.TW = TW;
+ver.TX = TX;
 
-% offset calculation
-offset_distance=(TW.peak)*lambda;   % in [m]
-if strcmp(Trans.units,'mm')
-    offset_distance=offset_distance+2*Trans.lensCorrection*1e-3;
-elseif strcmp(Trans.units,'wavelengths')
-    offset_distance=offset_distance+2*Trans.lensCorrection*lambda;
-end
-offset_time=offset_distance/Resource.Parameters.speedOfSound;   % in [s]
-
-% convert data
-n=1;
-t_out=0:(1/Fs):((no_samples-1)/Fs);
-plot_delayed_signal=0;
-for n_frame = 1:Resource.RcvBuffer(1).numFrames
-    for n_tx = 1:no_Apert
-        % compute time vector for this line
-        t_ini=2*Receive(n).startDepth*lambda/c0;
-        t_end=2*Receive(n).endDepth*lambda/c0;
-        no_t=(Receive(n).endSample-Receive(n).startSample+1);
-        t_in=linspace(t_ini,t_end,no_t)-offset_time;%scanOffsetTime;
-        
-        % read data
-        data(:,:,n_tx,n_frame)=interp1(t_in,double(RcvData{1}(Receive(n).startSample:Receive(n).endSample,:,n_frame)),t_out,'linear',0);
-        n=n+1;
-
-        % to check delay calculation
-        if plot_delayed_signal
-            delay= delay_x0+delay_x0(n_tx);
-
-            figure(101); hold off;
-            pcolor(1:no_Apert,t_out,real(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
-            plot(1:no_Apert,delay,'r');
-            title(n_tx);
-            ylim([0.9*min(delay) 1.1*max(delay)]);
-            pause();
-        end
-    end
-end
-
-%% create USTB data class structure
-sta_dataset=sta('STA Verasonics',E.signal_format.RF,c0,t_out.',double(data),geom);
+%Create USTB sta dataset
+sta_dataset = sta();
+sta_dataset = ver.create_USTB_dataset(sta_dataset);
 
 %% save RF as huff
 disp('Writting HUFF file');
@@ -325,6 +293,7 @@ sta_dataset.demodulate(true,[],[0 1e6 1.9*f0 2*f0],[],E.demodulation_algorithm.f
 %% image reconstruction with USTB 
 sta_image=reconstruction();
 
+
 % define the scan 
 sta_image.scan=linear_scan();
 sta_image.scan.x_axis=linspace(-5e-3,5e-3,256).';                 % x vector [m]
@@ -336,7 +305,11 @@ sta_image.orientation.transmit_beam=beam(1.7,E.apodization_type.boxcar);
 sta_image.orientation.receive_beam=beam(1.2,E.apodization_type.boxcar);
 
 sta_image.name='STA L11 example';                                   % reconstruction name (optional)
-sta_dataset.image_reconstruction(sta_image);                        % request reconstruction
+if ismac
+    sta_dataset.image_reconstruction(sta_image,E.implementation.simple_matlab);                        % request reconstruction
+else
+    sta_dataset.image_reconstruction(sta_image);                        % request reconstruction
+end
 im_1=sta_image.show('log',60);                                      % show 
     
 return
