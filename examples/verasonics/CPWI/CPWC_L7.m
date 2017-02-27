@@ -28,7 +28,7 @@ close all;
 filename='a.mat';
 folderdata=['data/' datestr(now,'yyyymmdd')];
 mkdir(folderdata);            
-filedata=['L11_CPW_' datestr(now,'HHMMSS') '.h5'];
+filedata=['L7_CPW_' datestr(now,'HHMMSS') '.h5'];
 hufffile=[folderdata '/' filedata];
 
 % scan area in live view
@@ -113,7 +113,7 @@ Resource.ImageBuffer(1).datatype = 'double';
 Resource.ImageBuffer(1).rowsPerFrame = 1024;
 Resource.ImageBuffer(1).colsPerFrame = PData.Size(2);
 Resource.ImageBuffer(1).numFrames = no_frames;         % image buffer 
-Resource.DisplayWindow(1).Title = 'L11-4v CPWC';
+Resource.DisplayWindow(1).Title = 'L7-4 CPWC';
 Resource.DisplayWindow(1).AxesUnits = 'mm';
 Resource.DisplayWindow(1).pdelta = PData.pdeltaX;
 Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner position
@@ -334,7 +334,7 @@ cpw_image.orientation=orientation();
 cpw_image.orientation.transmit_beam=beam(1.7,E.apodization_type.boxcar);
 cpw_image.orientation.receive_beam=beam(1.2,E.apodization_type.boxcar);
 
-cpw_image.name='CPW L11 example';                           % reconstruction name (optional)
+cpw_image.name='CPW L7 example';                           % reconstruction name (optional)
 cpw_dataset.image_reconstruction(cpw_image);                % request reconstruction
 im_1=cpw_image.show();                                      % show 
 

@@ -24,10 +24,10 @@ clear all;
 close all;
 
 filename='a.mat';
-folderdata=['data\' datestr(now,'yyyymmdd')];
+folderdata=['data/' datestr(now,'yyyymmdd')];
 mkdir(folderdata);            
 filedata=['L7_STA_' datestr(now,'HHMMSS') '.h5'];
-hufffile=[folderdata '\' filedata];
+hufffile=[folderdata '/' filedata];
 scan_area=[-19e-3 0e-3 19e-3 40e-3];
 pixels=[255 255];
 
@@ -95,7 +95,7 @@ Resource.ImageBuffer(1).datatype = 'double';
 Resource.ImageBuffer(1).rowsPerFrame = 1024;
 Resource.ImageBuffer(1).colsPerFrame = PData.Size(2);
 Resource.ImageBuffer(1).numFrames = 10;         % 10 image buffer only
-Resource.DisplayWindow(1).Title = 'L11-4v STAI';
+Resource.DisplayWindow(1).Title = 'L7-4 STAI';
 Resource.DisplayWindow(1).AxesUnits = 'mm';
 Resource.DisplayWindow(1).pdelta = 0.45;
 Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner position
@@ -304,7 +304,7 @@ sta_image.orientation=orientation();
 sta_image.orientation.transmit_beam=beam(1.7,E.apodization_type.boxcar);
 sta_image.orientation.receive_beam=beam(1.2,E.apodization_type.boxcar);
 
-sta_image.name='STA L11 example';                                   % reconstruction name (optional)
+sta_image.name='STA L7 example';                                   % reconstruction name (optional)
 if ismac
     sta_dataset.image_reconstruction(sta_image,E.implementation.simple_matlab);                        % request reconstruction
 else
