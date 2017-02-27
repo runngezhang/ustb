@@ -35,6 +35,7 @@ classdef verasonics < handle
     
     methods 
         function set.Trans(h,Trans)
+            assert(strcmp(Trans.units,'mm'),'Please use mm as units in Verasonics.');
             h.Trans = Trans;
             h.f0 = Trans.frequency*10^6;
         end
@@ -43,6 +44,9 @@ classdef verasonics < handle
             assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Receive = Receive;
             h.Fs = h.f0*Receive(1).samplesPerWave;
+            if isfield(Receive,'aperture') == 0 % Then this is a no-mux probe and we set this to one
+               h.Receive(1).aperture = 1; 
+            end
         end
         
         function set.Resource(h,Resource)
@@ -75,7 +79,7 @@ classdef verasonics < handle
             cpw_dataset.format = E.signal_format.RF;
             cpw_dataset.center_frequency = double(h.Trans.frequency*10^6); %center frequency in Hz
             cpw_dataset.angle = h.angles';
-            cpw_dataset.geom = h.Trans.ElementPos(1:128,1:3)*1e-3;
+            cpw_dataset.geom = h.Trans.ElementPos([1:128]+h.Receive(1).aperture-1,1:3)*1e-3;
             cpw_dataset.c0 = h.c0;
             
             no_samples = h.Receive(1).endSample;
@@ -96,18 +100,24 @@ classdef verasonics < handle
                     no_t=(h.Receive(n).endSample-h.Receive(n).startSample+1);
                     
                     % Find t_0
-                    if 0  %Calculate geometrically
-                        D = abs(cpw_dataset.geom(1,1)-cpw_dataset.geom(end,1));
+                    if 1  %Calculate geometrically
+                        D = abs(h.Trans.ElementPos(1,1)-h.Trans.ElementPos(end,1))*1e-3;
                         q = abs((D/2)*sin(cpw_dataset.angle(n_tx)));
                         t0_1 = q/(cpw_dataset.c0);
-                    else  %Calculate using Verasonics transmit delay.
+                    else  %Calculate using Verasonics transmit delay, this will not work for the multiplexer probe NBNB!
                         t0_1 = mean(h.TX(n_tx).Delay)*h.lambda/h.Resource.Parameters.speedOfSound;
                     end
                     
                     t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
                     
+                    if isfield(h.Trans,'HVMux') % If Transducer has MUX, for example the L12-4v, we need to re arrange channels
+                        validChannels = h.Trans.HVMux.Aperture(:,h.Receive(n_tx).aperture)';
+                        validChannels = validChannels(validChannels>0);
+                    else
+                        validChannels = [1:128];
+                    end
                     % read data
-                    data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,:,n_frame)),cpw_dataset.time,'linear',0);
+                    data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame)),cpw_dataset.time,'linear',0);
                     n=n+1;
 
                     % to check delay calculation
@@ -115,8 +125,8 @@ classdef verasonics < handle
                         delay= 20e-3*cos(h.angles(n_tx))/h.c0+delay_x0;
                         
                         figure(101); hold off;
-                        pcolor(1:h.Trans.numelements,cpw_dataset.time,abs(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
-                        plot(1:h.Trans.numelements,delay,'r');
+                        pcolor(1:length(cpw_dataset.geom),cpw_dataset.time,abs(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
+                        plot(1:length(cpw_dataset.geom),delay,'r');
                         title(n_tx);
                         ylim([0.95*min(delay) 1.05*max(delay)]);
                         pause();
