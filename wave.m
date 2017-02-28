@@ -101,7 +101,11 @@ classdef wave
         function value=get.delay(h)
             if ~isinf(h.source.distance)
                 dst=sqrt((h.probe.x-h.source.x).^2+(h.probe.y-h.source.y).^2+(h.probe.z-h.source.z).^2);
-                value=h.source.distance/h.sound_speed-dst/h.sound_speed;
+                if(h.source.z<0)
+                    value=dst/h.sound_speed-h.source.distance/h.sound_speed;
+                else
+                    value=h.source.distance/h.sound_speed-dst/h.sound_speed;
+                end
             else
                 value=h.probe.x*sin(h.source.azimuth)/h.sound_speed+h.probe.y*sin(h.source.elevation)/h.sound_speed;
             end

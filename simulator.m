@@ -63,8 +63,8 @@ classdef simulator
                 max_range=max([max_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
                 min_range=min([min_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
             end
-            time_1w=(min_range/h.phantom.sound_speed-4/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
-            time_2w=(2*min_range/h.phantom.sound_speed-4/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(2*max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
+            time_1w=(min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
+            time_2w=(2*min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(2*max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
             N_samples=numel(time_2w);                                                                              % number of time samples
 
             %% wavenumber

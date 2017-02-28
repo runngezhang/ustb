@@ -14,6 +14,7 @@ classdef raw_data < handle
         sequence                   % collection of WAVE classes
         probe                      % PROBE class
         data                       % data
+        modulation_frequency       % modulation frequency [Hz]
     end
     
     %% optional properties
@@ -40,7 +41,9 @@ classdef raw_data < handle
             %   h = raw_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
-                      
+           
+            h.modulation_frequency=0;
+            h.sampling_frequency=0;
         end
     end
     
@@ -106,6 +109,10 @@ classdef raw_data < handle
             assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a escalar');
             h.sampling_frequency=in_sampling_frequency;
         end 
+        function h=set.modulation_frequency(h,in_modulation_frequency)
+            assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a escalar');
+            h.modulation_frequency=in_modulation_frequency;
+        end         
         function h=set.sound_speed(h,in_sound_speed)
             assert(numel(in_sound_speed)==1, 'The sound speed must be a escalar');
             h.sound_speed=in_sound_speed;
@@ -117,7 +124,6 @@ classdef raw_data < handle
         function h=set.data(h,in_data)
             % checking needed inputs
             assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
-            assert(~isempty(h.pulse), 'The pulse structure must be set before inserting the data.');
             assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
             assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
             assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
@@ -141,7 +147,7 @@ classdef raw_data < handle
             value=numel(h.sequence);
         end
         function value=get.time(h)
-            value=h.initial_time+(0:h.N_samples-1)/h.sampling_frequency;
+            value=(h.initial_time+(0:h.N_samples-1)/h.sampling_frequency).';
         end
     end
 end
