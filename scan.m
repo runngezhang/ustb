@@ -18,11 +18,11 @@ classdef scan
     
     %% Constructor
     methods (Access = public)
-        function h = scan(in_x,in_z)
+        function h = scan(in_x,in_y,in_z)
             %scan   Constructor of scan class
             %
             %   Syntax:
-            %   h = scan(x,z)
+            %   h = scan(x,y,z)
             %       x    Vector with the x coordinates of each pixel
             %       z    Vector with the z coordinates of each pixel
             %
@@ -31,6 +31,9 @@ classdef scan
                 h.x=in_x;
             end
             if nargin>1
+                h.y=in_y;
+            end            
+            if nargin>2
                 h.z=in_z;
             end
         end
@@ -61,15 +64,15 @@ classdef scan
     %% Set methods
     methods
         function h=set.x(h,in_x)
-            assert(size(in_x,1)>1, 'The x vector must be a column vector.')
+            assert(size(in_x,2)==1, 'The x vector must be a column vector.')
             h.x=in_x;
         end
         function h=set.y(h,in_y)
-            assert(size(in_y,1)>1, 'The y vector must be a column vector.')
+            assert(size(in_y,2)==1, 'The y vector must be a column vector.')
             h.y=in_y;
         end
         function h=set.z(h,in_z)
-            assert(size(in_z,1)>1, 'The z vector must be a column vector.')
+            assert(size(in_z,2)==1, 'The z vector must be a column vector.')
             h.z=in_z;
         end
     end

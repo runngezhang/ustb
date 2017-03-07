@@ -55,18 +55,7 @@ classdef simulator
             
             % checking number of elements
             assert(h.probe.N_elements==h.sequence(1).N_elements,'Mismatch in the number of elements in probe and the size of delay and apodization vectors in beam');
-            
-            %% time vector
-            max_range=0;
-            min_range=Inf;
-            for n_p=1:h.N_points
-                max_range=max([max_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
-                min_range=min([min_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
-            end
-            time_1w=(min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
-            time_2w=(2*min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth):(1/h.sampling_frequency):(2*max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth);                                                  % time vector [s]
-            N_samples=numel(time_2w);                                                                              % number of time samples
-
+           
             %% wavenumber
             k=2*pi*h.pulse.center_frequency/h.phantom.sound_speed;
    
@@ -77,6 +66,18 @@ classdef simulator
                 focusing_delay(:,1,n_beam)=h.sequence(n_beam).delay;
                 apodization(:,1,n_beam)=h.sequence(n_beam).apodization;
             end
+            
+            %% time vector
+            max_range=0;
+            min_range=Inf;
+            for n_p=1:h.N_points
+                max_range=max([max_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
+                min_range=min([min_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
+            end
+            time_1w=(min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth + max(focusing_delay(:)));                                                  % time vector [s]
+            time_2w=(2*min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                                  % time vector [s]
+            N_samples=numel(time_2w);                                                                              % number of time samples
+
                   
             %% points loop
             data=zeros(N_samples,h.N_elements,h.N_beams);
@@ -99,12 +100,12 @@ classdef simulator
 %                 for n_beam=1:h.N_beams 
 %                     
 %                     % computing the transmit signal 
-%                     delayed_time=ones(h.N_elements,1)*time-(propagation_delay+h.sequence(n_beam).delay)*ones(1,N_samples);                
+%                     delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_beam).delay)*ones(1,numel(time_1w));                
 %                     transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),h.sequence(n_beam).apodization.*directivity./(4*pi*distance)),1);  
 % 
 %                     % computing the receive signal
-%                     delayed_time=ones(h.N_elements,1)*time-propagation_delay*ones(1,N_samples);                
-%                     data(:,:,n_beam)=data(:,:,n_beam)+bsxfun(@times,interp1(time,transmit_signal,delayed_time,'linear',0),10.^(-h.phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
+%                     delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
+%                     data(:,:,n_beam)=data(:,:,n_beam)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-h.phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
 %                 end
                 
                 %% all in one

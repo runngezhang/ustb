@@ -8,8 +8,9 @@ classdef wave
 
     %% public properties
     properties  (SetAccess = public)
-        source           % source class
-        probe            % probe class
+        probe            % PROBE class
+        source           % SOURCE class
+        apodizator       % APODIZATOR class
         sound_speed      % reference speed of sound
     end
     
@@ -22,21 +23,17 @@ classdef wave
     
     %% constructor
     methods (Access = public)
-        function h=wave(probe_in,source_in)
+        function h=wave()
             %WAVE   Constructor of WAVE class
             %
             %   Syntax:
-            %   h = wave(source)
-            %           source      % source class
+            %   h = wave()
             %
             %   See also WAVE, SOURCE, PHANTOM, PROBE, PULSE
             
-            if nargin>0
-               h.probe=probe_in;
-            end
-            if nargin>1
-               h.source=source_in;
-            end            
+            h.probe=probe();
+            h.source=source();
+            h.apodizator=apodizator();
         end
     end
     
@@ -51,7 +48,7 @@ classdef wave
           z = zeros(size(x));
           c = linspace(0,1,h.probe.N_elements);
           
-          %subplot(1,2,1);
+          subplot(2,1,1);
           % draw flatten elements
           fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
           % draw delays
@@ -62,27 +59,26 @@ classdef wave
           set(gca,'fontsize',14);
           title('Delays');
           
-%           subplot(1,2,2);
-%           % draw flatten elements
-%           fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
-%           % draw apodization
-%           plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization,'r.'); grid on; axis tight;
-%           xlabel('x [mm]');
-%           xlabel('y [mm]');
-%           ylabel('Apodization');
-%           set(gca,'fontsize',14);
-%           title('Apodization');
+          subplot(2,1,2);
+          % draw flatten elements
+          fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
+          % draw apodization
+          plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization,'r.'); grid on; axis tight;
+          xlabel('x [mm]');
+          xlabel('y [mm]');
+          ylabel('Apodization');
+          set(gca,'fontsize',14);
+          title('Apodization');
           
         end
     end
     
     %% set methods
     methods  
-%         function h=set.apodization(h,in_apodization)
-%             assert(size(in_apodization,2)==1, 'The apodization should be a column vector [N_elements 1]');
-%             assert(size(in_apodization,1)==h.N_elements, 'The apodization size does not match the probe definition');
-%             h.apodization=in_apodization;
-%         end
+        function h=set.apodizator(h,in_apodizator)
+            assert(strcmp(class(in_apodizator),'apodizator'), 'The apodizator is not an APODIZATOR class. Check HELP APODIZATOR');
+            h.apodizator=in_apodizator;
+        end
         function h=set.source(h,in_source)
             assert(strcmp(class(in_source),'source'), 'The source is not a SOURCE class. Check HELP SOURCE');
             h.source=in_source;
@@ -111,8 +107,10 @@ classdef wave
             end
         end
         function value=get.apodization(h)
-            % for the moment no apodization is programed
-            value=ones(size(h.probe.x));
+            % set values in apodizator
+            h.apodizator.probe=h.probe;
+            
+            value=h.apodizator.go();
         end
     end
     

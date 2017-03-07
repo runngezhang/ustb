@@ -48,37 +48,42 @@ pul.fractional_bandwidth=0.6;                         % fractional bandwidth [un
 pul.plot([],'2-way pulse');
 
 %% SEQUENCE GENERATION
-N=2;                           % number of waves
-z=linspace(-10e-3,10e-3,N);
+N=10;                           % number of focussed waves
+x0=linspace(-10e-3,10e-3,N);
 for n=1:N 
     seq(n)=wave();
     seq(n).probe=prb;
-    seq(n).source=source();
-    seq(n).source.xyz=[0 0 z(n)];
+    seq(n).source.xyz=[x0(n) 0 10e-3];
+    
+    seq(n).apodizator.apodization_window=window.hamming;
+    seq(n).apodizator.origin=seq(n).source;
+    seq(n).apodizator.scan=scan(x0(n),0,20e-3);
+    seq(n).apodizator.f_number=1;
+    
     seq(n).sound_speed=pha.sound_speed;
-    seq(n).source.plot(fig_handle,'Scenario');
+%     seq(n).source.plot(fig_handle,'Scenario');
+%     seq(n).plot(); 
+%     pause();
 end
-seq(1).plot(); % plot one of the delay profiles
-seq(2).plot(); % plot one of the delay profiles
 
 %% SIMULATOR
 sim=simulator();
 
 % setting input data 
-sim.phantom=pha;                   % phantom
-sim.pulse=pul;                % transmitted pulse
-sim.probe=prb;                    % probe
-sim.sequence=seq;             % beam sequence
-sim.sampling_frequency=41.6e6;     % sampling frequency [Hz]
+sim.phantom=pha;                % phantom
+sim.pulse=pul;                  % transmitted pulse
+sim.probe=prb;                  % probe
+sim.sequence=seq;               % beam sequence
+sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 
 % we launch the simulation
 raw=sim.go();
  
-%check how does it look
-for n=1:N 
-    raw.plot(n);
-    pause();
-end
+% %check how does it look
+% for n=1:N 
+%     raw.plot(n);
+%     pause();
+% end
 
 %% DEMODULATOR
 dem=demodulator();
@@ -127,33 +132,33 @@ for ntx=1:numel(seq)
         sig(:,ntx)=sig(:,ntx)+phase_shift.*interp1(dem_raw.time,dem_raw.data(:,nrx,ntx),delay,'linear',0);
     end
     
-    TF0=sqrt((seq(ntx).source.x-0).^2+(seq(ntx).source.y-0).^2+(seq(ntx).source.z-20e-3).^2);
-    if ~isinf(seq(ntx).source.distance)
-        if(seq(ntx).source.z<0)
-            TF0=TF0-seq(ntx).source.distance;
-        else
-            TF0=seq(ntx).source.distance+TF0;
-        end
-    end
-    RF0=sqrt((prb.x-0).^2+(prb.y-0).^2+(prb.z-20e-3).^2);
-    
-    figure(111);
-    subplot(1,2,1)
-    imagesc(1:prb.N_elements,raw.time,raw.data(:,:,ntx)); hold on; grid on;
-    plot(1:prb.N_elements,(RF0+TF0)/raw.sound_speed,'r-');
-    title(ntx);
-    axis tight;
-    subplot(1,2,2)
-    imagesc(x_axis*1e3,z_axis*1e3,abs(reshape(sig(:,ntx),[length(z_axis) length(x_axis)]))); axis equal tight;
-    
-    pause();
+%     TF0=sqrt((seq(ntx).source.x-0).^2+(seq(ntx).source.y-0).^2+(seq(ntx).source.z-20e-3).^2);
+%     if ~isinf(seq(ntx).source.distance)
+%         if(seq(ntx).source.z<0)
+%             TF0=TF0-seq(ntx).source.distance;
+%         else
+%             TF0=seq(ntx).source.distance+TF0;
+%         end
+%     end
+%     RF0=sqrt((prb.x-0).^2+(prb.y-0).^2+(prb.z-20e-3).^2);
+%     
+%     figure(111);
+%     subplot(1,2,1)
+%     imagesc(1:prb.N_elements,raw.time,raw.data(:,:,ntx)); hold on; grid on;
+%     plot(1:prb.N_elements,(RF0+TF0)/raw.sound_speed,'r-');
+%     title(ntx);
+%     axis tight;
+%     subplot(1,2,2)
+%     imagesc(x_axis*1e3,z_axis*1e3,abs(reshape(sig(:,ntx),[length(z_axis) length(x_axis)]))); axis equal tight;
+%     
+%     pause();
     
 end
 close(wb);
 
-%beamformed_data=sum(reshape(sig,[length(z_axis) length(x_axis) size(sig,2)]),3);
+beamformed_data=sum(reshape(sig,[length(z_axis) length(x_axis) size(sig,2)]),3);
 
-beamformed_data=reshape(sig(:,2),[length(z_axis) length(x_axis) ]);
+%beamformed_data=reshape(sig(:,1),[length(z_axis) length(x_axis) ]);
 
 % convert to intensity values
 if(dem_raw.modulation_frequency>0)
