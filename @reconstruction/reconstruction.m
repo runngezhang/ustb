@@ -390,7 +390,8 @@ classdef reconstruction < handle
                             im(:,:,o,f)=abs(hilbert(h.data(:,:,o,f)));
                         end
                     end
-                    
+                case E.signal_format.AS    
+                    im=abs(h.data);
                 case E.signal_format.IQ
                     im=abs(h.data);
                 otherwise
