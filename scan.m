@@ -3,7 +3,7 @@ classdef scan
 %
 %   See also WAVE, RAW_DATA, PROBE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %   $Date: 2017/02/24 $
 
     properties  (SetAccess = public)

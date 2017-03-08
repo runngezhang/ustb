@@ -83,27 +83,35 @@ classdef probe
             value=size(h.geometry,1);
         end
         function value=get.x(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,1);
         end
         function value=get.y(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,2);
         end
         function value=get.z(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,3);
         end
         function value=get.theta(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,4);
         end
         function value=get.phi(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,5);
         end
         function value=get.width(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,6);
         end
         function value=get.height(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=h.geometry(:,7);
         end
         function value=get.r(h)
+            if h.N_elements==0 error('The PROBE class is empty'); end
             value=sqrt(sum(h.geometry(:,1:3).^2,2));
         end
     end

@@ -10,7 +10,7 @@ classdef wave
     properties  (SetAccess = public)
         probe            % PROBE class
         source           % SOURCE class
-        apodizator       % APODIZATOR class
+        apodization      % APODIZATION class
         sound_speed      % reference speed of sound
     end
     
@@ -18,7 +18,7 @@ classdef wave
     properties  (Dependent)   
         N_elements       % number of elements 
         delay            % delay [s]        
-        apodization      % apodization [unitless]
+        apodization_values % apodization [unitless]
     end
     
     %% constructor
@@ -33,7 +33,7 @@ classdef wave
             
             h.probe=probe();
             h.source=source();
-            h.apodizator=apodizator();
+            h.apodization=apodization();
         end
     end
     
@@ -63,7 +63,7 @@ classdef wave
           % draw flatten elements
           fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
           % draw apodization
-          plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization,'r.'); grid on; axis tight;
+          plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization_values,'r.'); grid on; axis tight;
           xlabel('x [mm]');
           xlabel('y [mm]');
           ylabel('Apodization');
@@ -75,9 +75,9 @@ classdef wave
     
     %% set methods
     methods  
-        function h=set.apodizator(h,in_apodizator)
-            assert(strcmp(class(in_apodizator),'apodizator'), 'The apodizator is not an APODIZATOR class. Check HELP APODIZATOR');
-            h.apodizator=in_apodizator;
+        function h=set.apodization(h,in_apodization)
+            assert(strcmp(class(in_apodization),'apodization'), 'The apodization is not an APODIZATION class. Check HELP APODIZATOR');
+            h.apodization=in_apodization;
         end
         function h=set.source(h,in_source)
             assert(strcmp(class(in_source),'source'), 'The source is not a SOURCE class. Check HELP SOURCE');
@@ -106,11 +106,10 @@ classdef wave
                 value=h.probe.x*sin(h.source.azimuth)/h.sound_speed+h.probe.y*sin(h.source.elevation)/h.sound_speed;
             end
         end
-        function value=get.apodization(h)
-            % set values in apodizator
-            h.apodizator.probe=h.probe;
-            
-            value=h.apodizator.go();
+        function value=get.apodization_values(h)
+            % set values not yet in apodization
+            h.apodization.probe=h.probe;
+            value=h.apodization.data();
         end
     end
     

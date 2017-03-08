@@ -64,7 +64,7 @@ classdef simulator
             apodization=zeros(h.N_elements,1,h.N_beams);
             for n_beam=1:h.N_beams 
                 focusing_delay(:,1,n_beam)=h.sequence(n_beam).delay;
-                apodization(:,1,n_beam)=h.sequence(n_beam).apodization;
+                apodization(:,1,n_beam)=h.sequence(n_beam).apodization_values;
             end
             
             %% time vector

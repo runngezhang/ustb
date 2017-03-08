@@ -1,5 +1,5 @@
 classdef source 
-%source   Source definition
+%SOURCE   Source definition
 %
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
@@ -7,14 +7,14 @@ classdef source
 
     %% public properties
     properties  (SetAccess = public)
-        distance=0     % distance from the source location to the origin of coordinates [m]
-        azimuth=0      % angle from the source location to the plane YZ [rad]
-        elevation=0    % angle from the source location to the plane XZ [rad]
+        distance     % distance from the source location to the origin of coordinates [m]
+        azimuth      % angle from the source location to the plane YZ [rad]
+        elevation    % angle from the source location to the plane XZ [rad]
     end
     
     %% dependent properties
     properties  (Dependent)   
-        xyz          % location of the source [m m m] if the source is not at infinity        
+        xyz                   % location of the source [m m m] if the source is not at infinity        
         x
         y
         z
@@ -22,31 +22,17 @@ classdef source
     
     %% constructor
     methods (Access = public)
-        function h=source(distance_in,azimuth_in,elevation_in)
+        function h=source()
             %SOURCE   Constructor of SOURCE class
             %
             %   Syntax:
-            %   h = source(distance,azimuth,elevation)
-            %           distance     % distance from the source location to the origin of coordinates [m]
-            %           azimuth      % angle from the source location to the plane YZ [rad]
-            %           elevation    % angle from the source location to the plane XZ [rad]
-            %
+            %   h = source()
             %   All input parameters can be inserted after declaration.
             %
             %   See also SOURCE
-            
-            if nargin>0
-               h.distance=distance_in;
-            end
-            if nargin>1
-               h.azimuth=azimuth_in;
-            end       
-            if nargin>2
-               h.elevation=elevation_in;
-            end              
-            if nargin>3
-               error('Too many input parameters.');
-            end              
+            h.distance=0;     % distance from the source location to the origin of coordinates [m]
+            h.azimuth=0;      % angle from the source location to the plane YZ [rad]
+            h.elevation=0;    % angle from the source location to the plane XZ [rad]
         end
     end
     
@@ -152,6 +138,10 @@ classdef source
                 title('Source');
             end            
             
+            if nargin>2
+                title(in_title);
+            end
+            
             if isinf(h.distance)
                 x=sin(h.azimuth).*cos(h.elevation);
                 y=sin(h.elevation);
@@ -166,10 +156,6 @@ classdef source
                 xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
                 set(gca,'ZDir','Reverse');
                 set(gca,'fontsize',14);
-            end
-            
-            if nargin>2
-                title(in_title);
             end
         end
     end
