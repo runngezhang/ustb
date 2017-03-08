@@ -67,7 +67,7 @@ classdef huff < handle
             %       dataset          Instance of a known dataset: (sta, cpw, vs, or reconstruction)
             %
             %   See also HUFF
-            known_datasets = {'sta', 'cpw', 'vs'};
+            known_datasets = {'sta', 'cpw', 'vs','pha'};
             if ismember(class(dataset),known_datasets)
                 n=length(h.ultrasound_signal);
                 h.ultrasound_signal{n+1}=dataset;
@@ -183,6 +183,9 @@ classdef huff < handle
                             h.ultrasound_signal{n}.huff_read(h.filename,location);
                         case 'VS'
                             h.ultrasound_signal{n}=vs();
+                            h.ultrasound_signal{n}.huff_read(h.filename,location);
+                        case 'PHA'
+                            h.ultrasound_signal{n}=pha();
                             h.ultrasound_signal{n}.huff_read(h.filename,location);
                         case 'BS'
                             disp('BS is not supported yet');                

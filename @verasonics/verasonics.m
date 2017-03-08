@@ -20,8 +20,8 @@ classdef verasonics < handle
         c0                     % The speed of sound in m/s
         lambda                 % The wavelength in m
         
-        % For CPW 
-        angles                 % The transmit angles of the planewaves in radians
+        % For CPW and pha
+        angles                 % The transmit angles of the planewaves in radians, or for pha the transmit beam angles
     end
     
     %% Constructor
@@ -64,6 +64,8 @@ classdef verasonics < handle
                 dataset = create_cpw_dataset(h,dataset);
             elseif ismember(class(dataset),'sta')
                 dataset = create_sta_dataset(h,dataset);
+            elseif ismember(class(dataset),'pha')
+                dataset = create_pha_dataset(h,dataset);
             else
                 error('Only CPW dataset is implemented for Alpinion');
             end
@@ -169,6 +171,8 @@ classdef verasonics < handle
                     no_t=(h.Receive(n).endSample-h.Receive(n).startSample+1);
                     t_in=linspace(t_ini,t_end,no_t)-offset_time;%scanOffsetTime;
                     
+                    
+                    
                     % read data
                     data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,:,n_frame)),sta_dataset.time,'linear',0);
                     n=n+1;
@@ -188,6 +192,62 @@ classdef verasonics < handle
             end
             
             sta_dataset.data = data;
+            
+        end
+        
+        %% %%
+        %    Save to PHased Array dataset
+        %
+        function pha_dataset = create_pha_dataset(h,pha_dataset)
+            pha_dataset.name = ['PHA Verasonics ',h.Trans.name,' Probe'];
+            pha_dataset.format = E.signal_format.RF;
+            pha_dataset.center_frequency = double(h.Trans.frequency*10^6); %center frequency in Hz
+            pha_dataset.geom = h.Trans.ElementPos(1:h.Trans.numelements,1:3)*1e-3;
+            pha_dataset.c0 = h.c0;
+            pha_dataset.angle = h.angles';
+            no_samples=h.Receive(1).endSample;
+            data=zeros(no_samples, h.Trans.numelements, h.Resource.RcvBuffer(1).numFrames);
+            
+            %delay_x0=sqrt(sum((pha_dataset.geom-ones(h.Trans.numelements,1)*[0 0 20e-3]).^2,2))/h.c0;
+            %no_Apert = size(h.TX,2);
+            
+            offset_time = calculate_delay_offset(h);
+            
+            % convert data
+            pha_dataset.time=[0:(1/h.Fs):((no_samples-1)/h.Fs)]';
+            plot_delayed_signal=0;
+            n=1;
+            for n_frame = 1:h.Resource.RcvBuffer(1).numFrames
+                for n_tx = 1:size(h.TX,2)
+                    % compute time vector for this line
+                    t_ini=2*h.Receive(n).startDepth*h.lambda/h.c0;
+                    t_end=2*h.Receive(n).endDepth*h.lambda/h.c0;
+                    no_t=(h.Receive(n).endSample-h.Receive(n).startSample+1);
+                    
+                    t0_1 = mean(h.TX(n_tx).Delay)*h.lambda/h.Resource.Parameters.speedOfSound; 
+                    %t0_1 = h.TX(n_tx).Delay(32)*h.Receive(1).samplesPerWave/h.Fs;
+                    
+                    t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;%scanOffsetTime;
+                    
+                    % read data
+                    data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame)),pha_dataset.time,'linear',0);
+                    n=n+1;
+                    
+                    % to check delay calculation
+                    if plot_delayed_signal
+%                         delay = delay_x0+delay_x0(n_tx);
+%                         
+%                         figure(101); hold off;
+%                         pcolor(1:no_Apert,pha_dataset.time,real(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
+%                         plot(1:no_Apert,delay,'r');
+%                         title(n_tx);
+%                         ylim([0.9*min(delay) 1.1*max(delay)]);
+%                         pause();
+                    end
+                end
+            end
+           % data(1:20,:,:,:,:)=0;
+            pha_dataset.data = data;
             
         end
         
