@@ -58,7 +58,7 @@ classdef probe
             end
 
             fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
-            %plot3(h.x*1e3,h.y*1e3,h.z*1e3,'kx');
+            plot3(h.x*1e3,h.y*1e3,h.z*1e3,'k+');
             xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
@@ -72,6 +72,13 @@ classdef probe
     %% set methods
     methods  
         function h=set.geometry(h,in_geometry)
+            
+            % if element tilt & dimensions aren't provided we set them to 0
+            N_columns=size(in_geometry,2);
+            if(N_columns<7)
+                in_geometry=[in_geometry zeros(size(in_geometry,1),7-size(in_geometry,2))];
+            end
+            
             assert(size(in_geometry,2)==7, 'The elements matrix should be [x y z theta phi width height] - [m m m rad rad m m]');
             h.geometry=in_geometry;
         end

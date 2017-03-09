@@ -11,7 +11,7 @@ classdef apodization
         probe               % PROBE class
         apex                % SOURCE class
         scan                % SCAN class        
-        apodization_window  % apodization window
+        window              % apodization window
         f_number            % F-number [Fx Fy] [unitless unitless] 
         tilt                % tilt angle [azimuth elevation] [rad rad] 
     end
@@ -32,7 +32,7 @@ classdef apodization
             %
             %   See also apodization, apex, PHANTOM, PROBE, PULSE
             
-            h.apodization_window=window.none;
+            h.window=window.none;
             h.probe=probe();
             h.apex=source();
             h.scan=scan(0,0,0);
@@ -68,9 +68,9 @@ classdef apodization
             assert(size(in_tilt,1)==1,size(in_tilt,1)==2,'The tilt must be a row vector [azimuth elevation]');
             h.tilt=in_tilt;
         end  
-        function h=set.apodization_window(h,in_window)
-             assert(strcmp(class(in_window),'window'),'The apodization_window input should be a WINDOW class. Check help WINDOW');
-             h.apodization_window=in_window;
+        function h=set.window(h,in_window)
+             assert(strcmp(class(in_window),'window'),'The window input should be a WINDOW class. Check help WINDOW');
+             h.window=in_window;
         end
     end
     
@@ -82,10 +82,18 @@ classdef apodization
             assert(numel(h.probe)>0,'The PROBE parameter is not set.');
             assert(numel(h.scan)>0,'The SCAN parameter is not set.');
             assert(numel(h.apex)>0,'The APEX parameter is not set.');
+            %assert(all(h.scan.z>0),'Cannot compute apodization for points behind the XY plane');
             
             % NONE APODIZATION
-            if(h.apodization_window==window.none)
+            if(h.window==window.none)
                 value=ones(h.scan.N_pixels,h.probe.N_elements);
+                return;
+            end
+            
+            % STA APODIZATION (just the element closest to apex)
+            if (h.window==window.sta)
+                dist=sqrt((h.probe.x-h.apex.x).^2+(h.probe.y-h.apex.y).^2+(h.probe.z-h.apex.z).^2);
+                value=ones(h.scan.N_pixels,1)*double(dist==min(dist(:)));
                 return;
             end
             
@@ -104,18 +112,12 @@ classdef apodization
             x_dist=abs(ones(h.scan.N_pixels,1)*(h.probe.x.') - origin_x*ones(1,h.probe.N_elements));
             y_dist=abs(ones(h.scan.N_pixels,1)*(h.probe.y.') - origin_y*ones(1,h.probe.N_elements));    
             
-            % STA APODIZATION (just element closest to apex)
-            if (h.apodization_window==window.sta)
-                value=double(x_dist==min(x_dist(:))).*double(y_dist==min(y_dist(:)));
-                return;
-            end
-            
             % computing aperture
-            Aperture_x=(h.scan.z./h.f_number(1))*ones(1,h.probe.N_elements);
-            Aperture_y=(h.scan.z./h.f_number(2))*ones(1,h.probe.N_elements);
+            Aperture_x=(abs(h.scan.z)./h.f_number(1))*ones(1,h.probe.N_elements);
+            Aperture_y=(abs(h.scan.z)./h.f_number(2))*ones(1,h.probe.N_elements);
 
             % SWITCH
-            switch(h.apodization_window)
+            switch(h.window)
                 % BOXCAR/FLAT/RECTANGULAR
                 case window.boxcar
                     value=double(x_dist<=Aperture_x/2).*...

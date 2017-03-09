@@ -4,7 +4,7 @@
 %   $Date: 2017/02/23$
 
 clear all;
-%close all;
+close all;
 
 %% PHANTOM
 pha=phantom();
@@ -22,7 +22,7 @@ Ny=1;                                   % number of rows
 az_pitch=300e-6;                        % probe pitch in azimuth [m]
 el_pitch=1500e-6;                       % probe pitch in elevation [m]
 az_w=270e-6;                            % element width [m]
-%el_w=1470e-6;                           % element height [m]
+%el_w=1470e-6;                          % element height [m]
 el_w=5000e-6;                           % element height [m]
 
 [X,Y] = meshgrid((1:Nx)*az_pitch,(1:Ny)*el_pitch);
@@ -48,25 +48,26 @@ pul.fractional_bandwidth=0.6;                         % fractional bandwidth [un
 pul.plot([],'2-way pulse');
 
 %% SEQUENCE GENERATION
-N=10;                           % number of focussed waves
-x0=linspace(-10e-3,10e-3,N);
+N=128;                      % number of waves
 for n=1:N 
     seq(n)=wave();
+    
+    % assign probe
     seq(n).probe=prb;
-    seq(n).source.xyz=[x0(n) 0 10e-3];
     
-    seq(n).apodization.apodization_window=window.hamming;
-    seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.f_number=1;
-    seq(n).apodization.scan=scan(seq(n).source.x,seq(n).source.y,seq(n).source.z);
+    % assign source
+    seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization.apodization_window
+    % assign apodization
+    seq(n).apodization.window=window.sta;
+    seq(n).apodization.apex=seq(n).source;
     
+    % assign sound speed
     seq(n).sound_speed=pha.sound_speed;
-%     seq(n).source.plot(fig_handle,'Scenario');
-%     seq(n).plot(); 
-%     pause();
+    seq(n).source.plot(fig_handle,'Scenario');
 end
+seq(1).plot(); % plot one of the delay profiles
+seq(2).plot(); % plot one of the delay profiles
 
 %% SIMULATOR
 sim=simulator();
@@ -87,29 +88,23 @@ dem.raw_data=raw;
 dem_raw=dem.go();
 
 %% SCAN
-%
-sca=linear_scan();
-sca.x_axis=linspace(-4e-3,4e-3,256).';
-sca.z_axis=linspace(16e-3,24e-3,256).';
-
+sca=linear_scan(linspace(-2e-3,2e-3,128).', linspace(18e-3,22e-3,128).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
-%
-% First approximation to the general beamformer
-
 bmf=beamformer();
 bmf.raw_data=dem_raw;
 bmf.scan=sca;
-bmf.probe=prb;
-bmf.sequence=seq;
-bmf.receive_apodization.apodization_window=window.hanning;
+bmf.receive_apodization.window=window.hanning;
 bmf.receive_apodization.f_number=1;
 bmf.receive_apodization.apex.distance=Inf;
 
 % beamforming
-bmf_data=bmf.go();
+i_data=bmf.go();
+
+% postprocess
+b_data=postprocess.coherent_compound(i_data);
 
 % show
-bmf_data(6).plot();
+b_data.plot();
 

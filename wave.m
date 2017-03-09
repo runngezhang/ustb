@@ -95,6 +95,9 @@ classdef wave
             value=h.probe.N_elements;
         end
         function value=get.delay(h)
+            assert(~isempty(h.probe),'The PROBE must be inserted for delay calculation');
+            assert(~isempty(h.sound_speed),'The sound speed must be inserted for delay calculation');
+            
             if ~isinf(h.source.distance)
                 dst=sqrt((h.probe.x-h.source.x).^2+(h.probe.y-h.source.y).^2+(h.probe.z-h.source.z).^2);
                 if(h.source.z<0)

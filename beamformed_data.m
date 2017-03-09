@@ -9,14 +9,14 @@ classdef beamformed_data < handle
     %% compulsory properties
     properties  (SetAccess = public)
         scan                       % SCAN class
-        wave                       % WAVE class
-        probe                      % PROBE class
         data                       % data
     end
     
     %% optional properties
     properties  (SetAccess = public)
         phantom                    % PHANTOM class [optional]
+        wave                       % WAVE class [optional]
+        probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
     end
     
@@ -34,7 +34,6 @@ classdef beamformed_data < handle
             %   h = beamformed_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
-            
         end
     end
     
@@ -65,6 +64,7 @@ classdef beamformed_data < handle
     %% plot methods
     methods
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
+           
             if nargin>1 && ~isempty(figure_handle_in)
                 figure_handle=figure(figure_handle_in);
             else
@@ -83,7 +83,7 @@ classdef beamformed_data < handle
             
             switch class(h.scan)
                 case 'linear_scan'
-                    imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_x_axis h.scan.N_z_axis]));
+                    imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
                     set(gca,'fontsize',14); 
                     axis tight equal; 
                     colorbar; 
@@ -101,24 +101,34 @@ classdef beamformed_data < handle
     %% set methods
     methods
         function h=set.phantom(h,in_phantom)
-            assert(isa(in_phantom,'phantom'), 'The input is not a PHANTOM class. Check HELP PHANTOM.');
-            h.phantom=in_phantom;
+            if ~isempty(in_phantom)
+                assert(isa(in_phantom,'phantom'), 'The input is not a PHANTOM class. Check HELP PHANTOM.');
+                h.phantom=in_phantom;
+            end
         end
         function h=set.pulse(h,in_pulse)
-            assert(isa(in_pulse,'pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
-            h.pulse=in_pulse;
+            if ~isempty(in_pulse)
+                assert(isa(in_pulse,'pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
+                h.pulse=in_pulse;
+            end
         end
         function h=set.probe(h,in_probe)
-            assert(isa(in_probe,'probe'), 'The input is not a PROBE class. Check HELP PROBE.');
-            h.probe=in_probe;
+            if ~isempty(in_probe)
+                assert(isa(in_probe,'probe'), 'The input is not a PROBE class. Check HELP PROBE.');
+                h.probe=in_probe;
+            end
         end
         function h=set.wave(h,in_wave)
-            assert(isa(in_wave,'wave'), 'The input is not a WAVE class. Check HELP WAVE.');
-            h.wave=in_wave;
+            if ~isempty(in_wave)
+                assert(isa(in_wave,'wave'), 'The input is not a WAVE class. Check HELP WAVE.');
+                h.wave=in_wave;
+            end
         end
         function h=set.scan(h,in_scan)
-            assert(isa(in_scan,'scan'), 'The input is not a SCAN class. Check HELP SCAN.');
-            h.scan=in_scan;
+            if ~isempty(in_scan)            
+                assert(isa(in_scan,'scan'), 'The input is not a SCAN class. Check HELP SCAN.');
+                h.scan=in_scan;
+            end
         end
         function h=set.data(h,in_data)
             % some checking is due here

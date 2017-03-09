@@ -1,16 +1,16 @@
 classdef raw_data < handle
-%raw_data   raw_data definition. Children of HANDLE class
-%
-%   See also PULSE, BEAM, PHANTOM, PROBE
-
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/02/24 $
-
+    %raw_data   raw_data definition. Children of HANDLE class
+    %
+    %   See also PULSE, BEAM, PHANTOM, PROBE
+    
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Date: 2017/02/24 $
+    
     %% compulsory properties
     properties  (SetAccess = public)
         sampling_frequency         % sampling frequency [Hz]
         initial_time               % time of the initial sample [s]
-        sound_speed                % reference sound speed [m/s]        
+        sound_speed                % reference sound speed [m/s]
         sequence                   % collection of WAVE classes
         probe                      % PROBE class
         data                       % data
@@ -24,7 +24,7 @@ classdef raw_data < handle
     end
     
     %% dependent properties
-    properties  (Dependent)   
+    properties  (Dependent)
         N_samples          % number of samples in the data
         N_elements         % number of elements in the probe
         N_waves            % number of transmitted waves
@@ -41,7 +41,7 @@ classdef raw_data < handle
             %   h = raw_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
-           
+            
             h.modulation_frequency=0;
             h.sampling_frequency=0;
         end
@@ -53,11 +53,11 @@ classdef raw_data < handle
             %COPY    Copy the values from another RAW_DATA
             %
             %   Syntax:
-            %   COPY(object) 
+            %   COPY(object)
             %       object       Instance of a RAW_DATA class
             %
             %   See also SCAN, WAVE, SOURCE
-            assert(isa(object,class(h)),'Class of the input object is not identical'); 
+            assert(isa(object,class(h)),'Class of the input object is not identical');
             
             % we copy all non-dependent public properties
             list_properties=properties(object);
@@ -74,21 +74,36 @@ classdef raw_data < handle
     %% plot methods
     methods
         function plot(h,n_beam)
-           if nargin<2
-               n_beam=1;
+            if nargin<2
+                n_beam=1;
             end
             
-          figure; 
-          imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_beam)); grid on; axis tight;
-          xlabel('Channel');
-          ylabel('time [\mus]');
-          set(gca,'fontsize',14);
-          title(sprintf('Beam %d',n_beam));
+            figure;
+            if abs(h.modulation_frequency)>eps
+                subplot(1,2,1);
+                imagesc(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_beam))); grid on; axis tight;
+                xlabel('Channel');
+                ylabel('time [\mus]');
+                set(gca,'fontsize',14);
+                title(sprintf('Real Part - Beam %d',n_beam));
+                subplot(1,2,2);                
+                imagesc(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_beam))); grid on; axis tight;
+                xlabel('Channel');
+                ylabel('time [\mus]');
+                set(gca,'fontsize',14);
+                title(sprintf('Imaginary Part - Beam %d',n_beam));
+            else
+                imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_beam)); grid on; axis tight;
+                xlabel('Channel');
+                ylabel('time [\mus]');
+                set(gca,'fontsize',14);
+                title(sprintf('Beam %d',n_beam));
+            end
         end
     end
     
     %% set methods
-    methods  
+    methods
         function h=set.phantom(h,in_phantom)
             assert(strcmp(class(in_phantom),'phantom'), 'The _phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
             h.phantom=in_phantom;
@@ -108,19 +123,19 @@ classdef raw_data < handle
         function h=set.sampling_frequency(h,in_sampling_frequency)
             assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a escalar');
             h.sampling_frequency=in_sampling_frequency;
-        end 
+        end
         function h=set.modulation_frequency(h,in_modulation_frequency)
             assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a escalar');
             h.modulation_frequency=in_modulation_frequency;
-        end         
+        end
         function h=set.sound_speed(h,in_sound_speed)
             assert(numel(in_sound_speed)==1, 'The sound speed must be a escalar');
             h.sound_speed=in_sound_speed;
-        end 
+        end
         function h=set.initial_time(h,in_initial_time)
             assert(numel(in_initial_time)==1, 'The sampling frequency must be a escalar');
             h.initial_time=in_initial_time;
-        end 
+        end
         function h=set.data(h,in_data)
             % checking needed inputs
             assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
@@ -132,11 +147,11 @@ classdef raw_data < handle
             assert(size(in_data,3)==h.N_waves, 'The N_beams in the sequence does not match the beams in the inserted data (3th dimension).');
             
             h.data=in_data;
-        end 
+        end
     end
     
     %% get methods
-    methods  
+    methods
         function value=get.N_elements(h)
             value=h.probe.N_elements;
         end
