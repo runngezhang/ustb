@@ -21,7 +21,7 @@ classdef beamformer
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.2';  % beamformer version
+        version='v1.0.3';  % beamformer version
     end
     
     %% constructor
@@ -42,8 +42,6 @@ classdef beamformer
     %% set methods
     methods  
         function out_dataset=go(h,postprocess)
-            disp(sprintf('USTB General beamformer (%s)',h.version));
-            disp('---------------------------------------------------------------');
             
             % checking we have all we need
             assert(numel(h.raw_data)>0,'The RAW_DATA parameter is not set.');
@@ -53,7 +51,8 @@ classdef beamformer
             w0=2*pi*h.raw_data.modulation_frequency;
 
             %% beamforming 
-            wb=waitbar(0,'Beamforming');
+            wb=waitbar(0,sprintf('USTB General Beamformer (%s)',h.version));
+            set(wb,'Name','USTB');
             for n_wave=1:numel(h.raw_data.sequence)
                 waitbar(n_wave/numel(h.raw_data.sequence));
                 
@@ -64,12 +63,16 @@ classdef beamformer
                     current_scan=h.scan(n_wave); 
                 end
 
-                % precalculate apodizations
+                % precalculate receive apodization
                 h.receive_apodization.probe=h.raw_data.probe;
                 h.receive_apodization.scan=current_scan;
                 rx_apo=h.receive_apodization.data;
+                rx_propagation_distance=h.receive_apodization.propagation_distance;
                 
-                h.transmit_apodization.probe.geometry=[h.raw_data.sequence(n_wave).source.xyz];
+                % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183 
+                % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
+                %h.transmit_apodization.probe=probe();
+                h.transmit_apodization.sequence=h.raw_data.sequence(n_wave);
                 h.transmit_apodization.scan=current_scan;
                 tx_apo=h.transmit_apodization.data;
                 
@@ -80,11 +83,14 @@ classdef beamformer
                 inter_dataset(n_wave).data=zeros(current_scan.N_pixels,1);
                 
                 % transmit delay
-                TF=sqrt((h.raw_data.sequence(n_wave).source.x-current_scan.x).^2+(h.raw_data.sequence(n_wave).source.y-current_scan.y).^2+(h.raw_data.sequence(n_wave).source.z-current_scan.z).^2);
-
-                % add distance from source to origin
                 if ~isinf(h.raw_data.sequence(n_wave).source.distance)
+                    % point sources
+                    TF=sqrt((h.raw_data.sequence(n_wave).source.x-current_scan.x).^2+(h.raw_data.sequence(n_wave).source.y-current_scan.y).^2+(h.raw_data.sequence(n_wave).source.z-current_scan.z).^2);
+                    % add distance from source to origin
                     TF=TF+sign(cos(h.raw_data.sequence(n_wave).source.azimuth)).*h.raw_data.sequence(n_wave).source.distance;
+                else
+                    % plane waves
+                    TF=h.scan.z*cos(h.raw_data.sequence(n_wave).source.azimuth)*cos(h.raw_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.raw_data.sequence(n_wave).source.azimuth)*cos(h.raw_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.raw_data.sequence(n_wave).source.elevation);
                 end
 
                 % receive loop
@@ -98,10 +104,13 @@ classdef beamformer
 
                     % phase correction factor (IQ)
                     phase_shift=exp(1i.*w0*delay);
-
+               
                     % beamformed signal
                     inter_dataset(n_wave).data=inter_dataset(n_wave).data+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.raw_data.time,h.raw_data.data(:,nrx,n_wave),delay,'linear',0);
                 end
+                
+                % assign phase according to 2 times the receive propagation distance
+                inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.raw_data.sound_speed));
             end
             close(wb);
 

@@ -1,7 +1,7 @@
-function ok = ps_sta_iq(h)
-%PS_STA_IQ Point Spread function STA IQ test
+function ok = TE_ps_sta_iq(h)
+%PS_STA_IQ Point Spread function Synthetic Transmit Aperture IQ test
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
-%   beamforms it and compares it with previously beamformed data
+%   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
@@ -46,19 +46,6 @@ function ok = ps_sta_iq(h)
     r_data.modulation_frequency=s.modulation_frequency;
     r_data.data=data;
     
-    
-%     fh=figure;
-%     for n=1:prb.N_elements 
-%         r_data.plot(n); 
-%         dst=norm(seq(n).source.xyz-[0 0 40e-3])+sqrt(sum((prb.geometry(:,1:3)-ones(prb.N_elements,1)*[0 0 40e-3]).^2,2));
-%         delay=dst/s.c0+seq(n).source.distance/s.c0;
-%         subplot(1,2,1); hold on;
-%         plot(delay*1e6,'r--','linewidth',2)
-%         subplot(1,2,2); hold on;
-%         plot(delay*1e6,'r--','linewidth',2)
-%         pause;
-%     end
-    
     % APODIZATION
     apo=apodization();
     apo.window=window.boxcar;
@@ -75,13 +62,20 @@ function ok = ps_sta_iq(h)
     % beamforming
     b_data=bmf.go(@postprocess.coherent_compound);
     
-    % show
-    b_data.plot([],'Result');
+    % test result
+    ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
     
-    % ref
-    ref_data=beamformed_data();
-    ref_data.data=r.data;
-    ref_data.scan=linear_scan(r.x_axis,r.z_axis);
-    ref_data.plot([],'Reference');
+%     figure;
+%     plot(real(b_data.data)); hold on;
+%     plot(real(r.data(:)),'r--'); 
+%    
+%     % show
+%     b_data.plot([],'Result');
+%     
+%     % ref
+%     ref_data=beamformed_data();
+%     ref_data.data=r.data;
+%     ref_data.scan=linear_scan(r.x_axis,r.z_axis);
+%     ref_data.plot([],'Reference');
 end
 

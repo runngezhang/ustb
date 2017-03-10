@@ -1,13 +1,13 @@
-function ok = ps_sta_iq(h)
-%PS_STA_IQ Point Spread function STA IQ test
+function ok = TE_ps_cpw_rf(h)
+%PS_CPW_RF Point Spread function Coherent Plane-Wave Compounding RF test
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
-%   beamforms it and compares it with previously beamformed data
+%   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
     local_path='data/ps/';                              % location of example data in this computer                      
-    raw_data_filename='ps_sta_rf.mat';
-    beamformed_data_filename='beamformed_ps_sta_rf.mat';
+    raw_data_filename='ps_cpw_rf.mat';
+    beamformed_data_filename='beamformed_ps_cpw_rf.mat';
     
     % check if the file is available in the local path & downloads otherwise
     h.download(raw_data_filename, url, local_path);
@@ -21,17 +21,12 @@ function ok = ps_sta_iq(h)
     prb=probe(s.geom);
     
     % SEQUENCE 
-    for n=1:prb.N_elements 
+    for n=1:length(s.angle)
         seq(n)=wave();
         seq(n).probe=prb;
         seq(n).sound_speed=s.c0;
-        seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
-    end
-    
-    % converting time vector standards
-    data=zeros(size(s.data));
-    for n=1:prb.N_elements 
-        data(:,:,n)=interp1(s.time+seq(n).source.distance/s.c0,s.data(:,:,n),s.time,'linear',0);
+        seq(n).source.distance=Inf;
+        seq(n).source.azimuth=s.angle(n);
     end
     
     % RAW DATA
@@ -41,21 +36,7 @@ function ok = ps_sta_iq(h)
     r_data.initial_time=s.time(1);
     r_data.sampling_frequency=1/(s.time(2)-s.time(1));
     r_data.sound_speed=s.c0;
-    r_data.data=data;
-    
-    
-%     fh=figure;
-%     for n=1:prb.N_elements 
-%         r_data.plot(n); 
-%         dst=norm(seq(n).source.xyz-[0 0 40e-3])+sqrt(sum((prb.geometry(:,1:3)-ones(prb.N_elements,1)*[0 0 40e-3]).^2,2));
-%         delay=dst/s.c0+seq(n).source.distance/s.c0;
-%         %subplot(1,2,1); 
-%         hold on;
-%         plot(delay*1e6,'r--','linewidth',2)
-%         %subplot(1,2,2); hold on;
-%         %plot(delay*1e6,'r--','linewidth',2)
-%         pause;
-%     end
+    r_data.data=s.data;
     
     % APODIZATION
     apo=apodization();
@@ -72,15 +53,22 @@ function ok = ps_sta_iq(h)
         
     % beamforming
     b_data=bmf.go(@postprocess.coherent_compound);
-    
-    % show
-    b_data.plot([],'Result');
-    
-    % ref
-    ref_data=beamformed_data();
-    ref_data.data=r.data;
-    ref_data.scan=linear_scan(r.x_axis,r.z_axis);
-    ref_data.plot([],'Reference');
+
+    % test result
+    ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
+
+%     figure;
+%     plot(b_data.data); hold on; grid on;
+%     plot(r.data(:),'r--'); 
+%    
+%     % show
+%     b_data.plot([],'Result');
+%     
+%     % ref
+%     ref_data=beamformed_data();
+%     ref_data.data=r.data;
+%     ref_data.scan=linear_scan(r.x_axis,r.z_axis);
+%     ref_data.plot([],'Reference');
     
 end
 
