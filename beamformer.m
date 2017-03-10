@@ -4,7 +4,10 @@ classdef beamformer
 %   See also PULSE, BEAM, PHANTOM, PROBE
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/28 $
+%            Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%            Stine Myren Hverven <stinemhv@ifi.uio.no>
+%
+%   $Date: 2017/03/10$
 
     %% public properties
     properties  (SetAccess = public)
@@ -102,11 +105,23 @@ classdef beamformer
                     % total delay
                     delay=(RF+TF)/h.raw_data.sound_speed;
 
-                    % phase correction factor (IQ)
-                    phase_shift=exp(1i.*w0*delay);
-               
+                    % check whether is IQ or RF data
+                    if(w0>eps)
+                        % phase correction factor
+                        phase_shift=exp(1i.*w0*delay);
+                        % data
+                        data=h.raw_data.data(:,nrx,n_wave);
+                    else
+                        % phase correction factor
+                        phase_shift=1;
+                        % data
+                        data=hilbert(h.raw_data.data(:,nrx,n_wave));
+                    end
+                    
+                    
                     % beamformed signal
-                    inter_dataset(n_wave).data=inter_dataset(n_wave).data+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.raw_data.time,h.raw_data.data(:,nrx,n_wave),delay,'linear',0);
+                    inter_dataset(n_wave).data=inter_dataset(n_wave).data+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.raw_data.time,data,delay,'linear',0);
+                    
                 end
                 
                 % assign phase according to 2 times the receive propagation distance

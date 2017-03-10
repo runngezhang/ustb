@@ -55,7 +55,7 @@ function ok = TE_ps_cpw_rf(h)
     b_data=bmf.go(@postprocess.coherent_compound);
 
     % test result
-    ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
+    ok=(norm(real(b_data.data)-r.data(:))/norm(r.data(:)))<h.external_tolerance;
 
 %     figure;
 %     plot(b_data.data); hold on; grid on;
