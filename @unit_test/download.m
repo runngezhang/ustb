@@ -12,8 +12,8 @@ function download(h, filename, url, local_path )
     a=dir([local_path filename]);
     if not(numel(a))
         % if not download it
-        disp(['Downloading example data from ' url '. This may take a while.']);
-        urlwrite([url filename],[local_path filename]);
+        disp(['Downloading ' url filename '. This may take a while.']);
+        websave([local_path filename],[url filename]);
     end
 
 end

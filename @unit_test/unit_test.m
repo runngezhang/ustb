@@ -26,7 +26,7 @@ classdef unit_test
     
     %% tests
     methods (Access = public)
-        function ok=all(h, verbose)
+        function ok=all(h)
             %ALL   Go through all tests
             allok=1;
             
@@ -42,10 +42,10 @@ classdef unit_test
                 user=getenv('USER');
                 computer=getenv('HOSTNAME');
             end            
-            line=sprintf('Test run by %s at %s on %s\n\n',user,computer,datestr(datetime));
+            line=sprintf('Alltest run on %s by %s at %s MATLAB=%s\n',datestr(datetime),user,computer,version);
             fprintf(1,line);
-            fprintf(fid,line);
-                    
+            fprintf(fid,line);            
+            
             % read methods
             m=methods(h);
             

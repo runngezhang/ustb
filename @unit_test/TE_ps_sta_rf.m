@@ -3,6 +3,8 @@ function ok = TE_ps_sta_rf(h)
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
 %   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
+    import huff.*;
+    
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
     local_path='data/ps/';                              % location of example data in this computer                      

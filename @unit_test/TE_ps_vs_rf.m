@@ -3,6 +3,8 @@ function ok = TE_ps_vs_rf(h)
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
 %   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
+    import huff.*;
+
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
     local_path='data/ps/';                              % location of example data in this computer                      
@@ -16,11 +18,12 @@ function ok = TE_ps_vs_rf(h)
     % load data
     load([local_path raw_data_filename]);    
     load([local_path beamformed_data_filename]);    
-    
+        
     % PROBE
     prb=probe(s.geom);
     
-    % SEQUENCE 
+    % SEQUENCE
+    seq=wave();
     for n=1:length(s.source)
         seq(n)=wave();
         seq(n).probe=prb;
