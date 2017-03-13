@@ -60,7 +60,7 @@ sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
-bmf.raw_data=channel_data;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=huff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;

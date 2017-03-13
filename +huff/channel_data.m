@@ -1,7 +1,7 @@
-classdef raw_data < handle
-    %raw_data   raw_data definition. Children of HANDLE class
+classdef channel_data < handle
+    %CHANNEL_DATA   CHANNEL_DATA definition. Children of HANDLE class
     %
-    %   See also PULSE, BEAM, PHANTOM, PROBE
+    %   See also CHANNEL_DATA/CHANNEL_DATA, BEAMFORMED_DATA, PHANTOM, PROBE
     
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %   $Date: 2017/02/24 $
@@ -34,11 +34,11 @@ classdef raw_data < handle
     
     %% constructor
     methods (Access = public)
-        function h=raw_data()
-            %raw_data   Constructor of raw_data class
+        function h=channel_data()
+            %CHANNEL_DATA   Constructor of CHANNEL_DATA class
             %
             %   Syntax:
-            %   h = raw_data()
+            %   h = channel_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
             
@@ -50,11 +50,11 @@ classdef raw_data < handle
     %% copy
     methods (Access = public)
         function copy(h,object)
-            %COPY    Copy the values from another RAW_DATA
+            %COPY    Copy the values from another channel_data
             %
             %   Syntax:
             %   COPY(object)
-            %       object       Instance of a RAW_DATA class
+            %       object       Instance of a channel_data class
             %
             %   See also SCAN, WAVE, SOURCE
             assert(isa(object,class(h)),'Class of the input object is not identical');

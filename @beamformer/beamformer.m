@@ -11,7 +11,7 @@ classdef beamformer
 
     %% public properties
     properties  (SetAccess = public)
-        raw_data             % RAW_DATA class
+        channel_data         % CHANNEL_DATA class
         receive_apodization  % APODIZATION class
         transmit_apodization % APODIZATION class
         scan                 % collection of SCAN classes
@@ -47,17 +47,17 @@ classdef beamformer
         function out_dataset=go(h,postprocess)
             
             % checking we have all we need
-            assert(numel(h.raw_data)>0,'The RAW_DATA parameter is not set.');
+            assert(numel(h.channel_data)>0,'The channel_data parameter is not set.');
             assert(numel(h.scan)>0,'The SCAN parameter is not set.');
 
             % modulation frequency
-            w0=2*pi*h.raw_data.modulation_frequency;
+            w0=2*pi*h.channel_data.modulation_frequency;
 
             %% beamforming 
             wb=waitbar(0,sprintf('USTB General Beamformer (%s)',h.version));
             set(wb,'Name','USTB');
-            for n_wave=1:numel(h.raw_data.sequence)
-                waitbar(n_wave/numel(h.raw_data.sequence));
+            for n_wave=1:numel(h.channel_data.sequence)
+                waitbar(n_wave/numel(h.channel_data.sequence));
                 
                 % support multiple or single scans with the same code
                 if numel(h.scan)==1 
@@ -67,7 +67,7 @@ classdef beamformer
                 end
 
                 % precalculate receive apodization
-                h.receive_apodization.probe=h.raw_data.probe;
+                h.receive_apodization.probe=h.channel_data.probe;
                 h.receive_apodization.scan=current_scan;
                 rx_apo=h.receive_apodization.data;
                 rx_propagation_distance=h.receive_apodization.propagation_distance;
@@ -75,58 +75,58 @@ classdef beamformer
                 % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183 
                 % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
                 %h.transmit_apodization.probe=probe();
-                h.transmit_apodization.sequence=h.raw_data.sequence(n_wave);
+                h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
                 h.transmit_apodization.scan=current_scan;
                 tx_apo=h.transmit_apodization.data;
                 
                 % create an intermediate beamformed data class
                 inter_dataset(n_wave)=huff.beamformed_data();
                 inter_dataset(n_wave).scan=current_scan; 
-                inter_dataset(n_wave).wave=h.raw_data.sequence(n_wave);
+                inter_dataset(n_wave).wave=h.channel_data.sequence(n_wave);
                 inter_dataset(n_wave).data=zeros(current_scan.N_pixels,1);
                 
                 % transmit delay
-                if ~isinf(h.raw_data.sequence(n_wave).source.distance)
+                if ~isinf(h.channel_data.sequence(n_wave).source.distance)
                     % point sources
-                    %TF=sqrt((h.raw_data.sequence(n_wave).source.x-current_scan.x).^2+(h.raw_data.sequence(n_wave).source.y-current_scan.y).^2+(h.raw_data.sequence(n_wave).source.z-current_scan.z).^2);                    
-                    TF=(-1).^(current_scan.z<h.raw_data.sequence(n_wave).source.z).*sqrt((h.raw_data.sequence(n_wave).source.x-current_scan.x).^2+(h.raw_data.sequence(n_wave).source.y-current_scan.y).^2+(h.raw_data.sequence(n_wave).source.z-current_scan.z).^2);                   
+                    %TF=sqrt((h.channel_data.sequence(n_wave).source.x-current_scan.x).^2+(h.channel_data.sequence(n_wave).source.y-current_scan.y).^2+(h.channel_data.sequence(n_wave).source.z-current_scan.z).^2);                    
+                    TF=(-1).^(current_scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-current_scan.x).^2+(h.channel_data.sequence(n_wave).source.y-current_scan.y).^2+(h.channel_data.sequence(n_wave).source.z-current_scan.z).^2);                   
                     % add distance from source to origin
-                    TF=TF+sign(cos(h.raw_data.sequence(n_wave).source.azimuth)).*h.raw_data.sequence(n_wave).source.distance;
+                    TF=TF+sign(cos(h.channel_data.sequence(n_wave).source.azimuth)).*h.channel_data.sequence(n_wave).source.distance;
                 else
                     % plane waves
-                    TF=current_scan.z*cos(h.raw_data.sequence(n_wave).source.azimuth)*cos(h.raw_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.raw_data.sequence(n_wave).source.azimuth)*cos(h.raw_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.raw_data.sequence(n_wave).source.elevation);
+                    TF=current_scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                 end
 
                 % receive loop
-                for nrx=1:h.raw_data.probe.N_elements
+                for nrx=1:h.channel_data.probe.N_elements
                     
                     % receive delay
-                    RF=sqrt((h.raw_data.probe.x(nrx)-current_scan.x).^2+(h.raw_data.probe.y(nrx)-current_scan.y).^2+(h.raw_data.probe.z(nrx)-current_scan.z).^2);
+                    RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
 
                     % total delay
-                    delay=(RF+TF)/h.raw_data.sound_speed;
+                    delay=(RF+TF)/h.channel_data.sound_speed;
 
                     % check whether is IQ or RF data
                     if(w0>eps)
                         % phase correction factor
                         phase_shift=exp(1i.*w0*delay);
                         % data
-                        data=h.raw_data.data(:,nrx,n_wave);
+                        data=h.channel_data.data(:,nrx,n_wave);
                     else
                         % phase correction factor
                         phase_shift=1;
                         % data
-                        data=hilbert(h.raw_data.data(:,nrx,n_wave));
+                        data=hilbert(h.channel_data.data(:,nrx,n_wave));
                     end
                     
                     
                     % beamformed signal
-                    inter_dataset(n_wave).data=inter_dataset(n_wave).data+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.raw_data.time,data,delay,'linear',0);
+                    inter_dataset(n_wave).data=inter_dataset(n_wave).data+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
                     
                 end
                 
                 % assign phase according to 2 times the receive propagation distance
-                inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.raw_data.sound_speed));
+                inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
             end
             close(wb);
 
@@ -154,6 +154,10 @@ classdef beamformer
             assert(isa(in_apodization,'huff.apodization'), 'The input is not a APODIZATION class. Check HELP APODIZATION.');
             h.transmit_apodization=in_apodization;
         end           
+        function h=set.channel_data(h,in_channel_data)
+            assert(isa(in_channel_data,'huff.channel_data'), 'The input is not a CHANNEL_DATA class. Check HELP CHANNEL_DATA.');
+            h.channel_data=in_channel_data;
+        end   
     end
     
     

@@ -37,7 +37,7 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[x0(n) 0 z0];
     seq(n).sound_speed=pha.sound_speed;
-    
+
     % show source
     fig_handle=seq(n).source.plot(fig_handle);
 end
@@ -61,7 +61,7 @@ sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
-bmf.raw_data=channel_data;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=huff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;

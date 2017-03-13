@@ -53,7 +53,6 @@ for n=1:N
     % show source
     fig_handle=seq(n).source.plot(fig_handle);
 end
-seq(100).plot();
 
 %% SIMULATOR
 sim=simulator();
@@ -78,7 +77,7 @@ end
  
 %% BEAMFORMER
 bmf=beamformer();
-bmf.raw_data=channel_data;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=huff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;

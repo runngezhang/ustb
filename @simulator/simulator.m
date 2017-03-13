@@ -120,7 +120,7 @@ classdef simulator
             delete(wb);
             
             % save the data into a RAW_DATA structure
-            out_dataset=huff.raw_data();
+            out_dataset=huff.channel_data();
             out_dataset.probe=h.probe();
             out_dataset.pulse=h.pulse();
             out_dataset.phantom=h.phantom();

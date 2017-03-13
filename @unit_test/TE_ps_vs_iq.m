@@ -39,7 +39,7 @@ function ok = TE_ps_vs_iq(h)
     end
     
     % RAW DATA
-    r_data=raw_data();
+    r_data=channel_data();
     r_data.probe=prb;
     r_data.sequence=seq;
     r_data.initial_time=s.time(1);
@@ -56,7 +56,7 @@ function ok = TE_ps_vs_iq(h)
     
     % BEAMFORMER
     bmf=beamformer();
-    bmf.raw_data=r_data;
+    bmf.channel_data=r_data;
     bmf.receive_apodization=apo;
     bmf.transmit_apodization=apo;
     bmf.scan=linear_scan(r.x_axis,r.z_axis);

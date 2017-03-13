@@ -40,7 +40,6 @@ for n=1:N
     % show source
     fig_handle=seq(n).source.plot(fig_handle);
 end
-seq(64).plot(); % plot one of the delay profiles
 
 %% SIMULATOR
 sim=simulator();
@@ -61,7 +60,7 @@ sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
-bmf.raw_data=channel_data;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=huff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
