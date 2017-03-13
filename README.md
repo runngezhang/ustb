@@ -9,7 +9,7 @@ An open source MATLAB toolbox for beamforming, processing, and visualization of 
 
 * Just clone the repository and add the folder (without subfolders) to MATLAB's path
 
-### Check the development wiki
+### Check the development wiki!
 
 * [Wiki](https://bitbucket.org/ustb/ustb/wiki/Home)
 
