@@ -83,14 +83,20 @@ classdef beamformed_data < handle
             
             switch class(h.scan)
                 case 'huff.linear_scan'
-                    imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
-                    set(gca,'fontsize',14); 
-                    axis tight equal; 
-                    colorbar; 
-                    colormap gray;
-                    xlabel('x[mm]'); ylabel('z[mm]');
-                    caxis([-dynamic_range 0]);
-                    title(in_title);
+                    if size(envelope_dB,3)>1
+                        envelope_dB=max(envelope_dB,-dynamic_range);
+                        envelope_dB=(envelope_dB+dynamic_range)/dynamic_range;
+                        implay(reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis 1 size(envelope_dB,3)]),10);                        
+                    else
+                        imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
+                        set(gca,'fontsize',14); 
+                        axis tight equal; 
+                        colorbar; 
+                        colormap gray;
+                        xlabel('x[mm]'); ylabel('z[mm]');
+                        caxis([-dynamic_range 0]);
+                        title(in_title);
+                    end
                     
                 otherwise
                     error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(h.scan)));

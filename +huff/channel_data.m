@@ -21,6 +21,7 @@ classdef channel_data < handle
     properties  (SetAccess = public)
         phantom                    % PHANTOM class [optional]
         pulse                      % PULSE class [optional]
+        PRF                        % pulse repetition frequency [Hz]
     end
     
     %% dependent properties
@@ -28,6 +29,7 @@ classdef channel_data < handle
         N_samples          % number of samples in the data
         N_elements         % number of elements in the probe
         N_waves            % number of transmitted waves
+        N_frames           % number of frames
         time
     end
     
@@ -143,10 +145,14 @@ classdef channel_data < handle
             assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
             assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
             
-            assert(size(in_data,2)==h.N_elements, 'The N_elements in the probe does not match the channels in the inserted data (2nd dimension).');
-            assert(size(in_data,3)==h.N_waves, 'The N_beams in the sequence does not match the beams in the inserted data (3th dimension).');
+            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
+            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
             
             h.data=in_data;
+        end
+        function h=set.PRF(h,in_PRF)
+            assert(numel(in_PRF)==1, 'The PRF must be a escalar');
+            h.PRF=in_PRF;
         end
     end
     
@@ -160,6 +166,9 @@ classdef channel_data < handle
         end
         function value=get.N_waves(h)
             value=numel(h.sequence);
+        end
+        function value=get.N_frames(h)
+            value=size(h.data,4);
         end
         function value=get.time(h)
             value=(h.initial_time+(0:h.N_samples-1)/h.sampling_frequency).';

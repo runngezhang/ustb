@@ -13,13 +13,16 @@ classdef simulator
         probe               % probe class
         sequence            % collection of wave classes
         sampling_frequency  % sampling frequency [Hz]
+        PRF                 % pulse repetition frequency [Hz]
     end
     
     %% dependent properties
     properties  (Dependent)   
         N_elements         % number of elements in the probe
         N_points           % number of points in the phantom
-        N_beams            % number of beams 
+        N_waves            % number of waves
+        N_events           % number of events (waves*frames)
+        N_frames           % number of frames
     end
     
     %% private properties
@@ -53,69 +56,85 @@ classdef simulator
             assert(numel(h.sequence)>0,'The SEQUENCE parameter is not set.');
             assert(numel(h.sampling_frequency)>0,'The SAMPLING_FREQUENCY parameter is not set.');
             
+            % phantom dimensions
+            if(length(h.phantom)>1)
+                assert(mod(h.N_events,h.N_waves)==0,'The number of waves and phantoms does not macth. length(phantom)=length(waves)*frames');
+            end
+            
             % checking number of elements
             assert(h.probe.N_elements==h.sequence(1).N_elements,'Mismatch in the number of elements in probe and the size of delay and apodization vectors in beam');
            
-            %% wavenumber
-            k=2*pi*h.pulse.center_frequency/h.phantom.sound_speed;
-   
             %% unwrapping the signal
-            focusing_delay=zeros(h.N_elements,1,h.N_beams);
-            apodization=zeros(h.N_elements,1,h.N_beams);
-            for n_beam=1:h.N_beams 
-                focusing_delay(:,1,n_beam)=h.sequence(n_beam).delay;
-                apodization(:,1,n_beam)=h.sequence(n_beam).apodization_values;
+            focusing_delay=zeros(h.N_elements,1,h.N_waves);
+            apodization=zeros(h.N_elements,1,h.N_waves);
+            for n_w=1:h.N_waves 
+                focusing_delay(:,1,n_w)=h.sequence(n_w).delay;
+                apodization(:,1,n_w)=h.sequence(n_w).apodization_values;
             end
+            
+            %% reference sound speed
+            c0=h.phantom(1).sound_speed; % choose the first speed of sound as reference
             
             %% time vector
             max_range=0;
             min_range=Inf;
-            for n_p=1:h.N_points
-                max_range=max([max_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
-                min_range=min([min_range; sqrt(sum((ones(h.N_elements,1)*h.phantom.points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
+            for n_e=1:h.N_events
+                for n_p=1:h.N_points
+                    max_range=max([max_range; sqrt(sum((ones(h.N_elements,1)*h.phantom(n_e).points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
+                    min_range=min([min_range; sqrt(sum((ones(h.N_elements,1)*h.phantom(n_e).points(n_p,1:3)-h.probe.geometry(:,1:3)).^2,2))]);
+                end
             end
-            time_1w=(min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth + max(focusing_delay(:)));                                                  % time vector [s]
-            time_2w=(2*min_range/h.phantom.sound_speed-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/h.phantom.sound_speed+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                                  % time vector [s]
+            time_1w=(min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth + max(focusing_delay(:)));                                                  % time vector [s]
+            time_2w=(2*min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                                  % time vector [s]
             N_samples=numel(time_2w);                                                                              % number of time samples
 
                   
-            %% points loop
-            data=zeros(N_samples,h.N_elements,h.N_beams);
+            %% events loop
+            data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
             wb = waitbar(0,'Simulating');
-            for n_p=1:h.N_points
-                % waitbar
-                waitbar(n_p/h.N_points,wb,sprintf('Simulating point %d of %d',n_p,h.N_points));
-                
-                % computing geometry relations to the point
-                theta     = atan2(h.phantom.x(n_p)-h.probe.x, h.phantom.z(n_p)-h.probe.z)-h.probe.theta;
-                phi       = atan2(h.phantom.y(n_p)-h.probe.y, h.phantom.z(n_p)-h.probe.z)-h.probe.phi;
-                distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*h.phantom.points(n_p,1:3)).^2,2));
+            for n_e=1:h.N_events
+                % frame number
+                n_f=ceil(n_e/h.N_waves);
 
-                % directivity between probe and the point
-                directivity = sinc(k*h.probe.width/2.*sin(theta).*cos(phi)/pi).*sinc(k*h.probe.height/2.*sin(theta).*sin(phi)/pi);
-                % delay between probe and the point
-                propagation_delay = distance/h.phantom.sound_speed;
-                    
-%                 % the beam loop
-%                 for n_beam=1:h.N_beams 
-%                     
-%                     % computing the transmit signal 
-%                     delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_beam).delay)*ones(1,numel(time_1w));                
-%                     transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),h.sequence(n_beam).apodization.*directivity./(4*pi*distance)),1);  
-% 
-%                     % computing the receive signal
-%                     delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
-%                     data(:,:,n_beam)=data(:,:,n_beam)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-h.phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
-%                 end
+                % wavenumber
+                k=2*pi*h.pulse.center_frequency/h.phantom(n_e).sound_speed;  
                 
-                %% all in one
-                delayed_time_1w=ones(h.N_elements,1)*time_1w-(propagation_delay)*ones(size(time_1w));  
-                delayed_time_2w=ones(h.N_elements,1)*time_2w-(propagation_delay)*ones(1,N_samples);  
-                DDT=repmat(delayed_time_1w,[1 1 h.N_beams]);
-                mf=h.phantom.Gamma(n_p).*10.^(-h.phantom.alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)/20).*directivity./(4*pi*distance);
-                AMF=bsxfun(@times,apodization,mf);
-                transmit_signal=squeeze(sum(bsxfun(@times,h.pulse.signal(bsxfun(@minus,DDT,focusing_delay)),AMF),1));
-                data=data+permute(bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time_2w,'linear',0),mf),[2 1 3]);
+                %% points loop
+                for n_p=1:h.N_points
+                    % waitbar
+                    waitbar(n_p*n_e/h.N_points/h.N_events,wb,sprintf('Simulating point %d of %d',n_p*n_e,h.N_points*h.N_events));
+                    
+                    % computing geometry relations to the point
+                    theta     = atan2(h.phantom(n_e).x(n_p)-h.probe.x, h.phantom(n_e).z(n_p)-h.probe.z)-h.probe.theta;
+                    phi       = atan2(h.phantom(n_e).y(n_p)-h.probe.y, h.phantom(n_e).z(n_p)-h.probe.z)-h.probe.phi;
+                    distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*h.phantom(n_e).points(n_p,1:3)).^2,2));
+
+                    % directivity between probe and the point
+                    directivity = sinc(k*h.probe.width/2.*sin(theta).*cos(phi)/pi).*sinc(k*h.probe.height/2.*sin(theta).*sin(phi)/pi);
+                    % delay between probe and the point
+                    propagation_delay = distance/h.phantom(n_e).sound_speed;
+
+                    % the beam loop
+                    for n_w=1:h.N_waves 
+
+                         % computing the transmit signal 
+                         delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
+                         transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*directivity./(4*pi*distance)),1);  
+
+                         % computing the receive signal
+                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
+                         data(:,:,n_w,n_f)=data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-h.phantom(n_e).alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
+                    end
+                    
+%                     %% all in one
+%                     delayed_time_1w=ones(h.N_elements,1)*time_1w-(propagation_delay)*ones(size(time_1w));  
+%                     delayed_time_2w=ones(h.N_elements,1)*time_2w-(propagation_delay)*ones(1,N_samples);  
+%                     DDT=repmat(delayed_time_1w,[1 1 h.N_waves]);
+%                     mf=h.phantom(n_e).Gamma(n_p).*10.^(-h.phantom(n_e).alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)/20).*directivity./(4*pi*distance);
+%                     AMF=bsxfun(@times,apodization,mf);
+%                     transmit_signal=squeeze(sum(bsxfun(@times,h.pulse.signal(bsxfun(@minus,DDT,focusing_delay)),AMF),1));
+%                     data=data+permute(bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time_2w,'linear',0),mf),[2 1 3]);
+                end
             end
             delete(wb);
             
@@ -126,9 +145,10 @@ classdef simulator
             out_dataset.phantom=h.phantom();
             out_dataset.sequence=h.sequence();
             out_dataset.sampling_frequency=h.sampling_frequency();
-            out_dataset.sound_speed=h.phantom.sound_speed;
+            out_dataset.sound_speed=c0;
             out_dataset.initial_time=time_2w(1);
             out_dataset.data=data;
+            out_dataset.PRF=h.PRF;
             
         end
     end
@@ -155,6 +175,10 @@ classdef simulator
             assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a escalar');
             h.sampling_frequency=in_sampling_frequency;
         end       
+        function h=set.PRF(h,in_PRF)
+            assert(numel(in_PRF)==1, 'The PRF must be a escalar');
+            h.PRF=in_PRF;
+        end       
     end
     
     %% get methods
@@ -165,8 +189,14 @@ classdef simulator
         function value=get.N_points(h)
             value=h.phantom.N_points;
         end
-        function value=get.N_beams(h)
+        function value=get.N_waves(h)
             value=numel(h.sequence);
+        end
+        function value=get.N_events(h)
+            value=length(h.phantom);
+        end
+        function value=get.N_frames(h)
+            value=floor(h.N_events/h.N_waves);
         end
     end
     

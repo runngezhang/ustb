@@ -76,7 +76,6 @@ classdef phantom
             end
 
             plot3(h.points(:,1)*1e3,h.points(:,2)*1e3,h.points(:,3)*1e3,'r.'); grid on; axis equal; hold on;
-            zlim([0 1.1*max(h.points(:,3))*1e3]);
             xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
