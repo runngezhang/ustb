@@ -151,8 +151,10 @@ classdef channel_data < handle
             h.data=in_data;
         end
         function h=set.PRF(h,in_PRF)
-            assert(numel(in_PRF)==1, 'The PRF must be a escalar');
-            h.PRF=in_PRF;
+            if ~isempty(in_PRF)
+                assert(numel(in_PRF)==1, 'The PRF must be a escalar');
+                h.PRF=in_PRF;
+            end
         end
     end
     

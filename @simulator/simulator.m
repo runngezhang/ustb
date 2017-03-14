@@ -27,7 +27,7 @@ classdef simulator
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.2';  % simulator version
+        version='v1.0.3';  % simulator version
     end
     
     %% constructor
@@ -46,7 +46,7 @@ classdef simulator
     %% set methods
     methods  
         function out_dataset=go(h)
-            disp(sprintf('USTB Fresnel linear impulse response simulator (%s)',h.version));
+            disp(sprintf('USTB''s Fresnel impulse response simulator (%s)',h.version));
             disp('---------------------------------------------------------------');
             
             %% checking we have all we need
@@ -89,41 +89,46 @@ classdef simulator
             N_samples=numel(time_2w);                                                                              % number of time samples
 
                   
-            %% events loop
+            % the frame loop
             data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
-            wb = waitbar(0,'Simulating');
-            for n_e=1:h.N_events
-                % frame number
-                n_f=ceil(n_e/h.N_waves);
-
-                % wavenumber
-                k=2*pi*h.pulse.center_frequency/h.phantom(n_e).sound_speed;  
+            wb = waitbar(0,'Fresnel simulator');
+            for n_f=1:h.N_frames
                 
-                %% points loop
-                for n_p=1:h.N_points
-                    % waitbar
-                    waitbar(n_p*n_e/h.N_points/h.N_events,wb,sprintf('Simulating point %d of %d',n_p*n_e,h.N_points*h.N_events));
-                    
-                    % computing geometry relations to the point
-                    theta     = atan2(h.phantom(n_e).x(n_p)-h.probe.x, h.phantom(n_e).z(n_p)-h.probe.z)-h.probe.theta;
-                    phi       = atan2(h.phantom(n_e).y(n_p)-h.probe.y, h.phantom(n_e).z(n_p)-h.probe.z)-h.probe.phi;
-                    distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*h.phantom(n_e).points(n_p,1:3)).^2,2));
+                % the wave loop
+                for n_w=1:h.N_waves 
+                
+                    % support for static phantoms
+                    if(h.N_events==1)
+                       current_phantom=h.phantom;
+                    else
+                       current_phantom=h.phantom((n_f-1)*h.N_waves+n_w);
+                    end
 
-                    % directivity between probe and the point
-                    directivity = sinc(k*h.probe.width/2.*sin(theta).*cos(phi)/pi).*sinc(k*h.probe.height/2.*sin(theta).*sin(phi)/pi);
-                    % delay between probe and the point
-                    propagation_delay = distance/h.phantom(n_e).sound_speed;
+                    % wavenumber
+                    k=2*pi*h.pulse.center_frequency/current_phantom.sound_speed;  
 
-                    % the beam loop
-                    for n_w=1:h.N_waves 
+                    %% points loop
+                    for n_p=1:h.N_points
+                        % waitbar
+                        waitbar((n_p+h.N_points*(n_w-1)+h.N_points*h.N_waves*(n_f-1))/(h.N_points*h.N_waves*h.N_frames),wb);
 
-                         % computing the transmit signal 
-                         delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
-                         transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*directivity./(4*pi*distance)),1);  
+                        % computing geometry relations to the point
+                        theta     = atan2(current_phantom.x(n_p)-h.probe.x, current_phantom.z(n_p)-h.probe.z)-h.probe.theta;
+                        phi       = atan2(current_phantom.y(n_p)-h.probe.y, current_phantom.z(n_p)-h.probe.z)-h.probe.phi;
+                        distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*current_phantom.points(n_p,1:3)).^2,2));
 
-                         % computing the receive signal
-                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
-                         data(:,:,n_w,n_f)=data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-h.phantom(n_e).alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
+                        % directivity between probe and the point
+                        directivity = sinc(k*h.probe.width/2.*sin(theta).*cos(phi)/pi).*sinc(k*h.probe.height/2.*sin(theta).*sin(phi)/pi);
+                        % delay between probe and the point
+                        propagation_delay = distance/current_phantom.sound_speed;
+
+                        % computing the transmit signal 
+                        delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
+                        transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*directivity./(4*pi*distance)),1);  
+
+                        % computing the receive signal
+                        delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
+                        data(:,:,n_w,n_f)=data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-current_phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
                     end
                     
 %                     %% all in one
@@ -196,7 +201,7 @@ classdef simulator
             value=length(h.phantom);
         end
         function value=get.N_frames(h)
-            value=floor(h.N_events/h.N_waves);
+            value=ceil(h.N_events/h.N_waves);
         end
     end
     

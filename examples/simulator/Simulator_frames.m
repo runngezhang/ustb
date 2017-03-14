@@ -1,4 +1,4 @@
-% Example of movement simulation with the USTB built-in Fresnel simulator
+% Example of movement simulation with USTB's Fresnel simulator
 % using Coherent Plane-Wave Compounding sequence
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
@@ -8,15 +8,17 @@ clear all;
 close all;
 
 %% PHANTOM
-alpha=-45*pi/180;                 % vesel direction [rad]
+alpha=-45*pi/180;                 % vessel direction [rad]
 N_sca=1;                          % number of scatterers
-x_sca=random('unif',-10e-3,10e-3,N_sca,1);
-z_sca=random('unif',15e-3,25e-3,N_sca,1);
+%x_sca=random('unif',-10e-3,10e-3,N_sca,1);
+%z_sca=random('unif',15e-3,25e-3,N_sca,1);
+x_sca=-1e-3;
+z_sca=21e-3;
 p=[x_sca zeros(N_sca,1) z_sca+x_sca*sin(alpha)];
 v=0.9754*ones(N_sca,1)*[cos(alpha) 0 sin(alpha)]; % scatterer velocity [m/s m/s m/s]
 PRF=10000;                           % pulse repetition frequency [Hz]
 N_plane_waves=3;                     % number of plane wave
-N_frames=10;                     % number of frames
+N_frames=10;                         % number of frames
 fig_handle=figure();
 for n=1:N_plane_waves*N_frames
     pha(n)=huff.phantom();
