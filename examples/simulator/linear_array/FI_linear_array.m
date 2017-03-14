@@ -79,7 +79,7 @@ bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go(@postprocess.stack);
+b_data=bmf.go(@bmf.matlab,@postprocess.stack);
 
 % show
 b_data.plot();

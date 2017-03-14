@@ -70,7 +70,7 @@ bmf.transmit_apodization.window=huff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
 
 % beamforming
-b_data=bmf.go(@postprocess.coherent_compound);
+b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 
 % show
 b_data.plot();

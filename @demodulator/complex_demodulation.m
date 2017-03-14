@@ -1,5 +1,5 @@
 function out_dataset=complex_demodulation(h)
-%% Hilbert tranform demodulation
+%Hilbert tranform demodulation
 % 2015-03-26 Øyvind K.-V. Standal
 % 2015-06-04 Alfonso Rodriguez-Molares
 
