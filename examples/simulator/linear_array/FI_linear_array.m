@@ -1,14 +1,9 @@
-% Example of Retrospective Transmit focus Beamforming (converging waves) 
-% simulation with the USTB built-in Fresnel simulator
-%
-% NOT WORKING RIGHT NOW. 
-% - If the focal points are below the scanning region nothing is displayed. 
-%   Probably a problem with the limits of the time vector of the
-%   simulation.
-% - Something must be wrong on the calculation of the apodization for RTB.
+% Example of Conventional Focused Imaging (single focal depth)
+% for a linear-array and linear scan. Simulated with the USTB's Fresnel
+% simulator 
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/11$
+%   $Date: 2017/03/14$
 
 clear all;
 close all;

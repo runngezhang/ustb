@@ -88,8 +88,13 @@ classdef beamformed_data < handle
                         envelope_dB=(envelope_dB+dynamic_range)/dynamic_range;
                         implay(reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis 1 size(envelope_dB,3)]),10);                        
                     else
-                        imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
-                        set(gca,'fontsize',14); 
+                        x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
+                        z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
+                        pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
+                        %imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
+                        shading flat;
+                        set(gca,'fontsize',14);
+                        set(gca,'YDir','reverse');
                         axis tight equal; 
                         colorbar; 
                         colormap gray;
@@ -97,7 +102,25 @@ classdef beamformed_data < handle
                         caxis([-dynamic_range 0]);
                         title(in_title);
                     end
-                    
+                case 'huff.sector_scan'
+                    if size(envelope_dB,3)>1
+                        envelope_dB=max(envelope_dB,-dynamic_range);
+                        envelope_dB=(envelope_dB+dynamic_range)/dynamic_range;
+                        implay(reshape(envelope_dB,[h.scan.N_azimuth_axis h.scan.N_depth_axis 1 size(envelope_dB,3)]),10);                        
+                    else
+                        x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
+                        z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
+                        pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis]));
+                        shading flat;
+                        set(gca,'fontsize',14); 
+                        set(gca,'YDir','reverse');
+                        axis tight equal; 
+                        colorbar; 
+                        colormap gray;
+                        xlabel('x[mm]'); ylabel('z[mm]');
+                        caxis([-dynamic_range 0]);
+                        title(in_title);
+                    end
                 otherwise
                     error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(h.scan)));
             end
