@@ -8,7 +8,7 @@ classdef unit_test
     
     %% private properties
     properties  (Access = public)   
-        external_tolerance=0.10;  % relative error to pass unit test against other beamformers (due to interpolation errors)
+        external_tolerance=0.05;  % relative error to pass unit test against other beamformers (due to interpolation errors)
         internal_tolerance=0.01;  % relative error to pass unit test against our own beamformers
     end
     

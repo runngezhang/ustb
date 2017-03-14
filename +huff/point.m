@@ -1,5 +1,5 @@
-classdef source 
-%SOURCE   Source definition
+classdef point 
+%POINT   POINT definition
 %
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
@@ -7,14 +7,14 @@ classdef source
 
     %% public properties
     properties  (SetAccess = public)
-        distance     % distance from the source location to the origin of coordinates [m]
-        azimuth      % angle from the source location to the plane YZ [rad]
-        elevation    % angle from the source location to the plane XZ [rad]
+        distance     % distance from the point location to the origin of coordinates [m]
+        azimuth      % angle from the point location to the plane YZ [rad]
+        elevation    % angle from the point location to the plane XZ [rad]
     end
     
     %% dependent properties
     properties  (Dependent)   
-        xyz                   % location of the source [m m m] if the source is not at infinity        
+        xyz                   % location of the point [m m m] if the point is not at infinity        
         x
         y
         z
@@ -22,17 +22,17 @@ classdef source
     
     %% constructor
     methods (Access = public)
-        function h=source()
-            %SOURCE   Constructor of SOURCE class
+        function h=point()
+            %POINT   Constructor of point class
             %
             %   Syntax:
-            %   h = source()
+            %   h = point()
             %   All input parameters can be inserted after declaration.
             %
-            %   See also SOURCE
-            h.distance=0;     % distance from the source location to the origin of coordinates [m]
-            h.azimuth=0;      % angle from the source location to the plane YZ [rad]
-            h.elevation=0;    % angle from the source location to the plane XZ [rad]
+            %   See also point
+            h.distance=0;     % distance from the point location to the origin of coordinates [m]
+            h.azimuth=0;      % angle from the point location to the plane YZ [rad]
+            h.elevation=0;    % angle from the point location to the plane XZ [rad]
         end
     end
     
@@ -122,7 +122,7 @@ classdef source
                 value=Inf;
              else
                 %value=h.distance.*cos(h.azimuth).*cos(h.elevation);
-                value=h.distance.*cosd(h.azimuth*180/pi).*cosd(h.elevation*180/pi); % trick to get exact representation
+                value=h.distance.*cosd(h.azimuth*180/pi).*cosd(h.elevation*180/pi); % trick to get exact representation of 0
              end
          end
     end
@@ -130,12 +130,12 @@ classdef source
     %% plot methods
     methods
         function figure_handle=plot(h,figure_handle_in,in_title)
-            % plotting source
+            % plotting point
             if (nargin>1) && ~isempty(figure_handle_in)
                 figure_handle=figure(figure_handle_in);
             else
                 figure_handle=figure();
-                title('Source');
+                title('point');
             end            
             
             if nargin>2

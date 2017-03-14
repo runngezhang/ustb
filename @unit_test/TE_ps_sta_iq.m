@@ -35,7 +35,7 @@ function ok = TE_ps_sta_iq(h)
     for n=1:prb.N_elements
         delay=seq(n).source.distance/s.c0;
         pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
-        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'linear',0);
+        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
     end
     
     % RAW DATA

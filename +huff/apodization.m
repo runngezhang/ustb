@@ -1,7 +1,7 @@
 classdef apodization 
 %APDOIZATION   apodization definition
 %
-%   See also SOURCE, PHANTOM, PROBE, PULSE
+%   See also POINT, PHANTOM, PROBE, PULSE
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %   $Date: 2017/03/07 $
@@ -9,7 +9,7 @@ classdef apodization
     %% public properties
     properties  (SetAccess = public)
         probe               % PROBE class
-        apex                % SOURCE class
+        apex                % POINT class
         scan                % SCAN class        
         window              % apodization window
         f_number            % F-number [Fx Fy] [unitless unitless] 
@@ -39,7 +39,7 @@ classdef apodization
             
             h.window=huff.window.none;
             h.probe=huff.probe();
-            h.apex=huff.source();
+            h.apex=huff.point();
             h.scan=huff.scan(0,0,0);
             h.tilt=[0 0];
         end
@@ -48,7 +48,7 @@ classdef apodization
     %% set methods
     methods  
         function h=set.apex(h,in_source)
-            assert(isa(in_source,'huff.source'), 'The input apex is not a SOURCE class. Check HELP apex');
+            assert(isa(in_source,'huff.point'), 'The input apex is not a POINT class. Check HELP POINT');
             h.apex=in_source;
         end
         function h=set.probe(h,in_probe)

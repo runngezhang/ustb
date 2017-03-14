@@ -54,8 +54,8 @@ classdef beamformer
             w0=2*pi*h.channel_data.modulation_frequency;
 
             %% beamforming 
-            wb=waitbar(0,sprintf('USTB General Beamformer (%s)',h.version));
-            set(wb,'Name','USTB');
+            %wb=waitbar(0,sprintf('USTB General Beamformer (%s)',h.version));
+            %set(wb,'Name','USTB');
             % wave loop
             for n_wave=1:numel(h.channel_data.sequence)
 
@@ -98,8 +98,8 @@ classdef beamformer
 
                 % receive loop
                 for nrx=1:h.channel_data.N_elements
-                    waitbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,wb);
-                    
+                    %waitbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,wb);
+                    tools.workbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,sprintf('USTB General Beamformer (%s)',h.version),'USTB');
                     % receive delay
                     RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
 
@@ -129,7 +129,7 @@ classdef beamformer
                 % assign phase according to 2 times the receive propagation distance
                 inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
             end
-            close(wb);
+            %close(wb);
 
             %% postprocess
             if nargin==1

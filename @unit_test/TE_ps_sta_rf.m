@@ -39,7 +39,7 @@ function ok = TE_ps_sta_rf(h)
         else
             pcf=1;
         end
-        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'linear',0);
+        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
     end
     
     % RAW DATA

@@ -35,9 +35,9 @@ function ok = TE_ps_vs_iq(h)
     for n=1:length(s.source)
         delay=-seq(n).source.distance/s.c0;
         pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
-        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'linear',0);
+        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
     end
-    
+        
     % RAW DATA
     r_data=channel_data();
     r_data.probe=prb;
@@ -68,8 +68,8 @@ function ok = TE_ps_vs_iq(h)
     ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
 
 %     figure;
-%     plot(b_data.data); hold on; grid on;
-%     plot(r.data(:),'r--'); 
+%     plot(real(b_data.data)); hold on; grid on;
+%     plot(real(r.data(:)),'r--'); 
 %    
 %     % show
 %     b_data.plot([],'Result');
