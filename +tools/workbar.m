@@ -117,7 +117,6 @@ if isempty(progfig)
     progfig = figure('menubar','none',...                   % Turn figure menu display off
          'numbertitle','off',...                            % Turn figure numbering off
          'position',winpos,...                              % Set the position of the figure as above
-         'color',wincolor,...                               % Set the figure color
          'resize','off',...                                 % Turn of figure resizing
          'tag','timebar');                                  % Tag the figure for later checking
     
@@ -133,8 +132,8 @@ if isempty(progfig)
         'units','pixels',...                                % Provide axes units in pixels
         'pos',[10 winheight-45 winwidth-50 15],...          % Set the progress bar position and size
         'xlim',[0 1],...                                    % Set the range from 0 to 1
-        'visible','off',...                                 % Turn off axes
-        'drawmode','fast');                                 % Draw faster (I dunno if this matters)
+        'visible','off');                                   % Turn off axes
+        %'drawmode','fast');                                % Draw faster (I dunno if this matters)
     
     imshow(progimage(m));                                   % Set Progress Bar Image
     
@@ -148,34 +147,29 @@ if isempty(progfig)
         'XData',            [1 0 0 1],...                   % Initialize X-coordinates for patch
         'YData',            [0 0 1 1],...                   % Initialize Y-coordinates for patch
         'Facecolor',        'w',...                         % Set Color of patch
-        'EraseMode',        'normal',...                    % Set Erase mode, so we can see progress image
         'edgecolor',        'none');                        % Set the edge color of the patch to none
     
     text(1) = uicontrol(progfig,'style','text',...          % Prepare message text (set the style to text)
         'pos',[10 winheight-30 winwidth-20 20],...          % Set the textbox position and size
         'hor','left',...                                    % Center the text in the textbox
-        'backgroundcolor',wincolor,...                      % Set the textbox background color
         'foregroundcolor',0*[1 1 1],...                     % Set the text color
         'string',message);                                  % Set the text to the input message
     
     text(2) = uicontrol(progfig,'style','text',...          % Prepare static estimated time text
         'pos',[10 5 winwidth-20 20],...                     % Set the textbox position and size
         'hor','left',...                                    % Left align the text in the textbox
-        'backgroundcolor',wincolor,...                      % Set the textbox background color
         'foregroundcolor',0*[1 1 1],...                     % Set the text color
         'string',est_text);                                 % Set the static text for estimated time
     
     text(3) = uicontrol(progfig,'style','text',...          % Prepare estimated time
         'pos',[135 5 winwidth-145 20],...                   % Set the textbox position and size
         'hor','left',...                                    % Left align the text in the textbox
-        'backgroundcolor',wincolor,...                      % Set the textbox background color
         'foregroundcolor',0*[1 1 1],...                     % Set the text color
         'string','');                                       % Initialize the estimated time as blank
     
     text(4) = uicontrol(progfig,'style','text',...          % Prepare the percentage progress
-        'pos',[winwidth-35 winheight-50 25 20],...          % Set the textbox position and size
+        'pos',[winwidth-35 winheight-50 30 20],...          % Set the textbox position and size
         'hor','right',...                                   % Left align the text in the textbox
-        'backgroundcolor',wincolor,...                      % Set the textbox background color
         'foregroundcolor',0*[1 1 1],...                     % Set the textbox foreground color
         'string','');                                       % Initialize the progress text as blank
         
@@ -204,12 +198,10 @@ if ~fractiondone,
     fractiondone = 0.001;
 end
 work = get(progfig,'userdata');
-try progtitle;
-catch
+if ~exist('progtitle')
     progtitle = work.progtitle;
 end
-try message;
-catch
+if ~exist('message')
     message = work.message;
 end
 timeleft = runtime/fractiondone - runtime;
