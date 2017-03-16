@@ -26,10 +26,11 @@ clear all;
 close all;
 
 filename='a.mat';
-folderdata=['data/' datestr(now,'yyyymmdd')];
-mkdir(folderdata);            
-filedata=['L7_STA_' datestr(now,'HHMMSS') '.h5'];
-hufffile=[folderdata '/' filedata];
+% filehandling not ready yet
+%folderdata=['data/' datestr(now,'yyyymmdd')];
+%mkdir(folderdata);            
+%filedata=['L7_STA_' datestr(now,'HHMMSS') '.h5'];
+%hufffile=[folderdata '/' filedata];
 scan_area=[-19e-3 0e-3 19e-3 40e-3];
 pixels=[255 255];
 
@@ -52,7 +53,7 @@ lambda=c0/f0;                               % wavelength [m]
 Resource.Parameters.numTransmit = 128;      % number of transmit channels.
 Resource.Parameters.numRcvChannels = 128;   % number of receive channels.
 Resource.Parameters.speedOfSound = c0;      % set speed of sound in m/sec before calling computeTrans
-Resource.Parameters.simulateMode = 1;       % 1 forces simulate mode, even if hardware is present.
+Resource.Parameters.simulateMode = 0;       % 1 forces simulate mode, even if hardware is present.
 
 %% Specify Trans structure array.
 Trans.name = 'L7-4';
@@ -284,24 +285,23 @@ ver.TW = TW;
 ver.TX = TX;
 
 % Create channel_data object
-channel_data_ver = ver.create_sta_channeldata();
+channel_data = ver.create_sta_channeldata();
 
 %% SCAN
 sca=huff.linear_scan();
-sca.x_axis = linspace(-5e-3,5e-3,100).'
-sca.z_axis = linspace(15e-3,25e-3,100).'
- 
+sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
+sca.z_axis = linspace(0,40e-3,256).'
 %% BEAMFORMER
 bmf=beamformer();
-bmf.channel_data=channel_data_ver;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 
 bmf.receive_apodization.window=huff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
+bmf.receive_apodization.f_number=FN;
 bmf.receive_apodization.apex.distance=Inf;
 
 bmf.transmit_apodization.window=huff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
+bmf.transmit_apodization.f_number=FN;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
