@@ -86,7 +86,7 @@ classdef verasonics < handle
             offset_time = calculate_delay_offset(h); % Get offset time 
             n=1;
             time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
-            plot_delayed_signal=1;
+            plot_delayed_signal=0;
             for n_frame = 1:h.Resource.RcvBuffer(1).numFrames
                 for n_tx = 1:length(channel_data.sequence)
                     %% compute time vector for this line
