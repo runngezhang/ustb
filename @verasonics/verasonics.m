@@ -99,7 +99,7 @@ classdef verasonics < handle
                     if 1  %Calculate geometrically
                         D = abs(h.Trans.ElementPos(1,1)-h.Trans.ElementPos(end,1))*1e-3;
                         q = abs((D/2)*sin(channel_data.sequence(n_tx).source.azimuth));
-                        t0_1 = q/(channel_data.sound_speed)
+                        t0_1 = q/(channel_data.sound_speed);
                     else  %Calculate using Verasonics transmit delay, this will not work for the multiplexer probe NBNB!
                         t0_1 = mean(h.TX(n_tx).Delay)*h.lambda/h.Resource.Parameters.speedOfSound;
                         figure(100);hold all;

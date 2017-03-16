@@ -26,13 +26,14 @@ close all;
 
 % filename handling
 filename='a.mat';
-folderdata=['data/' datestr(now,'yyyymmdd')];
-mkdir(folderdata);            
-filedata=['L7_CPW_' datestr(now,'HHMMSS') '.h5'];
-hufffile=[folderdata '/' filedata];
+% filhandling not ready for USTB v2 yet
+%folderdata=['data/' datestr(now,'yyyymmdd')];
+%mkdir(folderdata);            
+%filedata=['L7_CPW_' datestr(now,'HHMMSS') '.h5'];
+%hufffile=[folderdata '/' filedata];
 
 % scan area in live view
-scan_area=[-19e-3 0e-3 19e-3 40e-3];
+scan_area=[-19e-3 0e-3 19e-3 50e-3];
 pixels=[256 256];
 
 %% SI units
@@ -43,13 +44,13 @@ ex_cycles = 2.5;        % number of cycles of the excitation signal (NOT half-cy
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
 ex_polarity = 1;        % easy way of changing the polarity
 
-no_frames = 1;          % number of frames to be acquired
+no_frames = 3;          % number of frames to be acquired
 no_packets = 1;         % number of apertures per plane wave
 no_planes = 15;         % number of acquisitions (ergo plane waves)
 buffer_size = 4096;     % number of samples in the buffer
-end_depth = 128;        % number of times samples to be acquired
+end_depth = 180;        % number of times samples to be acquired, given in number of wavelengths
 
-PRF=9000;                           % Pulse repetition frequency [pulses/s]
+PRF=5000;                           % Pulse repetition frequency [pulses/s]
 framerate=PRF/no_packets/no_planes; % frame rate [frames/second]
 
 %% dependent values
@@ -68,7 +69,7 @@ end
 Resource.Parameters.numTransmit = 128;    % number of transmit channels.
 Resource.Parameters.numRcvChannels = 128; % number of receive channels.
 Resource.Parameters.speedOfSound = c0;    % set speed of sound in m/sec before calling computeTrans
-Resource.Parameters.simulateMode = 1;     % 0 means no simulation, if hardware is present.
+Resource.Parameters.simulateMode = 0;     % 0 means no simulation, if hardware is present.
 
 %% Specify Trans structure array.
 Trans.name = 'L7-4';
@@ -309,16 +310,16 @@ ver.TX = TX;
 ver.angles = angles;
 
 % Create channel_data object
-channel_data_ver = ver.create_cpw_channeldata();
+channel_data = ver.create_cpw_channeldata();
 
 %% SCAN
 sca=huff.linear_scan();
-sca.x_axis = linspace(-20e-3,22e-3,256).'
+sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
 sca.z_axis = linspace(0,50e-3,256).'
  
 %% BEAMFORMER
 bmf=beamformer();
-bmf.channel_data=channel_data_ver;
+bmf.channel_data=channel_data;
 bmf.scan=sca;
 
 bmf.receive_apodization.window=huff.window.tukey50;
@@ -332,7 +333,7 @@ bmf.transmit_apodization.apex.distance=Inf;
 % beamforming
 b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 
-% show
+%% show
 b_data.plot();
 return
 
