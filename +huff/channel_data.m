@@ -123,19 +123,19 @@ classdef channel_data < handle
             h.sequence=in_sequence;
         end
         function h=set.sampling_frequency(h,in_sampling_frequency)
-            assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a escalar');
+            assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a scalar');
             h.sampling_frequency=in_sampling_frequency;
         end
         function h=set.modulation_frequency(h,in_modulation_frequency)
-            assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a escalar');
+            assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a scalar');
             h.modulation_frequency=in_modulation_frequency;
         end
         function h=set.sound_speed(h,in_sound_speed)
-            assert(numel(in_sound_speed)==1, 'The sound speed must be a escalar');
+            assert(numel(in_sound_speed)==1, 'The sound speed must be a scalar');
             h.sound_speed=in_sound_speed;
         end
         function h=set.initial_time(h,in_initial_time)
-            assert(numel(in_initial_time)==1, 'The sampling frequency must be a escalar');
+            assert(numel(in_initial_time)==1, 'The initial time must be a scalar');
             h.initial_time=in_initial_time;
         end
         function h=set.data(h,in_data)
@@ -152,7 +152,7 @@ classdef channel_data < handle
         end
         function h=set.PRF(h,in_PRF)
             if ~isempty(in_PRF)
-                assert(numel(in_PRF)==1, 'The PRF must be a escalar');
+                assert(numel(in_PRF)==1, 'The PRF must be a scalar');
                 h.PRF=in_PRF;
             end
         end
