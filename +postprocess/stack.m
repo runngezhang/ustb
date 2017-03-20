@@ -15,7 +15,7 @@ switch class(in_dataset(1).scan)
             waitbar(n/length(in_dataset),wb);
 
             x_axis(n)=in_dataset(n).scan.x(1);
-            out_dataset.data(:,n)=in_dataset(n).data;
+            out_dataset.data(:,n,:)=in_dataset(n).data;
         end
         out_dataset.scan=huff.linear_scan(x_axis.',z_axis);
     case 'huff.sector_scan'
@@ -26,7 +26,7 @@ switch class(in_dataset(1).scan)
             waitbar(n/length(in_dataset),wb);
 
             azimuth_axis(n)=in_dataset(n).scan.azimuth_axis(1);
-            out_dataset.data(:,n)=in_dataset(n).data;
+            out_dataset.data(:,n,:)=in_dataset(n).data;
         end
         out_dataset.scan=huff.sector_scan(azimuth_axis.',depth_axis);        
 end
