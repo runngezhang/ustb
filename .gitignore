@@ -2,6 +2,7 @@
 *.fig
 *.mltbx
 *.avi
+!multi_frame_gui.fig
 *.pptx
 *.png
 development/

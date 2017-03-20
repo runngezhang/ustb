@@ -4,7 +4,11 @@ classdef beamformed_data < handle
     %   See also PULSE, BEAM, PHANTOM, PROBE
     
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
+    %
     %   $Date: 2017/03/08 $
+    %   Update 2017/03/20 : Added the multi_frame_gui to show multiple
+    %                       frames.
     
     %% compulsory properties
     properties  (SetAccess = public)
@@ -65,29 +69,29 @@ classdef beamformed_data < handle
     methods
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
            
-            if nargin>1 && ~isempty(figure_handle_in)
-                figure_handle=figure(figure_handle_in);
-            else
-                figure_handle=figure();
+            if size(h.data,3) == 1 %If more than one frame, use GUI and cant set initial handle.
+                if nargin>1 && ~isempty(figure_handle_in)
+                    figure_handle=figure(figure_handle_in);
+                else
+                    figure_handle=figure();
+                end
             end
-            if nargin<3 
+            if nargin<3
                 in_title='Beamformed data';
             end
             if nargin<4 
                 dynamic_range=60;
             end
             
-            % convert to intensity values
-            envelope=abs(h.data);
-            envelope_dB=20*log10(envelope./max(envelope(:)));
-            
-            switch class(h.scan)
-                case 'huff.linear_scan'
-                    if size(envelope_dB,3)>1
-                        envelope_dB=max(envelope_dB,-dynamic_range);
-                        envelope_dB=(envelope_dB+dynamic_range)/dynamic_range;
-                        implay(reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis 1 size(envelope_dB,3)]),10);                        
-                    else
+            if size(h.data,3) > 1 %If more than one frame, call multi_frame_gui
+                multi_frame_gui(h,in_title,dynamic_range);
+            else
+                % convert to intensity values
+                envelope=abs(h.data);
+                envelope_dB=20*log10(envelope./max(envelope(:)));
+                
+                switch class(h.scan)
+                    case 'huff.linear_scan'
                         x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
                         z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
                         pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
@@ -95,34 +99,29 @@ classdef beamformed_data < handle
                         shading flat;
                         set(gca,'fontsize',14);
                         set(gca,'YDir','reverse');
-                        axis tight equal; 
-                        colorbar; 
+                        axis tight equal;
+                        colorbar;
                         colormap gray;
                         xlabel('x[mm]'); ylabel('z[mm]');
                         caxis([-dynamic_range 0]);
                         title(in_title);
-                    end
-                case 'huff.sector_scan'
-                    if size(envelope_dB,3)>1
-                        envelope_dB=max(envelope_dB,-dynamic_range);
-                        envelope_dB=(envelope_dB+dynamic_range)/dynamic_range;
-                        implay(reshape(envelope_dB,[h.scan.N_azimuth_axis h.scan.N_depth_axis 1 size(envelope_dB,3)]),10);                        
-                    else
+                        
+                    case 'huff.sector_scan'
                         x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
                         z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
                         pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis]));
                         shading flat;
-                        set(gca,'fontsize',14); 
+                        set(gca,'fontsize',14);
                         set(gca,'YDir','reverse');
-                        axis tight equal; 
-                        colorbar; 
+                        axis tight equal;
+                        colorbar;
                         colormap gray;
                         xlabel('x[mm]'); ylabel('z[mm]');
                         caxis([-dynamic_range 0]);
                         title(in_title);
-                    end
-                otherwise
-                    error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(h.scan)));
+                    otherwise
+                        error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(h.scan)));
+                end
             end
         end
     end
