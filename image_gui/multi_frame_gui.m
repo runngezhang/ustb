@@ -72,29 +72,31 @@ switch class(b_data.scan)
         z_matrix=reshape(b_data.scan.z,[b_data.scan.N_z_axis b_data.scan.N_x_axis ]);
         all_images_dB = reshape(envelope_dB,[b_data.scan.N_z_axis b_data.scan.N_x_axis size(b_data.data,3)]);
         image_handle = pcolor(handles.image_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,current_frame));
-        shading flat;
+        shading(handles.image_handle,'flat');
         set(handles.image_handle,'fontsize',14);
         set(handles.image_handle,'YDir','reverse');
-        axis tight equal;
-        colorbar;
-        colormap gray;
-        xlabel('x[mm]'); ylabel('z[mm]');
-        caxis([-dynamic_range 0]);
-        title([in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+        axis(handles.image_handle,'tight','equal');
+        colorbar(handles.image_handle);
+        colormap(handles.image_handle,'gray');
+        xlabel(handles.image_handle,'x[mm]'); ylabel(handles.image_handle,'z[mm]');
+        caxis(handles.image_handle,[-dynamic_range 0]);
+        title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+        drawnow;
     case 'huff.sector_scan'
         x_matrix=reshape(b_data.scan.x,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis]);
         z_matrix=reshape(b_data.scan.z,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis ]);
-        all_images_dB = reshape(envelope_dB,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis size(b_data.data,3)])
+        all_images_dB = reshape(envelope_dB,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis size(b_data.data,3)]);
         image_handle = pcolor(handles.image_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,current_frame));
-        shading flat;
+        shading(handles.image_handle,'flat');
         set(handles.image_handle,'fontsize',14);
         set(handles.image_handle,'YDir','reverse');
-        axis tight equal;
-        colorbar;
-        colormap gray;
-        xlabel('x[mm]'); ylabel('z[mm]');
-        caxis([-dynamic_range 0]);
-        title([in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+        axis(handles.image_handle,'tight','equal');
+        colorbar(handles.image_handle);
+        colormap(handles.image_handle,'gray');
+        xlabel(handles.image_handle,'x[mm]'); ylabel(handles.image_handle,'z[mm]');
+        caxis(handles.image_handle,[-dynamic_range 0]);
+        title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+        drawnow;
     otherwise
         error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
 end
@@ -148,7 +150,7 @@ global in_title;
 if current_frame+1 <= size(all_images_dB,3)
     current_frame = current_frame+1;
     set(image_handle,'CData',all_images_dB(:,:,current_frame));
-    title([in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+    title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
 end
 
 
@@ -170,7 +172,7 @@ while(play_loop)
         current_frame = 1;
     end
     set(image_handle,'CData',all_images_dB(:,:,current_frame));
-    title([in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+    title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
     drawnow();
     pause(0.05);
 end
