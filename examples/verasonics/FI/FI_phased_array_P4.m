@@ -16,7 +16,7 @@ filename='a.mat';
 % filedata=['P4_PHA_' datestr(now,'HHMMSS') '.h5'];
 % hufffile=[folderdata '/' filedata];
 
-frames = 1;
+frames = 3;
 
 P.numRays = 128;      % no. of Rays (1 for Flash transmit)
 P.startDepth = 0;
@@ -63,6 +63,11 @@ for i = 1:P.numRays
 end
 PData(1).Region = computeRegions(PData(1));
 
+%Calculate transmit angle, I do it here because we need then to place the
+%points in the delay test.
+Angles = P.theta:P.rayDelta:(P.theta + (P.numRays-1)*P.rayDelta);
+
+
 % Specify Media.  Use point targets in middle of PData.
 % Set up Media points
 % - Uncomment for speckle
@@ -71,30 +76,16 @@ PData(1).Region = computeRegions(PData(1));
 % Media.MP(:,4) = 0.04*Media.MP(:,4) + 0.04;  % Random amplitude 
 % Media.MP(:,1) = 2*halfwidth*(Media.MP(:,1)-0.5);
 % Media.MP(:,3) = P.endDepth*Media.MP(:,3);
-Media.MP(1,:) = [-45,0,30,1.0];
-Media.MP(2,:) = [-15,0,30,1.0];
-Media.MP(3,:) = [15,0,30,1.0];
-Media.MP(4,:) = [45,0,30,1.0];
-Media.MP(5,:) = [-15,0,60,1.0];
-Media.MP(6,:) = [-15,0,90,1.0];
-Media.MP(7,:) = [-15,0,120,1.0];
-Media.MP(8,:) = [-15,0,150,1.0];
-Media.MP(9,:) = [-45,0,120,1.0];
-Media.MP(10,:) = [15,0,120,1.0];
-Media.MP(11,:) = [45,0,120,1.0];
-Media.MP(12,:) = [-10,0,69,1.0];
-Media.MP(13,:) = [-5,0,75,1.0];
-Media.MP(14,:) = [0,0,78,1.0];
-Media.MP(15,:) = [5,0,80,1.0];
-Media.MP(16,:) = [10,0,81,1.0];
-Media.MP(17,:) = [-75,0,120,1.0];
-Media.MP(18,:) = [75,0,120,1.0];
-Media.MP(19,:) = [-15,0,180,1.0];
-Media.MP(20,:) = [0,0,77.2987,1.0];
 
-Media.numPoints = 20;
+% Points to check delay calculation
+%[z,x] = pol2cart(Angles,ones(1,length(Angles))*77.2987);
+%Media.MP = [x', zeros(length(x),1), z', ones(length(x),1)];
+
+pt1
+
+Media.numPoints = length(Media.MP);
 Media.attenuation = -0.5;
-%Media.function = 'movePoints';
+Media.function = 'movePoints';
 
 % Specify Resources.
 Resource.RcvBuffer(1).datatype = 'int16';
@@ -127,7 +118,7 @@ TX = repmat(struct('waveform', 1, ...
                    'Apod', ones(1,64), ...  % set TX.Apod for 64 elements
                    'Delay', zeros(1,64)), 1, P.numRays);
 % - Set event specific TX attributes.
-Angles = P.theta:P.rayDelta:(P.theta + (P.numRays-1)*P.rayDelta);
+
 TXorgs = P.radius*tan(Angles);
 for n = 1:P.numRays   % P.numRays transmit events
     TX(n).Origin = [TXorgs(n),0.0,0.0];

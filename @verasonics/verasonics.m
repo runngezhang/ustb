@@ -271,10 +271,12 @@ classdef verasonics < handle
                     no_t=(h.Receive(n).endSample-h.Receive(n).startSample+1);
                     
                     % compute the offset in time from center of probe to
-                    % "closest transmit delay" to get correct t_0
-                    [dummy,idx] = min(sqrt((h.TX(n_tx).Delay*h.lambda).^2+channel_data.probe.r'.^2));
-                        
-                    t0_1 = (h.TX(n_tx).Delay(idx))*h.lambda/h.Resource.Parameters.speedOfSound; 
+                    % center of transmit wave. We do this by finding the
+                    % mean between the two center transmit delays for a
+                    % even numbered probe, and the center transmit delay
+                    % for a odd elemtn probe
+                    t0_1 = mean(h.TX(n_tx).Delay(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)))...
+                            *h.lambda/h.Resource.Parameters.speedOfSound; 
                     
                     t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
                     
@@ -287,9 +289,17 @@ classdef verasonics < handle
                     % are firing at angle=0
                     if plot_delayed_signal
                         % Point to beamform to (where the scatterer is in the simulation)
-                        x = 0;
+                        % Need to change to correct scatter setup in the
+                        % Verasonics script, see FI_phase_array_p4.m for
+                        % example. This seems to be correct, but the delays
+                        % are slighty off for transmit angles > 0 but not
+                        % for angles < 0. Strange. Is there somthing wrong
+                        % with the Verasonics simulation?? :)   
+                       
+                        [z_all,x_all] = pol2cart(h.angles,ones(1,length(h.angles))*40e-3);
+                        x = x_all(n_tx);
                         y = 0;
-                        z = 40e-3;
+                        z = z_all(n_tx);
                         
                         TF=(-1).^(z<channel_data.sequence(n_tx).source.z).*sqrt((channel_data.sequence(n_tx).source.x-x).^2+(channel_data.sequence(n_tx).source.y-y).^2+(channel_data.sequence(n_tx).source.z-z).^2);
                         % add distance from source to origin
