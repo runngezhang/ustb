@@ -84,7 +84,7 @@ classdef beamformed_data < handle
             end
             
             if size(h.data,3) > 1 %If more than one frame, call multi_frame_gui
-                multi_frame_gui(h,in_title,dynamic_range);
+                gui.multi_frame_gui_export(h,in_title,dynamic_range);
             else
                 % convert to intensity values
                 envelope=abs(h.data);
