@@ -66,62 +66,70 @@ classdef beamformed_data < handle
     end
     
     %% plot methods
-    methods
+    methods (Access = public)
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
-           
+            
             if size(h.data,3) == 1 %If more than one frame, use GUI and cant set initial handle.
                 if nargin>1 && ~isempty(figure_handle_in)
                     figure_handle=figure(figure_handle_in);
+                    axis_handle = gca(figure_handle);
                 else
                     figure_handle=figure();
+                    axis_handle = gca(figure_handle);
                 end
             end
             if nargin<3
                 in_title='Beamformed data';
             end
-            if nargin<4 
+            if nargin<4
                 dynamic_range=60;
             end
             
             if size(h.data,3) > 1 %If more than one frame, call multi_frame_gui
                 gui.multi_frame_gui_export(h,in_title,dynamic_range);
             else
-                % convert to intensity values
-                envelope=abs(h.data);
-                envelope_dB=20*log10(envelope./max(envelope(:)));
+                h.draw_image(axis_handle,in_title,dynamic_range);
+            end
+        end
+        
+        function [image_handle, all_images_dB] = draw_image(h,axis_handle,in_title,dynamic_range)
+            % convert to intensity values
+            envelope=abs(h.data);
+            envelope_dB=20*log10(envelope./max(envelope(:)));
                 
-                switch class(h.scan)
-                    case 'huff.linear_scan'
-                        x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
-                        z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
-                        pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
-                        %imagesc(h.scan.x_axis*1e3,h.scan.z_axis*1e3,reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis]));
-                        shading flat;
-                        set(gca,'fontsize',14);
-                        set(gca,'YDir','reverse');
-                        axis tight equal;
-                        colorbar;
-                        colormap gray;
-                        xlabel('x[mm]'); ylabel('z[mm]');
-                        caxis([-dynamic_range 0]);
-                        title(in_title);
-                        
-                    case 'huff.sector_scan'
-                        x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
-                        z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
-                        pcolor(x_matrix*1e3,z_matrix*1e3,reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis]));
-                        shading flat;
-                        set(gca,'fontsize',14);
-                        set(gca,'YDir','reverse');
-                        axis tight equal;
-                        colorbar;
-                        colormap gray;
-                        xlabel('x[mm]'); ylabel('z[mm]');
-                        caxis([-dynamic_range 0]);
-                        title(in_title);
-                    otherwise
-                        error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(h.scan)));
-                end
+            switch class(h.scan)
+                case 'huff.linear_scan'
+                    x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
+                    z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
+                    all_images_dB = reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
+                    image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                    shading(axis_handle,'flat');
+                    set(axis_handle,'fontsize',14);
+                    set(axis_handle,'YDir','reverse');
+                    axis(axis_handle,'tight','equal');
+                    colorbar(axis_handle);
+                    colormap(axis_handle,'gray');
+                    xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
+                    caxis(axis_handle,[-dynamic_range 0]);
+                    title(axis_handle,in_title);
+                    drawnow;
+                case 'huff.sector_scan'
+                    x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
+                    z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
+                    all_images_dB = reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                    image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                    shading(axis_handle,'flat');
+                    set(axis_handle,'fontsize',14);
+                    set(axis_handle,'YDir','reverse');
+                    axis(axis_handle,'tight','equal');
+                    colorbar(axis_handle);
+                    colormap(axis_handle,'gray');
+                    xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
+                    caxis(axis_handle,[-dynamic_range 0]);
+                    title(axis_handle,in_title);
+                    drawnow;
+                otherwise
+                    error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
             end
         end
     end
@@ -153,7 +161,7 @@ classdef beamformed_data < handle
             end
         end
         function h=set.scan(h,in_scan)
-            if ~isempty(in_scan)            
+            if ~isempty(in_scan)
                 assert(isa(in_scan,'huff.scan'), 'The input is not a SCAN class. Check HELP SCAN.');
                 h.scan=in_scan;
             end
@@ -169,4 +177,5 @@ classdef beamformed_data < handle
     methods
         
     end
+    
 end

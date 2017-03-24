@@ -59,49 +59,10 @@ global image_handle;
 global all_images_dB;
 global in_title;
 b_data = varargin{1};
-envelope=abs(b_data.data);
-envelope_dB=20*log10(envelope./max(envelope(:)));
-
 in_title = varargin{2};
 dynamic_range = varargin{3};
 current_frame = 1;
-
-switch class(b_data.scan)
-    case 'huff.linear_scan'
-        x_matrix=reshape(b_data.scan.x,[b_data.scan.N_z_axis b_data.scan.N_x_axis]);
-        z_matrix=reshape(b_data.scan.z,[b_data.scan.N_z_axis b_data.scan.N_x_axis ]);
-        all_images_dB = reshape(envelope_dB,[b_data.scan.N_z_axis b_data.scan.N_x_axis size(b_data.data,3)]);
-        image_handle = pcolor(handles.image_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,current_frame));
-        shading(handles.image_handle,'flat');
-        set(handles.image_handle,'fontsize',14);
-        set(handles.image_handle,'YDir','reverse');
-        axis(handles.image_handle,'tight','equal');
-        colorbar(handles.image_handle);
-        colormap(handles.image_handle,'gray');
-        xlabel(handles.image_handle,'x[mm]'); ylabel(handles.image_handle,'z[mm]');
-        caxis(handles.image_handle,[-dynamic_range 0]);
-        title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
-        drawnow;
-    case 'huff.sector_scan'
-        x_matrix=reshape(b_data.scan.x,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis]);
-        z_matrix=reshape(b_data.scan.z,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis ]);
-        all_images_dB = reshape(envelope_dB,[b_data.scan.N_depth_axis b_data.scan.N_azimuth_axis size(b_data.data,3)]);
-        image_handle = pcolor(handles.image_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,current_frame));
-        shading(handles.image_handle,'flat');
-        set(handles.image_handle,'fontsize',14);
-        set(handles.image_handle,'YDir','reverse');
-        axis(handles.image_handle,'tight','equal');
-        colorbar(handles.image_handle);
-        colormap(handles.image_handle,'gray');
-        xlabel(handles.image_handle,'x[mm]'); ylabel(handles.image_handle,'z[mm]');
-        caxis(handles.image_handle,[-dynamic_range 0]);
-        title(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
-        drawnow;
-    otherwise
-        error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
-end
-
-%imagesc(handles.image_handle,rand(100,100));
+[image_handle, all_images_dB] = b_data.draw_image(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))],dynamic_range);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -135,7 +96,7 @@ global in_title;
 if current_frame-1 > 0
     current_frame = current_frame-1;
     set(image_handle,'CData',all_images_dB(:,:,current_frame));
-    title([in_title,' Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
+    title([in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))]);
 end
 
 % --- Executes on button press in pushbuttonNext.
