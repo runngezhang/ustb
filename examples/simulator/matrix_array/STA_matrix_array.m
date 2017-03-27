@@ -4,12 +4,12 @@
 %   $Date: 2017/03/11$
 
 clear all;
-close all;
+%close all;
 
 %% PHANTOM
 pha=huff.phantom();
-pha.sound_speed=1540;            % speed of sound [m/s]
-pha.points=[0,  0, 20e-3, 1];    % point scatterer position [m]
+pha.sound_speed=1540;               % speed of sound [m/s]
+pha.points=[0, -2e-3, 20e-3, 1];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% PROBE
@@ -24,7 +24,7 @@ prb.plot(fig_handle);
 
 %% PULSE
 pul=huff.pulse();
-pul.center_frequency=3e6;       % transducer frequency [MHz]
+pul.center_frequency=3e6;         % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
@@ -56,18 +56,28 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 
 % we launch the simulation
 channel_data=sim.go();
+
+% %% check channel data
+% n_beam=1;
+% channel_data.plot(n_beam); hold on;
+% dtx=norm([prb.x(n_beam)-pha.points(1) prb.y(n_beam)-pha.points(2) prb.z(n_beam)-pha.points(3)])+norm([prb.x(n_beam) prb.y(n_beam) prb.z(n_beam)]);
+% drx=sqrt(sum(([prb.x-pha.points(1) prb.y-pha.points(2) prb.z-pha.points(3)]).^2,2));
+% delay=(dtx+drx)/pha.sound_speed;
+% plot(1:prb.N_elements,delay*1e6,'r--','linewidth',2)
  
 %% SCAN
-sca=huff.linear_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).');
+sca=huff.linear_3D_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).',pi/2);
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
+
 bmf.receive_apodization.window=huff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
+
 bmf.transmit_apodization.window=huff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
