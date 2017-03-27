@@ -45,9 +45,11 @@ classdef linear_scan < huff.scan
             [X Z]=meshgrid(h.x_axis,h.z_axis);
             
             % position of the pixels
-            h.x=X(:);
-            h.y=0.*X(:);
-            h.z=Z(:);
+            if ~isempty(X)
+                h.x=X(:);
+                h.y=0.*X(:);
+                h.z=Z(:);
+            end
         end
     end
     
@@ -74,13 +76,6 @@ classdef linear_scan < huff.scan
             value=numel(h.z_axis);
         end        
     end
-    
-%     %% inherit plot method
-%     methods
-%         function figure_handle=plot(h,figure_handle_in,title_in)
-%             figure_handle=plot@scan(h);
-%         end
-%     end
     
 end
 
