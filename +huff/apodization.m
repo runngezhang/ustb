@@ -41,6 +41,7 @@ classdef apodization
             h.probe=huff.probe();
             h.apex=huff.point();
             h.scan=huff.scan(0,0,0);
+            h.f_number=[1 1];
             h.tilt=[0 0];
         end
     end
@@ -76,6 +77,21 @@ classdef apodization
         function h=set.window(h,in_window)
              assert(isa(in_window,'huff.window'),'The window input should be a WINDOW class. Check help WINDOW');
              h.window=in_window;
+        end
+    end
+    
+    methods
+        function value=rectangular(h,dist,aperture)
+            value=double(dist<=aperture/2);
+        end
+        function value=hanning(h,dist,aperture)
+            value=double(dist<=aperture/2).*(0.5 + 0.5*cos(2*pi*dist./aperture));
+        end
+        function value=hamming(h,dist,aperture)
+            value=double(dist<=aperture/2).*(0.53836 + 0.46164*cos(2*pi*dist./aperture));
+        end
+        function value=tukey(h,dist,aperture,roll)
+            value=(dist<=(aperture/2*(1-roll))) + (dist>(aperture/2*(1-roll))).*(dist<(aperture/2)).*0.5.*(1+cos(2*pi/roll*(dist./aperture-roll/2-1/2)));
         end
     end
     
@@ -117,36 +133,29 @@ classdef apodization
             switch(h.window)
                 % BOXCAR/FLAT/RECTANGULAR
                 case huff.window.boxcar
-                    value=double(x_dist<=Aperture_x/2).*...
-                          double(y_dist<=Aperture_y/2);
+                    value=h.rectangular(x_dist,Aperture_x).*h.rectangular(y_dist,Aperture_y);
                 % HANNING
                 case huff.window.hanning
-                    value=double(x_dist<=Aperture_x/2).*(0.5 + 0.5*cos(2*pi*x_dist./Aperture_x)).*... 
-                          double(y_dist<=Aperture_y/2).*(0.5 + 0.5*cos(2*pi*y_dist./Aperture_y));
+                    value=h.hanning(x_dist,Aperture_x).*h.hanning(y_dist,Aperture_y);
                 % HAMMING
                 case huff.window.hamming
-                    value=double(x_dist<=Aperture_x/2).*(0.53836 + 0.46164*cos(2*pi*x_dist./Aperture_x)).*...
-                          double(y_dist<=Aperture_y/2).*(0.53836 + 0.46164*cos(2*pi*y_dist./Aperture_y));
+                    value=h.hamming(x_dist,Aperture_x).*h.hamming(y_dist,Aperture_y);
                 % TUKEY25        
                 case huff.window.tukey25
                     roll=0.25;
-                    value=(x_dist<=(Aperture_x/2*(1-roll))) + (x_dist>(Aperture_x/2*(1-roll))).*(x_dist<(Aperture_x/2)).*0.5.*(1+cos(2*pi/roll*(x_dist./Aperture_x-roll/2-1/2))).*...                               
-                          (y_dist<=(Aperture_y/2*(1-roll))) + (y_dist>(Aperture_y/2*(1-roll))).*(y_dist<(Aperture_y/2)).*0.5.*(1+cos(2*pi/roll*(y_dist./Aperture_y-roll/2-1/2)));
+                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY50        
                 case huff.window.tukey50
                     roll=0.50;
-                    value=(x_dist<=(Aperture_x/2*(1-roll))) + (x_dist>(Aperture_x/2*(1-roll))).*(x_dist<(Aperture_x/2)).*0.5.*(1+cos(2*pi/roll*(x_dist./Aperture_x-roll/2-1/2))).*...                               
-                          (y_dist<=(Aperture_y/2*(1-roll))) + (y_dist>(Aperture_y/2*(1-roll))).*(y_dist<(Aperture_y/2)).*0.5.*(1+cos(2*pi/roll*(y_dist./Aperture_y-roll/2-1/2)));
+                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY75        
                 case huff.window.tukey75
                     roll=0.75;
-                    value=(x_dist<=(Aperture_x/2*(1-roll))) + (x_dist>(Aperture_x/2*(1-roll))).*(x_dist<(Aperture_x/2)).*0.5.*(1+cos(2*pi/roll*(x_dist./Aperture_x-roll/2-1/2))).*...                               
-                          (y_dist<=(Aperture_y/2*(1-roll))) + (y_dist>(Aperture_y/2*(1-roll))).*(y_dist<(Aperture_y/2)).*0.5.*(1+cos(2*pi/roll*(y_dist./Aperture_y-roll/2-1/2)));
+                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY80        
                 case huff.window.tukey80
                     roll=0.80;
-                    value=(x_dist<=(Aperture_x/2*(1-roll))) + (x_dist>(Aperture_x/2*(1-roll))).*(x_dist<(Aperture_x/2)).*0.5.*(1+cos(2*pi/roll*(x_dist./Aperture_x-roll/2-1/2))).*...                               
-                          (y_dist<=(Aperture_y/2*(1-roll))) + (y_dist>(Aperture_y/2*(1-roll))).*(y_dist<(Aperture_y/2)).*0.5.*(1+cos(2*pi/roll*(y_dist./Aperture_y-roll/2-1/2)));
+                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 otherwise
                     error('Unknown apodization type!');
             end
