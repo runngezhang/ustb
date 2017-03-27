@@ -1,7 +1,7 @@
 classdef beamformed_data < handle
     %BEAMFORMED_DATA   beamformed_data definition. Children of HANDLE class
     %
-    %   See also PULSE, BEAM, PHANTOM, PROBE
+    %   See also PULSE, PHANTOM, PROBE
     
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
@@ -68,6 +68,9 @@ classdef beamformed_data < handle
     %% plot methods
     methods (Access = public)
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
+            %PLOT Plots the beamformed data
+            %
+            % Usage: figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
             
             if size(h.data,3) == 1 %If more than one frame, use GUI and cant set initial handle.
                 if nargin>1 && ~isempty(figure_handle_in)
