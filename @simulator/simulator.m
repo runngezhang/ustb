@@ -27,7 +27,7 @@ classdef simulator
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.3';  % simulator version
+        version='v1.0.4';  % simulator version
     end
     
     %% constructor
@@ -113,12 +113,12 @@ classdef simulator
                         waitbar((n_p+h.N_points*(n_w-1)+h.N_points*h.N_waves*(n_f-1))/(h.N_points*h.N_waves*h.N_frames),wb);
 
                         % computing geometry relations to the point
-                        theta     = atan2(current_phantom.x(n_p)-h.probe.x, current_phantom.z(n_p)-h.probe.z)-h.probe.theta;
-                        phi       = atan2(current_phantom.y(n_p)-h.probe.y, current_phantom.z(n_p)-h.probe.z)-h.probe.phi;
                         distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*current_phantom.points(n_p,1:3)).^2,2));
+                        theta     = atan2(current_phantom.x(n_p)-h.probe.x, current_phantom.z(n_p)-h.probe.z)-h.probe.theta;
+                        phi       = asin((current_phantom.y(n_p)-h.probe.y)./distance)-h.probe.phi;
 
                         % directivity between probe and the point
-                        directivity = sinc(k*h.probe.width/2.*sin(theta).*cos(phi)/pi).*sinc(k*h.probe.height/2.*sin(theta).*sin(phi)/pi);
+                        directivity = sinc(k*h.probe.width/2/pi.*tan(theta)).*sinc(k*h.probe.height/2/pi.*tan(phi)./cos(theta));
                         % delay between probe and the point
                         propagation_delay = distance/current_phantom.sound_speed;
 

@@ -212,7 +212,7 @@ classdef apodization
                         element(:,2)=h.scan.y+h.scan.z*tan(h.sequence(n).source.elevation);
                     else
                         element(:,1)=h.sequence(n).source.x-h.sequence(n).source.z*(h.scan.x-h.sequence(n).source.x)./(h.scan.z-h.sequence(n).source.z);
-                        element(:,2)=(h.scan.y-h.sequence(n).source.y)./(h.scan.x-h.sequence(n).source.x).*(element(:,1)-h.sequence(n).source.x)+h.scan.y;
+                        element(:,2)=h.sequence(n).source.y-h.sequence(n).source.z*(h.scan.y-h.sequence(n).source.y)./(h.scan.z-h.sequence(n).source.z);
                     end
                     element(:,3)=0;
                     element(isnan(element))=0; % solve divisions by 0
