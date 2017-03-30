@@ -6,7 +6,11 @@
 #include <tuple>
 #include <valarray>
 #include <set>
-#include <ppl.h>            // parallel processing library
+#if defined(_WIN_)
+    #include <ppl.h>            // Requires VS2010+
+#elif defined(_UNIX_)
+    #include <parallel_for.h>   // Requires Intel tbb
+#endif
 
 // compulsory input
 #define	M_P			prhs[0]	// CPW dataset [samples, channels, firings, frames]
@@ -229,13 +233,21 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	}
 
 	// creating concurrent structures for real data
-	Concurrency::concurrent_vector<std::vector<float>> c_im_r;
+#if defined(_WIN_)
+	 Concurrency::concurrent_vector<std::vector<float>> c_im_r;
+#elif defined(_UNIX_)
+	tbb::concurrent_vector<std::vector<float>> c_im_r;
+#endif  
 	for (int f = 0; f < F; f++) {
-		std::vector<float> im_r(P, 0.0); // vector of floats
-		c_im_r.push_back(im_r);
+	        std::vector<float> im_r(P, 0.0); // vector of floats
+	        c_im_r.push_back(im_r);
 	}
 	// creating concurrent structures for imag data
-	Concurrency::concurrent_vector<std::vector<float>> c_im_i;
+#if defined(_WIN_)
+    Concurrency::concurrent_vector<std::vector<float>> c_im_i;
+#elif defined(_UNIX_)
+	tbb::concurrent_vector<std::vector<float>> c_im_i;
+#endif
 	if (IQ_version) for (int f = 0; f < F; f++) {
 		std::vector<float> im_i(P, 0.0);
 		c_im_i.push_back(im_i);
@@ -244,8 +256,12 @@ void mexFunction(int nlhs,mxArray *plhs[],int nrhs,const mxArray *prhs[]) {
 	//////////////////////////////////////////////////////
 	// Beamforming loop
 	if (verbose) { mexPrintf("2.- Beamforming (multi-CPU)\n"); mexEvalString("drawnow;"); }
-	Concurrency::parallel_for(0, P, [&](int pp) {
-		// for(int nz=0; nz<Lz; nz++) { // z vector
+#if defined(_WIN_)
+        Concurrency::parallel_for(0, P, [&](int pp) {
+#elif defined(_UNIX_)
+	    tbb::strict_ppl::parallel_for(0, P, [&](int pp) {
+#endif
+				// for(int nz=0; nz<Lz; nz++) { // z vector
 		float& zz = z[pp];
 		float& xx = x[pp];
 

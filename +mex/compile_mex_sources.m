@@ -1,13 +1,12 @@
 % compile mex sources for
 
-% linux
-%mex source/cpwir.cpp -I"/media/Data/ingvilek/ustb2/Source Code/CPWI_LR/Mex/tbb44_20151115oss/include" -L"/media/Data/ingvilek/ustb2/Source Code/CPWI_LR/Mex/tbb44_20151115oss/lib/intel64/gcc4.4" -ltbb
+% Works on MS with VS2010+ and Linux with Intel tbb
 
 copyfile(fullfile(matlabroot,'extern'),'.mex','f')
 
 %% CPWC 
 disp('------------------------ CPWC');
-mex source/cpwir.cpp
+mex.build_mex('cpwir');
 
 %% CPWC Low resolution images
 disp('------------------------ Low res CPWC');
@@ -23,5 +22,8 @@ mex.build_bf(1,1,1,1);
 
 %% compile snell
 disp('------------------------ Snell beamformer STAI');
-mex source/snell.cpp
-mex source/snell_detector.cpp
+mex.build_mex('snell');
+
+%% compile snell-detector
+disp('------------------------ Snell detector');
+mex.build_mex('snell_detector');
