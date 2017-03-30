@@ -1,6 +1,6 @@
 classdef signal_format
    enumeration
-      RF, IQ
+      RF, IQ, AS
    end
 end
 

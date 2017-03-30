@@ -13,7 +13,9 @@ function [sig] = ir_simple_matlab(h,r)
 
     %% formats
     switch(h.format)
-        case E.signal_format.RF
+        case E.signal_format.RF 
+            w0=0;
+        case E.signal_format.AS
             w0=0;
         case E.signal_format.IQ
             w0=2*pi*h.modulation_frequency;

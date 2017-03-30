@@ -19,6 +19,7 @@ classdef reconstruction < handle
         format=E.signal_format.RF   % format of the signal
         central_frequency           % central frequency [Hz]
         bandwidth                   % signal bandwidth [Hz]
+        sampling_frequency          % the sampling frequency in the axial direction (z direction/depth)
         
         % temporal
         envelope                    % matrix containing the envelope of the reconstructed signal
@@ -390,7 +391,8 @@ classdef reconstruction < handle
                             im(:,:,o,f)=abs(hilbert(h.data(:,:,o,f)));
                         end
                     end
-                    
+                case E.signal_format.AS    
+                    im=abs(h.data);
                 case E.signal_format.IQ
                     im=abs(h.data);
                 otherwise
@@ -536,6 +538,16 @@ classdef reconstruction < handle
         end
     end
 
+    %% presentation methods
+    methods (Access = public) 
+        function h = calculate_axial_sampling_frequency(h,c)
+            assert(exist('c')==1,'Please give speed of sound as input');
+            % calculate sampling frequency
+            dz=h.scan.depth_step();
+            h.sampling_frequency =c/2/dz;                   % effective sampling frequency (Hz)
+        end
+    end
+    
     %% Set methods
     methods
         function h=set.data(h,input_data)
