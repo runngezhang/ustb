@@ -53,7 +53,7 @@ classdef verasonics < handle
         function set.Resource(h,Resource)
             assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Resource = Resource;
-            h.c0 = Resource.Parameters.speedOfSound
+            h.c0 = Resource.Parameters.speedOfSound;
             h.lambda = h.c0/h.f0;
         end
     end
