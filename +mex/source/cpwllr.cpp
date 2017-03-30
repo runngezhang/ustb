@@ -6,14 +6,10 @@
 #include <tuple>
 #include <valarray>
 #include <set>
-
-// parallel processing library
 #if defined(_WIN_) 
-    #include <ppl.h> // requires VS2010+
-#endif
-        
-#if defined (_UNIX_) 
-    #include <omp.h>        
+    #include <ppl.h>           // Requires VS2010+
+#elif defined (_UNIX_) 
+    #include <parallel_for.h>  // Requires Intel tbb
 #endif    
 
 // compulsory input
@@ -252,19 +248,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	if (verbose) { mexPrintf("2.- Beamforming (multicore)\n"); mexEvalString("drawnow;"); }
 
 #if defined (_WIN_)    
-	Concurrency::parallel_for(0, P, [&](int pp) 
-#else
-    #if defined (_UNIX_) 
-        int pp;    
-        #pragma omp parallel num_threads(omp_get_num_procs())
-        {
-        #pragma omp for
-        for(pp = 0; pp < P; ++pp)
-    #else          
-        for(int pp = 0; pp < P; pp++)
-    #endif
+	Concurrency::parallel_for(0, P, [&](int pp) {
+#elif defined(_UNIX_)
+    tbb::strict_ppl::parallel_for(0, P, [&](int pp) {
 #endif          
-    {            
 		float& zz = z[pp];
 		float& xx = x[pp];
 
@@ -307,16 +294,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 				}
 			} // end rx loop
 		} // end tx loop
-	} // end pixel loop 
-
- #if defined (_WIN_) 
-        );
- #else
-    #if defined (_UNIX_) 
-    }
-    #endif
- #endif    
-    
+    }); // end pixel loop 
+     
 	if (verbose) {
 		mexPrintf("3.- Copying results to output structures\n");
 		mexPrintf("---------------------------------------------------\n");

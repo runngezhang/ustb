@@ -6,7 +6,11 @@
 #include <tuple>
 #include <valarray>
 #include <set>
-#include <ppl.h>            // parallel processing library
+#if defined(_WIN_)
+    #include <ppl.h>            // Requires VS2010+
+#elif defined(_UNIX_)
+    #include <parallel_for.h>   // Requires Intel tbb
+#endif
 
 // compulsory input
 #define	M_P			prhs[0]	// STA dataset [samples, channels, firings, frames]
@@ -221,7 +225,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[] ) {
 	
 	// creating concurrent structures for real data
     int Gmax=200;
+#if defined(_WIN_)
 	Concurrency::concurrent_vector<std::vector<std::vector<double>>> c_im_r;
+#elif defined(_UNIX_)
+    tbb::concurrent_vector<std::vector<std::vector<double>>> c_im_r;
+#endif
 	for(int f=0;f<F;f++) {
 		std::vector<std::vector<double>> temp_im_r; // vector of vector of doubles
 		for(int g=0;g<Gmax;g++) {
@@ -232,7 +240,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[] ) {
 	}
 
 	// creating concurrent structures for imag data
+#if defined(_WIN_)
 	Concurrency::concurrent_vector<std::vector<std::vector<double>>> c_im_i;
+#elif defined(_UNIX_)
+    tbb::concurrent_vector<std::vector<std::vector<double>>> c_im_i;
+#endif
 	if(IQ_version) for(int f=0;f<F;f++) {
 		std::vector<std::vector<double>> temp_im_i;
 		for(int g=0;g<Gmax;g++) {
@@ -253,7 +265,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[] ) {
      
 	////////////////////////////////////////////
 	// imaging loop
+#if defined(_WIN_)
 	Concurrency::parallel_for (0, P, [&](int pp) { 
+#elif defined(_UNIX_)
+    tbb::parallel_for (0, P, [&](int pp) { 
+#endif
 	// for(int nz=0; nz<Lz; nz++) { // z vector
 		double& zz=z[pp];
 		double& xx=x[pp];
