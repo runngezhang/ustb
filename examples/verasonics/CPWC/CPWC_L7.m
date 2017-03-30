@@ -14,7 +14,7 @@
 % >> cd C:\Users\verasonics\Documents\Vantage-3.0.7
 % >> activate
 %
-% The run and chose "Add to Path"
+% Then run and choose "Add to Path"
 %
 % To save the data:
 %  
@@ -23,6 +23,10 @@
 
 clear all;
 close all;
+
+% Check that user is standing in a Verasonics Vantage folder
+s = strsplit(pwd,filesep);
+assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
 % filename handling
 filename='a.mat';

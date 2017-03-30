@@ -2,7 +2,7 @@
 
 % date:     21.02.2017
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
-%           Ole Marius HOel Rindal <olemarius@olemarius.net>
+%           Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
 % History:  Slight modification from the original STAI_L11.m script to fit
 %           the L7-4 probe we have at UiO.
@@ -24,6 +24,10 @@
 
 clear all;
 close all;
+
+% Check that user is standing in a Verasonics Vantage folder
+s = strsplit(pwd,filesep);
+assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
 filename='a.mat';
 % filehandling not ready yet

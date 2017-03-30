@@ -4,9 +4,26 @@
 % authors:  Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %           
 %       
+%% Read me
+% To run you should be in the Verasonics folder and activate it. For
+% instance by:
+%
+% >> cd C:\Users\verasonics\Documents\Vantage-3.0.7
+% >> activate
+%
+% Then run and choose "Add to Path"
+%
+% To save the data:
+%  
+%  1.- Freeze
+%  2.- Close the VSX window
 
 close all
 clear all
+
+% Check that user is standing in a Verasonics Vantage folder
+s = strsplit(pwd,filesep);
+assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
 % filename handling
 filename='a.mat';
@@ -313,7 +330,7 @@ bmf.receive_apodization.f_number=1.7;
 % beamforming
 b_data=bmf.go(@bmf.matlab,@postprocess.stack);
 
-% show
+%% show
 b_data.plot();
 
 return
