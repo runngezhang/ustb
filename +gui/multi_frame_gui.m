@@ -62,7 +62,7 @@ b_data = varargin{1};
 in_title = varargin{2};
 dynamic_range = varargin{3};
 current_frame = 1;
-[image_handle, all_images_dB] = b_data.draw_image(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(all_images_dB,3))],dynamic_range);
+[image_handle, all_images_dB] = b_data.draw_image(handles.image_handle,[in_title,', Frame = ',num2str(current_frame),'/',num2str(size(b_data.data,3))],dynamic_range);
 
 % Update handles structure
 guidata(hObject, handles);
