@@ -24,8 +24,22 @@ try
      
         obj_ext = 'o';
 
+    elseif ~isempty(strfind(sys_str,'maci64'))
+        
+        [main_ver, minor_ver, rev_ver] = get_gcc_version();
+        
+        if main_ver < 4
+            error('Must have gcc version 4 or higher');
+        end
+        
+        d_flags=['-D_UNIX_ '];
+        c_flags='-I/usr/local/Cellar/tbb/2017_U5/include/tbb/';
+        ld_flags='-L/usr/local/Cellar/tbb/2017_U5/lib -ltbb';
+     
+        obj_ext = 'o';
+        
     else
-        error('Not supported on MAC systems');
+        error('Only MAC, WINDOWS and LINUX is supported.');
     end
     
     mex_str = ['mex ' d_flags ' ' c_flags ' ' ld_flags ' source' filesep filename '.cpp'];

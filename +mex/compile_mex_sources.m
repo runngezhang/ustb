@@ -1,6 +1,17 @@
 % compile mex sources for
 
-% Works on MS with VS2010+ and Linux with Intel tbb
+% FOR WINDOWS:
+% Works on MS with Visual Studo 2010+.
+
+% FOR LINUX :
+% All code exept Thor Andreas Code compiles if you have the Intel tbb
+% installed
+
+% FOR MAC:
+% All code exept Thor Andreas Code compiles if you have installed the 
+% Intel TBB library. This is easiest done with 
+% "brew install tbb". Thus, using the Homebrew (https://brew.sh/index_no.html). 
+% It is then defaultly installed to /usr/local/Cellar/tbb/2017_U5/include/tbb/
 
 copyfile(fullfile(matlabroot,'extern'),'.mex','f')
 
