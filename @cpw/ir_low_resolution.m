@@ -25,7 +25,7 @@ function [sig] = ir_low_resolution(h,r)
                 single(h.sampling_frequency),...        % sampling frequency [Hz]
                 single(h.initial_time),...              % initial time [s]
                 single(0),...                           % modulation frequency [Hz]
-                single(0));                             % verbose mode
+                single(1));                             % verbose mode
         case E.signal_format.IQ
             sig=mex.cpwlr(single(h.data), ...           % data
                 single(r.scan.x.'),...
@@ -38,7 +38,7 @@ function [sig] = ir_low_resolution(h,r)
                 single(h.sampling_frequency),...        % sampling frequency [Hz]
                 single(h.initial_time),...              % initial time [s]
                 single(h.modulation_frequency),...      % modulation frequency [Hz]
-                single(0));                             % verbose mode
+                single(1));                             % verbose mode
         otherwise
             error('Unknown signal format!');
     end
