@@ -1,6 +1,7 @@
 # UltraSound ToolBox (USTB) #
 
-An open source MATLAB toolbox for beamforming, processing, and visualization of ultrasonic signals. The USTB is developed as a joint effort of: 
+An open source MATLAB toolbox for beamforming, processing, and visualization of ultrasonic signals. The USTB is developed as a joint effort of:
+ 
 * the Department of Circulation and Medical Imaging of NTNU (https://www.ntnu.no/isb), 
 * the Department of Informatics of the University of Oslo (http://www.uio.no/), and
 * the CREATIS Laboratory of the University of Lyon (https://www.creatis.insa-lyon.fr/site7/en).
