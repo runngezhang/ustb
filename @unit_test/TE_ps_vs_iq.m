@@ -3,7 +3,7 @@ function ok = TE_ps_vs_iq(h)
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
 %   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
-    import huff.*;
+    import uff.*;
     
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here

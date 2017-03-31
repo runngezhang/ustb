@@ -1,5 +1,5 @@
-classdef simulator
-%simulator   Simulator definition
+classdef fresnel
+%fresnel   fresnel definition
 %
 %   See also PULSE, BEAM, PHANTOM, PROBE
 
@@ -27,16 +27,16 @@ classdef simulator
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.4';  % simulator version
+        version='v1.0.5';  % fresnel version
     end
     
     %% constructor
     methods (Access = public)
-        function h=simulator()
-            %simulator   Constructor of simulator class
+        function h=fresnel()
+            %fresnel   Constructor of fresnel class
             %
             %   Syntax:
-            %   h = simulator()
+            %   h = fresnel()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE                      
             
@@ -144,7 +144,7 @@ classdef simulator
             delete(wb);
             
             % save the data into a RAW_DATA structure
-            out_dataset=huff.channel_data();
+            out_dataset=uff.channel_data();
             out_dataset.probe=h.probe();
             out_dataset.pulse=h.pulse();
             out_dataset.phantom=h.phantom();
@@ -161,19 +161,19 @@ classdef simulator
     %% set methods
     methods  
         function h=set.phantom(h,in_phantom)
-            assert(isa(in_phantom,'huff.phantom'), 'The phantom is not a PHANTOM class. Check HELP PHANTOM.');
+            assert(isa(in_phantom,'uff.phantom'), 'The phantom is not a PHANTOM class. Check HELP PHANTOM.');
             h.phantom=in_phantom;
         end
         function h=set.pulse(h,in_pulse)
-            assert(isa(in_pulse,'huff.pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
+            assert(isa(in_pulse,'uff.pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
             h.pulse=in_pulse;
         end
         function h=set.probe(h,in_probe)
-            assert(isa(in_probe,'huff.probe'), 'The probe is not a PROBE class. Check HELP PROBE.');
+            assert(isa(in_probe,'uff.probe'), 'The probe is not a PROBE class. Check HELP PROBE.');
             h.probe=in_probe;
         end
         function h=set.sequence(h,in_sequence)
-            assert(isa(in_sequence,'huff.wave'), 'The sequence members are not a WAVE class. Check HELP WAVE.');
+            assert(isa(in_sequence,'uff.wave'), 'The sequence members are not a WAVE class. Check HELP WAVE.');
             h.sequence=in_sequence;
         end
         function h=set.sampling_frequency(h,in_sampling_frequency)

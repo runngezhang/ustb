@@ -32,8 +32,8 @@ classdef beamformer
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE                      
             
-            h.receive_apodization=huff.apodization();  % APODIZATION class
-            h.transmit_apodization=huff.apodization(); % APODIZATION class
+            h.receive_apodization=uff.apodization();  % APODIZATION class
+            h.transmit_apodization=uff.apodization(); % APODIZATION class
         end
     end
     
@@ -65,19 +65,19 @@ classdef beamformer
     %% set methods
     methods  
         function h=set.pulse(h,in_pulse)
-            assert(isa(in_pulse,'huff.pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
+            assert(isa(in_pulse,'uff.pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
             h.pulse=in_pulse;
         end
         function h=set.receive_apodization(h,in_apodization)
-            assert(isa(in_apodization,'huff.apodization'), 'The input is not a APODIZATION class. Check HELP APODIZATION.');
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a APODIZATION class. Check HELP APODIZATION.');
             h.receive_apodization=in_apodization;
         end        
         function h=set.transmit_apodization(h,in_apodization)
-            assert(isa(in_apodization,'huff.apodization'), 'The input is not a APODIZATION class. Check HELP APODIZATION.');
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a APODIZATION class. Check HELP APODIZATION.');
             h.transmit_apodization=in_apodization;
         end           
         function h=set.channel_data(h,in_channel_data)
-            assert(isa(in_channel_data,'huff.channel_data'), 'The input is not a CHANNEL_DATA class. Check HELP CHANNEL_DATA.');
+            assert(isa(in_channel_data,'uff.channel_data'), 'The input is not a CHANNEL_DATA class. Check HELP CHANNEL_DATA.');
             h.channel_data=in_channel_data;
         end   
     end

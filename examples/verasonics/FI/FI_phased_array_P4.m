@@ -313,9 +313,9 @@ channel_data = ver.create_FI_phased_array_channeldata();
 
 %%
 depth_axis=linspace(0e-3,80e-3,256).';
-sca=huff.sector_scan();
+sca=uff.sector_scan();
 for n=1:length(TX)
-    sca(n)=huff.sector_scan(Angles(n),depth_axis);
+    sca(n)=uff.sector_scan(Angles(n),depth_axis);
 end
  
 
@@ -324,7 +324,7 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=huff.window.tukey50;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 
 % beamforming

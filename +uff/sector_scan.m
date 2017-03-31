@@ -1,4 +1,4 @@
-classdef sector_scan < huff.scan
+classdef sector_scan < uff.scan
 %SECTOR_SCAN Class defining a SECTOR_SCAN area. Child of SCAN class 
 %
 %   See also SECTOR_SCAN/SECTOR_SCAN, SCAN/SCAN
@@ -33,7 +33,7 @@ classdef sector_scan < huff.scan
             if nargin>2
                 h.apex=in_apex;
             else
-                h.apex=huff.point();
+                h.apex=uff.point();
                 h.apex.xyz=[0 0 0];
             end
 
@@ -74,7 +74,7 @@ classdef sector_scan < huff.scan
             h=h.update_pixel_position();
         end
         function h=set.apex(h,in_apex)
-            assert(isa(in_apex,'huff.point'), 'The input is not a SOURCE class. Check HELP SOURCE');
+            assert(isa(in_apex,'uff.point'), 'The input is not a SOURCE class. Check HELP SOURCE');
             h.apex=in_apex;
         end
     end

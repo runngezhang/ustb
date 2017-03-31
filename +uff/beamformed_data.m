@@ -102,7 +102,7 @@ classdef beamformed_data < handle
             envelope_dB=20*log10(envelope./max(envelope(:)));
                 
             switch class(h.scan)
-                case 'huff.linear_scan'
+                case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
                     all_images_dB = reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
@@ -117,7 +117,7 @@ classdef beamformed_data < handle
                     caxis(axis_handle,[-dynamic_range 0]);
                     title(axis_handle,in_title);
                     drawnow;
-                case 'huff.linear_3D_scan'
+                case 'uff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
                     all_images_dB = reshape(envelope_dB,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
                     [az,el] = view();
@@ -153,7 +153,7 @@ classdef beamformed_data < handle
                         title(axis_handle,in_title);                        
                     end
                     drawnow;
-                case 'huff.sector_scan'
+                case 'uff.sector_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
                     all_images_dB = reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
@@ -178,31 +178,31 @@ classdef beamformed_data < handle
     methods
         function h=set.phantom(h,in_phantom)
             if ~isempty(in_phantom)
-                assert(isa(in_phantom,'huff.phantom'), 'The input is not a PHANTOM class. Check HELP PHANTOM.');
+                assert(isa(in_phantom,'uff.phantom'), 'The input is not a PHANTOM class. Check HELP PHANTOM.');
                 h.phantom=in_phantom;
             end
         end
         function h=set.pulse(h,in_pulse)
             if ~isempty(in_pulse)
-                assert(isa(in_pulse,'huff.pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
+                assert(isa(in_pulse,'uff.pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
                 h.pulse=in_pulse;
             end
         end
         function h=set.probe(h,in_probe)
             if ~isempty(in_probe)
-                assert(isa(in_probe,'huff.probe'), 'The input is not a PROBE class. Check HELP PROBE.');
+                assert(isa(in_probe,'uff.probe'), 'The input is not a PROBE class. Check HELP PROBE.');
                 h.probe=in_probe;
             end
         end
         function h=set.wave(h,in_wave)
             if ~isempty(in_wave)
-                assert(isa(in_wave,'huff.wave'), 'The input is not a WAVE class. Check HELP WAVE.');
+                assert(isa(in_wave,'uff.wave'), 'The input is not a WAVE class. Check HELP WAVE.');
                 h.wave=in_wave;
             end
         end
         function h=set.scan(h,in_scan)
             if ~isempty(in_scan)
-                assert(isa(in_scan,'huff.scan'), 'The input is not a SCAN class. Check HELP SCAN.');
+                assert(isa(in_scan,'uff.scan'), 'The input is not a SCAN class. Check HELP SCAN.');
                 h.scan=in_scan;
             end
         end

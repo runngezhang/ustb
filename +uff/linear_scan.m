@@ -1,4 +1,4 @@
-classdef linear_scan < huff.scan
+classdef linear_scan < uff.scan
 %LINEAR_SCAN Class defining a linear_scan area. Child of SCAN class 
 %
 %   See also LINEAR_SCAN/LINEAR_SCAN, SCAN/SCAN

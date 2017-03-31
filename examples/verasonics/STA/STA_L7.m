@@ -292,7 +292,7 @@ ver.TX = TX;
 channel_data = ver.create_sta_channeldata();
 
 %% SCAN
-sca=huff.linear_scan();
+sca=uff.linear_scan();
 sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
 sca.z_axis = linspace(0,40e-3,256).'
 %% BEAMFORMER
@@ -300,11 +300,11 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=huff.window.tukey50;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=FN;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=huff.window.tukey50;
+bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=FN;
 bmf.transmit_apodization.apex.distance=Inf;
 

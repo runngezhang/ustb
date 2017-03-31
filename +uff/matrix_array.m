@@ -1,4 +1,4 @@
-classdef matrix_array < huff.probe 
+classdef matrix_array < uff.probe 
 %MATRIX_ARRAY   2D matrix array definition. Child of PROBE class
 %
 %   See also PROBE, BEAM, PHANTOM

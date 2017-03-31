@@ -40,7 +40,7 @@ for n_wave=1:numel(h.channel_data.sequence)
     tx_apo=h.transmit_apodization.data;
     
     % create an intermediate beamformed data class
-    inter_dataset(n_wave)=huff.beamformed_data();
+    inter_dataset(n_wave)=uff.beamformed_data();
     inter_dataset(n_wave).scan=current_scan;
     inter_dataset(n_wave).wave=h.channel_data.sequence(n_wave);
     inter_dataset(n_wave).data=zeros(current_scan.N_pixels,1,h.channel_data.N_frames);

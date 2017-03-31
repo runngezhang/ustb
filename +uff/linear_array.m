@@ -1,4 +1,4 @@
-classdef linear_array < huff.probe 
+classdef linear_array < uff.probe 
 %LINEAR_ARRAY   Linear array definition. Child of PROBE class
 %
 %   See also PROBE, BEAM, PHANTOM

@@ -37,10 +37,10 @@ classdef apodization
             %
             %   See also apodization, apex, PHANTOM, PROBE, PULSE
             
-            h.window=huff.window.none;
-            h.probe=huff.probe();
-            h.apex=huff.point();
-            h.scan=huff.scan(0,0,0);
+            h.window=uff.window.none;
+            h.probe=uff.probe();
+            h.apex=uff.point();
+            h.scan=uff.scan(0,0,0);
             h.f_number=[1 1];
             h.tilt=[0 0];
         end
@@ -49,15 +49,15 @@ classdef apodization
     %% set methods
     methods  
         function h=set.apex(h,in_source)
-            assert(isa(in_source,'huff.point'), 'The input apex is not a POINT class. Check HELP POINT');
+            assert(isa(in_source,'uff.point'), 'The input apex is not a POINT class. Check HELP POINT');
             h.apex=in_source;
         end
         function h=set.probe(h,in_probe)
-            assert(isa(in_probe,'huff.probe'), 'The input probe is not a PROBE class. Check HELP PROBE');
+            assert(isa(in_probe,'uff.probe'), 'The input probe is not a PROBE class. Check HELP PROBE');
             h.probe=in_probe;
         end
         function h=set.scan(h,in_scan)
-            assert(isa(in_scan,'huff.scan'), 'The input scan is not a SCAN class. Check HELP SCAN');
+            assert(isa(in_scan,'uff.scan'), 'The input scan is not a SCAN class. Check HELP SCAN');
             h.scan=in_scan;
         end
         function h=set.f_number(h,in_f_number)
@@ -75,7 +75,7 @@ classdef apodization
             h.tilt=in_tilt;
         end  
         function h=set.window(h,in_window)
-             assert(isa(in_window,'huff.window'),'The window input should be a WINDOW class. Check help WINDOW');
+             assert(isa(in_window,'uff.window'),'The window input should be a WINDOW class. Check help WINDOW');
              h.window=in_window;
         end
     end
@@ -106,13 +106,13 @@ classdef apodization
             %assert(all(h.scan.z>0),'Cannot compute apodization for points behind the XY plane');
             
             % NONE APODIZATION
-            if(h.window==huff.window.none)
+            if(h.window==uff.window.none)
                 value=ones(h.scan.N_pixels,h.N_elements);
                 return;
             end
             
             % STA APODIZATION (just the element closest to apex)
-            if (h.window==huff.window.sta)
+            if (h.window==uff.window.sta)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
                 dist=sqrt((h.probe.x-h.apex.x).^2+(h.probe.y-h.apex.y).^2+(h.probe.z-h.apex.z).^2);
                 value=ones(h.scan.N_pixels,1)*double(dist==min(dist(:)));
@@ -132,28 +132,28 @@ classdef apodization
             % SWITCH
             switch(h.window)
                 % BOXCAR/FLAT/RECTANGULAR
-                case huff.window.boxcar
+                case uff.window.boxcar
                     value=h.rectangular(x_dist,Aperture_x).*h.rectangular(y_dist,Aperture_y);
                 % HANNING
-                case huff.window.hanning
+                case uff.window.hanning
                     value=h.hanning(x_dist,Aperture_x).*h.hanning(y_dist,Aperture_y);
                 % HAMMING
-                case huff.window.hamming
+                case uff.window.hamming
                     value=h.hamming(x_dist,Aperture_x).*h.hamming(y_dist,Aperture_y);
                 % TUKEY25        
-                case huff.window.tukey25
+                case uff.window.tukey25
                     roll=0.25;
                     value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY50        
-                case huff.window.tukey50
+                case uff.window.tukey50
                     roll=0.50;
                     value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY75        
-                case huff.window.tukey75
+                case uff.window.tukey75
                     roll=0.75;
                     value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 % TUKEY80        
-                case huff.window.tukey80
+                case uff.window.tukey80
                     roll=0.80;
                     value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
                 otherwise

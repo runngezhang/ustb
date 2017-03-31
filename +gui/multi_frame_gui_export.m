@@ -51,7 +51,7 @@ function multi_frame_gui_export_OpeningFcn(hObject, eventdata, handles, varargin
 % Choose default command line output for multi_frame_gui_export
 handles.output = hObject;
 
-assert(strcmp(class(varargin{1}),'huff.beamformed_data'),'First input should be a beamformed_data object.')
+assert(strcmp(class(varargin{1}),'uff.beamformed_data'),'First input should be a beamformed_data object.')
 
 global b_data;
 global current_frame;

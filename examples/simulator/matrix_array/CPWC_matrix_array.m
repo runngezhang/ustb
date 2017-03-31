@@ -10,14 +10,13 @@ close all;
 F_number=1.7;
 
 %% PHANTOM
-pha=huff.phantom();
+pha=uff.phantom();
 pha.sound_speed=1540;               % speed of sound [m/s]
-pha.points=[0, 0, 20e-3, 1;...      % point scatterer position [m]
-            0, -2e-3, 20e-3, 1];    % point scatterer position [m]
+pha.points=[0, 0, 20e-3, 1];...     % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% PROBE
-prb=huff.matrix_array();
+prb=uff.matrix_array();
 prb.N_x=16;                 % number of elements 
 prb.N_y=16;                 % number of elements 
 prb.pitch_x=600e-6;         % probe pitch in azimuth [m]
@@ -27,7 +26,7 @@ prb.element_height=570e-6;  % element height [m]
 prb.plot(fig_handle);
 
 %% PULSE
-pul=huff.pulse();
+pul=uff.pulse();
 pul.center_frequency=3e6;         % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
@@ -36,15 +35,15 @@ pul.plot([],'2-way pulse');
 alpha_max=1/2/F_number;
 N=15;
 tx_angles=linspace(-alpha_max,alpha_max,N);
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     
     seq(n).source.azimuth=tx_angles(n);
     seq(n).source.distance=Inf;
     
-    seq(n).apodization.window=huff.window.none;
+    seq(n).apodization.window=uff.window.none;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -53,7 +52,7 @@ for n=1:N
 end
 
 %% SIMULATOR
-sim=simulator();
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -66,7 +65,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=huff.linear_3D_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).',0);
+sca=uff.linear_3D_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).',0);
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
@@ -74,11 +73,11 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=huff.window.tukey50;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=F_number;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=huff.window.tukey50;
+bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 

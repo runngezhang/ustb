@@ -24,13 +24,13 @@ for n=1:N_frames*N_beams
     if mod(n,N_beams) == 0 % Move one mm between frames
         p(1) = p(1) + 1e-3; 
     end
-    pha(n)=huff.phantom();
+    pha(n)=uff.phantom();
     pha(n).sound_speed=1540;            % speed of sound [m/s]
     pha(n).points=[p, ones(N_sca,1)];    % point scatterer position [m]
     pha(n).plot(fig_handle);             
 end
 %% PROBE
-prb=huff.linear_array();
+prb=uff.linear_array();
 prb.N=64;                   % number of elements 
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
 prb.element_width=270e-6;   % element width [m]
@@ -38,7 +38,7 @@ prb.element_height=7000e-6; % element height [m]
 prb.plot(fig_handle);
 
 %% PULSE
-pul=huff.pulse();
+pul=uff.pulse();
 pul.center_frequency=3e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;   % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
@@ -46,16 +46,16 @@ pul.plot([],'2-way pulse');
 %% SEQUENCE GENERATION
 azimuth_axis=linspace(-10*pi/180,10*pi/180,N_beams).';
 depth=40e-3;
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N_beams
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     
-    seq(n).source=huff.point();
+    seq(n).source=uff.point();
     seq(n).source.azimuth=azimuth_axis(n);
     seq(n).source.distance=depth;
     
-    seq(n).apodization.window=huff.window.tukey50;
+    seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
     seq(n).apodization.scan.xyz=seq(n).source.xyz;
     
@@ -66,7 +66,7 @@ for n=1:N_beams
 end
 
 %% SIMULATOR
-sim=simulator();
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -80,9 +80,9 @@ channel_data=sim.go();
  
 %% SCAN
 depth_axis=linspace(35e-3,45e-3,100).';
-sca=huff.sector_scan();
+sca=uff.sector_scan();
 for n=1:N_beams
-    sca(n)=huff.sector_scan(azimuth_axis(n),depth_axis);
+    sca(n)=uff.sector_scan(azimuth_axis(n),depth_axis);
     sca(n).plot(fig_handle,'Scenario');    
 end
  
@@ -91,7 +91,7 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=huff.window.tukey50;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 
 % beamforming

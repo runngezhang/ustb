@@ -9,16 +9,16 @@ close all;
 z0=20e-3;           % depth of the scatterer [m]
 Fs=41.6e6;          % sampling frequency [Hz]
 F_number=1.2;       % F-number
-uwindow=huff.window.boxcar;
+uwindow=uff.window.boxcar;
 
 %% PHANTOM
-pha=huff.phantom();
+pha=uff.phantom();
 pha.sound_speed=1540;         % speed of sound [m/s]
 pha.points=[0,  0, z0, 1];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% PROBE
-prb=huff.linear_array();
+prb=uff.linear_array();
 prb.N=128;                  % number of elements 
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
 prb.element_width=270e-6;   % element width [m]
@@ -26,13 +26,13 @@ prb.element_height=5000e-6; % element height [m]
 prb.plot(fig_handle);
 
 %% PULSE
-pul=huff.pulse();
+pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SCAN
-sca=huff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(z0-1e-3,z0+1e-3,100).');
+sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(z0-1e-3,z0+1e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,20 +43,20 @@ sca.plot(fig_handle,'Scenario');    % show mesh
 
 %% SEQUENCE GENERATION
 N=128;                      % number of waves
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization.window=huff.window.sta;
+    seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.apex=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
 end
 
-%% SIMULATOR
-sim=simulator();
+%% fresnel
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;            % phantom
@@ -92,9 +92,9 @@ stai_data.plot([],'STAI');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% SEQUENCE GENERATION
-seq=huff.wave();
+seq=uff.wave();
 for n=1:sca.N_x_axis 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.xyz=[sca.x_axis(n) 0 z0];
     
@@ -106,8 +106,8 @@ for n=1:sca.N_x_axis
     seq(n).sound_speed=pha.sound_speed;
 end
 
-%% SIMULATOR
-sim=simulator();
+%% fresnel
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -120,9 +120,9 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-fi_sca=huff.linear_scan();
+fi_sca=uff.linear_scan();
 for n=1:sca.N_x_axis
-    fi_sca(n)=huff.linear_scan(sca.x_axis(n),sca.z_axis);
+    fi_sca(n)=uff.linear_scan(sca.x_axis(n),sca.z_axis);
     fi_sca(n).plot(fig_handle,'Scenario');    
 end
  
@@ -151,17 +151,17 @@ angle_max=atan(1/2/F_number);
 lambda=pha.sound_speed/pul.center_frequency;
 N=round(prb.pitch*prb.N_elements/lambda/F_number);
 angles=linspace(-angle_max,angle_max,N);
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
     seq(n).sound_speed=pha.sound_speed;
 end
 
-%% SIMULATOR
-sim=simulator();
+%% fresnel
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -201,17 +201,17 @@ cpwc_data.plot([],'CPWC');
 %% SEQUENCE GENERATION
 zs=-10e-3;
 xs=(z0-zs)*tan(angles);
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.xyz=[xs(n) 0 zs];
     
     seq(n).sound_speed=pha.sound_speed;
 end
 
-%% SIMULATOR
-sim=simulator();
+%% fresnel
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -251,9 +251,9 @@ dwi_data.plot([],'DWI');
 %% SEQUENCE GENERATION
 zs=40e-3;
 xs=(zs-z0)*tan(angles);
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.xyz=[xs(n) 0 zs];
     
@@ -263,8 +263,8 @@ for n=1:N
     fig_handle=seq(n).source.plot(fig_handle);
 end
 
-%% SIMULATOR
-sim=simulator();
+%% fresnel
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom

@@ -32,8 +32,8 @@ classdef wave
             %   See also WAVE, SOURCE, PHANTOM, PROBE, PULSE
             
             %h.probe=probe();
-            h.source=huff.point();
-            h.apodization=huff.apodization();
+            h.source=uff.point();
+            h.apodization=uff.apodization();
         end
     end
     
@@ -76,15 +76,15 @@ classdef wave
     %% set methods
     methods  
         function h=set.apodization(h,in_apodization)
-            assert(isa(in_apodization,'huff.apodization'), 'The apodization is not an APODIZATION class. Check HELP APODIZATOR');
+            assert(isa(in_apodization,'uff.apodization'), 'The apodization is not an APODIZATION class. Check HELP APODIZATOR');
             h.apodization=in_apodization;
         end
         function h=set.source(h,in_source)
-            assert(isa(in_source,'huff.point'), 'The source is not a POINT class. Check HELP POINT');
+            assert(isa(in_source,'uff.point'), 'The source is not a POINT class. Check HELP POINT');
             h.source=in_source;
         end
         function h=set.probe(h,in_probe)
-            assert(isa(in_probe,'huff.probe'), 'The probe is not a PROBE class. Check HELP PROBE');
+            assert(isa(in_probe,'uff.probe'), 'The probe is not a PROBE class. Check HELP PROBE');
             h.probe=in_probe;
         end
     end

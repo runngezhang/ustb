@@ -21,14 +21,14 @@ N_plane_waves=3;                     % number of plane wave
 N_frames=10;                         % number of frames
 fig_handle=figure();
 for n=1:N_plane_waves*N_frames
-    pha(n)=huff.phantom();
+    pha(n)=uff.phantom();
     pha(n).sound_speed=1540;            % speed of sound [m/s]
     pha(n).points=[p+v*(n-1)/PRF, ones(N_sca,1)];    % point scatterer position [m]
     pha(n).plot(fig_handle);             
 end
              
 %% PROBE
-prb=huff.linear_array();
+prb=uff.linear_array();
 prb.N=128;                  % number of elements 
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
 prb.element_width=270e-6;   % element width [m]
@@ -36,16 +36,16 @@ prb.element_height=5000e-6; % element height [m]
 prb.plot(fig_handle);
 
 %% PULSE
-pul=huff.pulse();
+pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SEQUENCE GENERATION
 angles=linspace(-0.3,0.3,N_plane_waves);
-seq=huff.wave();
+seq=uff.wave();
 for n=1:N_plane_waves 
-    seq(n)=huff.wave();
+    seq(n)=uff.wave();
     seq(n).probe=prb;
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
@@ -56,7 +56,7 @@ for n=1:N_plane_waves
 end
 
 %% SIMULATOR
-sim=simulator();
+sim=fresnel();
 
 % setting input data 
 sim.phantom=pha;                % phantom
@@ -70,17 +70,17 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=huff.linear_scan(linspace(-19e-3,19e-3,256).', linspace(0e-3,40e-3,256).');
+sca=uff.linear_scan(linspace(-19e-3,19e-3,256).', linspace(0e-3,40e-3,256).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
-bmf.receive_apodization.window=huff.window.tukey50;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.0;
 bmf.receive_apodization.apex.distance=Inf;
-bmf.transmit_apodization.window=huff.window.tukey50;
+bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.0;
 bmf.transmit_apodization.apex.distance=Inf;
 
