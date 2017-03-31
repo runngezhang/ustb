@@ -1,29 +1,27 @@
-% Example of Synthetic Transmit Aperture simulation with USTB built-in Fresnel simulator
-% using a 16 x 16 2D matrix probe
+% Example of Coherent Plane-Wave Imaging with USTB built-in Fresnel simulator
+% using a 2D matrix probe
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/25$
+%   $Date: 2017/03/29$
 
 clear all;
 close all;
 
-F_number=1.0;
-z0=10e-3;
+F_number=1.7;
 
 %% PHANTOM
 pha=huff.phantom();
-pha.sound_speed=1540;                 % speed of sound [m/s]
-pha.points=[0e-3, 0, z0-2e-3, 1;...        % point scatterer positions [m]
-            0, -2e-3, z0, 1;...    
-            -3e-3, 0, z0+2e-3, 1];      
+pha.sound_speed=1540;               % speed of sound [m/s]
+pha.points=[0, 0, 20e-3, 1;...      % point scatterer position [m]
+            0, -2e-3, 20e-3, 1];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% PROBE
 prb=huff.matrix_array();
-prb.N_x=32;                 % number of elements 
-prb.N_y=4;                  % number of elements 
-prb.pitch_x=400e-6;         % probe pitch in azimuth [m]
-prb.pitch_y=400e-6;         % probe pitch in azimuth [m]
+prb.N_x=16;                 % number of elements 
+prb.N_y=16;                 % number of elements 
+prb.pitch_x=600e-6;         % probe pitch in azimuth [m]
+prb.pitch_y=600e-6;         % probe pitch in azimuth [m]
 prb.element_width=570e-6;   % element width [m]
 prb.element_height=570e-6;  % element height [m]
 prb.plot(fig_handle);
@@ -35,14 +33,18 @@ pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SEQUENCE GENERATION
+alpha_max=1/2/F_number;
+N=15;
+tx_angles=linspace(-alpha_max,alpha_max,N);
 seq=huff.wave();
-for n=1:prb.N_elements 
+for n=1:N
     seq(n)=huff.wave();
     seq(n).probe=prb;
-    seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization.window=huff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).source.azimuth=tx_angles(n);
+    seq(n).source.distance=Inf;
+    
+    seq(n).apodization.window=huff.window.none;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -64,7 +66,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=huff.linear_3D_scan(linspace(-6.4e-3,6.4e-3,200).', linspace(z0-3.2e-3,z0+3.2e-3,100).',0);
+sca=huff.linear_3D_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).',0);
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
@@ -84,7 +86,5 @@ bmf.transmit_apodization.apex.distance=Inf;
 b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 
 % show
-fig_plot=pha.plot();
-b_data.plot(fig_plot); 
-
+b_data.plot();
 
