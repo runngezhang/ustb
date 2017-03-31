@@ -53,9 +53,6 @@ for n=1:N
     seq(n).apodization.apex=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
-    
-    % show source
-    fig_handle=seq(n).source.plot(fig_handle);
 end
 
 %% SIMULATOR
@@ -88,16 +85,6 @@ stai_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 % show
 stai_data.plot([],'STAI');
 
-data=reshape(stai_data.data,[sca.N_z_axis sca.N_x_axis]);
-lat_prof=abs(data(50,100:200)); lat_prof=lat_prof./max(lat_prof);
-lat_prof=20*log10(lat_prof);
-xlat=interp1(lat_prof,sca.x_axis(100:200),-6);
-fwhm=2*xlat
-
-figure(101);
-plot(sca.x_axis(100:200)*1e3,lat_prof,'linewidth',2); grid on; hold on; axis tight;
-%plot([-xlat xlat]*1e3,[-6 -6],'ro')
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FI
@@ -117,9 +104,6 @@ for n=1:sca.N_x_axis
     seq(n).apodization.scan.xyz=seq(n).source.xyz;
     
     seq(n).sound_speed=pha.sound_speed;
-    
-    % show source
-    fig_handle=seq(n).source.plot(fig_handle);
 end
 
 %% SIMULATOR
@@ -156,16 +140,6 @@ fi_data=bmf.go(@bmf.matlab,@postprocess.stack);
 % show
 fi_data.plot([],'FI');
 
-data=reshape(fi_data.data,[sca.N_z_axis sca.N_x_axis]);
-lat_prof=abs(data(50,100:200)); lat_prof=lat_prof./max(lat_prof);
-lat_prof=20*log10(lat_prof);
-xlat=interp1(lat_prof,sca.x_axis(100:200),-6);
-fwhm=2*xlat
-
-figure(101);
-plot(sca.x_axis(100:200)*1e3,lat_prof,'--','linewidth',2); grid on; hold on;
-%plot([-xlat xlat]*1e3,[-6 -6],'ro')
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CPWC
@@ -184,9 +158,6 @@ for n=1:N
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
     seq(n).sound_speed=pha.sound_speed;
-    
-    % show source
-    fig_handle=seq(n).source.plot(fig_handle);
 end
 
 %% SIMULATOR
@@ -221,17 +192,6 @@ cpwc_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 % show
 cpwc_data.plot([],'CPWC');
 
-data=reshape(cpwc_data.data,[sca.N_z_axis sca.N_x_axis]);
-lat_prof=abs(data(50,100:200)); lat_prof=lat_prof./max(lat_prof);
-lat_prof=20*log10(lat_prof);
-xlat=interp1(lat_prof,sca.x_axis(100:200),-6);
-fwhm=2*xlat
-
-figure(101);
-plot(sca.x_axis(100:200)*1e3,lat_prof,':','linewidth',2); grid on; hold on;
-%plot([xlat]*1e3,[-6],'ro')
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% DWI
@@ -248,9 +208,6 @@ for n=1:N
     seq(n).source.xyz=[xs(n) 0 zs];
     
     seq(n).sound_speed=pha.sound_speed;
-    
-    % show source
-    fig_handle=seq(n).source.plot(fig_handle);
 end
 
 %% SIMULATOR
@@ -284,17 +241,6 @@ dwi_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 
 % show
 dwi_data.plot([],'DWI');
-
-data=reshape(dwi_data.data,[sca.N_z_axis sca.N_x_axis]);
-lat_prof=abs(data(50,100:200)); lat_prof=lat_prof./max(lat_prof);
-lat_prof=20*log10(lat_prof);
-xlat=interp1(lat_prof,sca.x_axis(100:200),-6);
-fwhm=2*xlat
-
-figure(101);
-plot(sca.x_axis(100:200)*1e3,lat_prof,'.-','linewidth',2); grid on; hold on;
-%plot([xlat]*1e3,[-6],'ro')
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -349,16 +295,57 @@ rtb_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 % show
 rtb_data.plot([],'RTB');
 
-data=reshape(rtb_data.data,[sca.N_z_axis sca.N_x_axis]);
-lat_prof=abs(data(50,100:200)); lat_prof=lat_prof./max(lat_prof);
-lat_prof=20*log10(lat_prof);
-xlat=interp1(lat_prof,sca.x_axis(100:200),-6);
-fwhm=2*xlat
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Analyze results
+%%%%%%%%%%%%%%%%%%%%%%%%%
+mask=sca.x>-0.5e-3&sca.x<0.5e-3&sca.z>19.6e-3&sca.z<20.4e-3;
+for n=1:5
+    switch n
+        case 1
+            data=reshape(stai_data.data,[sca.N_z_axis sca.N_x_axis]);
+        case 2
+            data=reshape(fi_data.data,[sca.N_z_axis sca.N_x_axis]);
+        case 3
+            data=reshape(cpwc_data.data,[sca.N_z_axis sca.N_x_axis]);
+        case 4
+            data=reshape(dwi_data.data,[sca.N_z_axis sca.N_x_axis]);
+        case 5
+            data=reshape(rtb_data.data,[sca.N_z_axis sca.N_x_axis]);
+    end
+    
+    %
+    temp=sum(abs(data(:,100:200)),1); 
+    temp=temp./max(temp);
+    temp=20*log10(temp);
+    xlat=interp1(temp,sca.x_axis(100:200),-6);
+    lateral_profile(n,:)=temp;
+    fwhm(n)=2*xlat;
+    
+    data_dB=20*log10(abs(data)./max(abs(data(:))));
+    data_dB(data_dB<-60)=-60; % crop values smaller than -60 dB
+    
+    sll(n)=max(data_dB(not(mask)))-max(data_dB(mask));
+end
 
-figure(101);
-plot(sca.x_axis(100:200)*1e3,lat_prof,'--','linewidth',2); grid on; hold on;
+disp(sprintf('FWHM %0.2f±%0.2f',mean(fwhm)*1e6,std(fwhm)*1e6));
+disp(sprintf('SLL %0.2f±%0.2f',mean(sll),std(sll)));
+
+% figure;
+% imagesc(sca.x_axis,sca.z_axis,reshape(mask,[sca.N_z_axis sca.N_x_axis]).*(20*log10(reshape(abs(rtb_data.data),[sca.N_z_axis sca.N_x_axis])))); axis equal tight; colormap gray;
+
+
+figure;
+plot(sca.x_axis(100:200)*1e3,lateral_profile,'linewidth',2); grid on; hold on;
 legend('STAI','FI','CPWC','DWI','RTB');
-xlabel('x [mm]');
+xlabel('x [mm]'); axis tight
 ylabel('Intensity [dB]');
 set(gca,'fontsize', 14);
 title('Lateral profile');
+c = categorical({'STAI','FI','CPWC','DWI','RTB'});
+
+figure;
+bar(fwhm*1e6); grid on; 
+ylabel('FWHM [\mum]');
+set(gca,'fontsize', 14);
+
+
