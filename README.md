@@ -19,6 +19,7 @@ The project administrators are:
 
 * Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>,
 * Ole Marius Hoel Rindal <omrindal@ifi.uio.no> 
+* Olivier Bernard <olivier.bernard@insa-lyon.fr> 
 
 Collaborators:
 
@@ -26,3 +27,6 @@ Collaborators:
 * Jochen Rau <jochen.rau@inphase.no>
 * Lasse Løvstakken <lasse.lovstakken@ntnu.no>
 * Stefano Fiorentini <stefano.fiorentini@ntnu.no>
+* Svein Bøe <svein@ifi.uio.no>
+* Hervé Liebgott <liebgott@creatis.insa-lyon.fr>
+* Andreas Austeng <Andreas.Austeng@ifi.uio.no>
