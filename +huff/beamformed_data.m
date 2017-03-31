@@ -76,6 +76,7 @@ classdef beamformed_data < handle
                 if nargin>1 && ~isempty(figure_handle_in)
                     figure_handle=figure(figure_handle_in);
                     axis_handle = gca(figure_handle);
+                    hold on;
                 else
                     figure_handle=figure();
                     axis_handle = gca(figure_handle);
@@ -119,16 +120,38 @@ classdef beamformed_data < handle
                 case 'huff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
                     all_images_dB = reshape(envelope_dB,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
-                    image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,all_images_dB(:,:,1));
-                    shading(axis_handle,'flat');
-                    set(axis_handle,'fontsize',14);
-                    set(axis_handle,'YDir','reverse');
-                    axis(axis_handle,'tight','equal');
-                    colorbar(axis_handle);
-                    colormap(axis_handle,'gray');
-                    xlabel(axis_handle,'radial[mm]'); ylabel(axis_handle,'axial[mm]');
-                    caxis(axis_handle,[-dynamic_range 0]);
-                    title(axis_handle,in_title);
+                    [az,el] = view();
+                    if (el==90) 
+                        % plot in 2D
+                        image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,all_images_dB(:,:,1));
+                        shading(axis_handle,'flat');
+                        set(axis_handle,'fontsize',14);
+                        set(axis_handle,'YDir','reverse');
+                        axis(axis_handle,'tight','equal');
+                        colorbar(axis_handle);
+                        colormap(axis_handle,'gray');
+                        xlabel(axis_handle,'radial[mm]'); ylabel(axis_handle,'axial[mm]');
+                        caxis(axis_handle,[-dynamic_range 0]);
+                        title(axis_handle,in_title);
+                    else
+                        % plot in 3D
+                        x_matrix=reshape(h.scan.x,[h.scan.N_axial_axis h.scan.N_radial_axis]);
+                        y_matrix=reshape(h.scan.y,[h.scan.N_axial_axis h.scan.N_radial_axis]);
+                        z_matrix=reshape(h.scan.z,[h.scan.N_axial_axis h.scan.N_radial_axis]);
+                        surface(axis_handle);
+                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                        shading(axis_handle,'flat');
+                        set(axis_handle,'fontsize',14);
+                        %set(axis_handle,'YDir','reverse');
+                        axis(axis_handle,'tight','equal');
+                        colorbar(axis_handle);
+                        colormap(axis_handle,'gray');
+                        xlabel(axis_handle,'x[mm]'); 
+                        ylabel(axis_handle,'y[mm]');
+                        zlabel(axis_handle,'z[mm]');
+                        caxis(axis_handle,[-dynamic_range 0]);
+                        title(axis_handle,in_title);                        
+                    end
                     drawnow;
                 case 'huff.sector_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
