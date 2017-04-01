@@ -6,7 +6,7 @@
 %
 % Related materials:
 %
-% * <http://folk.ntnu.no/alfonsom/TTK13/lib/Szabo_ch_6_Beamforming Szabo Chapter 6>
+% * <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058 Montaldo et al. 2009>
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 31.03.2017_
 
@@ -74,8 +74,8 @@ pul.plot([],'2-way pulse');
 % 0.3]$ radians. The *wave* structure has a *plot* method that plots the
 % direction of the transmitted plane-wave.
 
-N=31;                      % number of plane waves
-angles=linspace(-0.3,0.3,N);
+N=31;                           % number of plane waves
+angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
@@ -91,7 +91,14 @@ for n=1:N
     fig_handle=seq(n).source.plot(fig_handle);
 end
 
-%% SIMULATOR
+%% The Fresnel simulator
+%
+% We can finally launch the built-in simulator. This simulator uses
+% fresnel approximation for a directive rectangular element. We need to
+% assign the *phantom*, *pulse*, *probe*, sequence of *wave*, and the
+% desired sampling frequency. The simulator returns a *channel_data* UFF
+% structure.
+
 sim=fresnel();
 
 % setting input data 
@@ -104,11 +111,24 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% SCAN
+%% Scan
+%
+% The scan area is defined as a collection of pixel via another UFF structure.
+% The *scan* is a general structure where the pixels have no spatial
+% organization. That makes it very flexible, but a bit cumbersome to work
+% with. But *scan* class has a number of children to help with that. In
+% particular we use here the *linear_scan* structure, which is defined with
+% just two axis. The *plot* method shows the position of the pixels in a 3D
+% scenario.
 sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% BEAMFORMER
+%% Beamformer
+%
+% With *channel_data* and a *scan* we have all we need to produce a
+% ultrasound image. We use now a USTB structure *beamformer*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan*.
+
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
@@ -120,6 +140,30 @@ bmf.receive_apodization.apex.distance=Inf;
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
+
+%% 
+%
+% Several implementation can be launched with the *beamformer* structure,
+% that is the first parameter in the *go* method below. In this case we
+% select a matlab implementation using the handle of the method *matlab*. 
+% Besides we must select what should be done with the several transmit events,
+% something that we have generalized in a *postprocess* in USTB.
+%
+% In conventional focus imaging each transmit wave leads to a single scan
+% line. In the end all the scanlines are stacked to produce a 2D image. In
+% CPWC, however, a full image is produce for each transmit wave, the so
+% called "low resolution image". Then all the images are coherently
+% combined, i.e. added together, to produce a "high resolution image". Here
+% we specify that *postprocess* inserting the handle of the method
+% "coherent_compound". Notice that the exact same *postprocess* is used in
+% other sequences such as DWI or RTB.
+%
+% This division between *beamformer* and *postprocess* is slightly slower
+% than combining the two stages together, but it opens endless posibilities
+% for implementen different techniques based on the same ingredients.
+%
+% The beamformer returns yet another *UFF* structure: *beamformed_data*
+% which we can just display by using the method *plot*
 
 % beamforming
 b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
