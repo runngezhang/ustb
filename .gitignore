@@ -20,3 +20,4 @@ data/
 +mex/.mex/engines/
 *.obj
 examples/huff/recording.h5
+*.prj
