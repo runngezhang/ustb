@@ -1,8 +1,8 @@
 %% CPWC simulation with the USTB built-in Fresnel simulator
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
-% to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how can
-% it be beamformed with USTB.
+% to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can
+% be beamformed with USTB.
 %
 % Related materials:
 %
@@ -13,7 +13,7 @@
 %% Phantom
 %
 % The *fresnel* simulator takes a *phantom* structure as input. *phantom* is 
-% a Ultrasound File Format (UFF) structure that contains the position of a 
+% an Ultrasound File Format (UFF) structure that contains the position of a 
 % collection of point scatterers. USTB's implementation of phantom includes
 % a *plot* method
 
@@ -24,9 +24,9 @@ fig_handle=pha.plot();
              
 %% Probe
 %
-% Another UFF structure is *probe*. You've guest it, if contains
-% information about the probe's geometry. USTB's implementation counts with
-% a *plot* method. When combined with previous Figure we can see the
+% Another UFF structure is *probe*. You've guessed it, it contains
+% information about the probe's geometry. USTB's implementation comes with
+% a *plot* method. When combined with the previous Figure we can see the
 % position of the probe respect to the phantom.
 
 prb=uff.linear_array();
@@ -44,7 +44,7 @@ prb.plot(fig_handle);
 % simple and it neglects the effect of the spatial impulse response. For a 
 % more accurate model, use Field II (http://field-ii.dk/).
 %
-% In order define the pulse-echo signal in the *fresnel* simulator the 
+% In order to define the pulse-echo signal in the *fresnel* simulator the 
 % structure *pulse* is used:
 pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
@@ -53,8 +53,8 @@ pul.plot([],'2-way pulse');
 
 %% Sequence generation
 %
-% Here it comes something a bit more interesting. The *fresnel* simulator
-% takes the same sequence definition than the USTB beamformer. In UFF and
+% Here comes something a bit more interesting. The *fresnel* simulator
+% takes the same sequence definition as the USTB beamformer. In UFF and
 % USTB a sequence is defined as a collection of *wave*. 
 %
 % The most important piece of information in a *wave* structure is the
@@ -66,12 +66,12 @@ pul.plot([],'2-way pulse');
 % needed to beamform that specific transmitted wave, i.e. probe dimensions 
 % and reference sound speed. That adds some data overhead, since the probe
 % and sound speed are often the same for all transmit events in the sequence. But it 
-% makes possible to process each transmitting event independently. On the other
+% makes it possible to process each transmitting event independently. On the other
 % hand it also simplifies the handling of probes with multiplexors and even
 % allows for a more efficient use of the memory in those cases.
 %
 % We define a sequence of 31 plane-waves covering an angle span of $[-0.3,
-% 0.3]$ radians. The *wave* structure has a *plot* method that plots the
+% 0.3]$ radians. The *wave* structure has a *plot* method which plots the
 % direction of the transmitted plane-wave.
 
 N=31;                           % number of plane waves
@@ -113,20 +113,20 @@ channel_data=sim.go();
  
 %% Scan
 %
-% The scan area is defined as a collection of pixel via another UFF structure.
+% The scan area is defined as a collection of pixels via another UFF structure.
 % The *scan* is a general structure where the pixels have no spatial
 % organization. That makes it very flexible, but a bit cumbersome to work
 % with. But *scan* class has a number of children to help with that. In
-% particular we use here the *linear_scan* structure, which is defined with
-% just two axis. The *plot* method shows the position of the pixels in a 3D
+% particular we here use the *linear_scan* structure, which is defined with
+% just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
 sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
 %
-% With *channel_data* and a *scan* we have all we need to produce a
-% ultrasound image. We use now a USTB structure *beamformer*, that takes an
+% With *channel_data* and a *scan* we have all we need to produce an
+% ultrasound image. We now use a USTB structure *beamformer*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
 bmf=beamformer();
@@ -143,24 +143,24 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 %% 
 %
-% Several implementation can be launched with the *beamformer* structure,
-% that is the first parameter in the *go* method below. In this case we
+% Several implementations can be launched with the *beamformer* structure,
+% which is the first parameter in the *go* method below. In this case we
 % select a matlab implementation using the handle of the method *matlab*. 
 % Besides we must select what should be done with the several transmit events,
 % something that we have generalized in a *postprocess* in USTB.
 %
 % In conventional focus imaging each transmit wave leads to a single scan
 % line. In the end all the scanlines are stacked to produce a 2D image. In
-% CPWC, however, a full image is produce for each transmit wave, the so
+% CPWC, however, a full image is produced for each transmit wave, the so
 % called "low resolution image". Then all the images are coherently
 % combined, i.e. added together, to produce a "high resolution image". Here
-% we specify that *postprocess* inserting the handle of the method
+% we specify that *postprocess* should use the handle of the method
 % "coherent_compound". Notice that the exact same *postprocess* is used in
 % other sequences such as DWI or RTB.
 %
 % This division between *beamformer* and *postprocess* is slightly slower
 % than combining the two stages together, but it opens endless posibilities
-% for implementen different techniques based on the same ingredients.
+% for implementing different techniques based on the same ingredients.
 %
 % The beamformer returns yet another *UFF* structure: *beamformed_data*
 % which we can just display by using the method *plot*
