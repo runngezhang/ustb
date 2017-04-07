@@ -22,6 +22,7 @@ classdef beamformed_data < handle
         wave                       % WAVE class [optional]
         probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
+        adaptive_beamformer        % ADAPTIVE_BEAMFORMER subclass [optional]
     end
     
     %% dependent properties

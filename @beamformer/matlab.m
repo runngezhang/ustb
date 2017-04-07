@@ -1,22 +1,30 @@
-function inter_dataset=matlab(h)
+function inter_dataset=matlab(h,adaptive_implementation)
 % MATLAB implementation of the general beamformer
+%
+%   Update: Added modification to be able to do adaptive_beamforming
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+%            Ole Marius Hoel Rindal (olemarius@olemarius.net)
 %
 %   $Date: 2017/03/14$
+%          2017/04/07   % Added adaptive beamforming.
 
 
 name='USTB General Beamformer MATLAB'; % beamformer name
 version='v1.0.4';                      % & version
 
 % checking aditional requirements
+if nargin > 1 
+    adaptive = 1;
+else
+    adaptive = 0;
+end
 
 % modulation frequency
 w0=2*pi*h.channel_data.modulation_frequency;
 
 %% beamforming
-%wb=waitbar(0,sprintf('USTB General Beamformer (%s)',h.version));
-%set(wb,'Name','USTB');
+counter = 1;
 % wave loop
 for n_wave=1:numel(h.channel_data.sequence)
     
@@ -56,17 +64,32 @@ for n_wave=1:numel(h.channel_data.sequence)
         TF=current_scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
     end
     
-    % receive loop
-    for nrx=1:h.channel_data.N_elements
-        %waitbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,wb);
-        tools.workbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,sprintf('%s (%s)',name,version),'USTB');
-        % receive delay
-        RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
+    if adaptive
+        % If we are doing adaptive beamforming we need to temporarily store
+        % the data as a "data_cube" for the adaptive beamforming
+        % implementations.
+        if isa(current_scan,'uff.linear_scan')
+            data_cube = complex(zeros(current_scan.N_z_axis,current_scan.N_x_axis,h.channel_data.N_elements));
+        else isa(current_scan,'uff.linear_scan')
+            data_cube = complex(zeros(current_scan.N_z_axis,current_scan.N_x_axis,h.channel_data.N_elements));
+        end
+    end
         
-        % total delay
-        delay=(RF+TF)/h.channel_data.sound_speed;
+    % frame loop
+    for n_frame=1:h.channel_data.N_frames
         
-        for n_frame=1:h.channel_data.N_frames
+        % receive loop
+        for nrx=1:h.channel_data.N_elements
+            
+            % Update waitbar
+            tools.workbar(counter/(numel(h.channel_data.sequence)*h.channel_data.N_frames*h.channel_data.N_elements),sprintf('%s (%s)',name,version),'USTB');
+            counter = counter+1;
+            
+            % receive delay
+            RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
+            
+            % total delay
+            delay=(RF+TF)/h.channel_data.sound_speed;
             
             % check whether is IQ or RF data
             if(w0>eps)
@@ -81,14 +104,30 @@ for n_wave=1:numel(h.channel_data.sequence)
                 data=hilbert(h.channel_data.data(:,nrx,n_wave,n_frame));
             end
             
-            % beamformed signal
-            inter_dataset(n_wave).data(:,1,n_frame)=inter_dataset(n_wave).data(:,1,n_frame)+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
+            if adaptive
+                % beamformed signal
+                delayed_data = tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
+                data_cube(:,:,nrx) = reshape(delayed_data,current_scan.N_z_axis,current_scan.N_x_axis);
+            else
+                % beamformed signal
+                inter_dataset(n_wave).data(:,1,n_frame)=inter_dataset(n_wave).data(:,1,n_frame)+tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
+            end
+        end
+        
+        if adaptive
+            % Set data_cube and apodization in adaptive beamforming object
+            adaptive_implementation.set_data_cube(data_cube);
+            adaptive_implementation.set_tx_apo(tx_apo);
+            adaptive_implementation.set_rx_apo(rx_apo);
+            
+            % Call the adaptive beamformer implementation
+            image = adaptive_implementation.go(h);
+            inter_dataset(n_wave).data(:,1,n_frame) = reshape(image,current_scan.N_z_axis*current_scan.N_x_axis,1);
+        else
+            % assign phase according to 2 times the receive propagation distance
+            inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
         end
     end
-    
-    % assign phase according to 2 times the receive propagation distance
-    inter_dataset(n_wave).data=bsxfun(@times,inter_dataset(n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
 end
-%close(wb);
 
 end

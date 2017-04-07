@@ -5,7 +5,6 @@ classdef beamformer
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%            Stine Myren Hverven <stinemhv@ifi.uio.no>
 %
 %   $Date: 2017/03/10$
 
@@ -44,12 +43,21 @@ classdef beamformer
             % checking we have all we need
             assert(numel(h.channel_data)>0,'The channel_data parameter is not set.');
             assert(numel(h.scan)>0,'The SCAN parameter is not set.');
-    
+            
             %% beamforming
             if ~exist('implementation')||isempty(implementation)
                 inter_dataset=h.matlab();
-            else
+            elseif isa(implementation,'function_handle') % If implementation is a function handle, call it!
                 inter_dataset=implementation();
+            elseif isobject(implementation)              % If it is a object, check if it is a adaptive beamformer 
+                s = superclasses(implementation);        % subclass and call it!
+                if strcmp(s{1,1},'adaptive_beamformers.adaptive_beamformer')
+                    inter_dataset=h.matlab(implementation);
+                else
+                    error('Sorry! The adaptive beamformer have to be a subclass of the adaptive_beamformer class!');
+                end
+            else
+                error('Input for beamformer.go have to be a function_handle or a adaptive_beamformer object.');
             end
 
             %% postprocess
@@ -59,6 +67,12 @@ classdef beamformer
                 out_dataset=postprocess(inter_dataset);
             end
             
+            %% If adaptive beamforming have been used, we want to save the parameters
+            if isobject(implementation)
+                % Saving the adaptive beamformer so that we have the
+                % parameters used
+                out_dataset.adaptive_beamformer = implementation;
+            end
         end
     end
     
