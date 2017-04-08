@@ -25,6 +25,7 @@ w0=2*pi*h.channel_data.modulation_frequency;
 
 %% beamforming
 counter = 1;
+tools.workbar();
 % wave loop
 for n_wave=1:numel(h.channel_data.sequence)
     
@@ -116,9 +117,9 @@ for n_wave=1:numel(h.channel_data.sequence)
         
         if adaptive
             % Set data_cube and apodization in adaptive beamforming object
-            adaptive_implementation.set_data_cube(data_cube);
-            adaptive_implementation.set_tx_apo(tx_apo);
-            adaptive_implementation.set_rx_apo(rx_apo);
+            adaptive_implementation = adaptive_implementation.set_data_cube(data_cube);
+            adaptive_implementation = adaptive_implementation.set_tx_apo(tx_apo);
+            adaptive_implementation = adaptive_implementation.set_rx_apo(rx_apo);
             
             % Call the adaptive beamformer implementation
             image = adaptive_implementation.go(h);

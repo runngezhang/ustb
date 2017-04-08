@@ -36,7 +36,7 @@ classdef phase_coherence_factor < adaptive_beamformers.adaptive_beamformer
                 
                 % Please see the article referred for details on the
                 % implementation
-                sigma_0=pi/sqrt(3)
+                sigma_0=pi/sqrt(3);
                 phase=angle(h.data_cube);
                 
                 % auxiliary phase

@@ -90,10 +90,11 @@ bmf.transmit_apodization.apex.distance=Inf;
 figure(1);
 axis_handle = subplot(131);
 
-b_data_das=bmf.go(@bmf.matlab_base,@postprocess.coherent_compound);
+b_data_das=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
 
 % show
 b_data_das.plot(axis_handle,['Delay-and-sum (DAS)'],80);
+
 
 %%
 % If you want to use an adaptive beamforming algorithm you give a oject to
