@@ -74,7 +74,8 @@ classdef beamformed_data < handle
             % Usage: figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
             
             if size(h.data,3) == 1 %If more than one frame, use GUI and cant set initial handle.
-                if nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')
+                if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
+                   (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))     
                     figure_handle=figure(figure_handle_in);
                     axis_handle = gca(figure_handle);
                     hold on;
