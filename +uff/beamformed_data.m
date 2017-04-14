@@ -29,7 +29,14 @@ classdef beamformed_data < handle
     properties  (Dependent)
     end
     
-    
+    %% private properties
+    properties (Access = private)
+       current_frame             %If multi frame, this is the current frame shown 
+       all_images_dB
+       image_handle
+       in_title
+       play_loop
+    end
     %% constructor
     methods (Access = public)
         function h=beamformed_data()
@@ -73,30 +80,38 @@ classdef beamformed_data < handle
             %
             % Usage: figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
             
-            if size(h.data,3) == 1 %If more than one frame, use GUI and cant set initial handle.
-                if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
-                   (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))     
-                    figure_handle=figure(figure_handle_in);
-                    axis_handle = gca(figure_handle);
-                    hold on;
-                elseif nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.graphics.axis.Axes')
-                    axis_handle = figure_handle_in;
-                else
-                    figure_handle=figure();
-                    axis_handle = gca(figure_handle);
-                end
+            if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
+                    (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
+                figure_handle=figure(figure_handle_in);
+                axis_handle = gca(figure_handle);
+                hold on;
+            elseif nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.graphics.axis.Axes')
+                axis_handle = figure_handle_in;
+            else
+                figure_handle=figure();
+                axis_handle = gca(figure_handle);
             end
+
             if nargin<3
-                in_title='Beamformed data';
+                h.in_title='Beamformed data';
+            else
+                h.in_title = in_title;
             end
             if nargin<4
                 dynamic_range=60;
             end
             
-            if size(h.data,3) > 1 %If more than one frame, call multi_frame_gui
-                gui.multi_frame_gui_export(h,in_title,dynamic_range);
-            else
-                h.draw_image(axis_handle,in_title,dynamic_range);
+            %Draw the image
+            h.draw_image(axis_handle,in_title,dynamic_range);
+            
+            %If more than one frame, add the GUI buttons
+            if size(h.data,3) > 1 
+                figure_handle
+                set(figure_handle, 'Position', [100, 100, 600, 700]);
+                h.current_frame = 1;
+                h.add_buttons(figure_handle);
+                h.play_loop = 0;
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
             end
         end
         
@@ -109,8 +124,8 @@ classdef beamformed_data < handle
                 case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
-                    all_images_dB = reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
-                    image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
+                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
@@ -123,11 +138,11 @@ classdef beamformed_data < handle
                     drawnow;
                 case 'uff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
-                    all_images_dB = reshape(envelope_dB,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
+                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
                     [az,el] = view();
                     if (el==90) 
                         % plot in 2D
-                        image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,all_images_dB(:,:,1));
+                        h.image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,h.all_images_dB(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         set(axis_handle,'YDir','reverse');
@@ -143,7 +158,7 @@ classdef beamformed_data < handle
                         y_matrix=reshape(h.scan.y,[h.scan.N_axial_axis h.scan.N_radial_axis]);
                         z_matrix=reshape(h.scan.z,[h.scan.N_axial_axis h.scan.N_radial_axis]);
                         surface(axis_handle);
-                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         %set(axis_handle,'YDir','reverse');
@@ -160,8 +175,8 @@ classdef beamformed_data < handle
                 case 'uff.sector_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
-                    all_images_dB = reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
-                    image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,all_images_dB(:,:,1));
+                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
@@ -220,6 +235,45 @@ classdef beamformed_data < handle
     %% get methods
     methods
         
+    end
+    
+    %% GUI functions
+    methods (Access = private)
+        function add_buttons(h,figure_handle)
+            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Previous frame','Units','normalized','Position',[0.22 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_previous_frame,h});
+            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Play movie loop','Units','normalized','Position',[0.42 0.95 0.2 0.05],'Visible','on','Callback',{@h.play_movie_loop,h});
+            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Next frame','Units','normalized','Position',[0.62 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_next_frame,h});
+        end
+        
+        function plot_previous_frame(h,var1,var2,var3)
+            if h.current_frame-1 > 0
+                h.current_frame = h.current_frame - 1;
+                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+            end
+        end
+        
+        function plot_next_frame(h,var1,var2,var3)
+            if h.current_frame+1 <= size(h.all_images_dB,3)
+                h.current_frame = h.current_frame + 1;
+                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+            end
+        end
+        
+        function play_movie_loop(h,var1,var2,var3)
+            h.play_loop = ~h.play_loop;
+            while(h.play_loop)
+                h.current_frame = h.current_frame+1;
+                if h.current_frame > size(h.all_images_dB,3)
+                    h.current_frame = 1;
+                end
+                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+                drawnow();
+                pause(0.05);
+            end
+        end
     end
     
 end
