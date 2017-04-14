@@ -102,11 +102,10 @@ classdef beamformed_data < handle
             end
             
             %Draw the image
-            h.draw_image(axis_handle,in_title,dynamic_range);
+            h.draw_image(axis_handle,h.in_title,dynamic_range);
             
             %If more than one frame, add the GUI buttons
             if size(h.data,3) > 1 
-                figure_handle
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(figure_handle);
@@ -115,7 +114,7 @@ classdef beamformed_data < handle
             end
         end
         
-        function [image_handle, all_images_dB] = draw_image(h,axis_handle,in_title,dynamic_range)
+        function draw_image(h,axis_handle,in_title,dynamic_range)
             % convert to intensity values
             envelope=abs(h.data);
             envelope_dB=20*log10(envelope./max(envelope(:)));
