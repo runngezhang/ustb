@@ -33,7 +33,7 @@ pul.plot([],'2-way pulse');
 
 %% Sequence generation
 
-N=5;                           % number of plane waves
+N=3;                           % number of plane waves
 angles=linspace(-0.3,0.3,N)   % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
@@ -67,57 +67,57 @@ channel_data=sim.go();
 sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% 
+% Here we'll demonstrate how we can do adaptive beamforming with the USTB.
+% As we know from before we can do conventional delay-and-sum.
+
+%% Conventional DAS beamforming is default
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=0;
+bmf.receive_apodization.window=uff.window.boxcar;
+bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=0;
+bmf.transmit_apodization.window=uff.window.none;
+bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
-%% 
-% Here we'll demonstrate how we can do adaptive beamforming with the USTB.
-% As we know from before we can do conventional delay-and-sum by using the
-% default matlab implementation as a parameter to the *go* method of the
-% *beamformer* structure as shown below.
+b_data_das_CC = bmf.go(postprocess.coherent_compound);
+b_data_das_CC.plot(100,['DAS coherent compounded'],80);
 
-%% Conventional DAS
-figure(1);
-axis_handle = subplot(131);
-
-b_data_das=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
-
-% show
-b_data_das.plot(axis_handle,['Delay-and-sum (DAS)'],80);
-
+b_data_das_IC = bmf.go(postprocess.incoherent_compound);
+b_data_das_IC.plot(101,['DAS incoherent compounded'],80);
 
 %%
-% If you want to use an adaptive beamforming algorithm you give a oject to
-% an adaptive beamforming implementation as a paramtere to the *go* method.
-% The adaptive beamforming implementation have to be a subclass of the
-% *ADAPTIVE_BEAMFORMER* class. These are all found under the namespace
-% folder *adaptive_beamformers*. Below we show how to use both the
-% *coherence_factor* and *phase_coherence_factor* implementation in USTB.
-%% CF beamforming
-axis_handle = subplot(132);
+% If you want to use an adaptive beamforming algorithm you need to make the
+% beamforming object an object of one of the subclasses to the *beamformer*
+% class. For example the *coherence_factor* subclass.
 
-b_data_CF=bmf.go(adaptive_beamformers.coherence_factor(),@postprocess.coherent_compound);
+bmf_cf=coherence_factor();
+bmf_cf.channel_data=channel_data;
+bmf_cf.scan=sca;
 
-% show
-b_data_CF.plot(axis_handle,['Coherence Factor (CF)'],80);
+bmf_cf.receive_apodization.window=uff.window.boxcar;
+bmf_cf.receive_apodization.f_number=1.7;
+bmf_cf.receive_apodization.apex.distance=Inf;
 
-%% PCF beamforming
-% The phase coherence factor has an parameter *gamma* that the user can
-% set. 
-axis_handle = subplot(133);
-pcf = adaptive_beamformers.phase_coherence_factor();
-pcf.gamma = 1;
-b_data_pcf=bmf.go(pcf,@postprocess.coherent_compound);
+bmf_cf.transmit_apodization.window=uff.window.none;
+bmf_cf.transmit_apodization.f_number=1.7;
+bmf_cf.transmit_apodization.apex.distance=Inf;
 
-% show
-b_data_pcf.plot(axis_handle,['Phase Coherence Factor (PCF)'],80);
+b_data_cf = bmf_cf.go(postprocess.coherent_compound);
+b_data_cf.plot(102,['CF'],80);
+
+%%
+% However, if you allready have defined yourself a beamformer object you
+% can simply call the constructor to the subclass with the precious object
+% as input. We'll show this with the *phase_coherence_factor* subclass.
+bmf_pcf=phase_coherence_factor(bmf);
+
+% The PCF have a paramter *gamma* that we can set. If we don't set it gets
+% a default value.
+bmf_pcf.gamma = 1;
+b_data_pcf = bmf_pcf.go(postprocess.coherent_compound);
+b_data_pcf.plot(103,['PCF'],80);
