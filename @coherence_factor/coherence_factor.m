@@ -64,7 +64,7 @@ classdef coherence_factor < beamformer
                 
                 % The CF is defined as the coherent sum divided
                 % by the incoherent sum across the aperture.
-                channels    = h.channel_data.N_elements;
+                channels    = size(h.data_cube,3);
                 coherent    = abs(sum(h.data_cube,3)).^2;
                 incoherent  = sum(abs(h.data_cube).^2,3);
                 cf          = coherent./incoherent./channels;

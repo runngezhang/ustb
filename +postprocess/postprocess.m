@@ -3,6 +3,7 @@ classdef postprocess
     %   Detailed explanation goes here
     
     properties
+        bmf
     end
     
     methods (Abstract)

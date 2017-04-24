@@ -84,40 +84,36 @@ bmf.transmit_apodization.window=uff.window.none;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
+% The DAS is default first "postprocess"
 b_data_das_CC = bmf.go(postprocess.coherent_compound);
 b_data_das_CC.plot(100,['DAS coherent compounded'],80);
 
+%% meaning that these two calls produce the same result
+b_data_das_CC = bmf.go(postprocess.delay_and_sum,postprocess.coherent_compound);
+b_data_das_CC.plot(101,['DAS coherent compounded'],80);
+
+%% And if we want to do something else on the second postprocess, for example
+% icoherent compounding, we can call this
 b_data_das_IC = bmf.go(postprocess.incoherent_compound);
 b_data_das_IC.plot(101,['DAS incoherent compounded'],80);
 
-%%
-% If you want to use an adaptive beamforming algorithm you need to make the
-% beamforming object an object of one of the subclasses to the *beamformer*
-% class. For example the *coherence_factor* subclass.
-
-bmf_cf=coherence_factor();
-bmf_cf.channel_data=channel_data;
-bmf_cf.scan=sca;
-
-bmf_cf.receive_apodization.window=uff.window.boxcar;
-bmf_cf.receive_apodization.f_number=1.7;
-bmf_cf.receive_apodization.apex.distance=Inf;
-
-bmf_cf.transmit_apodization.window=uff.window.none;
-bmf_cf.transmit_apodization.f_number=1.7;
-bmf_cf.transmit_apodization.apex.distance=Inf;
-
-b_data_cf = bmf_cf.go(postprocess.coherent_compound);
+%% If we want to do an adaptive beamformer, for example the coherence_factor,
+% we can call it like this
+b_data_cf = bmf.go(postprocess.coherence_factor,postprocess.coherent_compound);
 b_data_cf.plot(102,['CF'],80);
 
-%%
-% However, if you allready have defined yourself a beamformer object you
-% can simply call the constructor to the subclass with the precious object
-% as input. We'll show this with the *phase_coherence_factor* subclass.
-bmf_pcf=phase_coherence_factor(bmf);
+%% And we can also do something fun, as using the coherence factor on both the 
+% low quality postprocess, and on the "second postprocess"
+b_data_cf = bmf.go(postprocess.coherence_factor,postprocess.coherence_factor);
+b_data_cf.plot(103,['CF - CF'],80);
 
-% The PCF have a paramter *gamma* that we can set. If we don't set it gets
-% a default value.
-bmf_pcf.gamma = 1;
-b_data_pcf = bmf_pcf.go(postprocess.coherent_compound);
-b_data_pcf.plot(103,['PCF'],80);
+%% If we want to use an adptive beamformer with an argument, we can call it 
+% like this, and set the argument.
+pp_pcf = postprocess.phase_coherence_factor;
+pp_pcf.gamma = 1;
+b_data_cf = bmf.go(pp_pcf,postprocess.coherent_compound);
+b_data_cf.plot(104,['PCF'],80);
+
+%% Thus ,we can also use that postprocess twice.
+b_data_cf = bmf.go(pp_pcf,pp_pcf);
+b_data_cf.plot(105,['PCF - PCF'],80);

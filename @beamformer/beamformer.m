@@ -46,57 +46,24 @@ classdef beamformer
     end
     
     methods 
-        function out_dataset = go(h,postprocess)
-            out_dataset = matlab_delay_base(h);
+        function out_dataset = go(h,postprocess_1,postprocess_2)
+            if nargin == 2 %Only one postprocess, this is assumed to be second
+                postprocess_2 = postprocess_1;
+                out_dataset = matlab_delay_interdataset(h,postprocess.delay_and_sum);
+            elseif nargin == 3
+                out_dataset = matlab_delay_interdataset(h,postprocess_1);
+            end
             
             if nargin == 1
                 if numel(out_dataset) > 1
                     no_postprocess_warning()
                 end
             else
-                out_dataset = postprocess.go(out_dataset);
+                postprocess_2.bmf = h;
+                out_dataset = postprocess_2.go(out_dataset);
             end
         end
     end
-%     %% set methods
-%     methods  
-%         function out_dataset=go(h,implementation,postprocess)
-%             
-%             % checking we have all we need
-%             assert(numel(h.channel_data)>0,'The channel_data parameter is not set.');
-%             assert(numel(h.scan)>0,'The SCAN parameter is not set.');
-%             
-%             %% beamforming
-%             if ~exist('implementation')||isempty(implementation)
-%                 inter_dataset=h.matlab();
-%             elseif isa(implementation,'function_handle') % If implementation is a function handle, call it!
-%                 inter_dataset=implementation();
-%             elseif isobject(implementation)              % If it is a object, check if it is a adaptive beamformer 
-%                 s = superclasses(implementation);        % subclass and call it!
-%                 if strcmp(s{1,1},'adaptive_beamformers.adaptive_beamformer')
-%                     inter_dataset=h.matlab(implementation);
-%                 else
-%                     error('Sorry! The adaptive beamformer have to be a subclass of the adaptive_beamformer class!');
-%                 end
-%             else
-%                 error('Input for beamformer.go have to be a function_handle or a adaptive_beamformer object.');
-%             end
-% 
-%             %% postprocess
-%             if ~exist('postprocess')||isempty(postprocess)
-%                 out_dataset=inter_dataset;
-%             else
-%                 out_dataset=postprocess(inter_dataset);
-%             end
-%             
-%             %% If adaptive beamforming have been used, we want to save the parameters
-%             if isobject(implementation)
-%                 % Saving the adaptive beamformer so that we have the
-%                 % parameters used
-%                 out_dataset.adaptive_beamformer = implementation;
-%             end
-%         end
-%     end
     
     %% set methods
     methods  
