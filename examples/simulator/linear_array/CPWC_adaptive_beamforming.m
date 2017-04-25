@@ -33,7 +33,7 @@ pul.plot([],'2-way pulse');
 
 %% Sequence generation
 
-N=5;                           % number of plane waves
+N=3;                           % number of plane waves
 angles=linspace(-0.3,0.3,N)   % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
@@ -67,57 +67,53 @@ channel_data=sim.go();
 sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% 
+% Here we'll demonstrate how we can do adaptive beamforming with the USTB.
+% As we know from before we can do conventional delay-and-sum.
+
+%% Conventional DAS beamforming is default
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=0;
+bmf.receive_apodization.window=uff.window.boxcar;
+bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=0;
+bmf.transmit_apodization.window=uff.window.none;
+bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
-%% 
-% Here we'll demonstrate how we can do adaptive beamforming with the USTB.
-% As we know from before we can do conventional delay-and-sum by using the
-% default matlab implementation as a parameter to the *go* method of the
-% *beamformer* structure as shown below.
+% The DAS is default first "postprocess"
+b_data_das_CC = bmf.go(postprocess.coherent_compound);
+b_data_das_CC.plot(100,['DAS coherent compounded'],80);
 
-%% Conventional DAS
-figure(1);
-axis_handle = subplot(131);
+%% meaning that these two calls produce the same result
+b_data_das_CC = bmf.go(postprocess.delay_and_sum,postprocess.coherent_compound);
+b_data_das_CC.plot(101,['DAS coherent compounded'],80);
 
-b_data_das=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+%% And if we want to do something else on the second postprocess, for example
+% icoherent compounding, we can call this
+b_data_das_IC = bmf.go(postprocess.incoherent_compound);
+b_data_das_IC.plot(101,['DAS incoherent compounded'],80);
 
-% show
-b_data_das.plot(axis_handle,['Delay-and-sum (DAS)'],80);
+%% If we want to do an adaptive beamformer, for example the coherence_factor,
+% we can call it like this
+b_data_cf = bmf.go(postprocess.coherence_factor,postprocess.coherent_compound);
+b_data_cf.plot(102,['CF'],80);
 
+%% And we can also do something fun, as using the coherence factor on both the 
+% low quality postprocess, and on the "second postprocess"
+b_data_cf = bmf.go(postprocess.coherence_factor,postprocess.coherence_factor);
+b_data_cf.plot(103,['CF - CF'],80);
 
-%%
-% If you want to use an adaptive beamforming algorithm you give a oject to
-% an adaptive beamforming implementation as a paramtere to the *go* method.
-% The adaptive beamforming implementation have to be a subclass of the
-% *ADAPTIVE_BEAMFORMER* class. These are all found under the namespace
-% folder *adaptive_beamformers*. Below we show how to use both the
-% *coherence_factor* and *phase_coherence_factor* implementation in USTB.
-%% CF beamforming
-axis_handle = subplot(132);
+%% If we want to use an adptive beamformer with an argument, we can call it 
+% like this, and set the argument.
+pp_pcf = postprocess.phase_coherence_factor;
+pp_pcf.gamma = 1;
+b_data_cf = bmf.go(pp_pcf,postprocess.coherent_compound);
+b_data_cf.plot(104,['PCF'],80);
 
-b_data_CF=bmf.go(adaptive_beamformers.coherence_factor(),@postprocess.coherent_compound);
-
-% show
-b_data_CF.plot(axis_handle,['Coherence Factor (CF)'],80);
-
-%% PCF beamforming
-% The phase coherence factor has an parameter *gamma* that the user can
-% set. 
-axis_handle = subplot(133);
-pcf = adaptive_beamformers.phase_coherence_factor();
-pcf.gamma = 1;
-b_data_pcf=bmf.go(pcf,@postprocess.coherent_compound);
-
-% show
-b_data_pcf.plot(axis_handle,['Phase Coherence Factor (PCF)'],80);
+%% Thus ,we can also use that postprocess twice.
+b_data_cf = bmf.go(pp_pcf,pp_pcf);
+b_data_cf.plot(105,['PCF - PCF'],80);
