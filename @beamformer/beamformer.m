@@ -45,23 +45,47 @@ classdef beamformer
         end
     end
     
+    %% go method
     methods 
-        function out_dataset = go(h,postprocess_1,postprocess_2)
-            if nargin == 2 %Only one postprocess, this is assumed to be second
-                postprocess_2 = postprocess_1;
-                out_dataset = matlab_delay_interdataset(h,postprocess.delay_and_sum);
-            elseif nargin == 3
-                out_dataset = matlab_delay_interdataset(h,postprocess_1);
-            end
-            
+        function out_dataset = go(h,process_list)
             if nargin == 1
-                if numel(out_dataset) > 1
-                    no_postprocess_warning()
-                end
+               proc=process.das_matlab();
+               proc.channel_data=h.channel_data;
+               proc.receive_apodization=h.receive_apodization;
+               proc.transmit_apodization=h.transmit_apodization;
+               proc.scan=h.scan;
+               out_dataset = proc.go();
             else
-                postprocess_2.bmf = h;
-                out_dataset = postprocess_2.go(out_dataset);
+               process_list{1}.channel_data=h.channel_data;
+               process_list{1}.receive_apodization=h.receive_apodization;
+               process_list{1}.transmit_apodization=h.transmit_apodization;
+               process_list{1}.scan=h.scan;
+               out_dataset = process_list{1}.go();
+               for n=2:length(process_list)
+                   process_list{n}.channel_data=h.channel_data;
+                   process_list{n}.receive_apodization=h.receive_apodization;
+                   process_list{n}.transmit_apodization=h.transmit_apodization;
+                   process_list{n}.scan=h.scan;
+                   process_list{n}.beamformed_data=out_dataset;
+                   out_dataset = process_list{n}.go();
+               end
             end
+                
+%             if nargin == 2 %Only one postprocess, this is assumed to be second
+%                 postprocess_2 = postprocess_1;
+%                 out_dataset = matlab_delay_interdataset(h,postprocess.delay_and_sum);
+%             elseif nargin == 3
+%                 out_dataset = matlab_delay_interdataset(h,postprocess_1);
+%             end
+%             
+%             if nargin == 1
+%                 if numel(out_dataset) > 1
+%                     no_postprocess_warning()
+%                 end
+%             else
+%                 postprocess_2.bmf = h;
+%                 out_dataset = postprocess_2.go(out_dataset);
+%             end
         end
     end
     

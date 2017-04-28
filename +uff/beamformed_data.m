@@ -6,9 +6,7 @@ classdef beamformed_data < handle
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
     %
-    %   $Date: 2017/03/08 $
-    %   Update 2017/03/20 : Added the multi_frame_gui to show multiple
-    %                       frames.
+    %   $Last updated: 2017/03/20 $
     
     %% compulsory properties
     properties  (SetAccess = public)
@@ -31,12 +29,13 @@ classdef beamformed_data < handle
     
     %% private properties
     properties (Access = private)
-       current_frame             %If multi frame, this is the current frame shown 
+       current_frame             % If multi frame, this is the current frame shown 
        all_images_dB
        image_handle
        in_title
        play_loop
     end
+    
     %% constructor
     methods (Access = public)
         function h=beamformed_data()
