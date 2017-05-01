@@ -1,4 +1,4 @@
-classdef process
+classdef process < handle
 %PROCESS   process part of the beamforming chain
 %
 %   See also BEAMFORMER, CHANNEL_DATA, BEAMFORMED_DATA
@@ -27,11 +27,11 @@ classdef process
             %
             %   See also BEAMFORMER, CHANNEL_DATA, BEAMFORMED_DATA
             
-            h.channel_data=uff.channel_data();        % CHANNEL_DATA
-            h.receive_apodization=uff.apodization();  % APODIZATION class
-            h.transmit_apodization=uff.apodization(); % APODIZATION class
-            h.scan=uff.scan();                        % SCAN class
-            h.beamformed_data=uff.beamformed_data();  % BEAMFORMED_DATA class
+            %h.channel_data=uff.channel_data();        % CHANNEL_DATA
+            %h.receive_apodization=uff.apodization();  % APODIZATION class
+            %h.transmit_apodization=uff.apodization(); % APODIZATION class
+            %h.scan=uff.scan();                        % SCAN class
+            %h.beamformed_data=uff.beamformed_data();  % BEAMFORMED_DATA class
             
 %             % If called with a beamformer object as parameter copy the properties
 %             if nargin > 0 && ~isempty(bmf) && isa(bmf,'beamformer')
