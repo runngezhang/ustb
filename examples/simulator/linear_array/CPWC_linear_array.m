@@ -120,7 +120,7 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
@@ -143,30 +143,30 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 %% 
 %
-% Several implementations can be launched with the *beamformer* structure,
-% which is the first parameter in the *go* method below. In this case we
-% select a matlab implementation using the handle of the method *matlab*. 
-% Besides we must select what should be done with the several transmit events,
-% something that we have generalized in a *postprocess* in USTB.
+% The *beamformer* structure allows you to implement different beamformers 
+% by combination of multiple built-in *processes*. The aim is to avoid code
+% repetition and minimize implementation differences that could hinder
+% intercomparisson. Here we combine two *processes* (*das_matlab* and 
+% *coherent_compounding*) to produce coherently compounded images with 
+% a MATLAB implementation of the DAS general beamformer. 
 %
-% In conventional focus imaging each transmit wave leads to a single scan
+% By changing the *process* chain other beamforming sequences can be implemented. 
+% For instance, in conventional focus imaging each transmit wave leads to a single scan
 % line. In the end all the scanlines are stacked to produce a 2D image. In
 % CPWC, however, a full image is produced for each transmit wave, the so
 % called "low resolution image". Then all the images are coherently
-% combined, i.e. added together, to produce a "high resolution image". Here
-% we specify that *postprocess* should use the handle of the method
-% "coherent_compound". Notice that the exact same *postprocess* is used in
-% other sequences such as DWI or RTB.
+% combined, i.e. added together, to produce a "high resolution image". 
+% Notice that the exact same *process* is used in other sequences such as DWI or RTB.
 %
-% This division between *beamformer* and *postprocess* is slightly slower
-% than combining the two stages together, but it opens endless posibilities
-% for implementing different techniques based on the same ingredients.
+% This division of the beamforming processing in *processes* is slower
+% than combining the stages together in a single code, but it opens endless posibilities
+% for implementing different techniques based on the same code blocks.
 %
 % The beamformer returns yet another *UFF* structure: *beamformed_data*
 % which we can just display by using the method *plot*
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 b_data.plot();

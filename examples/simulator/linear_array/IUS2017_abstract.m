@@ -80,7 +80,7 @@ bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-stai_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+stai_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 stai_data.plot([],'STAI');
@@ -135,7 +135,7 @@ bmf.receive_apodization.f_number=F_number;
 bmf.receive_apodization.apex.distance=Inf;
 
 % beamforming
-fi_data=bmf.go(@bmf.matlab,@postprocess.stack);
+fi_data=bmf.go({process.das_matlab() process.stack()});
 
 % show
 fi_data.plot([],'FI');
@@ -187,7 +187,7 @@ bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-cpwc_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+cpwc_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 cpwc_data.plot([],'CPWC');
@@ -237,7 +237,7 @@ bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-dwi_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+dwi_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 dwi_data.plot([],'DWI');
@@ -290,7 +290,7 @@ bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-rtb_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+rtb_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 rtb_data.plot([],'RTB');

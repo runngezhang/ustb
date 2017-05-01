@@ -70,7 +70,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=uff.linear_scan(linspace(-19e-3,19e-3,256).', linspace(0e-3,40e-3,256).');
+sca=uff.linear_scan(linspace(-5e-3,5e-3,256).', linspace(15e-3,25e-3,256).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
@@ -85,7 +85,7 @@ bmf.transmit_apodization.f_number=1.0;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 %% show
 b_data.plot([],['Beamformed data'],40);

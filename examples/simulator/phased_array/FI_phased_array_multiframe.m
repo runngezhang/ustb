@@ -95,7 +95,9 @@ bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.stack);
+%b_data=bmf.go(@bmf.matlab,@postprocess.stack);
+b_data=bmf.go({process.das_matlab() process.stack()});
+
 
 %% show
 b_data.plot();

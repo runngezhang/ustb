@@ -1,9 +1,8 @@
-% Example of Conventional Focused Imaging (single focal depth)
-% for a linear-array and linear scan. Simulated with the USTB's Fresnel
-% simulator 
+% Using receive processes with a Focused Imaging (single focal depth)
+% dataset simulated with the USTB's Fresnel simulator 
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/14$
+%   $Date: 2017/05/01$
 
 clear all;
 close all;
@@ -79,7 +78,43 @@ bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go({process.das_matlab() process.stack()});
+b_data=bmf.go({process.delay_matlab() process.stack()});
 
-% show
-b_data.plot();
+%% PROCESSES
+% coherently compounded
+cc=process.coherent_compounding();
+cc.beamformed_data=b_data;
+cc_data=cc.go();
+cc_data.plot([],cc.name);
+
+% incoherently compounded
+ic=process.incoherent_compounding();
+ic.beamformed_data=b_data;
+ic_data=ic.go();
+ic_data.plot([],ic.name);
+
+% max
+mv=process.max();
+mv.beamformed_data=b_data;
+mv_data=mv.go();
+mv_data.plot([],mv.name);
+
+% Mallart-Fink coherence factor
+cf=process.coherence_factor();
+cf.channel_data=bmf.channel_data;
+cf.transmit_apodization=bmf.transmit_apodization;
+cf.receive_apodization=bmf.receive_apodization;
+cf.beamformed_data=b_data;
+cf_data=cf.go();
+cf.CF.plot([],'Mallart-Fink Coherence factor',60,'none'); % show the coherence factor
+cf_data.plot([],cf.name);
+
+% Camacho-Fritsch phase coherence factor
+pcf=process.phase_coherence_factor();
+pcf.channel_data=bmf.channel_data;
+pcf.transmit_apodization=bmf.transmit_apodization;
+pcf.receive_apodization=bmf.receive_apodization;
+pcf.beamformed_data=b_data;
+pcf_data=pcf.go();
+pcf.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
+pcf_data.plot([],pcf.name);
