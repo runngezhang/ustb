@@ -28,7 +28,6 @@ classdef stack < process
                             n=(nrx-1)*Ntx+ntx;
                             tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
                             x_axis(ntx)=h.beamformed_data(nrx,ntx).scan.x(1);
-                            %out_dataset(nrx,1).data(:,ntx,:)=h.beamformed_data(nrx,ntx).data;
                             out_dataset(nrx,1).data=[out_dataset(nrx,1).data; h.beamformed_data(nrx,ntx).data];
                         end
                         out_dataset(nrx,1).scan=uff.linear_scan(x_axis.',z_axis);
@@ -47,6 +46,7 @@ classdef stack < process
                         out_dataset(nrx,1).scan=uff.sector_scan(azimuth_axis.',depth_axis);
                     end
             end
+            tools.workbar(1);
         end
     end
 end

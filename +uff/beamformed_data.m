@@ -1,4 +1,4 @@
-classdef beamformed_data
+classdef beamformed_data < handle
     %BEAMFORMED_DATA   beamformed_data definition. Children of HANDLE class
     %
     %   See also PULSE, PHANTOM, PROBE
@@ -38,39 +38,42 @@ classdef beamformed_data
     
     %% constructor
     methods (Access = public)
-        function h=beamformed_data()
+        function h=beamformed_data(in_beamformed_data)
             %BEAMFORMED_DATA   Constructor of beamformed_data class
             %
             %   Syntax:
             %   h = beamformed_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
+            if nargin>0 && ~isempty(in_beamformed_data)
+                h.copy(in_beamformed_data);
+            end
         end
     end
     
-    %% copy
-%     methods (Access = public)
-%         function copy(h,object)
-%             %COPY    Copy the values from another BEAMFORMED_DATA class
-%             %
-%             %   Syntax:
-%             %   COPY(object)
-%             %       object       Instance of a BEAMFORMED_DATA class
-%             %
-%             %   See also SCAN, WAVE, SOURCE
-%             assert(isa(object,class(h)),'Class of the input object is not identical');
-%             
-%             % we copy all non-dependent public properties
-%             list_properties=properties(object);
-%             for n=1:numel(list_properties)
-%                 property_name=list_properties{n};
-%                 mp = findprop(h,property_name);
-%                 if strcmp(mp.GetAccess,'public')&&~mp.Dependent
-%                     eval(sprintf('h.%s = object.%s',property_name,property_name));
-%                 end
-%             end
-%         end
-%     end
+    %% copy 
+    methods (Access = public)
+        function copy(h,object)
+            %COPY    Copy the values from another BEAMFORMED_DATA class
+            %
+            %   Syntax:
+            %   COPY(object)
+            %       object       Instance of a BEAMFORMED_DATA class
+            %
+            %   See also SCAN, WAVE, SOURCE
+            assert(isa(object,class(h)),'Class of the input object is not identical');
+            
+            % we copy all non-dependent public properties
+            list_properties=properties(object);
+            for n=1:numel(list_properties)
+                property_name=list_properties{n};
+                mp = findprop(h,property_name);
+                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
+                    eval(sprintf('h.%s = object.%s',property_name,property_name));
+                end
+            end
+        end
+    end
     
     %% plot methods
     methods (Access = public)
@@ -111,7 +114,7 @@ classdef beamformed_data
             h.draw_image(axis_handle,h.in_title,dynamic_range,compression);
             
             %If more than one frame, add the GUI buttons
-            if size(h.data,3) > 1 
+            if size(h.data,2) > 1 
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(figure_handle);
@@ -143,7 +146,7 @@ classdef beamformed_data
                 case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
-                    h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
+                    h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,2)]);
                     h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
@@ -157,7 +160,7 @@ classdef beamformed_data
                     drawnow;
                 case 'uff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
-                    h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
+                    h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,2)]);
                     [az,el] = view();
                     if (el==90) 
                         % plot in 2D
@@ -294,5 +297,4 @@ classdef beamformed_data
             end
         end
     end
-    
 end

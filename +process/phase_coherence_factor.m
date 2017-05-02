@@ -26,8 +26,10 @@ classdef phase_coherence_factor < process
 
     methods
         function [out_data h]=go(h)
-            % copy input beamformed data to output
-            out_data=h.beamformed_data(1);
+            % declare & copy beamformed dataset
+            out_data=uff.beamformed_data(h.beamformed_data(1));
+                        
+            % initialize coherent sum
             coherent=zeros(size(out_data.data));
             
             % check if we have information about apodization
@@ -87,7 +89,7 @@ classdef phase_coherence_factor < process
             sf=bsxfun(@min,online_phase.std(),online_auxiliary_phase.std());
                 
             % Phase Coherence Factor
-            h.PCF = out_data; 
+            h.PCF = uff.beamformed_data(out_data); 
             h.PCF.data=1-(h.gamma/h.sigma_0).*sf;
             h.PCF.data(h.PCF.data < 0) = 0;
             h.PCF.data(isnan(h.PCF.data)) = 0;

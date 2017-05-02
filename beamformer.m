@@ -1,4 +1,4 @@
-classdef beamformer
+classdef beamformer < handle
 %BEAMFORMER   beamformer definition
 %
 %   See also PULSE, BEAM, PHANTOM, PROBE
@@ -45,6 +45,30 @@ classdef beamformer
         end
     end
     
+    %% copy 
+    methods (Access = public)
+        function copy(h,object)
+            %COPY    Copy the values from another BEAMFORMER class
+            %
+            %   Syntax:
+            %   COPY(object)
+            %       object       Instance of a BEAMFORMER class
+            %
+            %   See also SCAN, WAVE, SOURCE
+            assert(isa(object,class(h)),'Class of the input object is not identical');
+            
+            % we copy all non-dependent public properties
+            list_properties=properties(object);
+            for n=1:numel(list_properties)
+                property_name=list_properties{n};
+                mp = findprop(h,property_name);
+                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
+                    eval(sprintf('h.%s = object.%s',property_name,property_name));
+                end
+            end
+        end
+    end
+    
     %% go method
     methods 
         function out_dataset = go(h,process_list)
@@ -69,23 +93,7 @@ classdef beamformer
                    process_list{n}.beamformed_data=out_dataset;
                    out_dataset = process_list{n}.go();
                end
-            end
-                
-%             if nargin == 2 %Only one postprocess, this is assumed to be second
-%                 postprocess_2 = postprocess_1;
-%                 out_dataset = matlab_delay_interdataset(h,postprocess.delay_and_sum);
-%             elseif nargin == 3
-%                 out_dataset = matlab_delay_interdataset(h,postprocess_1);
-%             end
-%             
-%             if nargin == 1
-%                 if numel(out_dataset) > 1
-%                     no_postprocess_warning()
-%                 end
-%             else
-%                 postprocess_2.bmf = h;
-%                 out_dataset = postprocess_2.go(out_dataset);
-%             end
+            end               
         end
     end
     

@@ -66,12 +66,10 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-%bmf.receive_apodization.window=uff.window.none;
 bmf.receive_apodization.apex.distance=Inf;
 
 bmf.transmit_apodization.window=uff.window.tukey25;
 bmf.transmit_apodization.f_number=1.7;
-%bmf.transmit_apodization.window=uff.window.none;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming

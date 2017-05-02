@@ -330,9 +330,6 @@ end
 disp(sprintf('FWHM %0.2f±%0.2f',mean(fwhm)*1e6,std(fwhm)*1e6));
 disp(sprintf('SLL %0.2f±%0.2f',mean(sll),std(sll)));
 
-% figure;
-% imagesc(sca.x_axis,sca.z_axis,reshape(mask,[sca.N_z_axis sca.N_x_axis]).*(20*log10(reshape(abs(rtb_data.data),[sca.N_z_axis sca.N_x_axis])))); axis equal tight; colormap gray;
-
 
 figure;
 plot(sca.x_axis(100:200)*1e3,lateral_profile,'linewidth',2); grid on; hold on;
@@ -344,8 +341,24 @@ title('Lateral profile');
 c = categorical({'STAI','FI','CPWC','DWI','RTB'});
 
 figure;
-bar(fwhm*1e6); grid on; 
+subplot(1,2,1);
+bar(fwhm*1e6); grid on; hold on; 
 ylabel('FWHM [\mum]');
+set(gca,'fontsize', 14); 
+plot(0:6,ones(1,7)*mean(fwhm)*1e6,'r--','linewidth',2)
+plot(0:6,ones(1,7)*mean(fwhm)*1e6+std(fwhm)*1e6,'r-','linewidth',2)
+plot(0:6,ones(1,7)*mean(fwhm)*1e6-std(fwhm)*1e6,'r-','linewidth',2)
+xlim([0 6]);
+
+subplot(1,2,2);
+bar(sll); grid on; hold on; 
+ylabel('SSL [dB]');
 set(gca,'fontsize', 14);
+plot(0:6,ones(1,7)*mean(sll),'r--','linewidth',2)
+plot(0:6,ones(1,7)*mean(sll)+std(sll),'r-','linewidth',2)
+plot(0:6,ones(1,7)*mean(sll)-std(sll),'r-','linewidth',2)
+xlim([0 6]);
+
+
 
 

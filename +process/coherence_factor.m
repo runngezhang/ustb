@@ -22,8 +22,10 @@ classdef coherence_factor < process
 
     methods
         function [out_data h]=go(h)
-            % copy input beamformed data to output
-            out_data=h.beamformed_data(1);
+            % declare & copy beamformed dataset
+            out_data=uff.beamformed_data(h.beamformed_data(1));
+            
+            % initialize coherent & coherent sum
             coherent=h.beamformed_data(1).data;
             incoherent=abs(h.beamformed_data(1).data);
             
@@ -67,7 +69,7 @@ classdef coherence_factor < process
             end
             
             % Coherent Factor
-            h.CF = out_data; 
+            h.CF = uff.beamformed_data(out_data);
             h.CF.data = abs(coherent).^2./incoherent./M; 
             
             % coherent factor image            

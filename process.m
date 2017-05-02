@@ -50,7 +50,20 @@ classdef process < handle
     %% go method
     methods 
         function out_data = go(h)
-            out_data = h.beamformed_data;
+            % beamformed_data is a handle class. The equal operation (a=b) 
+            % passes the handle not a copy. To pass a copy the following 
+            % must be done 
+            
+            [Nrx Ntx]=size(h.beamformed_data);
+            for nrx=1:Nrx
+                for ntx=1:Ntx
+                    out_data(nrx,ntx) = uff.beamformed_data();
+                    out_data(nrx,ntx).copy(h.beamformed_data(nrx,ntx));
+                end
+            end
+            
+            % handle classes allow us to limit memory use while updating
+            % parameters within the class methods
         end
     end
     

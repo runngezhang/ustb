@@ -59,7 +59,7 @@ classdef delay_matlab < process
                     out_data(nrx,n_wave)=uff.beamformed_data();
                     out_data(nrx,n_wave).scan=current_scan;
                     out_data(nrx,n_wave).wave=h.channel_data.sequence(n_wave);
-                    out_data(nrx,n_wave).data=zeros(current_scan.N_pixels,1,h.channel_data.N_frames);
+                    out_data(nrx,n_wave).data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
 
                      % receive delay
                     RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
@@ -83,13 +83,14 @@ classdef delay_matlab < process
                         end
 
                         % beamformed signal
-                        out_data(nrx,n_wave).data(:,1,n_frame)=tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
+                        out_data(nrx,n_wave).data(:,n_frame)=tx_apo.*rx_apo(:,nrx).*phase_shift.*interp1(h.channel_data.time,data,delay,'linear',0);
                     end
                     
                     % assign phase according to 2 times the receive propagation distance
                     out_data(nrx,n_wave).data=bsxfun(@times,out_data(nrx,n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));                    
                 end
             end
+            tools.workbar(1);
         end
     end
 end

@@ -13,8 +13,11 @@ classdef incoherent_compounding < process
 
     methods
         function out_data=go(h)
-            out_data=h.beamformed_data(1);
+            % declare & copy beamformed dataset
+            out_data=uff.beamformed_data(h.beamformed_data(1));
             out_data.data=abs(out_data.data);
+            
+            % loop over beamformed dataset
             N=length(h.beamformed_data(:));
             tools.workbar();
             for n=2:N
@@ -23,6 +26,7 @@ classdef incoherent_compounding < process
                 end
                 out_data.data=out_data.data+abs(h.beamformed_data(n).data);
             end
+            tools.workbar(1);
         end
     end 
 end
