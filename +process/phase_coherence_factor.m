@@ -93,6 +93,7 @@ classdef phase_coherence_factor < process
                     online_auxiliary_phase.add(apodization,auxiliary_phase);
                 end
             end
+            tools.workbar(1);
             
             % min of std deviation of phase and auxiliary phase
             sf=bsxfun(@min,online_phase.std(),online_auxiliary_phase.std());

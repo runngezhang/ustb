@@ -79,6 +79,7 @@ classdef coherence_factor < process
                     M=M+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
                 end
             end
+            tools.workbar(1);
             
             % Coherent Factor
             h.CF = uff.beamformed_data(out_data);

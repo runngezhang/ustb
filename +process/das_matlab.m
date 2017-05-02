@@ -25,6 +25,7 @@ classdef das_matlab < process
 
             % wave loop
             tools.workbar();
+            N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
             for n_wave=1:numel(h.channel_data.sequence)
 
                 % support multiple or single scans with the same code
@@ -65,8 +66,12 @@ classdef das_matlab < process
 
                 % receive loop
                 for nrx=1:h.channel_data.N_elements
-                    %waitbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,wb);
-                    tools.workbar(((n_wave-1)*h.channel_data.N_elements+nrx)/numel(h.channel_data.sequence)/h.channel_data.N_elements,sprintf('%s (%s)',h.name,h.version),'USTB');
+                    % progress bar
+                    n=(n_wave-1)*h.channel_data.N_elements+nrx;
+                    if mod(n,round(N/100))==1
+                        tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
+                    end
+                    
                     % receive delay
                     RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
 

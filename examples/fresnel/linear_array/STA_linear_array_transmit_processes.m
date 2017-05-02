@@ -75,7 +75,6 @@ bmf.transmit_apodization.apex.distance=Inf;
 % beamforming
 b_data=bmf.go({process.das_matlab()});
 
-
 %% PROCESSES
 % coherently compounded
 cc=process.coherent_compounding();
