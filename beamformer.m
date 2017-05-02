@@ -16,6 +16,14 @@ classdef beamformer < handle
         scan                 % collection of SCAN classes
     end
     
+    %% Logistics 
+    properties  (SetAccess = public)
+        name={}              % name of the processes
+        reference={}         % reference to the publication where it is disclossed
+        implemented_by={}    % contact of the implementer/s
+        version={}           % version
+    end
+    
     %% optional properties
     properties  (SetAccess = public)
         pulse                % PULSE class
@@ -74,23 +82,54 @@ classdef beamformer < handle
         function out_dataset = go(h,process_list)
             if nargin == 1
                proc=process.das_matlab();
+               
+               % input data
                proc.channel_data=h.channel_data;
                proc.receive_apodization=h.receive_apodization;
                proc.transmit_apodization=h.transmit_apodization;
                proc.scan=h.scan;
+               
+               % logistics
+               h.name = proc.name;
+               h.reference = proc.reference;
+               h.implemented_by = proc.implemented_by;
+               h.version = proc.version;
+               
+               % go method
                out_dataset = proc.go();
             else
+               % input data
                process_list{1}.channel_data=h.channel_data;
                process_list{1}.receive_apodization=h.receive_apodization;
                process_list{1}.transmit_apodization=h.transmit_apodization;
                process_list{1}.scan=h.scan;
+               
+               % logistics
+               h.name{1} = process_list{1}.name;
+               h.reference{1} = process_list{1}.reference;
+               h.implemented_by = process_list{1}.implemented_by;
+               h.version{1} = process_list{1}.version;
+               
+               % go first process
                out_dataset = process_list{1}.go();
+               
+               % rest of processes
                for n=2:length(process_list)
+                   
+                   % input data
                    process_list{n}.channel_data=h.channel_data;
                    process_list{n}.receive_apodization=h.receive_apodization;
                    process_list{n}.transmit_apodization=h.transmit_apodization;
                    process_list{n}.scan=h.scan;
                    process_list{n}.beamformed_data=out_dataset;
+                   
+                   % concatenate logistics
+                   h.name = [h.name process_list{n}.name];
+                   h.reference = [h.reference process_list{n}.reference];
+                   h.implemented_by = [h.implemented_by process_list{n}.implemented_by];
+                   h.version = [h.version process_list{n}.version];
+                   
+                   % go method
                    out_dataset = process_list{n}.go();
                end
             end               

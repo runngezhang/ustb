@@ -17,12 +17,12 @@ classdef process < handle
         beamformed_data      % collection of BEAMFORMED_DATA classes
     end
     
-    %% Logistics properties
+    %% Logistics 
     properties  (SetAccess = public)
         name=''              % name of the process
         reference=''         % reference to the publication where it is disclossed
         implemented_by=''    % contact of the implementer/s
-        version=''           % collection of SCAN classes
+        version=''           % verion
     end
     
     %% constructor
