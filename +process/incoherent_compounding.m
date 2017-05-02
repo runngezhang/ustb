@@ -1,14 +1,19 @@
 classdef incoherent_compounding < process
-%INCOHERENT_COMPOUNDING   Matlab implementation of Incoherent compounding
+%INCOHERENT_COMPOUNDING   Matlab implementation of incoherent compounding
 %
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
 %   $Last updated: 2017/05/01$
-
-    properties
-        name='Incoherent compounding MATLAB';  % process name
-        version='v1.0.0';                      % version
+   
+    %% constructor
+    methods (Access = public)
+        function h=incoherent_compounding()
+            h.name='Incoherent compounding MATLAB';   
+            h.reference='www.ntnu.no';                
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
+            h.version='v1.0.1';
+        end
     end
 
     methods

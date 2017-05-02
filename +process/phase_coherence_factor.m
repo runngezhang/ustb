@@ -11,14 +11,23 @@ classdef phase_coherence_factor < process
 %   The implementation computes coherence either on transmit, receive, or
 %   both.
 %
-%   authors: Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%            Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+%   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%                 Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-%   $Last updated: 2017/05/01$
+%   $Last updated: 2017/05/02$
 
+    %% constructor
+    methods (Access = public)
+        function h=phase_coherence_factor()
+            h.name='Phase Coherence Factor MATLAB';   
+            h.reference='J. Camacho and C. Fritsch, Phase coherence imaging of grained materials, in IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, vol. 58, no. 5, pp. 1006-1015, May 2011.';                
+            h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
+            h.version='v1.0.1';
+        end
+    end
+
+    %% Additional properties
     properties
-        name='Phase Coherence Factor MATLAB';  % process name
-        version='v1.0.0';                                      % version
         gamma=1;                                               % mixing ratio
         sigma_0=pi/sqrt(3);                                    % reference phase value
         PCF                                                    % BEAMFORMED_DATA class with the computed phase coherent factor

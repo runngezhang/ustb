@@ -4,11 +4,16 @@ classdef delay_matlab < process
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/05/01$
+%   $Last updated: 2017/05/02$
 
-    properties
-        name='Delay USTB General Beamformer MATLAB';  % process name
-        version='v1.0.2';                           % version
+    %% constructor
+    methods (Access = public)
+        function h=delay_matlab()
+            h.name='Delay USTB General Beamformer MATLAB';   
+            h.reference= 'www.ustb.no';                
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
+            h.version='v1.0.2';
+        end
     end
 
     methods

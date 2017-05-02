@@ -11,11 +11,23 @@ classdef coherence_factor < process
 %   The implementation computes coherence either on transmit, receive, or
 %   both.
 %
-%   $Last updated: 2017/04/01$
+%   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%                 Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+%
+%   $Last updated: 2017/05/02$
 
+    %% constructor
+    methods (Access = public)
+        function h=coherence_factor()
+            h.name='Coherence Factor MATLAB';   
+            h.reference= 'R. Mallart and M. Fink, Adaptive focusing in scattering media through sound-speed inhomogeneities: The van Cittert Zernike approach and focusing criterion, J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994';                
+            h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
+            h.version='v1.0.1';
+        end
+    end
+    
+    %% Additional properties
     properties
-        name='Coherence Factor MATLAB';  % process name
-        version='v1.0.1';                             % version
         CF                                            % BEAMFORMED_DATA class with the computed coherent factor
         active_element_criterium=0.16;                % value to decide whether an element is used or not
     end

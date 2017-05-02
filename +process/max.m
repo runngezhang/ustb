@@ -4,11 +4,17 @@ classdef max < process
 %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/04/01$
+%   $Last updated: 2017/05/02$
 
-    properties
-        name='Maximum value MATLAB';  % process name
-        version='v1.0.0';             % version
+   
+    %% constructor
+    methods (Access = public)
+        function h=max()
+            h.name='Maximum value MATLAB'   
+            h.reference= 'www.ustb.no';                
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
+            h.version='v1.0.1';
+        end
     end
 
     methods

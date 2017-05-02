@@ -4,13 +4,19 @@ classdef das_matlab < process
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/04/24$
+%   $Last updated: 2017/05/02$
 
-    properties
-        name='USTB General DAS Beamformer MATLAB';  % process name
-        version='v1.0.5';                           % version
+    %% constructor
+    methods (Access = public)
+        function h=das_matlab()
+            h.name='USTB General DAS Beamformer MATLAB';   
+            h.reference= 'www.ustb.no';                
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
+            h.version='v1.0.5';          
+        end
     end
-
+    
+    %% go method
     methods
         function out_data=go(h)
 

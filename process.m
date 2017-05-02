@@ -8,13 +8,21 @@ classdef process < handle
 %
 %   $Date: 2017/04/28$
 
-%% public properties
+    %% public properties
     properties  (SetAccess = public)
         channel_data         % CHANNEL_DATA class
         receive_apodization  % APODIZATION class
         transmit_apodization % APODIZATION class
         scan                 % collection of SCAN classes
         beamformed_data      % collection of BEAMFORMED_DATA classes
+    end
+    
+    %% Logistics properties
+    properties  (SetAccess = public)
+        name=''              % name of the process
+        reference=''         % reference to the publication where it is disclossed
+        implemented_by=''    % contact of the implementer/s
+        version=''           % collection of SCAN classes
     end
     
     %% constructor

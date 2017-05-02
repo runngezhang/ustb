@@ -4,11 +4,17 @@ classdef stack < process
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/05/01$
+%   $Last updated: 2017/05/02$
 
-    properties
-        name='Stack scanlines MATLAB';  % process name
-        version='v1.0.0';                    % version
+        
+    %% constructor
+    methods (Access = public)
+        function h=stack()
+            h.name='Stack scanlines MATLAB';          % name of the process
+            h.reference='www.ustb.no';                % reference to the publication where it is disclossed
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
+            h.version='v1.0.1';     
+        end
     end
     
     methods
