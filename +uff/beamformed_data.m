@@ -6,9 +6,7 @@ classdef beamformed_data < handle
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
     %
-    %   $Date: 2017/03/08 $
-    %   Update 2017/03/20 : Added the multi_frame_gui to show multiple
-    %                       frames.
+    %   $Last updated: 2017/03/20 $
     
     %% compulsory properties
     properties  (SetAccess = public)
@@ -22,7 +20,7 @@ classdef beamformed_data < handle
         wave                       % WAVE class [optional]
         probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
-        adaptive_beamformer        % ADAPTIVE_BEAMFORMER subclass [optional]
+        beamformer                 % String with the beamformer specification [optional]
     end
     
     %% dependent properties
@@ -31,25 +29,29 @@ classdef beamformed_data < handle
     
     %% private properties
     properties (Access = private)
-       current_frame             %If multi frame, this is the current frame shown 
-       all_images_dB
+       current_frame             % If multi frame, this is the current frame shown 
+       all_images
        image_handle
        in_title
        play_loop
     end
+    
     %% constructor
     methods (Access = public)
-        function h=beamformed_data()
+        function h=beamformed_data(in_beamformed_data)
             %BEAMFORMED_DATA   Constructor of beamformed_data class
             %
             %   Syntax:
             %   h = beamformed_data()
             %
             %   See also BEAM, PHANTOM, PROBE, PULSE
+            if nargin>0 && ~isempty(in_beamformed_data)
+                h.copy(in_beamformed_data);
+            end
         end
     end
     
-    %% copy
+    %% copy 
     methods (Access = public)
         function copy(h,object)
             %COPY    Copy the values from another BEAMFORMED_DATA class
@@ -75,10 +77,15 @@ classdef beamformed_data < handle
     
     %% plot methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
-            %PLOT Plots the beamformed data
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression)
+            %PLOT Plots beamformed data
             %
-            % Usage: figure_handle=plot(h,figure_handle_in,in_title,dynamic_range)
+            % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
+            %
+            %   figure_handle   Handle to the figure to plot to (default: none)
+            %   title           Figure title (default: none)
+            %   dynamic_range   Displayed dynamic range (default: 60 dB)
+            %   compression     String specifying compression type: 'log','none','sqrt' (default: 'log')
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
                     (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
@@ -100,31 +107,47 @@ classdef beamformed_data < handle
             if nargin<4
                 dynamic_range=60;
             end
-            
+            if nargin<5
+                compression='log';
+            end
             %Draw the image
-            h.draw_image(axis_handle,h.in_title,dynamic_range);
+            h.draw_image(axis_handle,h.in_title,dynamic_range,compression);
             
             %If more than one frame, add the GUI buttons
-            if size(h.data,3) > 1 
+            if size(h.data,2) > 1 
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(figure_handle);
                 h.play_loop = 0;
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
             end
         end
         
-        function draw_image(h,axis_handle,in_title,dynamic_range)
-            % convert to intensity values
-            envelope=abs(h.data);
-            envelope_dB=20*log10(envelope./max(envelope(:)));
+        function draw_image(h,axis_handle,in_title,dynamic_range,compression)
+            
+            % compress values
+            switch compression
+                case 'log'
+                    envelope=abs(h.data);
+                    envelope=20*log10(envelope./max(envelope(:)));
+                    max_value=0;
+                    min_value=-dynamic_range;
+                case 'sqrt'
+                    envelope=sqrt(abs(h.data));
+                    max_value=max(envelope(:));
+                    min_value=10^(-dynamic_range/20);
+                case 'none'
+                    envelope=abs(h.data);
+                    max_value=max(envelope(:));
+                    min_value=10^(-dynamic_range/20);
+            end
                 
             switch class(h.scan)
                 case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
-                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,3)]);
-                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
+                    h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,2)]);
+                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
@@ -132,16 +155,16 @@ classdef beamformed_data < handle
                     colorbar(axis_handle);
                     colormap(axis_handle,'gray');
                     xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
-                    caxis(axis_handle,[-dynamic_range 0]);
+                    caxis(axis_handle,[min_value max_value]);
                     title(axis_handle,in_title);
                     drawnow;
                 case 'uff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
-                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,3)]);
+                    h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,2)]);
                     [az,el] = view();
                     if (el==90) 
                         % plot in 2D
-                        h.image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,h.all_images_dB(:,:,1));
+                        h.image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         set(axis_handle,'YDir','reverse');
@@ -149,7 +172,7 @@ classdef beamformed_data < handle
                         colorbar(axis_handle);
                         colormap(axis_handle,'gray');
                         xlabel(axis_handle,'radial[mm]'); ylabel(axis_handle,'axial[mm]');
-                        caxis(axis_handle,[-dynamic_range 0]);
+                        caxis(axis_handle,[min_value max_value]);
                         title(axis_handle,in_title);
                     else
                         % plot in 3D
@@ -157,7 +180,7 @@ classdef beamformed_data < handle
                         y_matrix=reshape(h.scan.y,[h.scan.N_axial_axis h.scan.N_radial_axis]);
                         z_matrix=reshape(h.scan.z,[h.scan.N_axial_axis h.scan.N_radial_axis]);
                         surface(axis_handle);
-                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
+                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         %set(axis_handle,'YDir','reverse');
@@ -167,15 +190,15 @@ classdef beamformed_data < handle
                         xlabel(axis_handle,'x[mm]'); 
                         ylabel(axis_handle,'y[mm]');
                         zlabel(axis_handle,'z[mm]');
-                        caxis(axis_handle,[-dynamic_range 0]);
+                        caxis(axis_handle,[min_value max_value]);
                         title(axis_handle,in_title);                        
                     end
                     drawnow;
                 case 'uff.sector_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
-                    h.all_images_dB = reshape(envelope_dB,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
-                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images_dB(:,:,1));
+                    h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
@@ -183,7 +206,7 @@ classdef beamformed_data < handle
                     colorbar(axis_handle);
                     colormap(axis_handle,'gray');
                     xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
-                    caxis(axis_handle,[-dynamic_range 0]);
+                    caxis(axis_handle,[min_value max_value]);
                     title(axis_handle,in_title);
                     drawnow;
                 otherwise
@@ -247,16 +270,16 @@ classdef beamformed_data < handle
         function plot_previous_frame(h,var1,var2,var3)
             if h.current_frame-1 > 0
                 h.current_frame = h.current_frame - 1;
-                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+                set(h.image_handle,'CData',h.all_images(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
             end
         end
         
         function plot_next_frame(h,var1,var2,var3)
-            if h.current_frame+1 <= size(h.all_images_dB,3)
+            if h.current_frame+1 <= size(h.all_images,3)
                 h.current_frame = h.current_frame + 1;
-                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+                set(h.image_handle,'CData',h.all_images(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
             end
         end
         
@@ -264,15 +287,14 @@ classdef beamformed_data < handle
             h.play_loop = ~h.play_loop;
             while(h.play_loop)
                 h.current_frame = h.current_frame+1;
-                if h.current_frame > size(h.all_images_dB,3)
+                if h.current_frame > size(h.all_images,3)
                     h.current_frame = 1;
                 end
-                set(h.image_handle,'CData',h.all_images_dB(:,:,h.current_frame));
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images_dB,3))]);
+                set(h.image_handle,'CData',h.all_images(:,:,h.current_frame));
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
                 drawnow();
                 pause(0.05);
             end
         end
     end
-    
 end

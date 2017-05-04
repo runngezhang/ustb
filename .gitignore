@@ -20,3 +20,8 @@ data/
 +mex/.mex/engines/
 *.obj
 examples/huff/recording.h5
+.mex/engines/
+.mex/examples/NET/NetSample/NetDocCell.cs
+.mex/examples/
+.mex/include/
+.mex/lib/

@@ -10,7 +10,7 @@ classdef channel_data < handle
     properties  (SetAccess = public)
         sampling_frequency         % sampling frequency [Hz]
         initial_time               % time of the initial sample [s]
-        sound_speed                % reference sound speed [m/s]
+        sound_speed     =1540      % reference sound speed [m/s]
         sequence                   % collection of WAVE classes
         probe                      % PROBE class
         data                       % data
@@ -31,6 +31,7 @@ classdef channel_data < handle
         N_waves            % number of transmitted waves
         N_frames           % number of frames
         time
+        lambda             % wavelength [m]
     end
     
     
@@ -174,6 +175,11 @@ classdef channel_data < handle
         end
         function value=get.time(h)
             value=(h.initial_time+(0:h.N_samples-1)/h.sampling_frequency).';
+        end
+        function value=get.lambda(h)
+            assert(~isempty(h.sound_speed),'You need to set the channel_data.sound_speed')
+            assert(~isempty(h.pulse),'You need to set the pulse and the pulse center frequency.')
+            value = h.sound_speed/h.pulse.center_frequency;
         end
     end
 end
