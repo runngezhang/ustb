@@ -133,11 +133,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     ///////////////////////////////////
 	// OUTPUTS VAR
-	mwSize out_size2[3];
+	mwSize out_size2[2];
 	out_size2[0] = P;  // pixels
-	out_size2[1] = N;  // channels
-	out_size2[2] = F;  // frames
-	M_D = mxCreateNumericArray(3, (const mwSize*)&out_size2, mxSINGLE_CLASS, mxCOMPLEX);
+	out_size2[1] = F;  // frames
+	M_D = mxCreateNumericArray(2, (const mwSize*)&out_size2, mxSINGLE_CLASS, mxCOMPLEX);
 	float* Dr = (float*)mxGetData(M_D);
 	float* Di = (float*)mxGetImagData(M_D);
     
@@ -202,8 +201,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 						float re = a*pr[f][rx][n0] + b*pr[f][rx][n0 + 1];
 						float im = a*pi[f][rx][n0] + b*pi[f][rx][n0 + 1];
 						// apply phase change and delay
-						Dr[pp + P*rx + PN*f] = c_apo*(re*coswt - im*sinwt);
-						Di[pp + P*rx + PN*f] = c_apo*(im*coswt + re*sinwt);
+						Dr[pp + P*f] += c_apo*(re*coswt - im*sinwt);
+						Di[pp + P*f] += c_apo*(im*coswt + re*sinwt);
                     }
 				} else {
                     for (int f = 0; f<F; f++) { // frame vector
@@ -211,8 +210,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 						float re = a*pr[f][rx][n0] + b*pr[f][rx][n0 + 1];
 						float im = a*pi[f][rx][n0] + b*pi[f][rx][n0 + 1];
 						// apply phase change and delay
-						Dr[pp + P*rx + PN*f] = c_apo*re;
-						Di[pp + P*rx + PN*f] = c_apo*im;
+						Dr[pp + P*f] += c_apo*re;
+						Di[pp + P*f] += c_apo*im;
                     }
                 }
             }

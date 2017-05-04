@@ -20,13 +20,13 @@ current_path=pwd;
 [pathstr,name,ext] = fileparts(mfilename('fullpath'));
 cd(pathstr);
 
-%% CPWC 
-disp('------------------------ CPWC');
-mex.build_mex('cpwir');
+%% delay c
+disp('------------------------ delay_c');
+mex.build_mex('delay_c');
 
-%% CPWC Low resolution images
-disp('------------------------ Low res CPWC');
-mex.build_mex('cpwllr');
+%% delay c
+disp('------------------------ das_c');
+mex.build_mex('das_c');
 
 % going back to initial path
 cd(current_path);
