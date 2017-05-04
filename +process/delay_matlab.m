@@ -4,7 +4,7 @@ classdef delay_matlab < process
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/05/02$
+%   $Last updated: 2017/05/04$
 
     %% constructor
     methods (Access = public)
@@ -12,7 +12,7 @@ classdef delay_matlab < process
             h.name='Delay USTB General Beamformer MATLAB';   
             h.reference= 'www.ustb.no';                
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
-            h.version='v1.0.2';
+            h.version='v1.0.3';
         end
     end
 
@@ -22,6 +22,12 @@ classdef delay_matlab < process
             % modulation frequency
             w0=2*pi*h.channel_data.modulation_frequency;
 
+            % precalculate receive apodization
+            h.receive_apodization.probe=h.channel_data.probe;
+            h.receive_apodization.scan=h.scan(1);
+            rx_apo=h.receive_apodization.data;
+            rx_propagation_distance=h.receive_apodization.propagation_distance;
+            
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
@@ -34,11 +40,12 @@ classdef delay_matlab < process
                     current_scan=h.scan(n_wave);
                 end
 
-                % precalculate receive apodization
-                h.receive_apodization.probe=h.channel_data.probe;
-                h.receive_apodization.scan=current_scan;
-                rx_apo=h.receive_apodization.data;
-                rx_propagation_distance=h.receive_apodization.propagation_distance;
+                % calculate receive apodization for multiple scan
+                if numel(h.scan)>1
+                    h.receive_apodization.scan=current_scan;
+                    rx_apo=h.receive_apodization.data;
+                    rx_propagation_distance=h.receive_apodization.propagation_distance;
+                end 
 
                 % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
                 % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
