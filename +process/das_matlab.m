@@ -29,6 +29,12 @@ classdef das_matlab < process
             rx_apo=h.receive_apodization.data;
             rx_propagation_distance=h.receive_apodization.propagation_distance;
             
+            % precalculate receive delay
+            xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan(1).x);
+            ym=bsxfun(@minus,h.channel_data.probe.y.',h.scan(1).y);
+            zm=bsxfun(@minus,h.channel_data.probe.z.',h.scan(1).z);
+            RF=sqrt(xm.^2+ym.^2+zm.^2);
+            
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
@@ -71,6 +77,14 @@ classdef das_matlab < process
                     TF=current_scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                 end
 
+                % calculate receive delay for multiple scan
+                if numel(h.scan)>1
+                    xm=bsxfun(@minus,h.channel_data.probe.x.',current_scan.x);
+                    ym=bsxfun(@minus,h.channel_data.probe.y.',current_scan.y);
+                    zm=bsxfun(@minus,h.channel_data.probe.z.',current_scan.z);
+                    RF=sqrt(xm.^2+ym.^2+zm.^2);
+                end
+                
                 % receive loop
                 for nrx=1:h.channel_data.N_elements
                     % progress bar
@@ -79,11 +93,8 @@ classdef das_matlab < process
                         tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
                     end
                     
-                    % receive delay
-                    RF=sqrt((h.channel_data.probe.x(nrx)-current_scan.x).^2+(h.channel_data.probe.y(nrx)-current_scan.y).^2+(h.channel_data.probe.z(nrx)-current_scan.z).^2);
-
                     % total delay
-                    delay=(RF+TF)/h.channel_data.sound_speed;
+                    delay=(RF(:,nrx)+TF)/h.channel_data.sound_speed;
 
                     for n_frame=1:h.channel_data.N_frames
 
