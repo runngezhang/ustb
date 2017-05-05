@@ -25,6 +25,7 @@ classdef beamformed_data < handle
     
     %% dependent properties
     properties  (Dependent)
+        N_pixels                   % number of pixels                     
     end
     
     %% private properties
@@ -256,7 +257,9 @@ classdef beamformed_data < handle
     
     %% get methods
     methods
-        
+        function value=get.N_pixels(h)
+            value=h.scan.N_pixels;
+        end        
     end
     
     %% GUI functions
