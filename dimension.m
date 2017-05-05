@@ -1,5 +1,5 @@
-classdef operation < int32
-%window   Enumeration for operation types. To see the options available write "operation." and press <TAB>.
+classdef dimension < int32
+%window   Enumeration for dimension types. To see the options available write "dimension." and press <TAB>.
 %
 %   See also PROCESS
 

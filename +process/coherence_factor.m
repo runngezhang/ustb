@@ -30,7 +30,7 @@ classdef coherence_factor < process
     properties
         CF                                            % BEAMFORMED_DATA class with the computed coherent factor
         active_element_criterium=0.16;                % value to decide whether an element is used or not. This value depends on the SNR so it must be adjusted on a case-by-case basis.
-        operation = operation.both;                   % OPERATION class that specifies whether the process will run only on transmit, receive, or both.
+        dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
     end
 
     methods
@@ -59,21 +59,21 @@ classdef coherence_factor < process
             
             % declare temporary variables            
             [Nrx Ntx]=size(h.beamformed_data); 
-            switch h.operation
-                case operation.both
+            switch h.dimension
+                case dimension.both
                     coherent=zeros(h.beamformed_data(1).N_pixels,1,1);
                     incoherent=zeros(h.beamformed_data(1).N_pixels,1,1);
                     M=zeros(h.beamformed_data(1).N_pixels,1,1);
-                case operation.transmit
+                case dimension.transmit
                     coherent=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
                     incoherent=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
                     M=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
-                case operation.receive
+                case dimension.receive
                     coherent=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
                     incoherent=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
                     M=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
                 otherwise
-                    error('Unknown operation mode; check HELP OPERATION');
+                    error('Unknown dimension mode; check HELP dimension');
             end
             
             % loop
@@ -86,16 +86,16 @@ classdef coherence_factor < process
                     end
                     n=n+1;
         
-                    switch h.operation
-                        case operation.both
+                    switch h.dimension
+                        case dimension.both
                             coherent=coherent+h.beamformed_data(n_rx,n_tx).data;
                             incoherent=incoherent+abs(h.beamformed_data(n_rx,n_tx).data).^2;
                             M=M+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
-                        case operation.transmit
+                        case dimension.transmit
                             coherent(:,n_rx)=coherent(:,n_rx)+h.beamformed_data(n_rx,n_tx).data;
                             incoherent(:,n_rx)=incoherent(:,n_rx)+abs(h.beamformed_data(n_rx,n_tx).data).^2;
                             M(:,n_rx)=M(:,n_rx)+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
-                        case operation.receive
+                        case dimension.receive
                             coherent(:,1,n_tx)=coherent(:,1,n_tx)+h.beamformed_data(n_rx,n_tx).data;
                             incoherent(:,1,n_tx)=incoherent(:,1,n_tx)+abs(h.beamformed_data(n_rx,n_tx).data).^2;
                             M(:,1,n_tx)=M(:,1,n_tx)+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
@@ -105,8 +105,8 @@ classdef coherence_factor < process
             end
             tools.workbar(1);
             
-            switch h.operation
-                case operation.both
+            switch h.dimension
+                case dimension.both
                     % declare variables
                     out_data = uff.beamformed_data(h.beamformed_data(1)); 
                     h.CF = uff.beamformed_data(h.beamformed_data(1));
@@ -116,7 +116,7 @@ classdef coherence_factor < process
                     % coherent factor image            
                     out_data.data = h.CF.data .* coherent;
                     
-                case operation.receive
+                case dimension.receive
                     % transmit loop
                     for ntx=1:Ntx
                         out_data(1,ntx) = uff.beamformed_data(h.beamformed_data(1)); 
@@ -129,7 +129,7 @@ classdef coherence_factor < process
                         out_data(1,ntx).data = CF(1,ntx).data .* coherent(:,1,ntx);
                     end
                     h.CF=CF;
-                case operation.transmit
+                case dimension.transmit
                     % receive loop
                     for nrx=1:Nrx
                         out_data(nrx) = uff.beamformed_data(h.beamformed_data(1)); 
@@ -143,7 +143,7 @@ classdef coherence_factor < process
                     end                    
                     h.CF=CF;
                 otherwise
-                    error('Unknown operation type; check HELP OPERATION');
+                    error('Unknown dimension type; check HELP dimension');
             end
         end   
     end
