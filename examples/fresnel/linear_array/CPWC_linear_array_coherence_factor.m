@@ -143,32 +143,80 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 
 
-%% beamforming
-b_data = bmf.go({process.delay_matlab() process.coherence_factor()});
-b_data_alt = bmf.go({process.delay_matlab() process.coherence_factor_alternative() process.coherence_factor_alternative()});
+%% beamforming both
+b_data = bmf.go({process.delay_matlab()});
+
+% old
+proc=process.coherence_factor();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+tic; old_data = proc.go(); old_time=toc
+
+% ole
+proc=process.coherence_factor_alternative();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+
+tic;
+ole_data=proc.go();
+proc.beamformed_data=ole_data;
+ole_data=proc.go();
+ole_time=toc;
+
+% fon
+proc=process.coherence_factor_alternative_fon();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+tic; fon_data = proc.go(); fon_time=toc
+
 %% show
-b_data.plot(6,'Old Implementation',80);
-b_data_alt.plot(7,'New Implementation',80);
+old_data.plot(6,sprintf('Old Implementation %0.2f',old_time),80);
+ole_data.plot(7,sprintf('New Implementation ole %0.2f',ole_time),80);
+fon_data.plot(8,sprintf('New Implementation fon %0.2f',fon_time),80);
 
 %% however the "new version" allows us to get the individual CF PW images
-b_data_CF_low_quality =bmf.go({process.delay_matlab() process.coherence_factor_alternative()});
-%%
+
+% ole
+proc=process.coherence_factor_alternative();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+
+tic;
+ole_data=proc.go();
+ole_time=toc;
+
+% fon
+proc=process.coherence_factor_alternative_fon();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+proc.operation=operation.receive;
+
+tic;
+fon_data=proc.go();
+fon_time=toc;
+
 figure(10);
-ax = subplot(1,3,1);
-b_data_CF_low_quality(1,1).plot(ax,['CF on sigle PW, angle 1']);
-ax = subplot(1,3,2);
-b_data_CF_low_quality(1,round(end/2)).plot(ax,['CF on sigle PW, 15']);
-ax = subplot(1,3,3);
-b_data_CF_low_quality(1,end).plot(ax,['CF on sigle PW, 31']);
+ax = subplot(2,3,1);
+ole_data(1,1).plot(ax,sprintf('CF on PW 1, %0.2fs',ole_time));
+ax = subplot(2,3,2);
+ole_data(1,round(end/2)).plot(ax,sprintf('CF on PW 15, %0.2fs',ole_time));
+ax = subplot(2,3,3);
+ole_data(1,end).plot(ax,sprintf('CF on PW 31, %0.2fs',ole_time));
+ax = subplot(2,3,4);
+fon_data(1,1).plot(ax,sprintf('CF on PW 1, %0.2fs',fon_time));
+ax = subplot(2,3,5);
+fon_data(1,round(end/2)).plot(ax,sprintf('CF on PW 15, %0.2fs',ole_time));
+ax = subplot(2,3,6);
+fon_data(1,end).plot(ax,sprintf('CF on PW 31, %0.2fs',ole_time));
+set(gcf,'Position',[ 50 50 1232 592]);
 
-%% Thus we can do coherent compounding on it
-cc = process.coherent_compounding()
-cc.beamformed_data = b_data_CF_low_quality;
-b_data_CF_cc = cc.go();
-b_data_CF_cc.plot(11,'CF PW coherently compounded',80)
-
-%% Or do a second coherence factor again, gives the same result we have allready seen
-cf = process.coherence_factor_alternative()
-cf.beamformed_data = b_data_CF_low_quality;
-b_data_CF_cf = cf.go();
-b_data_CF_cf.plot(12,'CF PW CF compounded',80)
