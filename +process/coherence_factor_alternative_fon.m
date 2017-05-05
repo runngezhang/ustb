@@ -133,14 +133,15 @@ classdef coherence_factor_alternative_fon < process
                     % receive loop
                     for nrx=1:Nrx
                         out_data(nrx) = uff.beamformed_data(h.beamformed_data(1)); 
-                        h.CF(nrx) = uff.beamformed_data(h.beamformed_data(1));
+                        CF(nrx) = uff.beamformed_data(h.beamformed_data(1));
                     
                         % Coherent Factor
-                        h.CF(nrx).data = abs(coherent(:,nrx)).^2./incoherent(:,nrx)./M(:,nrx); 
+                        CF(nrx).data = abs(coherent(:,nrx)).^2./incoherent(:,nrx)./M(:,nrx); 
                         
                         % coherent factor image            
-                        out_data(nrx).data = h.CF(nrx).data .* coherent(:,nrx);
+                        out_data(nrx).data = CF(nrx).data .* coherent(:,nrx);
                     end                    
+                    h.CF=CF;
                 otherwise
                     error('Unknown operation type; check HELP OPERATION');
             end

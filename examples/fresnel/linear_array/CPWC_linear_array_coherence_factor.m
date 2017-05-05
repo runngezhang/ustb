@@ -205,7 +205,7 @@ tic;
 fon_data=proc.go();
 fon_time=toc;
 
-figure(10);
+figure();
 ax = subplot(2,3,1);
 ole_data(1,1).plot(ax,sprintf('CF on PW 1, %0.2fs',ole_time));
 ax = subplot(2,3,2);
@@ -219,4 +219,29 @@ fon_data(1,round(end/2)).plot(ax,sprintf('CF on PW 15, %0.2fs',ole_time));
 ax = subplot(2,3,6);
 fon_data(1,end).plot(ax,sprintf('CF on PW 31, %0.2fs',ole_time));
 set(gcf,'Position',[ 50 50 1232 592]);
+
+
+%% my version also allow to CF on transmit
+
+% fon
+proc=process.coherence_factor_alternative_fon();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+proc.operation=operation.transmit;
+
+tic;
+fon_data=proc.go();
+fon_time=toc;
+
+figure();
+ax = subplot(1,3,1);
+fon_data(1,43).plot(ax,sprintf('CF on EL 43, %0.2fs',fon_time));
+ax = subplot(1,3,2);
+fon_data(1,64).plot(ax,sprintf('CF on EL 64, %0.2fs',ole_time));
+ax = subplot(1,3,3);
+fon_data(1,85).plot(ax,sprintf('CF on EL 85, %0.2fs',ole_time));
+set(gcf,'Position',[ 50 150 1232 300]);
+
 
