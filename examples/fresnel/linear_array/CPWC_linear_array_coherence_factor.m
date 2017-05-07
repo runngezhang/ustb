@@ -1,14 +1,21 @@
-%% CPWC simulation with the USTB built-in Fresnel simulator
+%% CPWC Fresnel simulation beamformed with the Coherence Factor process
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
-% to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can
-% be beamformed with USTB.
+% to generate a Coherent Plane-Wave Compounding (CPWC) dataset. We then
+% demonstrate how you can use the coherence factor process to do the USTB
+% beamforming with the "adaptive" coherence factor beamforming.
+%
+% This example needs to be documentet, Ole Marius!! ;)
 %
 % Related materials:
 %
 % * <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058 Montaldo et al. 2009>
+% * R. Mallart and M. Fink, "Adaptive focusing in scattering media through 
+%   sound-speed inhomogeneities: The van Cittert Zernike approach and focusing 
+%   criterion", J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994
 %
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 31.03.2017_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 05.05.2017
+%  and Ole Marius Hoel Rindal <olemarius@olemarius.net> _
 
 %% Phantom
 %
@@ -143,105 +150,50 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 
 
-%% beamforming both
+%% beamforming both dimensions
 b_data = bmf.go({process.delay_matlab()});
 
-% old
 proc=process.coherence_factor();
 proc.beamformed_data=b_data;
 proc.channel_data=bmf.channel_data;
 proc.transmit_apodization=bmf.transmit_apodization;
 proc.receive_apodization=bmf.receive_apodization;
-tic; old_data = proc.go(); old_time=toc
+bmf_data = proc.go();
 
-% ole
-proc=process.coherence_factor_alternative();
+%% "receive" dimension resulting in individual CF PW images
+
+proc=process.coherence_factor();
 proc.beamformed_data=b_data;
 proc.channel_data=bmf.channel_data;
 proc.transmit_apodization=bmf.transmit_apodization;
 proc.receive_apodization=bmf.receive_apodization;
-
-tic;
-ole_data=proc.go();
-proc.beamformed_data=ole_data;
-ole_data=proc.go();
-ole_time=toc;
-
-% fon
-proc=process.coherence_factor_alternative_fon();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-tic; fon_data = proc.go(); fon_time=toc
-
-%% show
-old_data.plot(6,sprintf('Old Implementation %0.2f',old_time),80);
-ole_data.plot(7,sprintf('New Implementation ole %0.2f',ole_time),80);
-fon_data.plot(8,sprintf('New Implementation fon %0.2f',fon_time),80);
-
-%% however the "new version" allows us to get the individual CF PW images
-
-% ole
-proc=process.coherence_factor_alternative();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-
-tic;
-ole_data=proc.go();
-ole_time=toc;
-
-% fon
-proc=process.coherence_factor_alternative_fon();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-proc.operation=operation.receive;
-
-tic;
-fon_data=proc.go();
-fon_time=toc;
-
-figure();
-ax = subplot(2,3,1);
-ole_data(1,1).plot(ax,sprintf('CF on PW 1, %0.2fs',ole_time));
-ax = subplot(2,3,2);
-ole_data(1,round(end/2)).plot(ax,sprintf('CF on PW 15, %0.2fs',ole_time));
-ax = subplot(2,3,3);
-ole_data(1,end).plot(ax,sprintf('CF on PW 31, %0.2fs',ole_time));
-ax = subplot(2,3,4);
-fon_data(1,1).plot(ax,sprintf('CF on PW 1, %0.2fs',fon_time));
-ax = subplot(2,3,5);
-fon_data(1,round(end/2)).plot(ax,sprintf('CF on PW 15, %0.2fs',ole_time));
-ax = subplot(2,3,6);
-fon_data(1,end).plot(ax,sprintf('CF on PW 31, %0.2fs',ole_time));
-set(gcf,'Position',[ 50 50 1232 592]);
-
-
-%% my version also allow to CF on transmit
-
-% fon
-proc=process.coherence_factor_alternative_fon();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-proc.operation=operation.transmit;
-
-tic;
-fon_data=proc.go();
-fon_time=toc;
+proc.dimension=dimension.receive;
+bmf_data_rx=proc.go();
 
 figure();
 ax = subplot(1,3,1);
-fon_data(1,43).plot(ax,sprintf('CF on EL 43, %0.2fs',fon_time));
+bmf_data_rx(1,1).plot(ax,['CF on PW 1']);
 ax = subplot(1,3,2);
-fon_data(1,64).plot(ax,sprintf('CF on EL 64, %0.2fs',ole_time));
+bmf_data_rx(1,round(end/2)).plot(ax,['CF on PW 15']);
 ax = subplot(1,3,3);
-fon_data(1,85).plot(ax,sprintf('CF on EL 85, %0.2fs',ole_time));
+bmf_data_rx(1,end).plot(ax,['CF on PW 31']);
+set(gcf,'Position',[ 50 50 1232 592]);
+
+
+%% "transmit" dimension 
+proc=process.coherence_factor();
+proc.beamformed_data=b_data;
+proc.channel_data=bmf.channel_data;
+proc.transmit_apodization=bmf.transmit_apodization;
+proc.receive_apodization=bmf.receive_apodization;
+proc.dimension=dimension.transmit;
+bmf_data_tx=proc.go();
+
+figure();
+ax = subplot(1,3,1);
+bmf_data_tx(1,43).plot(ax,['CF on EL 43']);
+ax = subplot(1,3,2);
+bmf_data_tx(1,64).plot(ax,['CF on EL 64']);
+ax = subplot(1,3,3);
+bmf_data_tx(1,85).plot(ax,['CF on EL 85']);
 set(gcf,'Position',[ 50 150 1232 300]);
-
-
