@@ -215,6 +215,30 @@ classdef beamformed_data < handle
                     error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
             end
         end
+        
+        function img = get_image(h)
+            envelope=abs(h.data);
+            envelope=20*log10(envelope./max(envelope(:)));
+            switch class(h.scan)
+                case 'uff.linear_scan'
+                    img = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,2)]);
+                case 'uff.sector_scan'
+                    img = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                otherwise
+                    error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
+            end
+        end
+        
+        function h = calculate_sampling_frequency(h,c)
+            assert(exist('c')==1,'Please give speed of sound as input');
+            % calculate sampling frequency
+            if isa(h.scan,'uff.linear_scan')
+               dz = h.scan.z_step;
+            elseif isa(h.scan,'uff.sector_scan')
+               dz = h.scan.depth_step;
+            end  
+            h.sampling_frequency = (c/dz/2); % effective sampling frequency (Hz)      
+        end
     end
     
     %% set methods

@@ -15,6 +15,7 @@ classdef sector_scan < uff.scan
     properties  (Dependent)
         N_azimuth_axis            % number of pixels in the x_axis
         N_depth_axis              % number of pixels in the z_axis
+        depth_step                % the step size in m of the depth samples
     end
     
     %% Constructor
@@ -86,7 +87,10 @@ classdef sector_scan < uff.scan
         end
         function value=get.N_depth_axis(h)
             value=numel(h.depth_axis);
-        end        
+        end      
+        function value=get.depth_step(h)
+            value = mean(diff(h.depth_axis(1:end)));
+        end
     end
    
 end
