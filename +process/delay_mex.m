@@ -22,6 +22,11 @@ classdef delay_mex < process
             % modulation frequency
             w0=2*pi*h.channel_data.modulation_frequency;
 
+            % constants
+            sampling_frequency=single(h.channel_data.sampling_frequency);
+            initial_time=single(h.channel_data.initial_time);
+            modulation_frequency=single(h.channel_data.modulation_frequency);
+            
             % precalculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
             h.receive_apodization.scan=h.scan(1);
@@ -67,12 +72,6 @@ classdef delay_mex < process
                 h.transmit_apodization.scan=current_scan;
                 tx_apo=h.transmit_apodization.data;
 
-                % create an intermediate beamformed data class
-                out_data(1,n_wave)=uff.beamformed_data();
-                out_data(1,n_wave).scan=current_scan;
-                out_data(1,n_wave).wave=h.channel_data.sequence(n_wave);
-                out_data(1,n_wave).data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
-
                 % transmit delay
                 if ~isinf(h.channel_data.sequence(n_wave).source.distance)
                     % point sources
@@ -93,19 +92,19 @@ classdef delay_mex < process
                 end
 
                 % total delay
-                delay=bsxfun(@plus,RF,TF)./h.channel_data.sound_speed;
+                delay=single(bsxfun(@plus,RF,TF)./h.channel_data.sound_speed);
                 
                 % factor
-                apodization_matrix=bsxfun(@times,tx_apo,rx_apo);%.*phase_shift;
+                apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                 
                 % delay
-                delayed_data=mex.delay_c(single(squeeze(data(:,:,n_wave,:))),single(h.channel_data.sampling_frequency),single(h.channel_data.initial_time),single(delay),single(apodization_matrix),single(h.channel_data.modulation_frequency));                
-                
+                delayed_data=mex.delay_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);                
+
                 for n_rx=1:h.channel_data.N_elements
                     out_data(n_rx,n_wave)=uff.beamformed_data();
                     out_data(n_rx,n_wave).scan=current_scan;
                     out_data(n_rx,n_wave).wave=h.channel_data.sequence(n_wave);
-                    out_data(n_rx,n_wave).data=squeeze(delayed_data(:,n_rx,:));
+                    out_data(n_rx,n_wave).data=squeeze(delayed_data(:,:,n_rx));
                 end
                 
                 % assign phase according to 2 times the receive propagation distance
