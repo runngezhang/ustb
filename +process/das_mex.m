@@ -21,6 +21,11 @@ classdef das_mex < process
 
             % modulation frequency
             w0=2*pi*h.channel_data.modulation_frequency;
+            
+            % constants
+            sampling_frequency=single(h.channel_data.sampling_frequency);
+            initial_time=single(h.channel_data.initial_time);
+            modulation_frequency=single(h.channel_data.modulation_frequency);
 
             % precalculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
@@ -93,13 +98,13 @@ classdef das_mex < process
                 end
 
                 % total delay
-                delay=bsxfun(@plus,RF,TF)./h.channel_data.sound_speed;
+                delay=single(bsxfun(@plus,RF,TF)./h.channel_data.sound_speed);
                 
                 % factor
-                apodization_matrix=bsxfun(@times,tx_apo,rx_apo);%.*phase_shift;
+                apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                 
                 % das
-                out_data(1,n_wave).data=mex.das_c(single(squeeze(data(:,:,n_wave,:))),single(h.channel_data.sampling_frequency),single(h.channel_data.initial_time),single(delay),single(apodization_matrix),single(h.channel_data.modulation_frequency));                
+                out_data(1,n_wave).data=mex.das_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);                
 
                 % assign phase according to 2 times the receive propagation distance
                 if(w0>eps)

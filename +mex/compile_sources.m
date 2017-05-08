@@ -24,7 +24,7 @@ cd(pathstr);
 disp('------------------------ delay_c');
 mex.build_mex('delay_c');
 
-%% delay c
+%% das c
 disp('------------------------ das_c');
 mex.build_mex('das_c');
 

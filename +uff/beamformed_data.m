@@ -71,7 +71,7 @@ classdef beamformed_data < handle
                 property_name=list_properties{n};
                 mp = findprop(h,property_name);
                 if strcmp(mp.GetAccess,'public')&&~mp.Dependent
-                    eval(sprintf('h.%s = object.%s',property_name,property_name));
+                    eval(sprintf('h.%s = object.%s;',property_name,property_name));
                 end
             end
         end

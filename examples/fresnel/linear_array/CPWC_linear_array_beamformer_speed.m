@@ -94,14 +94,14 @@ for n=1:length(n_frame)
     b_data=bmf.go({process.delay_mex() process.coherent_compounding()});
     delay_mex_time(n)=toc;
 
-    
     figure(101);
-    plot(n_frame(1:n),das_matlab_time(1:n),'ro-'); hold on; grid on;
-    plot(n_frame(1:n),delay_matlab_time(1:n),'gx-'); 
-    plot(n_frame(1:n),das_mex_time(1:n),'bs-'); 
-    plot(n_frame(1:n),delay_mex_time(1:n),'k.-'); 
+    plot(n_frame(1:n),das_matlab_time(1:n),'ro-','linewidth',2); hold on; grid on;
+    plot(n_frame(1:n),delay_matlab_time(1:n),'gx-','linewidth',2); 
+    plot(n_frame(1:n),das_mex_time(1:n),'bs-','linewidth',2); 
+    plot(n_frame(1:n),delay_mex_time(1:n),'k^-','linewidth',2); 
     legend('das matlab','delay matlab','das mex','delay mex');
     xlabel('Frames');
     ylabel('Elapsed time [s]');
+    set(gca,'fontsize',14)
 end
 
