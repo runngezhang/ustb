@@ -28,6 +28,7 @@ classdef channel_data < handle
     properties  (Dependent)
         N_samples          % number of samples in the data
         N_elements         % number of elements in the probe
+        N_channels         % number of elements in the probe
         N_waves            % number of transmitted waves
         N_frames           % number of frames
         time
@@ -162,6 +163,9 @@ classdef channel_data < handle
     %% get methods
     methods
         function value=get.N_elements(h)
+            value=h.probe.N_elements;
+        end
+        function value=get.N_channels(h)
             value=h.probe.N_elements;
         end
         function value=get.N_samples(h)
