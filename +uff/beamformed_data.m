@@ -21,12 +21,13 @@ classdef beamformed_data < handle
         probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
         beamformer                 % String with the beamformer specification [optional]
+       sampling_frequency         % Sampling frequency in depth / z-direction        
     end
     
     %% dependent properties
     properties  (Dependent)
-        N_pixels                   % number of pixels                     
-    end
+        N_pixels                   % number of pixels  
+     end
     
     %% private properties
     properties (Access = private)
