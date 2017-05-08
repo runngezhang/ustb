@@ -22,6 +22,7 @@ classdef channel_data < handle
         phantom                    % PHANTOM class [optional]
         pulse                      % PULSE class [optional]
         PRF                        % pulse repetition frequency [Hz]
+        N_active_elements          % number of active transducers on receive
     end
     
     %% dependent properties
