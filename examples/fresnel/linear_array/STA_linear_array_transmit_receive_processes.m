@@ -104,7 +104,7 @@ cf_data=cf.go();
 cf.CF.plot([],'Mallart-Fink Coherence factor',60,'none'); % show the coherence factor
 cf_data.plot([],cf.name);
 
-% Camacho-Fritsch phase coherence factor
+%% Camacho-Fritsch phase coherence factor
 pcf=process.phase_coherence_factor();
 pcf.channel_data=bmf.channel_data;
 pcf.transmit_apodization=bmf.transmit_apodization;
@@ -113,3 +113,15 @@ pcf.beamformed_data=b_data;
 pcf_data=pcf.go();
 pcf.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);
+
+%% Camacho-Fritsch phase coherence factor
+pcf_alt=process.phase_coherence_factor_alternative();
+pcf_alt.dimension = dimension.both;
+pcf_alt.channel_data=bmf.channel_data;
+pcf_alt.transmit_apodization=bmf.transmit_apodization;
+pcf_alt.receive_apodization=bmf.receive_apodization;
+pcf_alt.beamformed_data=b_data;
+pcf_dim_data=pcf_alt.go();
+pcf_alt.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
+pcf_dim_data.plot([],pcf_alt.name);
+

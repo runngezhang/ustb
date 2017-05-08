@@ -140,7 +140,9 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
+% Temporarily it is a bug with the apodization with PCF, especially on
+% Transmit.
+bmf.receive_apodization.window=uff.window.none;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
@@ -148,52 +150,90 @@ bmf.transmit_apodization.window=uff.window.none;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
-
-
-%% beamforming both dimensions
+%% delay beamforming
 b_data = bmf.go({process.delay_matlab()});
 
-proc=process.coherence_factor();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-bmf_data = proc.go();
+%% CF on both transmit and receive
+proc_cf=process.coherence_factor();
+proc_cf.beamformed_data=b_data;
+proc_cf.channel_data=bmf.channel_data;
+proc_cf.transmit_apodization=bmf.transmit_apodization;
+proc_cf.receive_apodization=bmf.receive_apodization;
+bmf_data_cf = proc_cf.go();
+bmf_data_cf.plot([],'CF both dimensions')
 
-%% "receive" dimension resulting in individual CF PW images
+%% PCF on both transmit and receive
+proc_pcf=process.phase_coherence_factor_alternative();
+proc_pcf.beamformed_data=b_data;
+proc_pcf.channel_data=bmf.channel_data;
+proc_pcf.transmit_apodization=bmf.transmit_apodization;
+proc_pcf.receive_apodization=bmf.receive_apodization;
+bmf_data_pcf = proc_pcf.go();
+bmf_data_pcf.plot([],'PCF both dimensions')
 
-proc=process.coherence_factor();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-proc.dimension=dimension.receive;
-bmf_data_rx=proc.go();
+%% CF "receive" dimension resulting in individual CF PW images
+rx_cf=process.coherence_factor();
+rx_cf.beamformed_data=b_data;
+rx_cf.channel_data=bmf.channel_data;
+rx_cf.transmit_apodization=bmf.transmit_apodization;
+rx_cf.receive_apodization=bmf.receive_apodization;
+rx_cf.dimension=dimension.receive;
+bmf_data_rx_cf=rx_cf.go();
+
+%% PCF "receive" dimension resulting in individual CF PW images
+rx_pcf=process.phase_coherence_factor_alternative();
+rx_pcf.beamformed_data=b_data;
+rx_pcf.channel_data=bmf.channel_data;
+rx_pcf.transmit_apodization=bmf.transmit_apodization;
+rx_pcf.receive_apodization=bmf.receive_apodization;
+rx_pcf.dimension=dimension.receive;
+bmf_data_rx_pcf=rx_pcf.go();
 
 figure();
-ax = subplot(1,3,1);
-bmf_data_rx(1,1).plot(ax,['CF on PW 1']);
-ax = subplot(1,3,2);
-bmf_data_rx(1,round(end/2)).plot(ax,['CF on PW 15']);
-ax = subplot(1,3,3);
-bmf_data_rx(1,end).plot(ax,['CF on PW 31']);
+ax = subplot(2,3,1);
+bmf_data_rx_cf(1,1).plot(ax,['CF on PW 1']);
+ax = subplot(2,3,2);
+bmf_data_rx_cf(1,round(end/2)).plot(ax,['CF on PW 15']);
+ax = subplot(2,3,3);
+bmf_data_rx_cf(1,end).plot(ax,['CF on PW 31']);
+ax = subplot(2,3,4);
+bmf_data_rx_pcf(1,1).plot(ax,['PCF on PW 1']);
+ax = subplot(2,3,5);
+bmf_data_rx_pcf(1,round(end/2)).plot(ax,['PCF on PW 15']);
+ax = subplot(2,3,6);
+bmf_data_rx_pcf(1,end).plot(ax,['PCF on PW 31']);
 set(gcf,'Position',[ 50 50 1232 592]);
 
-
-%% "transmit" dimension 
-proc=process.coherence_factor();
-proc.beamformed_data=b_data;
-proc.channel_data=bmf.channel_data;
-proc.transmit_apodization=bmf.transmit_apodization;
-proc.receive_apodization=bmf.receive_apodization;
-proc.dimension=dimension.transmit;
-bmf_data_tx=proc.go();
+%% "transmit" dimension CF
+proc_cf=process.coherence_factor();
+proc_cf.beamformed_data=b_data;
+proc_cf.channel_data=bmf.channel_data;
+proc_cf.transmit_apodization=bmf.transmit_apodization;
+proc_cf.receive_apodization=bmf.receive_apodization;
+proc_cf.dimension=dimension.transmit;
+cf_data_tx=proc_cf.go();
 
 figure();
 ax = subplot(1,3,1);
-bmf_data_tx(1,43).plot(ax,['CF on EL 43']);
+cf_data_tx(1,43).plot(ax,['CF on EL 43']);
 ax = subplot(1,3,2);
-bmf_data_tx(1,64).plot(ax,['CF on EL 64']);
+cf_data_tx(1,64).plot(ax,['CF on EL 64']);
 ax = subplot(1,3,3);
-bmf_data_tx(1,85).plot(ax,['CF on EL 85']);
+cf_data_tx(1,85).plot(ax,['CF on EL 85']);
+set(gcf,'Position',[ 50 150 1232 300]);
+
+%% "transmit" dimension PCF
+proc_pcf=process.phase_coherence_factor_alternative();
+proc_pcf.beamformed_data=b_data;
+proc_pcf.channel_data=bmf.channel_data;
+proc_pcf.dimension=dimension.transmit;
+pcf_data_tx=proc_pcf.go();
+
+figure();
+ax = subplot(1,3,1);
+pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
+ax = subplot(1,3,2);
+pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
+ax = subplot(1,3,3);
+pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
 set(gcf,'Position',[ 50 150 1232 300]);
