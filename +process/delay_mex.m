@@ -11,7 +11,7 @@ classdef delay_mex < process
             h.name='USTB Delay General Beamformer MEX';   
             h.reference= 'www.ustb.no';                
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
-            h.version='v1.0.3';          
+            h.version='v1.0.4';          
         end
     end
     
@@ -40,7 +40,7 @@ classdef delay_mex < process
             RF=sqrt(xm.^2+ym.^2+zm.^2);
 
             % precalculating hilbert (if needed)
-            data=h.channel_data.data;
+            data=single(h.channel_data.data);
             if ~(w0>eps)
                 data=single(reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data)));
             end

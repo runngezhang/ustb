@@ -168,7 +168,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             vec_p_float temp_i; // create an array, don't work directly on buff yet.
 			for (int n = 0; n < N; n++) {
                 temp_r.push_back(Pr + L*n + LN*w + LNW*f);
-                temp_i.push_back(Pr + L*n + LN*w + LNW*f);
+                temp_i.push_back(Pi + L*n + LN*w + LNW*f);
             }
 			temp_temp_r.push_back(temp_r); // Store the array in the buffer
             temp_temp_i.push_back(temp_i); // Store the array in the buffer

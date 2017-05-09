@@ -132,7 +132,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const float fd = *((float*)mxGetData(M_FD));
 	if (fd > EPS) {
 		if (verbose) mexPrintf("Modulation frequency:			%0.2f MHz\n", fd / 1e6);
-		wd = 2 * PI*fd;
+		wd = 2 * PI * fd;
 		IQ_version = true;
 	}
     
@@ -167,7 +167,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             vec_p_float temp_i; // create an array, don't work directly on buff yet.
 			for (int n = 0; n < N; n++) {
                 temp_r.push_back(Pr + L*n + LN*w + LNW*f);
-                temp_i.push_back(Pr + L*n + LN*w + LNW*f);
+                temp_i.push_back(Pi + L*n + LN*w + LNW*f);
             }
 			temp_temp_r.push_back(temp_r); // Store the array in the buffer
             temp_temp_i.push_back(temp_i); // Store the array in the buffer
@@ -237,7 +237,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             //Di[pp + P*rx + PN*w + PNW*f] = c_apo*(im*coswt + re*sinwt);
                             Dr[pp + P*f + PF*w] += c_apo*(re*coswt - im*sinwt);
                             Di[pp + P*f + PF*w] += c_apo*(im*coswt + re*sinwt);
-                            
                         }
                     } else {
                         for (int f = 0; f<F; f++) { // frame loop
