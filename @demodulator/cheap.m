@@ -11,11 +11,11 @@ if ~isempty(h.modulation_frequency)
     assert(h.modulation_frequency==h.sampling_frequency/4,'The demodulation frequency in the "cheap" demodulation must be h.sampling_frequency/4');
 end
 
-siz = size(h.data);
+siz = size(h.channel_data.data);
 N = prod(siz(3:end));        % collapse dimensions beyond 3
 
 %% copy data
-data = h.data(:,:,1:N);
+data = h.channel_data.data(:,:,1:N);
 
 %% show spectrum
 if(h.plot_on)
@@ -55,5 +55,5 @@ end
 % copy dataset
 out_dataset.time=h.time(1:4:L);                          % resampled time vector
 out_dataset.data=reshape(demod_data,[L/4 siz(2:end)]);   % resampled data
-out_dataset.modulation_frequency=h.sampling_frequency/4;
+out_dataset.modulation_frequency=h.channel_data.sampling_frequency/4;
 end

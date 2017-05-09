@@ -5,11 +5,11 @@ function out_dataset=fieldsim(h)
 [h out_dataset]=h.fill_gaps();
 
 % demodulation
-start_time = h.raw_data.time(1);
-size_in    = size(h.raw_data.data);
+start_time = h.channel_data.time(1);
+size_in    = size(h.channel_data.data);
 
 % Find complex envelope (demodulate pre-env to zero)
-data_out      = hilbert(h.raw_data.data(:,:)); % Find pre-envelope
+data_out      = hilbert(h.channel_data.data(:,:)); % Find pre-envelope
 demodVect     = exp(-1i*2*pi*h.modulation_frequency*(start_time + (0:size(data_out,1)-1)*1/h.sampling_frequency)).';
 data_out      = reshape(bsxfun(@times, data_out, demodVect), size_in);
 

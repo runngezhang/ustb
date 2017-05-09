@@ -6,7 +6,7 @@ function out_dataset=original(h)
 [h out_dataset]=h.fill_gaps();
 
 % power spectrum
-[fx pw] = tools.power_spectrum(h.raw_data.data,h.sampling_frequency);
+[fx pw] = tools.power_spectrum(h.channel_data.data,h.sampling_frequency);
 assert(sum(pw)>0,'Dataset is zero');
 
 % computing central frequency and bandwidth
@@ -39,7 +39,7 @@ if isempty(h.bandpass_frequency_vector)
     high_freq=min([h.sampling_frequency/2*0.99 fc+2*bw]);
     h.bandpass_frequency_vector=[low_freq low_freq+transition high_freq-transition high_freq];
 end
-[data fre_res w]= tools.band_pass(h.raw_data.data,h.sampling_frequency,h.bandpass_frequency_vector);
+[data fre_res w]= tools.band_pass(h.channel_data.data,h.sampling_frequency,h.bandpass_frequency_vector);
 
 if(h.plot_on)
     [fx pw] = tools.power_spectrum(data,h.sampling_frequency);
@@ -49,7 +49,7 @@ if(h.plot_on)
 end
 
 % demodulation
-mod_sig=exp(-j*2*pi*h.modulation_frequency*h.raw_data.time)*ones(1,size(data,2)); % demodulation sognal
+mod_sig=exp(-j*2*pi*h.modulation_frequency*h.channel_data.time)*ones(1,size(data,2)); % demodulation sognal
 wb = waitbar(0, 'Demodulating...');
 for f=1:size(data,4)
     for n=1:size(data,3)
@@ -84,14 +84,14 @@ end
 
 % resampling
 dt=1/h.downsample_frequency;
-t=(h.raw_data.time(1):dt:h.raw_data.time(end));
-data=reshape(data,size(h.raw_data.data)); % we get back singleton dimmensions
+t=(h.channel_data.time(1):dt:h.channel_data.time(end));
+data=reshape(data,size(h.channel_data.data)); % we get back singleton dimmensions
 downsample_data=zeros(length(t),size(data,2),size(data,3),size(data,4));
 wb = waitbar(0, 'Resampling...');
 for f=1:size(data,4)
     for ntx=1:size(data,3)
         for nrx=1:size(data,2)
-            downsample_data(:,nrx,ntx,f)=interp1(h.raw_data.time,data(:,nrx,ntx,f),t,'linear',0);
+            downsample_data(:,nrx,ntx,f)=interp1(h.channel_data.time,data(:,nrx,ntx,f),t,'linear',0);
         end
         waitbar(ntx / size(data,3), wb);
     end

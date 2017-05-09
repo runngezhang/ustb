@@ -5,11 +5,11 @@ function out_dataset=fast(h)
 % fill the gaps
 [h out_dataset]=h.fill_gaps();
 
-siz = size(h.raw_data.data);
+siz = size(h.channel_data.data);
 N = prod(siz(3:end));        % collapse dimensions beyond 3
 
 % copy data
-data = h.raw_data.data(:,:,1:N);
+data = h.channel_data.data(:,:,1:N);
 
 % show spectrum
 if(h.plot_on)
@@ -27,7 +27,7 @@ if(h.plot_on)
 end
 
 % demodulation
-mod_sig=repmat(exp(-j*2*pi*h.modulation_frequency*h.raw_data.time),1,size(data,2),size(data,3));
+mod_sig=repmat(exp(-j*2*pi*h.modulation_frequency*h.channel_data.time),1,size(data,2),size(data,3));
 data=data.*mod_sig;
 
 if(h.plot_on)
@@ -61,8 +61,8 @@ ind_new = 1:Ndown:siz(1);       % decimating vector
 L = length(ind_new);            % length decimating  vector
 
 % copy results
-out_dataset.initial_time=h.raw_data.time(ind_new(1));
-out_dataset.sampling_frequency=1/(h.raw_data.time(ind_new(2))-h.raw_data.time(ind_new(1)));
+out_dataset.initial_time=h.channel_data.time(ind_new(1));
+out_dataset.sampling_frequency=1/(h.channel_data.time(ind_new(2))-h.channel_data.time(ind_new(1)));
 out_dataset.data=reshape(data(ind_new,:,:),[L siz(2:end)]);   % resampled data
 out_dataset.modulation_frequency=h.modulation_frequency;
 end

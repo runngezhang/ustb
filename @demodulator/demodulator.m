@@ -8,7 +8,7 @@ classdef demodulator
     
     %% public properties
     properties  (SetAccess = public)
-        raw_data                    % raw data class
+        channel_data                % CHANNEL_DATA class
         plot_on                     % plot intermediate graphs
         modulation_frequency        % modulation frequency [Hz]
         bandpass_frequency_vector   % bandpass trapezoidal filter appplied to signal before beamforming [Hz]
@@ -54,7 +54,7 @@ classdef demodulator
                 warning('The modulation frequency is not specified. The estimated central frequency will be used.');
                 
                 % power spectrum
-                [fx pw] = tools.power_spectrum(h.raw_data.data,h.sampling_frequency);
+                [fx pw] = tools.power_spectrum(h.channel_data.data,h.sampling_frequency);
                 assert(sum(pw)>0,'Dataset is zero');
                 
                 % computing central frequency and bandwidth
@@ -77,25 +77,25 @@ classdef demodulator
             end
             
             % copy dataset
-            out_dataset=huff.raw_data();
-            out_dataset.copy(h.raw_data);            
+            out_dataset=uff.channel_data();
+            out_dataset.copy(h.channel_data);            
         end
         
     end
     
     %% set methods
     methods
-        function h=set.raw_data(h,in_data)
-            assert(isa(in_data,'huff.raw_data'), 'The input raw_data is not a RAW_DATA class. Check HELP RAW_DATA.');
-            assert(in_data.modulation_frequency==0,sprintf('The input raw_data is already demodulated with %0.2 MHz',in_data.modulation_frequency/1e6));
-            assert(~isempty(in_data.data),'The input raw_data is empty');
-            assert(any(in_data.data(:)>0),'The input raw_data is zero');
+        function h=set.channel_data(h,in_data)
+            assert(isa(in_data,'uff.channel_data'), 'The input channel_data is not a CHANNEL_DATA class. Check HELP CHANNEL_DATA.');
+            assert(in_data.modulation_frequency==0,sprintf('The input channel_data is already demodulated with %0.2 MHz',in_data.modulation_frequency/1e6));
+            assert(~isempty(in_data.data),'The input channel_data is empty');
+            assert(any(in_data.data(:)>0),'The input channel_data is zero');
             
             timediff=in_data.time(2)-in_data.time(1);
-            assert(timediff>0,'The time interval of the time vector in the raw_data is zero');
+            assert(timediff>0,'The time interval of the time vector in the channel_data is zero');
             
             h.sampling_frequency=1/timediff;
-            h.raw_data=in_data;
+            h.channel_data=in_data;
         end
         function h=set.plot_on(h,in_plot_on)
             assert(isa(in_plot_on,'logical'), 'The input plot_on is not a LOGICAL class (true/false). Check HELP LOGICAL.');

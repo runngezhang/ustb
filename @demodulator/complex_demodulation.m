@@ -19,7 +19,7 @@ else
     %end
 end
 
-siz = size(h.raw_data.data);
+siz = size(h.channel_data.data);
 N = prod(siz(3:end)); % collapse dimensions beyond 3
 ind_new = 1:Ndown:siz(1);
 L = length(ind_new); % length of downsampled array
@@ -36,14 +36,14 @@ if dofilter, % make low-pass filter
     % calculate window parameters
     [M, Wn, beta, typ] = kaiserord([0.9,1]*h.modulation_frequency, [1,0], [1e-2,1e-2], h.sampling_frequency);
     b = fir1(M, Wn, typ, kaiser(M+1,beta), 'noscale'); % filter design
-    assert(size(h.raw_data.data,1)>3*(length(b)-1),'Too many low-pass filter coefficients! Try relaxing the filter design, or increasing the samples in the dataset.');
+    assert(size(h.channel_data.data,1)>3*(length(b)-1),'Too many low-pass filter coefficients! Try relaxing the filter design, or increasing the samples in the dataset.');
 end
 
 % preallocate temp array for Hilbert
 % H = zeros(siz(1:2), 'like', 1i);
 
 for nn = 1:N, % loop over higher dimensions
-    H = bsxfun(@times, hilbert(h.raw_data.data(:,:,nn)), mix);
+    H = bsxfun(@times, hilbert(h.channel_data.data(:,:,nn)), mix);
     if dofilter,
         H(:,:) = filtfilt(b, 1, H); % lowpass filter
     end
@@ -58,10 +58,10 @@ end
 
 % downsampling
 dt=Ndown/h.sampling_frequency;
-t=(h.raw_data.time(1):dt:h.raw_data.time(end));
+t=(h.channel_data.time(1):dt:h.channel_data.time(end));
 
 % copy results
 out_dataset.modulation_frequency=h.modulation_frequency;
 out_dataset.time=t.';
-out_dataset.raw_data.data=iq;
+out_dataset.channel_data.data=iq;
 end
