@@ -1,5 +1,5 @@
-function ok = TE_ps_sta_iq(h)
-%PS_STA_IQ Point Spread function Synthetic Transmit Aperture IQ test
+function ok = TE_ps_sta_rf_mex(h)
+%PS_STA_RF Point Spread function Synthetic Transmit Aperture RF test
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
 %   beamforms it and compares it with previously beamformed data (USTB v1.9)
 
@@ -8,8 +8,8 @@ function ok = TE_ps_sta_iq(h)
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
     local_path='data/ps/';                              % location of example data in this computer                      
-    raw_data_filename='ps_sta_iq.mat';
-    beamformed_data_filename='beamformed_ps_sta_iq.mat';
+    raw_data_filename='ps_sta_rf.mat';
+    beamformed_data_filename='beamformed_ps_sta_rf.mat';
     
     % check if the file is available in the local path & downloads otherwise
     h.download(raw_data_filename, url, local_path);
@@ -34,7 +34,11 @@ function ok = TE_ps_sta_iq(h)
     data=zeros(size(s.data));
     for n=1:prb.N_elements
         delay=seq(n).source.distance/s.c0;
-        pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
+        if exist('s.modulation_frequency')
+            pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
+        else
+            pcf=1;
+        end
         data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
     end
     
@@ -45,7 +49,6 @@ function ok = TE_ps_sta_iq(h)
     r_data.initial_time=s.time(1);
     r_data.sampling_frequency=1/(s.time(2)-s.time(1));
     r_data.sound_speed=s.c0;
-    r_data.modulation_frequency=s.modulation_frequency;
     r_data.data=data;
     
     % APODIZATION
@@ -62,14 +65,14 @@ function ok = TE_ps_sta_iq(h)
     bmf.scan=linear_scan(r.x_axis,r.z_axis);
         
     % beamforming
-    b_data=bmf.go({process.das_matlab,process.coherent_compounding});
-    
+    b_data=bmf.go({process.das_mex, process.coherent_compounding});
+
     % test result
-    ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
-    
+    ok=(norm(real(b_data.data)-r.data(:))/norm(r.data(:)))<h.external_tolerance;
+
 %     figure;
-%     plot(real(b_data.data)); hold on;
-%     plot(real(r.data(:)),'r--'); 
+%     plot(b_data.data); hold on; grid on;
+%     plot(r.data(:),'r--'); 
 %    
 %     % show
 %     b_data.plot([],'Result');
@@ -79,5 +82,6 @@ function ok = TE_ps_sta_iq(h)
 %     ref_data.data=r.data;
 %     ref_data.scan=linear_scan(r.x_axis,r.z_axis);
 %     ref_data.plot([],'Reference');
+    
 end
 

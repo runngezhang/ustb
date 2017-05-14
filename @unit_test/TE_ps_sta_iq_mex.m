@@ -1,4 +1,4 @@
-function ok = TE_ps_sta_iq(h)
+function ok = TE_ps_sta_iq_mex(h)
 %PS_STA_IQ Point Spread function Synthetic Transmit Aperture IQ test
 %   Downloads data from 'http://hirse.medisin.ntnu.no/ustb/data/ps/'
 %   beamforms it and compares it with previously beamformed data (USTB v1.9)
@@ -62,7 +62,7 @@ function ok = TE_ps_sta_iq(h)
     bmf.scan=linear_scan(r.x_axis,r.z_axis);
         
     % beamforming
-    b_data=bmf.go({process.das_matlab,process.coherent_compounding});
+    b_data=bmf.go({process.das_mex,process.coherent_compounding});
     
     % test result
     ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;

@@ -62,7 +62,7 @@ function ok = TE_ps_vs_iq(h)
     bmf.scan=linear_scan(r.x_axis,r.z_axis);
         
     % beamforming
-    b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+    b_data=bmf.go({process.das_matlab, process.coherent_compounding});
 
     % test result
     ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
