@@ -325,4 +325,25 @@ classdef beamformed_data < handle
             end
         end
     end
+    
+    % get object name
+    methods
+    	function  out  = objname(h)
+            out = evalin('caller','inputname(1)');
+        end
+    end
+    
+    %% Ultrasound File Format (UFF)
+    methods (Access = public)    
+        function write(h, uff_object, location)
+            assert(isa(uff_object,'uff'),'The input is not a UFF object')
+            if nargin<3 location=[]; end
+
+            fprintf('UFF write: %s -> %s',h.objname,uff_object.filename);
+            tic;
+            uff_object.write(location,h,h.objname);
+            fprintf(' [%0.1fs]\n',toc);
+            
+        end
+    end
 end

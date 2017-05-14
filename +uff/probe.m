@@ -24,11 +24,6 @@ classdef probe
         r                  % distance from the element center to the origin of coordinates [m]
     end
     
-    % UFF variables
-    properties (SetAccess = private)
-        uff_version = 'v1.0.0';
-    end
-    
     %% constructor
     methods (Access = public)
         function h=probe(in_geometry)
@@ -95,72 +90,53 @@ classdef probe
             value=size(h.geometry,1);
         end
         function value=get.x(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,1);
+            %if h.N_elements==0 error('The PROBE class is empty'); end
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,1);
+            end
         end
         function value=get.y(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,2);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,2);
+            end
         end
         function value=get.z(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,3);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,3);
+            end
         end
         function value=get.theta(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,4);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,4);
+            end
         end
         function value=get.phi(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,5);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,5);
+            end
         end
         function value=get.width(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,6);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,6);
+            end
         end
         function value=get.height(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=h.geometry(:,7);
+            if h.N_elements==0 value=[]; 
+            else
+                value=h.geometry(:,7);
+            end
         end
         function value=get.r(h)
-            if h.N_elements==0 error('The PROBE class is empty'); end
-            value=sqrt(sum(h.geometry(:,1:3).^2,2));
-        end
-    end
-    
-     %% Ultrasound File Format
-    methods (Access = public)    
-        function write(h,filename,location)
-            
-            %-- Writes all the information to Ultrasound File Format (UFF)
-            %-- Syntax:
-            %-- write_file_hdf5(file_name)
-            %-- file_name: Name of the hdf5 file
-            
-            %-- write UFF version in the root group
-            attr_details.Name = 'version';
-            attr_details.AttachedTo = location;
-            attr_details.AttachType = 'group';
-            hdf5write(filename, attr_details, h.uff_version);
-            
-            %-- We create a new channel data
-            group_name = 'probe';
-            fid = H5F.open(filename,'H5F_ACC_RDWR','H5P_DEFAULT');
-            gid = H5G.open(fid,[location '/' group_name]);
-            
-            s_gid = H5G.create(gid,group_name,'H5P_DEFAULT','H5P_DEFAULT','H5P_DEFAULT');
-            H5G.close(s_gid);
-            H5G.close(gid);
-            H5F.close(fid);
-            location = location '/' group_name;
-   
-            uff.append(filename, location, 'geometry', h.sound_speed);
-            uff.append(filename, location, 'initial_time', h.initial_time);
-            uff.append(filename, location, 'sampling_frequency', h.sampling_frequency);
-            uff.append(filename, location, 'modulation_frequency', h.modulation_frequency);
-            uff.append(filename, location, 'data', h.data);
-            uff.append(filename, location, 'probe', h.probe);
-
+            if h.N_elements==0 value=[]; 
+            else
+                value=sqrt(sum(h.geometry(:,1:3).^2,2));
+            end
         end
     end
 end

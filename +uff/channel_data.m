@@ -35,11 +35,6 @@ classdef channel_data < handle
         time
         lambda             % wavelength [m]
     end
-    
-    % UFF variables
-    properties (SetAccess = private)
-        uff_version = 'v1.0.0';
-    end
         
     %% constructor
     methods (Access = public)
@@ -147,13 +142,13 @@ classdef channel_data < handle
         end
         function h=set.data(h,in_data)
             % checking needed inputs
-            assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
-            assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
-            assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
-            assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
+%            assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
+%            assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
+%            assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
+%            assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
             
-            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
-            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
+%            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
+%            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
             
             h.data=in_data;
         end
@@ -192,145 +187,23 @@ classdef channel_data < handle
         end
     end
     
-    %% Ultrasound File Format
+    methods
+    	function  out  = objname(h)
+            out = evalin('caller','inputname(1)');
+        end
+    end
+    
+    %% Ultrasound File Format (UFF)
     methods (Access = public)    
-        function write(h,filename)
-            
-            %-- Writes all the information to Ultrasound File Format (UFF)
-            %-- Syntax:
-            %-- write_file_hdf5(file_name)
-            %-- file_name: Name of the hdf5 file
-            
-            
-            open_write(filename);                                                % open UFF for writting
-            location=uff.create_group(filename,[],'channel_data',h.uff_version); % create group
-            
-            % dump properties
-            uff.append(filename, location, 'sound_speed', h.sound_speed);
-            uff.append(filename, location, 'initial_time', h.initial_time);
-            uff.append(filename, location, 'sampling_frequency', h.sampling_frequency);
-            uff.append(filename, location, 'modulation_frequency', h.modulation_frequency);
-            uff.append(filename, location, 'data', h.data);
-            %uff.append(filename, location, 'probe', h.probe);
+        function write(h, uff_object, location)
+            assert(isa(uff_object,'uff'),'The input is not a UFF object')
+            if nargin<3 location=[]; end
+
+            fprintf('UFF write: %s -> %s',h.objname,uff_object.filename);
+            tic;
+            uff_object.write(location,h,h.objname);
+            fprintf(' [%0.1fs]\n',toc);
 
         end
-       
-
-%         function read_file(h,filename)
-%             
-%             %-- Reads all the information from a mat or hdf5 file
-%             %-- Syntax:
-%             %-- read_file(file_name)
-%             %-- file_name: Name of the mat or hdf5 file
-%             
-%             [pathstr, name, ext] = fileparts(filename); 
-%             switch ext
-%                 case '.mat'
-%                     h.read_file_mat(filename);
-%                 case '.hdf5'
-%                     h.read_file_hdf5(filename);
-%                 otherwise
-%                     error('Unknown signal format!');
-%             end
-%             
-%         end
-       
-        
-%         function write_file(h,filename)
-%             
-%             %-- Write all the information into a mat or hdf5 file
-%             %-- Syntax:
-%             %-- write_file(file_name)
-%             %-- file_name: Name of the mat or hdf5 file
-%             
-%             [pathstr, name, ext] = fileparts(filename); 
-%             switch ext
-%                 case '.mat'
-%                     h.write_file_mat(filename);
-%                 case '.hdf5'
-%                     h.write_file_hdf5(filename);
-%                 otherwise
-%                     error('Unknown signal format!');
-%             end
-%             
-%         end
-                
-        
-%         function read_file_hdf5(h,filename)
-% 
-%             %-- Reads all the information from a HUFF (HDF5 Ultrasound File Format) file
-%             %-- Syntax:
-%             %-- read_file_hdf5(file_name)
-%             %-- file_name: Name of the hdf5 file
-%             
-%             %-- read US metagroup
-%             info = h5info(filename,'/US');
-% 
-%             %-- read the groups in the metagroup
-%             for n=1:length(info.Groups)
-%                 location=info.Groups(n).Name;
-%                 dstype=h5readatt(filename,location,'type');
-%                 if strcmp(dstype,'US')
-%                     subtype=h5readatt(filename,location,'subtype');
-%                     if strcmp(subtype{1},'CPW')
-% 
-%                         %-- subtype
-%                         dataset_subtype=h5readatt(filename,location,'subtype');
-%                         assert(strcmp(dataset_subtype,'CPW'),'Only CPWC us_dataset are supported!');
-%                         
-%                         %-- read signal format 
-%                         signal_format=h5readatt(filename,location,'signal_format');
-%                         
-%                         %-- read modulation frequency
-%                         h.modulation_frequency=h5read(filename,[location '/modulation_frequency']);
-% 
-%                         %-- check format
-%                         switch(signal_format{1})
-%                             case 'RF'
-%                                 assert(h.modulation_frequency==0,'RF dataset cannot have a modulation frequency');
-%                             case 'IQ'
-%                                 assert(h.modulation_frequency>0,'IQ dataset cannot have a null modulation frequency');
-%                             otherwise
-%                                 error('Unknown signal format!');
-%                         end
-% 
-%                         %-- Attributes
-%                         %-- read name
-%                         a = h5readatt(filename,location,'name'); h.name=a{1}(1:end-1);
-% 
-%                         %-- read date
-%                         a = h5readatt(filename,location,'creation_date'); h.creation_date=a{1}(1:end-1);
-%                         
-%                         %-- read version
-%                         a = h5readatt(filename,location,'version'); h.version=a{1}(1:end-1);
-% 
-%                         %-- Data
-%                         %-- read speed of sound
-%                         h.c0 = h5read(filename,[location '/sound_speed']);
-% 
-%                         %-- read initial_time
-%                         h.initial_time = h5read(filename,[location '/initial_time']);
-% 
-%                         %-- read sampling_frequency
-%                         h.sampling_frequency = h5read(filename,[location '/sampling_frequency']);
-% 
-%                         %-- read sampling_frequency
-%                         h.PRF = h5read(filename,[location '/PRF']);
-% 
-%                         %-- read transducer geometry
-%                         h.probe_geometry = h5read(filename,[location '/probe_geometry']);
-% 
-%                         %-- read angles
-%                         h.angles = h5read(filename,[location '/angles']);
-%                         
-%                         %-- read data
-%                         real_part = h5read(filename,[location '/data/real']);
-%                         imag_part = h5read(filename,[location '/data/imag']);
-%                         h.data = real_part+1i*imag_part;
-%                     end
-%                 end
-%             end
-%         end
-
     end
 end
