@@ -56,6 +56,9 @@ plot([0 0],[min(two_ways_ir) max(two_ways_ir)],'g');
 legend('2-ways pulse','Envelope','Estimated lag');
 title('2-ways impulse response Field II');
 
+% Plot the pulse from USTB simulation
+pulse.plot([],'2-way pulse for Fresnel simulator');
+
 %% aperture objects
 % definition of the mesh geometry
 noSubAz=round(probe.element_width/(lambda/8));        % number of subelements in the azimuth direction
