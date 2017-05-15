@@ -12,8 +12,8 @@ function ok = TE_ps_sta_rf_mex(h)
     beamformed_data_filename='beamformed_ps_sta_rf.mat';
     
     % check if the file is available in the local path & downloads otherwise
-    h.download(raw_data_filename, url, local_path);
-    h.download(beamformed_data_filename, url, local_path);
+    tools.download(raw_data_filename, url, local_path);
+    tools.download(beamformed_data_filename, url, local_path);
     
     % load data
     load([local_path raw_data_filename]);    

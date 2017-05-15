@@ -1,4 +1,4 @@
-function download(h, filename, url, local_path )
+function download(filename, url, local_path )
 %DOWNLOAD Downloads a file from an URL to a local path (if needed)
 
     % check if the path is there 
