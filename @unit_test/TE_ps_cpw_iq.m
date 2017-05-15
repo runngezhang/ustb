@@ -12,8 +12,8 @@ function ok = TE_ps_cpw_iq(h)
     beamformed_data_filename='beamformed_ps_cpw_iq.mat';
     
     % check if the file is available in the local path & downloads otherwise
-    h.download(raw_data_filename, url, local_path);
-    h.download(beamformed_data_filename, url, local_path);
+    tools.download(raw_data_filename, url, local_path);
+    tools.download(beamformed_data_filename, url, local_path);
     
     % load data
     load([local_path raw_data_filename]);    
@@ -55,7 +55,7 @@ function ok = TE_ps_cpw_iq(h)
     bmf.scan=linear_scan(r.x_axis,r.z_axis);
         
     % beamforming
-    b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+    b_data=bmf.go({process.das_matlab,process.coherent_compounding});
 
     % test result
     ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
@@ -63,13 +63,13 @@ function ok = TE_ps_cpw_iq(h)
 %     figure;
 %     plot(b_data.data); hold on; grid on;
 %     plot(r.data(:),'r--'); 
-%    
+   
 %     % show
 %     b_data.plot([],'Result');
 %     
 %     % ref
 %     ref_data=beamformed_data();
-%     ref_data.data=r.data;
+%     ref_data.data=r.data(:);
 %     ref_data.scan=linear_scan(r.x_axis,r.z_axis);
 %     ref_data.plot([],'Reference');
     

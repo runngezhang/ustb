@@ -25,6 +25,14 @@ examples/huff/recording.h5
 .mex/examples/
 .mex/include/
 .mex/lib/
+<<<<<<< HEAD
+*.uff
+*.mat
+=======
 .mex
+<<<<<<< HEAD
 *.mat
 *.uff
+=======
+>>>>>>> master
+>>>>>>> uff

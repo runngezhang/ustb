@@ -35,8 +35,7 @@ classdef channel_data < handle
         time
         lambda             % wavelength [m]
     end
-    
-    
+        
     %% constructor
     methods (Access = public)
         function h=channel_data()
@@ -143,13 +142,13 @@ classdef channel_data < handle
         end
         function h=set.data(h,in_data)
             % checking needed inputs
-            assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
-            assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
-            assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
-            assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
+%            assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
+%            assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
+%            assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
+%            assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
             
-            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
-            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
+%            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
+%            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
             
             h.data=in_data;
         end
@@ -185,6 +184,26 @@ classdef channel_data < handle
             assert(~isempty(h.sound_speed),'You need to set the channel_data.sound_speed')
             assert(~isempty(h.pulse),'You need to set the pulse and the pulse center frequency.')
             value = h.sound_speed/h.pulse.center_frequency;
+        end
+    end
+    
+    methods
+    	function  out  = objname(h)
+            out = evalin('caller','inputname(1)');
+        end
+    end
+    
+    %% Ultrasound File Format (UFF)
+    methods (Access = public)    
+        function write(h, uff_object, location)
+            assert(isa(uff_object,'uff'),'The input is not a UFF object')
+            if nargin<3 location=[]; end
+
+            fprintf('UFF write: %s -> %s',h.objname,uff_object.filename);
+            tic;
+            uff_object.write(location,h,h.objname);
+            fprintf(' [%0.1fs]\n',toc);
+
         end
     end
 end
