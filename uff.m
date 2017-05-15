@@ -12,6 +12,7 @@ classdef uff
     properties (SetAccess = private)
         filename
         version = 'v1.0.0';
+        mode = 'append';
     end
     
     %% constructor
@@ -22,7 +23,7 @@ classdef uff
                 error('UFF: Missing filename');
             end
             if nargin<2
-                mode='read';
+                mode='append';
             end
             
             switch mode
@@ -31,11 +32,28 @@ classdef uff
                     attr_details.AttachedTo = '/';
                     attr_details.AttachType = 'group';
                     hdf5write(filename, attr_details, h.version);
-                case {'read', 'append'}
+                case 'read'
+                    assert(length(dir(filename))>0,sprintf('File %s not found. Check the path and filename, or chose ''write'' mode to create it.',filename));
+                case 'append'
+                    if(length(dir(filename))<1)
+                        % create it
+                        fprintf('UFF: file %s not found; it shall be created.\n',filename);
+                        attr_details.Name = 'version';
+                        attr_details.AttachedTo = '/';
+                        attr_details.AttachType = 'group';
+                        hdf5write(filename, attr_details, h.version);
+                    else
+                        % check that versions are the same
+                        file_version=h5readatt(filename, '/','version');  % read file version
+                        file_version=file_version{1};                       % from cell to string
+                        file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
+                        assert(strcmp(h.version,file_version),sprintf('The file version (%s) differs from UFF current version (%s). You cannot append data. Please choose a new file instead.',file_version,h.version));
+                    end
                 otherwise
                     error(sprintf('Mode %s not supported',mode));
             end
             
+            h.mode = mode;
             h.filename = filename;
         end
     end
@@ -48,135 +66,33 @@ classdef uff
     
     %% Ultrasound File Format
     methods (Access = public)
-%         function dumped_props=write(h,location,obj,name)
-%             %% dumped_props=write(h,location,obj,name)
-%             %
-%             % Writes the object/structure obj at location with name
-%             if(nargin<3)
-%                 error('Missing object to write on UFF file');
-%             end
-%             if(nargin<4)
-%                 error('Missing object name');
-%             end
-%             
-%             % dump all fields in struct
-%             dumped_props=0;
-%             field_list = fieldnames(obj);
-%             eval(['mco = ?' class(obj) ';']);
-%             plist = mco.PropertyList;
-%             for f=1:length(field_list)
-%                 prop=obj.(field_list{f});
-%                 
-%                 copy=false;
-%                 for p=1:length(plist)
-%                     if strcmp(plist(p).Name,field_list{f})
-%                         copy=~plist(p).Dependent;
-%                         continue;
-%                     end
-%                 end
-%                 
-%                 if copy
-%                     if numel(prop)
-%                         h.write_field([location '/' name], field_list{f}, prop);
-%                         dumped_props=dumped_props+1;
-%                     end
-%                 end
-%             end
-%             
-%             if dumped_props>0
-%                 h5writeatt(h.filename,[location '/' name],'class',class(obj));
-%                 h5writeatt(h.filename,[location '/' name],'name',name);
-%                 h5writeatt(h.filename,[location '/' name],'size',size(obj));
-%             end
-%         end
-%         
-%         function write_field(h, location, name, value)
-%             %% out=write_field(h, location, name, value)
-%             %
-%             % Writes the field
-%             switch class(value)
-%                 case {'double' 'single'}
-%                     if isreal(value)
-%                         h5create(h.filename,[location '/' name], size(value), 'Datatype', 'single', 'ChunkSize',size(value));
-%                         h5write(h.filename,[location '/' name], single(value));
-%                         h5writeatt(h.filename,[location '/' name],'class',class(value));
-%                         h5writeatt(h.filename,[location '/' name],'name',name);
-%                         h5writeatt(h.filename,[location '/' name],'imaginary',0);
-%                         h5writeatt(h.filename,[location '/' name],'complex',0);
-%                     else
-%                         % real
-%                         h5create(h.filename,[location '/' name '/real'], size(value), 'Datatype', 'single', 'ChunkSize',size(value));
-%                         h5write(h.filename,[location '/' name '/real'], single(real(value)));
-%                         h5writeatt(h.filename,[location '/' name '/real'],'class',class(value));
-%                         h5writeatt(h.filename,[location '/' name '/real'],'name',name);
-%                         h5writeatt(h.filename,[location '/' name '/real'],'imaginary',0);
-%                         
-%                         % imag
-%                         h5create(h.filename,[location '/' name '/imag'], size(value), 'Datatype', 'single', 'ChunkSize',size(value));
-%                         h5write(h.filename,[location '/' name '/imag'], single(imag(value)));
-%                         h5writeatt(h.filename,[location '/' name '/imag'],'class',class(value));
-%                         h5writeatt(h.filename,[location '/' name '/imag'],'name',name);
-%                         h5writeatt(h.filename,[location '/' name '/imag'],'imaginary',1);
-%                         
-%                         % group attributes
-%                         h5writeatt(h.filename,[location '/' name],'class',class(value));
-%                         h5writeatt(h.filename,[location '/' name],'name',name);
-%                         h5writeatt(h.filename,[location '/' name],'complex',1);
-%                     end
-%                 case {'char' 'uff.window'}
-%                     h5create(h.filename,[location '/' name], size(value), 'Datatype', 'single', 'ChunkSize',size(value));
-%                     h5write(h.filename,[location '/' name], single(value));
-%                     h5writeatt(h.filename,[location '/' name],'class',class(value));
-%                     h5writeatt(h.filename,[location '/' name],'name',name);
-%                 otherwise
-%                     % UFF structures
-%                     if (findstr('uff.',class(value)))
-%                         if numel(value)>1
-%                             dumped_props=0;
-%                             for n=1:numel(value)
-%                                 dumped_props=dumped_props+h.write([location '/' name], value(n), [name '_' sprintf('%04d',n)]);
-%                             end
-%                             
-%                             % group attributes
-%                             if dumped_props
-%                                 h5writeatt(h.filename,[location '/' name],'class',class(value));
-%                                 h5writeatt(h.filename,[location '/' name],'name',name);
-%                                 h5writeatt(h.filename,[location '/' name],'array',1);
-%                                 h5writeatt(h.filename,[location '/' name],'size',size(value));
-%                             end
-%                         else
-%                             dumped_props=h.write(location, value, name);
-%                             if dumped_props
-%                                 h5writeatt(h.filename,[location '/' name],'array',0);
-%                                 h5writeatt(h.filename,[location '/' name],'size',size(value));
-%                             end
-%                         end
-%                     else warning(sprintf('Class %s not supported by UFF; skipping write.',class(value))); end
-%             end
-%         end
-        
-        function dumped_objects=write(h,location,object,name)
+        function dumped_objects=write(h,object,name,location)
             %% WRITE- Writes object into location
-            % 
-            %   This UFF method writes the object into the specified location 
+            %
+            %   This UFF method writes the object into the specified location
             %   with the provided name. A UFF object must be defined.
             %
-            %   dumped_objects=UFF.WRITE(location,object,name)
+            %   dumped_objects=UFF.WRITE(object,name,location)
             %
             %   Example:
             %
             %       channel_data = uff.channel_data();
             %       uff_file = uff('test.uff');
-            %       dumped_objects = uff_file.write('/',channel_data,'chn01');
+            %       dumped_objects = uff_file.write(channel_data,'chn01');
             %
             %   See also UFF.READ, UFF.UFF, UFF.INDEX
-
-            if(nargin<3)||isempty(object)
+            
+            if(nargin<2)||isempty(object)
                 error('Missing object to write on UFF file');
             end
-            if(nargin<4)||isempty(name)
+            if(nargin<3)||isempty(name)
                 error('Missing object name');
             end
+            if(nargin<4)
+                location=[];
+            end
+            
+            assert(~strcmp(h.mode,'read'),'The file is open in read-only mode');
             
             switch class(object)
                 case {'double' 'single'}
@@ -223,7 +139,7 @@ classdef uff
                             % call write for all members in the array
                             dumped_objects=0;
                             for n=1:numel(object)
-                                dumped_objects=dumped_objects+h.write([location '/' name], object(n), [name '_' sprintf('%04d',n)]);
+                                dumped_objects=dumped_objects+h.write(object(n), [name '_' sprintf('%04d',n)],[location '/' name]);
                             end
                             
                             % group attributes
@@ -234,9 +150,12 @@ classdef uff
                                 h5writeatt(h.filename,[location '/' name],'size',size(object));
                             end
                         else
-                            % here we process the single UFF structures
-                            %dumped_objects=h.write(location, object, name);
-               
+                            % here we process non-array UFF structures
+                            switch class(object)
+                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.wave' 'uff.phantom'}
+                                    fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location);
+                            end
+                            
                             % dump all fields in struct (or properties in class)
                             dumped_objects=0;
                             field_list = fieldnames(object);
@@ -244,7 +163,7 @@ classdef uff
                             plist = mco.PropertyList;
                             for f=1:length(field_list)
                                 prop=object.(field_list{f});
-
+                                
                                 % check if the property is dependent
                                 copy=false;
                                 for p=1:length(plist)
@@ -257,12 +176,12 @@ classdef uff
                                 % if it isn't dependent or empty we write it
                                 if copy
                                     if numel(prop)
-                                        h.write([location '/' name], prop, field_list{f});
+                                        h.write(prop, field_list{f},[location '/' name]);
                                         dumped_objects=dumped_objects+1;
                                     end
                                 end
                             end
-
+                            
                             if dumped_objects>0
                                 h5writeatt(h.filename,[location '/' name],'class',class(object));
                                 h5writeatt(h.filename,[location '/' name],'name',name);
@@ -273,14 +192,14 @@ classdef uff
                     else warning(sprintf('Class %s not supported by UFF; skipping write.',class(object))); end
             end
         end
-   
+        
         
         function out=index(h,location,display)
-            %% INDEX - Returns contains of a UFF location   
-            % 
-            %   This UFF method returns a list of the datasets and groups 
+            %% INDEX - Returns contains of a UFF location
+            %
+            %   This UFF method returns a list of the datasets and groups
             %   in the specified location. The location must be group. The
-            %   display flag will plot the list on screen. 
+            %   display flag will plot the list on screen.
             %
             %   out = UFF.INDEX(location,display)
             %
@@ -290,7 +209,7 @@ classdef uff
             %       list = uff_file.index('/',true);
             %
             %   See also UFF.READ, UFF.UFF, UFF.WRITE
-
+            
             if nargin<2 location='/'; end
             if nargin<3 display=false; end
             if isempty(location) location='/'; end
@@ -298,18 +217,22 @@ classdef uff
             
             
             info=h5info(h.filename,location);
-            if display fprintf('Contents of %s at %s\n',h.filename,location); end
+            if display fprintf('UFF: Contents of %s at %s\n',h.filename,location); end
             
             % groups
             groups=info.Groups;
             out={}; nn=1;
             for n=1:length(groups)
                 out{nn}.location=groups(n).Name;
+                out{nn}.name=[];
+                out{nn}.class=[];
+                out{nn}.size=[0 0];
                 for m=1:length(groups(n).Attributes)
                     if strcmp(groups(n).Attributes(m).Name,'class') out{nn}.class=groups(n).Attributes(m).Value; end
                     if strcmp(groups(n).Attributes(m).Name,'name') out{nn}.name=groups(n).Attributes(m).Value; end
+                    if strcmp(groups(n).Attributes(m).Name,'size') out{nn}.size=groups(n).Attributes(m).Value; end
                 end
-                if display fprintf(' -- %s: %s [%s]\n',out{nn}.location, out{nn}.name, out{nn}.class); end
+                if display fprintf('   - %s: %s [%s] size(%d,%d)\n',out{nn}.location, out{nn}.name, out{nn}.class, out{nn}.size); end
                 nn=nn+1;
             end
             
@@ -321,7 +244,7 @@ classdef uff
                     if strcmp(datasets(n).Attributes(m).Name,'class') out{nn}.class=datasets(n).Attributes(m).Value; end
                     if strcmp(datasets(n).Attributes(m).Name,'name') out{nn}.name=datasets(n).Attributes(m).Value; end
                 end
-                if display fprintf(' -- %s: %s [%s]\n',out{nn}.location, out{nn}.name, out{nn}.class); end
+                if display fprintf('   - %s: %s [%s]\n',out{nn}.location, out{nn}.name, out{nn}.class); end
                 nn=nn+1;
             end
             
@@ -329,8 +252,8 @@ classdef uff
         
         
         function out = read(h, location)
-            %% READ - Reads UFF dataset or group from location   
-            % 
+            %% READ - Reads UFF dataset or group from location
+            %
             %   This UFF method returns a variable containing the information
             %   in the specified location. The location can be a dataset or
             %   a group. Version v1.0.0.
@@ -351,47 +274,61 @@ classdef uff
             file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
             assert(strcmp(version,file_version),sprintf('The file version (%s) and the READ function version (%s) do not match.',file_version,version));
             
-            % checking name and class 
-            data_name=h5readatt(h.filename, location ,'name');
-            class_name=h5readatt(h.filename, location ,'class');
-            
-            switch class_name
-                case {'double' 'single'}
-                    if ~h5readatt(h.filename, location, 'complex')
-                        out=h5read(h.filename, location);
-                    else
-                        out=h5read(h.filename, [ location '/real' ])+...
-                            1i*h5read(h.filename, [ location '/imag' ]);
-                    end
-                case 'char'
-                    out=h5read(h.filename, location)
-                case 'uff.window'
-                    out=uff.window(h5read(h.filename, location ));
-                otherwise
-                    % rest of UFF structures
-                    if (findstr('uff.',class_name))
-                        data_size=h5readatt(h.filename, location ,'size');
-                        N=prod(data_size);
-                        if(N>1)
-                            item=h.index( location );
-                            if length(item)~=N error('Size attribute does not match number of subgroups'); end
-                            for n=1:N
-                                out(n)=h.read(item{n}.location);
-                            end
-                            reshape(out,data_size.'); 
+            % check for root folder
+            if nargin<2 || strcmp(location,'/')
+                item=h.index('/');
+                if length(item) out={}; end
+                for n=1:length(item)
+                    out{n}=h.read(item{n}.location);
+                end
+            else
+                
+                % checking name and class
+                data_name=h5readatt(h.filename, location ,'name');
+                class_name=h5readatt(h.filename, location ,'class');
+                
+                switch class_name
+                    case {'double' 'single'}
+                        if ~h5readatt(h.filename, location, 'complex')
+                            out=h5read(h.filename, location);
                         else
-                            out=feval(class_name);
-                            
-                            % add properties
-                            prop=h.index(location);
-                            for m=1:length(prop)
-                                out.(prop{m}.name)=h.read(prop{m}.location);
-                            end
+                            out=h5read(h.filename, [ location '/real' ])+...
+                                1i*h5read(h.filename, [ location '/imag' ]);
                         end
-                    else
-                        warning(sprintf('Class %s not supported by UFF; skipping write.',class(value)));
-                        out=[];
-                    end
+                    case 'char'
+                        out=h5read(h.filename, location)
+                    case 'uff.window'
+                        out=uff.window(h5read(h.filename, location ));
+                    otherwise
+                        % rest of UFF structures
+                        if (findstr('uff.',class_name))
+                            switch class_name
+                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.wave' 'uff.phantom'}
+                                    fprintf('UFF: reading %s [%s]\n',data_name,class_name);
+                            end
+                            data_size=h5readatt(h.filename, location ,'size');
+                            N=prod(data_size);
+                            if(N>1)
+                                item=h.index( location );
+                                if length(item)~=N error('Size attribute does not match number of subgroups'); end
+                                for n=1:N
+                                    out(n)=h.read(item{n}.location);
+                                end
+                                reshape(out,data_size.');
+                            else
+                                out=feval(class_name);
+                                
+                                % add properties
+                                prop=h.index(location);
+                                for m=1:length(prop)
+                                    out.(prop{m}.name)=h.read(prop{m}.location);
+                                end
+                            end
+                        else
+                            warning(sprintf('Class %s not supported by UFF; skipping write.',class(value)));
+                            out=[];
+                        end
+                end
             end
         end
     end
