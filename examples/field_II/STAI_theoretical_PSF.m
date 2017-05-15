@@ -72,9 +72,13 @@ xdc_impulse (Rh, impulse_response);
 xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
-%% phantom
-sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
-amp=1;                       % list with the scatterers amplitudes
+%% PHANTOM
+pha=uff.phantom();
+pha.sound_speed=1540;            % speed of sound [m/s]
+pha.points=[0,  0, 20e-3, 1];    % point scatterer position [m]
+fig_handle=pha.plot();   
+%sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
+%amp=1;                       % list with the scatterers amplitudes
 cropat=round(2*40e-3/c0/dt); % maximum time sample, samples after this will be dumped
 
 %% output data
@@ -95,7 +99,7 @@ for n=1:probe.N
     xdc_focus_times(Rh, 0, zeros(1,probe.N));
     
     % do calculation
-    [v,t]=calc_scat_multi(Th, Rh, sca, amp);
+    [v,t]=calc_scat_multi(Th, Rh, pha.points(1:3), pha.points(4));
     
     % lag compensation
     t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt + probe.r(n)/c0;
@@ -109,25 +113,27 @@ for n=1:probe.N
     seq(n).probe=probe;
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
+    
+    seq(n).apodization.window=uff.window.sta;
+    seq(n).apodization.apex=seq(n).source;
 end
 close(wb);
 
 %% CHANNEL DATA
-channel_data = uff.channel_data();
-channel_data.sampling_frequency = fs;
-channel_data.sound_speed = c0;
-channel_data.initial_time = 0;
-channel_data.pulse = pulse;
-channel_data.probe = probe;
-channel_data.sequence = seq;
-channel_data.data = STA;
+channel_data_field_ii = uff.channel_data();
+channel_data_field_ii.sampling_frequency = fs;
+channel_data_field_ii.sound_speed = c0;
+channel_data_field_ii.initial_time = 0;
+channel_data_field_ii.pulse = pulse;
+channel_data_field_ii.probe = probe;
+channel_data_field_ii.sequence = seq;
+channel_data_field_ii.data = STA;
 
 %% SCAN
 sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
-
-%% BEAMFORMER
+ %% BEAMFORMER
 bmf=beamformer();
-bmf.channel_data=channel_data;
+bmf.channel_data=channel_data_field_ii;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
@@ -135,22 +141,71 @@ bmf.receive_apodization.apex.distance=Inf;
 bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
-
+%%
 % Delay and sum on receive, then coherent compounding
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
-% Display image
-b_data.plot()
+b_data_field_ii =bmf.go({process.das_mex() process.coherent_compounding()});
+
+%% SIMULATOR
+sim=fresnel();
+
+% setting input data 
+sim.phantom=pha;                % phantom
+sim.pulse=pulse;                  % transmitted pulse
+sim.probe=probe;                  % probe
+sim.sequence=seq;               % beam sequence
+sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
+
+% we launch the simulation
+channel_data_fresnel=sim.go();
+
+
+%% BEAMFORM data from Fresnel simulation
+bmf.channel_data=channel_data_fresnel;
+% Delay and sum on receive, then coherent compounding
+b_data_fresnel =bmf.go({process.das_mex() process.coherent_compounding()});
+
+
+%% Display images
+figure(101);
+ax1 = subplot(121);
+ax2 = subplot(122);
+
+b_data_field_ii.plot(ax1,'Field II Simulation')
+b_data_fresnel.plot(ax2,'Fresnel Simulation')
+
 
 %% compare lateral profile to sinc
-im = b_data.get_image;
-lateral_profile=im(128,:);
-lateral_profile=lateral_profile-max(lateral_profile);
-theoretical_profile=20*log10(sinc(1/bmf.receive_apodization.f_number(1)/lambda*b_data.scan.x_axis).^2);
+img_field_ii = b_data_field_ii.get_image;
+lateral_profile_field_ii=img_field_ii(128,:);
+lateral_profile_field_ii=lateral_profile_field_ii-max(lateral_profile_field_ii);
+
+img_fresnel = b_data_fresnel.get_image;
+lateral_profile_fresnel=img_fresnel(128,:);
+lateral_profile_fresnel=lateral_profile_fresnel-max(lateral_profile_fresnel);
+
+theoretical_profile=20*log10(sinc(1/bmf.receive_apodization.f_number(1)/lambda*b_data_field_ii.scan.x_axis).^2);
 
 figure;
-plot(b_data.scan.x_axis*1e3,lateral_profile); hold on; grid on; 
-plot(b_data.scan.x_axis*1e3,theoretical_profile,'r-'); 
-legend('Simulation','Theoretical');
+plot(b_data_field_ii.scan.x_axis*1e3,lateral_profile_field_ii); hold all; grid on; 
+plot(b_data_field_ii.scan.x_axis*1e3,lateral_profile_fresnel,'k'); 
+plot(b_data_field_ii.scan.x_axis*1e3,theoretical_profile,'r'); 
+legend('Field II Simulation','Fresnel Simulation','Theoretical');
 xlabel('x [mm]');
 ylabel('Amplitude [dB]');
+title('Lateral (x-axis) profile ');
+
+%% compare axial profile
+axial_profile_field_ii=img_field_ii(:,128);
+axial_profile_field_ii=axial_profile_field_ii-max(axial_profile_field_ii);
+
+axial_profile_fresnel=img_fresnel(:,128);
+axial_profile_fresnel=axial_profile_fresnel-max(axial_profile_fresnel);
+
+figure;
+plot(b_data_field_ii.scan.x_axis*1e3,axial_profile_field_ii); hold all; grid on; 
+plot(b_data_field_ii.scan.x_axis*1e3,axial_profile_fresnel,'k'); 
+legend('Field II Simulation','Fresnel Simulation');
+xlabel('z [mm]');
+ylabel('Amplitude [dB]');
+title('Axial (z-axis) profile ');
 
