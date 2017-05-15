@@ -26,3 +26,5 @@ examples/huff/recording.h5
 .mex/include/
 .mex/lib/
 .mex
+*.mat
+*.uff
