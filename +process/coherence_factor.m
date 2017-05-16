@@ -49,6 +49,7 @@ classdef coherence_factor < process
                 
                 % transmit
                 if size(h.beamformed_data,2)>1
+                    h.transmit_apodization.sequence = h.channel_data.sequence;
                     h.transmit_apodization.scan=h.beamformed_data(1).scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();

@@ -81,7 +81,7 @@ pul.plot([],'2-way pulse');
 % 0.3]$ radians. The *wave* structure has a *plot* method which plots the
 % direction of the transmitted plane-wave.
 
-N=31;                           % number of plane waves
+N=5;                           % number of plane waves
 angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
@@ -140,13 +140,11 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-% Temporarily it is a bug with the apodization with PCF, especially on
-% Transmit.
-bmf.receive_apodization.window=uff.window.none;
+bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=uff.window.none;
+bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
