@@ -144,7 +144,8 @@ bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=uff.window.boxcar;
+%We set this to none since we want to examin the low quality PW images
+bmf.transmit_apodization.window=uff.window.none; 
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
@@ -191,15 +192,15 @@ figure();
 ax = subplot(2,3,1);
 bmf_data_rx_cf(1,1).plot(ax,['CF on PW 1']);
 ax = subplot(2,3,2);
-bmf_data_rx_cf(1,round(end/2)).plot(ax,['CF on PW 15']);
+bmf_data_rx_cf(1,round(end/2)).plot(ax,['CF on PW 3']);
 ax = subplot(2,3,3);
-bmf_data_rx_cf(1,end).plot(ax,['CF on PW 31']);
+bmf_data_rx_cf(1,end).plot(ax,['CF on PW 4']);
 ax = subplot(2,3,4);
 bmf_data_rx_pcf(1,1).plot(ax,['PCF on PW 1']);
 ax = subplot(2,3,5);
-bmf_data_rx_pcf(1,round(end/2)).plot(ax,['PCF on PW 15']);
+bmf_data_rx_pcf(1,round(end/2)).plot(ax,['PCF on PW 3']);
 ax = subplot(2,3,6);
-bmf_data_rx_pcf(1,end).plot(ax,['PCF on PW 31']);
+bmf_data_rx_pcf(1,end).plot(ax,['PCF on PW 5']);
 set(gcf,'Position',[ 50 50 1232 592]);
 
 %% "transmit" dimension CF
