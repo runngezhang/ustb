@@ -137,9 +137,9 @@ bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+% Setting transmit apodization to "none" since we want to look at the
+% individual low quality PW's
+bmf.transmit_apodization.window=uff.window.none;
 
 %% 
 %
@@ -182,17 +182,3 @@ b_data(1,2).plot(h2,sprintf('PW at angle = %0.1f',angle_2));
 h3 = subplot(1,3,3)
 angle_3 = rad2deg(channel_data.sequence(1,3).source.azimuth);
 b_data(1,3).plot(h3,sprintf('PW at angle = %0.1f',angle_3));
-
-
-%%
-bmf.transmit_apodization.sequence = seq;
-bmf.transmit_apodization.scan=sca;
-bmf.transmit_apodization.probe=channel_data.probe;
-tx_apodization = bmf.transmit_apodization.data();
-size(tx_apodization)
-
-
-bmf.receive_apodization.scan=sca;
-bmf.receive_apodization.probe=channel_data.probe;
-rx_apodization = bmf.receive_apodization.data();
-size(rx_apodization)
