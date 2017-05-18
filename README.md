@@ -21,10 +21,12 @@ The project administrators are:
 
 Collaborators:
 
-* Øyvind Krøvel-Velle Standal <oyvind.standal@inphase.no>
-* Jochen Rau <jochen.rau@inphase.no>
-* Lasse Løvstakken <lasse.lovstakken@ntnu.no>
-* Stefano Fiorentini <stefano.fiorentini@ntnu.no>
-* Svein Bøe <svein@ifi.uio.no>
-* Hervé Liebgott <liebgott@creatis.insa-lyon.fr>
-* Andreas Austeng <Andreas.Austeng@ifi.uio.no>
+* Andreas Austeng 
+* Arun Nair
+* Muyinatu A. Lediju Bell, 
+* Lasse Løvstakken 
+* Svein Bøe 
+* Hervé Liebgott 
+* Øyvind Krøvel-Velle Standal 
+* Jochen Rau 
+* Stefano Fiorentini

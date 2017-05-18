@@ -51,6 +51,7 @@ classdef phase_coherence_factor_alternative < process
                 
                 % transmit
                 if size(h.beamformed_data,2)>1
+                    h.transmit_apodization.sequence = h.channel_data.sequence;
                     h.transmit_apodization.scan=h.beamformed_data(1).scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();
@@ -61,20 +62,6 @@ classdef phase_coherence_factor_alternative < process
             
             tools.workbar();
             [Nrx Ntx]=size(h.beamformed_data);
-            %            temp_data_cube = complex(zeros(h.beamformed_data(1).scan.N_z_axis*h.beamformed_data(1).scan.N_x_axis,Nrx,Ntx));
-            %             %%
-            %             N=Nrx;
-            %             n=0;
-            %             for n_tx=1:Ntx
-            %                 % progress bar
-            %                 tools.workbar(n/N,'Building Cube','Building Cube');
-            %                 n=n+1;
-            %                 for n_rx=1:Nrx
-            %                     %data = (reshape(h.beamformed_data(n_rx,n_tx).data,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis));
-            %                     temp_data_cube(:,n_rx,n_tx) = h.beamformed_data(n_rx,n_tx).data;
-            %                 end
-            %             end
-            %%
             tools.workbar(1);
             %% Call the phase coherence implementation
             switch h.dimension
@@ -127,32 +114,6 @@ classdef phase_coherence_factor_alternative < process
                     
                     % phase coherent factor image
                     out_data.data = h.PCF.data .* coherent;
-                    %                     % Create apodization matrix to know which elements
-                    %                     % are "active"
-                    %                     apo_matrix = zeros(size(tx_apodization,1),Ntx*Nrx);
-                    %                     for i = 1:Ntx
-                    %                         apo_matrix(:,1+(i-1)*Nrx:Nrx*i) = tx_apodization(:,i).*rx_apodization;
-                    %                     end
-                    %                     apo_matrix = reshape(apo_matrix,size(temp_data_cube,1),size(temp_data_cube,2),size(temp_data_cube,3)*size(temp_data_cube,4));
-                    %
-                    %                     % Pick out correct data_cube
-                    %                     data_cube = reshape(temp_data_cube,size(temp_data_cube,1),size(temp_data_cube,2),size(temp_data_cube,3)*size(temp_data_cube,4));
-                    %
-                    %                     %A hack to set non active elements to zero for the
-                    %                     %alpinion scanner FI who only use 64 active
-                    %                     %elements
-                    %                     if isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
-                    %                         apo_matrix(abs(data_cube)<eps) = 0;
-                    %                     end
-                    %
-                    %                     pcf = h.phase_coherence_implementation(data_cube,apo_matrix,[num2str(n_tx),'/',num2str(Ntx)]);
-                    %                     das = sum(data_cube,3);
-                    %                     image = das.*pcf;        % declare & copy beamformed dataset
-                    %
-                    %                     out_data=uff.beamformed_data(h.beamformed_data(1));
-                    %                     out_data.data = image(:);
-                    %                     PCF = uff.beamformed_data(h.beamformed_data(1));
-                    %                     PCF.data = pcf(:);
                 case dimension.transmit
                     %%
                     for n_rx = 1:Nrx
@@ -163,7 +124,6 @@ classdef phase_coherence_factor_alternative < process
                         for n_tx = 1:Ntx
                             data_cube(:,:,n_tx) = (reshape(h.beamformed_data(n_rx,n_tx).data,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis));
                         end
-                        %data_cube = squeeze(temp_data_cube(:,:,n_rx,:));
                         
                         %A hack to set non active elements to zero for the
                         %alpinion scanner FI who only use 64 active
@@ -190,11 +150,11 @@ classdef phase_coherence_factor_alternative < process
                         % Create apodization matrix to know which elements
                         % are "active"
                         apo_matrix = reshape(tx_apodization(:,n_tx).*rx_apodization,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,Nrx);
+                        
                         % Pick out correct data_cube
                         for n_rx = 1:Nrx
                             data_cube(:,:,n_rx) = (reshape(h.beamformed_data(n_rx,n_tx).data,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis));
                         end
-                        %data_cube = temp_data_cube(:,:,:,n_tx);
                         
                         %A hack to set non active elements to zero for the
                         %alpinion scanner FI who only use 64 active
@@ -207,6 +167,7 @@ classdef phase_coherence_factor_alternative < process
                         pcf = h.phase_coherence_implementation(data_cube,apo_matrix,[num2str(n_tx),'/',num2str(Ntx)]);
                         % Create coherent DAS image
                         das = sum(data_cube,3);
+                        
                         % Mulitply DAS and PCF
                         image = das.*pcf;
                         % declare & copy beamformed dataset

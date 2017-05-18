@@ -13,22 +13,24 @@ clear all;
 close all;
 
 %% PHANTOM
-N_sca=1;                          % number of scatterers
-x_sca=0e-3;
-z_sca=40e-3;
+N_sca=1;                           % number of scatterers
+x_sca=-20e-3;
+z_sca=30e-3;
 p=[x_sca zeros(N_sca,1) z_sca];
 N_frames=5;                         % number of frames
-N_beams=50;                              % number of focused beams
+N_beams=128;                        % number of focused beams
+alpha=35*pi/180;                    % scatterer direction [rad]
+v_mag=0.25;                         % scatterer velocity magnitude [m/s]
+v=v_mag*ones(N_sca,1)*[cos(alpha) 0 sin(alpha)]; % scatterer velocity [m/s m/s m/s]
+PRF=4000;                           % pulse repetition frequency [Hz]
 fig_handle=figure();
 for n=1:N_frames*N_beams
-    if mod(n,N_beams) == 0 % Move one mm between frames
-        p(1) = p(1) + 1e-3; 
-    end
     pha(n)=uff.phantom();
     pha(n).sound_speed=1540;            % speed of sound [m/s]
-    pha(n).points=[p, ones(N_sca,1)];    % point scatterer position [m]
+    pha(n).points=[p+v*(n-1)/PRF, ones(N_sca,1)];    % point scatterer position [m]
     pha(n).plot(fig_handle);             
 end
+
 %% PROBE
 prb=uff.linear_array();
 prb.N=64;                   % number of elements 
@@ -44,7 +46,7 @@ pul.fractional_bandwidth=0.6;   % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SEQUENCE GENERATION
-azimuth_axis=linspace(-10*pi/180,10*pi/180,N_beams).';
+azimuth_axis=linspace(-35*pi/180,35*pi/180,N_beams).';
 depth=40e-3;
 seq=uff.wave();
 for n=1:N_beams
@@ -79,7 +81,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-depth_axis=linspace(35e-3,45e-3,100).';
+depth_axis=linspace(5e-3,80e-3,256).';
 sca=uff.sector_scan();
 for n=1:N_beams
     sca(n)=uff.sector_scan(azimuth_axis(n),depth_axis);
@@ -95,8 +97,7 @@ bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 
 % beamforming
-%b_data=bmf.go(@bmf.matlab,@postprocess.stack);
-b_data=bmf.go({process.das_matlab() process.stack()});
+b_data=bmf.go({process.das_mex() process.stack()});
 
 
 %% show

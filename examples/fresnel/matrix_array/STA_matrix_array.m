@@ -81,7 +81,7 @@ bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+b_data=bmf.go({process.das_matlab process.coherent_compounding});
 
 % show
 fig_plot=pha.plot();

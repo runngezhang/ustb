@@ -1,21 +1,14 @@
-%% CPWC Fresnel simulation beamformed with the Coherence Factor process
+%% CPWC simulation with the USTB built-in Fresnel simulator
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
-% to generate a Coherent Plane-Wave Compounding (CPWC) dataset. We then
-% demonstrate how you can use the coherence factor process to do the USTB
-% beamforming with the "adaptive" coherence factor beamforming.
-%
-% This example needs to be documentet, Ole Marius!! ;)
+% to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can
+% be beamformed with USTB.
 %
 % Related materials:
 %
 % * <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058 Montaldo et al. 2009>
-% * R. Mallart and M. Fink, "Adaptive focusing in scattering media through 
-%   sound-speed inhomogeneities: The van Cittert Zernike approach and focusing 
-%   criterion", J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994
 %
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 05.05.2017
-%  and Ole Marius Hoel Rindal <olemarius@olemarius.net> _
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 31.03.2017_
 
 %% Phantom
 %
@@ -81,7 +74,7 @@ pul.plot([],'2-way pulse');
 % 0.3]$ radians. The *wave* structure has a *plot* method which plots the
 % direction of the transmitted plane-wave.
 
-N=5;                           % number of plane waves
+N=3;                           % number of plane waves
 angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
@@ -140,99 +133,52 @@ bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=uff.window.boxcar;
+bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-%We set this to none since we want to examin the low quality PW images
-bmf.transmit_apodization.window=uff.window.none; 
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+% Setting transmit apodization to "none" since we want to look at the
+% individual low quality PW's
+bmf.transmit_apodization.window=uff.window.none;
 
-%% delay beamforming
-b_data = bmf.go({process.delay_matlab()});
+%% 
+%
+% The *beamformer* structure allows you to implement different beamformers 
+% by combination of multiple built-in *processes*. The aim is to avoid code
+% repetition and minimize implementation differences that could hinder
+% intercomparisson. Here we combine two *processes* (*das_matlab* and 
+% *coherent_compounding*) to produce coherently compounded images with 
+% a MATLAB implementation of the DAS general beamformer. 
+%
+% By changing the *process* chain other beamforming sequences can be implemented. 
+% For instance, in conventional focus imaging each transmit wave leads to a single scan
+% line. In the end all the scanlines are stacked to produce a 2D image. In
+% CPWC, however, a full image is produced for each transmit wave, the so
+% called "low resolution image". Then all the images are coherently
+% combined, i.e. added together, to produce a "high resolution image". 
+% Notice that the exact same *process* is used in other sequences such as DWI or RTB.
+%
+% This division of the beamforming processing in *processes* is slower
+% than combining the stages together in a single code, but it opens endless posibilities
+% for implementing different techniques based on the same code blocks.
+%
+% The beamformer returns yet another *UFF* structure: *beamformed_data*
+% which we can just display by using the method *plot*
 
-%% CF on both transmit and receive
-proc_cf=process.coherence_factor();
-proc_cf.beamformed_data=b_data;
-proc_cf.channel_data=bmf.channel_data;
-proc_cf.transmit_apodization=bmf.transmit_apodization;
-proc_cf.receive_apodization=bmf.receive_apodization;
-bmf_data_cf = proc_cf.go();
-bmf_data_cf.plot([],'CF both dimensions')
+% beamforming, notice there are no process.coherent_compound so we will get
+% access to the individual low quality plane wave images
+b_data=bmf.go({process.das_matlab()});
 
-%% PCF on both transmit and receive
-proc_pcf=process.phase_coherence_factor_alternative();
-proc_pcf.beamformed_data=b_data;
-proc_pcf.channel_data=bmf.channel_data;
-proc_pcf.transmit_apodization=bmf.transmit_apodization;
-proc_pcf.receive_apodization=bmf.receive_apodization;
-bmf_data_pcf = proc_pcf.go();
-bmf_data_pcf.plot([],'PCF both dimensions')
+%% show
+figure('Position',[100 100 1000 300])
+h1 = subplot(1,3,1)
+angle_1 = rad2deg(channel_data.sequence(1,1).source.azimuth);
+b_data(1,1).plot(h1,sprintf('PW at angle = %0.1f',angle_1));
 
-%% CF "receive" dimension resulting in individual CF PW images
-rx_cf=process.coherence_factor();
-rx_cf.beamformed_data=b_data;
-rx_cf.channel_data=bmf.channel_data;
-rx_cf.transmit_apodization=bmf.transmit_apodization;
-rx_cf.receive_apodization=bmf.receive_apodization;
-rx_cf.dimension=dimension.receive;
-bmf_data_rx_cf=rx_cf.go();
+h2 = subplot(1,3,2)
+angle_2 = rad2deg(channel_data.sequence(1,2).source.azimuth);
+b_data(1,2).plot(h2,sprintf('PW at angle = %0.1f',angle_2));
 
-%% PCF "receive" dimension resulting in individual CF PW images
-rx_pcf=process.phase_coherence_factor_alternative();
-rx_pcf.beamformed_data=b_data;
-rx_pcf.channel_data=bmf.channel_data;
-rx_pcf.transmit_apodization=bmf.transmit_apodization;
-rx_pcf.receive_apodization=bmf.receive_apodization;
-rx_pcf.dimension=dimension.receive;
-bmf_data_rx_pcf=rx_pcf.go();
-
-figure();
-ax = subplot(2,3,1);
-bmf_data_rx_cf(1,1).plot(ax,['CF on PW 1']);
-ax = subplot(2,3,2);
-bmf_data_rx_cf(1,round(end/2)).plot(ax,['CF on PW 3']);
-ax = subplot(2,3,3);
-bmf_data_rx_cf(1,end).plot(ax,['CF on PW 4']);
-ax = subplot(2,3,4);
-bmf_data_rx_pcf(1,1).plot(ax,['PCF on PW 1']);
-ax = subplot(2,3,5);
-bmf_data_rx_pcf(1,round(end/2)).plot(ax,['PCF on PW 3']);
-ax = subplot(2,3,6);
-bmf_data_rx_pcf(1,end).plot(ax,['PCF on PW 5']);
-set(gcf,'Position',[ 50 50 1232 592]);
-
-%% "transmit" dimension CF
-proc_cf=process.coherence_factor();
-proc_cf.beamformed_data=b_data;
-proc_cf.channel_data=bmf.channel_data;
-proc_cf.transmit_apodization=bmf.transmit_apodization;
-proc_cf.receive_apodization=bmf.receive_apodization;
-proc_cf.dimension=dimension.transmit;
-cf_data_tx=proc_cf.go();
-
-figure();
-ax = subplot(1,3,1);
-cf_data_tx(1,43).plot(ax,['CF on EL 43']);
-ax = subplot(1,3,2);
-cf_data_tx(1,64).plot(ax,['CF on EL 64']);
-ax = subplot(1,3,3);
-cf_data_tx(1,85).plot(ax,['CF on EL 85']);
-set(gcf,'Position',[ 50 150 1232 300]);
-
-%% "transmit" dimension PCF
-proc_pcf=process.phase_coherence_factor_alternative();
-proc_pcf.beamformed_data=b_data;
-proc_pcf.channel_data=bmf.channel_data;
-proc_pcf.dimension=dimension.transmit;
-pcf_data_tx=proc_pcf.go();
-
-figure();
-ax = subplot(1,3,1);
-pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
-ax = subplot(1,3,2);
-pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
-ax = subplot(1,3,3);
-pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
-set(gcf,'Position',[ 50 150 1232 300]);
+h3 = subplot(1,3,3)
+angle_3 = rad2deg(channel_data.sequence(1,3).source.azimuth);
+b_data(1,3).plot(h3,sprintf('PW at angle = %0.1f',angle_3));
