@@ -125,12 +125,32 @@ classdef uff
                         h5writeatt(h.filename,[location '/' name],'complex',1);
                         dumped_objects=1;
                     end
-                case {'char' 'uff.window'}
+                case 'char' 
+                    h5create(h.filename,[location '/' name], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
+                    h5write(h.filename,[location '/' name], uint16(object));
+                    h5writeatt(h.filename,[location '/' name],'class',class(object));
+                    h5writeatt(h.filename,[location '/' name],'name',name);
+                    dumped_objects=1;
+                case 'uff.window'
                     h5create(h.filename,[location '/' name], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
                     h5write(h.filename,[location '/' name], single(object));
                     h5writeatt(h.filename,[location '/' name],'class',class(object));
                     h5writeatt(h.filename,[location '/' name],'name',name);
                     dumped_objects=1;
+                case 'cell'
+                    % call write for all members in the cell
+                    dumped_objects=0;
+                    for n=1:numel(object)
+                        dumped_objects=dumped_objects+h.write(object{n}, [name '_' sprintf('%04d',n)],[location '/' name]);
+                    end
+                    
+                    % group attributes
+                    if dumped_objects
+                        h5writeatt(h.filename,[location '/' name],'class',class(object));
+                        h5writeatt(h.filename,[location '/' name],'name',name);
+                        h5writeatt(h.filename,[location '/' name],'array',1);
+                        h5writeatt(h.filename,[location '/' name],'size',size(object));
+                    end
                 otherwise
                     % UFF structures
                     if (findstr('uff.',class(object)))
@@ -296,9 +316,21 @@ classdef uff
                                 1i*h5read(h.filename, [ location '/imag' ]);
                         end
                     case 'char'
-                        out=h5read(h.filename, location)
+                        out=char(h5read(h.filename, location));
                     case 'uff.window'
                         out=uff.window(h5read(h.filename, location ));
+                    case 'cell'
+                        data_size=h5readatt(h.filename, location ,'size');
+                        N=prod(data_size);
+                        if(N>0)
+                            item=h.index( location );
+                            if length(item)~=N error('Size attribute does not match number of subgroups'); end
+                            out={};
+                            for n=1:N
+                                out{n}=h.read(item{n}.location);
+                            end
+                            reshape(out,data_size.');
+                        end
                     otherwise
                         % rest of UFF structures
                         if (findstr('uff.',class_name))

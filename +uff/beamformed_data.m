@@ -13,6 +13,14 @@ classdef beamformed_data < handle
         scan                       % SCAN class
         data                       % data
     end
+ 
+    %% Logistics 
+    properties  (SetAccess = public)
+        name={}              % name of the dataset
+        reference={}         % reference to the publication where it was used/acquired
+        author={}            % contact of the authors
+        version={}           % version of the dataset
+    end
     
     %% optional properties
     properties  (SetAccess = public)

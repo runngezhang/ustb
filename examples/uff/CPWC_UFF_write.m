@@ -64,6 +64,11 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % launch the simulation
 channel_data=sim.go();
 
+% setting dataset name & author information
+channel_data.name = 'Test for UFF example';
+channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Arun Nair <anair8@jhu.edu>'}; 
+channel_data.reference = {'www.ustb.no'};
+
 %% Getting beamformed data
 %
 % We will also generate some beamformed data to save into the same UFF

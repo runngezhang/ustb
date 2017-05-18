@@ -7,7 +7,6 @@
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 15.05.2017_
 
-
 %% Checking the file is in the path
 %
 % To read data from a UFF file the first we need is, you guessed it, a UFF

@@ -17,6 +17,14 @@ classdef channel_data < handle
         modulation_frequency       % modulation frequency [Hz]
     end
     
+    %% Logistics 
+    properties  (SetAccess = public)
+        name={}              % name of the dataset
+        reference={}         % reference to the publication where it was used/acquired
+        author={}            % contact of the authors
+        version={}           % version of the dataset
+    end
+    
     %% optional properties
     properties  (SetAccess = public)
         phantom                    % PHANTOM class [optional]
