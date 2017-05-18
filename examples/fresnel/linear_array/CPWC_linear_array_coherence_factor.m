@@ -225,6 +225,8 @@ set(gcf,'Position',[ 50 150 1232 300]);
 proc_pcf=process.phase_coherence_factor_alternative();
 proc_pcf.beamformed_data=b_data;
 proc_pcf.channel_data=bmf.channel_data;
+proc_pcf.transmit_apodization=bmf.transmit_apodization;
+proc_pcf.receive_apodization=bmf.receive_apodization;
 proc_pcf.dimension=dimension.transmit;
 pcf_data_tx=proc_pcf.go();
 

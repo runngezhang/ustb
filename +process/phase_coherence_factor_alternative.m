@@ -119,7 +119,7 @@ classdef phase_coherence_factor_alternative < process
                     for n_rx = 1:Nrx
                         % Create apodization matrix to know which elements
                         % are "active"
-                        apo_matrix = reshape(tx_apodization.*rx_apodization(n_rx),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,Ntx);
+                        apo_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(:,n_rx)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,Ntx);
                         % Pick out correct data_cube
                         for n_tx = 1:Ntx
                             data_cube(:,:,n_tx) = (reshape(h.beamformed_data(n_rx,n_tx).data,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis));
@@ -149,7 +149,7 @@ classdef phase_coherence_factor_alternative < process
                     for n_tx = 1:Ntx
                         % Create apodization matrix to know which elements
                         % are "active"
-                        apo_matrix = reshape(tx_apodization(:,n_tx).*rx_apodization,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,Nrx);
+                        apo_matrix = reshape(bsxfun(@times,tx_apodization(:,n_tx),rx_apodization),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,Nrx);
                         
                         % Pick out correct data_cube
                         for n_rx = 1:Nrx
