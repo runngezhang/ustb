@@ -35,7 +35,7 @@ classdef incoherent_compounding < process
                     tools.workbar();
                     for n=2:N
                         if mod(n,round(N/100))==2
-                            tools.workbar(n/N,sprintf('%s (%s) on "%s"',h.name,h.version,h.dimension),'USTB');
+                            tools.workbar(n/N,sprintf('%s (%s) on "%s"',h.name,h.version,char(h.dimension)),'USTB');
                         end
                         out_data.data=out_data.data+abs(h.beamformed_data(n).data);
                     end
@@ -43,7 +43,7 @@ classdef incoherent_compounding < process
                 case dimension.transmit
                     tools.workbar();
                     for n_rx = 1:Nrx
-                        tools.workbar(n_rx/Nrx,sprintf('%s (%s) on "%s"',h.name,h.version,h.dimension),'USTB');
+                        tools.workbar(n_rx/Nrx,sprintf('%s (%s) on "%s"',h.name,h.version,char(h.dimension)),'USTB');
                         % declare & copy beamformed dataset
                         out_data(n_rx,1)=uff.beamformed_data(h.beamformed_data(1));
                         out_data(n_rx,1).data = zeros(size(out_data(n_rx,1).data));
@@ -55,7 +55,7 @@ classdef incoherent_compounding < process
                 case dimension.receive
                     tools.workbar();
                     for n_tx = 1:Ntx
-                        tools.workbar(n_tx/Ntx,sprintf('%s (%s) on "%s"',h.name,h.version,h.dimension),'USTB');
+                        tools.workbar(n_tx/Ntx,sprintf('%s (%s) on "%s"',h.name,h.version,char(h.dimension)),'USTB');
                         % declare & copy beamformed dataset
                         out_data(1,n_tx)=uff.beamformed_data(h.beamformed_data(1));
                         out_data(1,n_tx).data = zeros(size(out_data(1,n_tx).data));
