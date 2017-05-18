@@ -199,7 +199,7 @@ classdef beamformed_data < handle
                 case 'uff.sector_scan'
                     x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
-                    h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                    h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,2)]);
                     h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
