@@ -11,8 +11,8 @@
 %
 % The first thing we need to save data into a UFF file is, you guessed it,
 % data. Let us generate some channel data using the *fresnel*
-% simulator included in USTB. We won't get into detalis here. If you want
-% to know more about *fresnel* you can find some examples under the
+% simulator included in the USTB. We won't get into details here. If you 
+% want to know more about *fresnel* you can find some examples under the
 % _fresnel_ folder.
 %
 % So here we define a 15 angles plane-wave sequence using a 128 elements
@@ -40,8 +40,8 @@ pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 
 % sequence
-N_plane_waves=15;
-angles=linspace(-0.3,0.3,N_plane_waves);
+N_plane_waves=15; 
+angles=linspace(-0.3,0.3,N_plane_waves);  % angle vector [rad]
 seq=uff.wave();
 for n=1:N_plane_waves 
     seq(n)=uff.wave();
@@ -105,7 +105,7 @@ uff_file=uff('test02.uff');
 %
 % This will open 'test02.uff' file in the current folder. The constructor
 % can take an additional parameter: _mode_ a string that specifies whether
-% the file is ment to be for read-only ("read"), to read and write ("append"),
+% the file is meant to be for read-only ("read"), to read and write ("append"),
 % or if we want to overwrite the file ("write"). By default the constructor
 % opens the file in "append" mode.
 
@@ -132,7 +132,7 @@ index=uff_file.index('/',display);
 
 %% 
 % 
-% *uff/index* returns a cell with infomation on the datasets and
+% *uff/index* returns a cell with information on the datasets and
 % groups in the specified location, see: 
 
 index{:}
