@@ -146,7 +146,7 @@ bmf.transmit_apodization.apex.distance=Inf;
 % The *beamformer* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. The aim is to avoid code
 % repetition and minimize implementation differences that could hinder
-% intercomparisson. Here we combine two *processes* (*das_matlab* and 
+% inter-comparison. Here we combine two *processes* (*das_matlab* and 
 % *coherent_compounding*) to produce coherently compounded images with 
 % a MATLAB implementation of the DAS general beamformer. 
 %
