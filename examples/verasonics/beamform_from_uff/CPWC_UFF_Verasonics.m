@@ -43,7 +43,7 @@ content = uff_file.index('/',display);
 has_b_data = false;
 for i = 1:length(content)
     if strcmp(content{i}.class,'uff.beamformed_data')
-        has_b_data = true;
+        has_b_data = true; % We found a beamformed data object!
     end
 end
 
@@ -88,10 +88,11 @@ if ~has_b_data
     % Now we can save this beamformed image to that file, so that we don't have
     % to wait for the beamforming again.
     uff_file.write(b_data,'b_data');
-else
-    %%
-    %
-    % And finally display the image.
-    b_data.plot();
 end
-    
+
+%%
+%
+% And finally display the image.
+b_data.plot();
+
+
