@@ -1,12 +1,13 @@
 %% Adquire and record a CPWC dataset with L7-4 probe
 
-% date:     16.03.2017
+% date:     18.05.2017
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
 % History:  Slight modification from the original STAI_L11.m script to fit
 % the L7-4 probe we have at UiO.
 %           Modified to use the generalized beamformer USTB.
+%           Added writing to UFF file.
 %% Read me
 % To run you should be in the Verasonics folder and activate it. For
 % instance by:
@@ -28,13 +29,12 @@ close all;
 s = strsplit(pwd,filesep);
 assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
-% filename handling
+% Set of filename handling
 filename='a.mat';
-% filhandling not ready for USTB v2 yet
-%folderdata=['data/' datestr(now,'yyyymmdd')];
-%mkdir(folderdata);            
-%filedata=['L7_CPW_' datestr(now,'HHMMSS') '.h5'];
-%hufffile=[folderdata '/' filedata];
+folderdata=['data/' datestr(now,'yyyymmdd')];
+mkdir(folderdata);            
+filedata=['L7_CPWC_' datestr(now,'HHMMSS') '.uff'];
+uff_filename=[folderdata '/' filedata];
 
 % scan area in live view
 scan_area=[-19e-3 0e-3 19e-3 50e-3];
@@ -103,7 +103,9 @@ PData.pdeltaZ = (end_depth*lambda/PData.Size(1))/lambda;
 PData.Origin = [Trans.ElementPos(1,1)*1e-3/lambda, 0, 0e-3/lambda]; % x,y,z of upper lft crnr.
 
 %% Specify Media object. 'pt1.m' script defines array of point targets.
-Media.MP=[0, 0, 20e-3/lambda, 1; Trans.ElementPos];
+%Media.MP=[0, 0, 20e-3/lambda, 1; Trans.ElementPos];
+pt1
+Media.function = 'movePoints';
 
 %% Specify Resources.
 Resource.RcvBuffer(1).datatype = 'int16';
@@ -318,8 +320,8 @@ channel_data = ver.create_cpw_channeldata();
 
 %% SCAN
 sca=uff.linear_scan();
-sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
-sca.z_axis = linspace(0,50e-3,256).'
+sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
+sca.z_axis = linspace(0,50e-3,256).';
  
 %% BEAMFORMER
 bmf=beamformer();
@@ -335,10 +337,14 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+b_data=bmf.go({process.delay_matlab process.coherent_compounding});
 
 %% show
 b_data.plot();
+
+%% write channel_data to file the filname that was created in the beginning of this script
+uff_file=uff(uff_filename);
+uff_file.write(channel_data,'channel_data');
 return
 
 % **** Callback routines to be converted by text2cell function. ****
