@@ -79,6 +79,10 @@ classdef verasonics < handle
             end
             channel_data.sequence = seq;
             
+            
+            %% Save Pulse
+            channel_data.pulse = uff.pulse(double(h.Trans.frequency*10^6));
+            
             %% Convert channel data from Verasonics format to USTB format
             no_samples = h.Receive(1).endSample;
             data = zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames);
