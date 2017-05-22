@@ -22,7 +22,7 @@ classdef coherence_factor < process
             h.name='Coherence Factor MATLAB';   
             h.reference= 'R. Mallart and M. Fink, Adaptive focusing in scattering media through sound-speed inhomogeneities: The van Cittert Zernike approach and focusing criterion, J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994';                
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
-            h.version='v1.0.2';
+            h.version='v1.0.3';
         end
     end
         

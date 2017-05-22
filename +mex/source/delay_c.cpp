@@ -55,7 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mexPrintf(" USTB mex delay for multiple waves\n");
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" Single precision\n");
-		mexPrintf(" Vers:  1.0.4\n");
+		mexPrintf(" Vers:  1.0.5\n");
 		mexPrintf(" Auth:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>\n");
 		mexPrintf(" Date:  2017/05/02\n");
 		mexPrintf("---------------------------------------------------------------\n");
@@ -140,10 +140,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// OUTPUTS VAR
 	mwSize out_size2[4];
 	out_size2[0] = P;  // pixels
-	out_size2[1] = F;  // channels
-	out_size2[2] = N;  // waves
-    out_size2[3] = W;  // frames
-	M_D = mxCreateNumericArray(4, (const mwSize*)&out_size2, mxSINGLE_CLASS, mxCOMPLEX);
+	out_size2[1] = N;  // channels
+    out_size2[2] = W;  // waves
+	out_size2[3] = F;  // frames
+    M_D = mxCreateNumericArray(4, (const mwSize*)&out_size2, mxSINGLE_CLASS, mxCOMPLEX);
 	float* Dr = (float*)mxGetData(M_D);
 	float* Di = (float*)mxGetImagData(M_D);
 
@@ -226,10 +226,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
                             float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
                             // apply phase change and delay
-                            //Dr[pp + P*rx + PN*w + PNW*f] = c_apo*(re*coswt - im*sinwt);
-                            //Di[pp + P*rx + PN*w + PNW*f] = c_apo*(im*coswt + re*sinwt);
-                            Dr[pp + P*f + PF*rx + PFN*w] = c_apo*(re*coswt - im*sinwt);
-                            Di[pp + P*f + PF*rx + PFN*w] = c_apo*(im*coswt + re*sinwt);
+                            Dr[pp + P*rx + PN*w + PNW*f] = c_apo*(re*coswt - im*sinwt);
+                            Di[pp + P*rx + PN*w + PNW*f] = c_apo*(im*coswt + re*sinwt);
+                            //Dr[pp + P*f + PF*rx + PFN*w] = c_apo*(re*coswt - im*sinwt);
+                            //Di[pp + P*f + PF*rx + PFN*w] = c_apo*(im*coswt + re*sinwt);
                             
                         }
                     } else {
@@ -238,10 +238,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                             float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
                             float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
                             // apply phase change and delay
-                            //Dr[pp + P*rx + PN*w + PNW*f] = c_apo*re;
-                            //Di[pp + P*rx + PN*w + PNW*f] = c_apo*im;
-                            Dr[pp + P*f + PF*rx + PFN*w] = c_apo*re;
-                            Di[pp + P*f + PF*rx + PFN*w] = c_apo*im;
+                            Dr[pp + P*rx + PN*w + PNW*f] = c_apo*re;
+                            Di[pp + P*rx + PN*w + PNW*f] = c_apo*im;
+                            //Dr[pp + P*f + PF*rx + PFN*w] = c_apo*re;
+                            //Di[pp + P*f + PF*rx + PFN*w] = c_apo*im;
 
                         }
                     }

@@ -45,6 +45,15 @@ classdef delay_mex < process
                 data=single(reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data)));
             end
             
+            % create beamformed data class
+            out_data=uff.beamformed_data();
+            out_data.scan=h.scan;
+            N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
+            out_data.sequence=h.channel_data.sequence;
+
+            % auxiliary data
+            aux_data=zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames);
+            
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence);
@@ -98,20 +107,14 @@ classdef delay_mex < process
                 apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                 
                 % delay
-                delayed_data=mex.delay_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);                
-
-                for n_rx=1:h.channel_data.N_elements
-                    out_data(n_rx,n_wave)=uff.beamformed_data();
-                    out_data(n_rx,n_wave).scan=current_scan;
-                    out_data(n_rx,n_wave).wave=h.channel_data.sequence(n_wave);
-                    out_data(n_rx,n_wave).data=squeeze(delayed_data(:,:,n_rx));
-                end
-                
+                aux_data(:,:,n_wave,:)=mex.delay_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);                
+  
                 % assign phase according to 2 times the receive propagation distance
                 if(w0>eps)
-                    out_data(1,n_wave).data=bsxfun(@times,out_data(1,n_wave).data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                    aux_data(:,:,n_wave,:)=bsxfun(@times,aux_data(:,:,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                 end
             end
+            out_data.data = aux_data;
             tools.workbar(1);
         end
     end

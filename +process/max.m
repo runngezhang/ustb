@@ -13,25 +13,33 @@ classdef max < process
             h.name='Maximum value MATLAB'   
             h.reference= 'www.ustb.no';                
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
-            h.version='v1.0.1';
+            h.version='v1.0.3';
         end
+    end
+    
+    properties (Access = public)
+       dimension = dimension.both;          %Which "dimension" to sum over
     end
 
     methods
         function out_data=go(h)
-            % declare & copy beamformed dataset
-            out_data=uff.beamformed_data(h.beamformed_data(1));
+            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
             
-            % initialize
-            out_data.data=abs(h.beamformed_data(1).data);
-            
-            N=length(h.beamformed_data(:));
-            tools.workbar();
-            for n=2:N
-                if mod(n,round(N/100))==2
-                    tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
-                end
-                out_data.data=max(out_data.data, abs(h.beamformed_data(n).data));
+            switch h.dimension
+                case dimension.both
+                    out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+                    out_data.data=zeros(N_pixels, 1, 1, N_frames);
+                    out_data.data=max(max(abs(h.beamformed_data.data),[],2),[],3);
+                case dimension.transmit
+                    out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+                    out_data.data=zeros(N_pixels, Nrx, 1, N_frames);
+                    out_data.data=max(abs(h.beamformed_data.data),[],3);
+                case dimension.receive
+                    out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+                    out_data.data=zeros(N_pixels, 1, Ntx, N_frames);
+                    out_data.data=max(abs(h.beamformed_data.data),[],2);
+                otherwise
+                    error('Unknown dimension mode; check HELP dimension');
             end
         end
     end 
