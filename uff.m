@@ -33,9 +33,9 @@ classdef uff
                     attr_details.AttachType = 'group';
                     hdf5write(filename, attr_details, h.version);
                 case 'read'
-                    assert(length(dir(filename))>0,sprintf('File %s not found. Check the path and filename, or chose ''write'' mode to create it.',filename));
+                    assert(exist(filename,'file')==2,sprintf('File %s not found. Check the path and filename, or chose ''write'' mode to create it.',filename));
                 case 'append'
-                    if(length(dir(filename))<1)
+                    if(exist(filename,'file')~=2)
                         % create it
                         fprintf('UFF: file %s not found; it shall be created.\n',filename);
                         attr_details.Name = 'version';

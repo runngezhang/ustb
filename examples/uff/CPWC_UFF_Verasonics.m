@@ -6,8 +6,8 @@
 % run the *CPWC_L7.m* Verasonics example so the file 'L7_CPWC_193328.uff'
 % is in the current path.
 %
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 15.05.2017
-%  and Ole Marius Hoel Rindal <olemarius@olemarius.net>_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
+%  and Ole Marius Hoel Rindal <olemarius@olemarius.net> 15.05.2017_
 
 %% Checking the file is in the path
 %
@@ -16,8 +16,9 @@
 % websever.
 
 % data location
-url='http://ustb.no/datasets/';   % if not found data will be downloaded from here
-local_path='./';                  % location of example data in this computer
+url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
+local_path = [ustb_path(),'/data/']; % location of example data in this computer
+addpath(local_path);
 filename='L7_CPWC_193328.uff';
 
 % check if the file is available in the local path & downloads otherwise
@@ -28,12 +29,9 @@ tools.download(filename, url, local_path);
 % Now that the file is on the path let us create a *UFF* object to interact
 % with the file. We open it in "append" mode.
 
-
-uff_file=uff(filename);
-
+uff_file=uff(filename)
 
 %%
-%
 %
 % Let's first check if we are lucky and the file allready contains
 % beamformed_data that we can display.
