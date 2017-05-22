@@ -1,0 +1,231 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Reading data from an UFF file recorded with the Verasonics CPWC_L7 example</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_UFF_Verasonics.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Reading data from an UFF file recorded with the Verasonics CPWC_L7 example</h1><!--introduction--><p>In this example we show how to read channel and beamformed data from a UFF (Ultrasound File Format) file recorded with the Verasonics example. You will need an internet connectionto download data. Otherwise, you can run the <b>CPWC_L7.m</b> Verasonics example so the file 'L7_CPWC_193328.uff' is in the current path.</p><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> 15.05.2017  and Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a></i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Checking the file is in the path</a></li><li><a href="#2">Reading channel data</a></li></ul></div><h2>Checking the file is in the path<a name="1"></a></h2><p>To read data from a UFF file the first we need is, you guessed it, a UFF file. We check if it is on the current path and download it from the USTB websever.</p><pre class="codeinput"><span class="comment">% data location</span>
+url=<span class="string">'http://ustb.no/datasets/'</span>;   <span class="comment">% if not found data will be downloaded from here</span>
+local_path=<span class="string">'./'</span>;                  <span class="comment">% location of example data in this computer</span>
+filename=<span class="string">'L7_CPWC_193328.uff'</span>;
+
+<span class="comment">% check if the file is available in the local path &amp; downloads otherwise</span>
+tools.download(filename, url, local_path);
+</pre><pre class="codeoutput">Downloading http://ustb.no/datasets/L7_CPWC_193328.uff. This may take a while.
+</pre><h2>Reading channel data<a name="2"></a></h2><p>Now that the file is on the path let us create a <b>UFF</b> object to interact with the file. We open it in "append" mode.</p><pre class="codeinput">uff_file=uff(filename);
+</pre><p>Let's first check if we are lucky and the file allready contains beamformed_data that we can display.</p><pre class="codeinput">display=true;
+content = uff_file.index(<span class="string">'/'</span>,display);
+
+has_b_data = false;
+<span class="keyword">for</span> i = 1:length(content)
+    <span class="keyword">if</span> strcmp(content{i}.class,<span class="string">'uff.beamformed_data'</span>)
+        has_b_data = true; <span class="comment">% We found a beamformed data object!</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">UFF: Contents of L7_CPWC_193328.uff at /
+   - /channel_data: channel_data [uff.channel_data] size(1,1)
+</pre><p>If it doesn't have any beamformed data at least it should have some channel_data. So let's read that. If the file did have beamformed data, will will jump straight to the display part later on :)</p><pre class="codeinput"><span class="keyword">if</span> ~has_b_data
+</pre><pre class="codeinput">    channel_data=uff_file.read(<span class="string">'/channel_data'</span>);
+</pre><pre class="codeoutput">UFF: reading channel_data [uff.channel_data]
+UFF: reading sequence [uff.wave]
+UFF: reading sequence_0001 [uff.wave]
+UFF: reading sequence_0002 [uff.wave]
+UFF: reading sequence_0003 [uff.wave]
+UFF: reading sequence_0004 [uff.wave]
+UFF: reading sequence_0005 [uff.wave]
+UFF: reading sequence_0006 [uff.wave]
+UFF: reading sequence_0007 [uff.wave]
+UFF: reading sequence_0008 [uff.wave]
+UFF: reading sequence_0009 [uff.wave]
+UFF: reading sequence_0010 [uff.wave]
+UFF: reading sequence_0011 [uff.wave]
+UFF: reading sequence_0012 [uff.wave]
+UFF: reading sequence_0013 [uff.wave]
+UFF: reading sequence_0014 [uff.wave]
+UFF: reading sequence_0015 [uff.wave]
+</pre><p>And then the normal routine of defining the scan,</p><pre class="codeinput">    sca=uff.linear_scan();
+    sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
+    sca.z_axis = linspace(0,50e-3,256).';
+</pre><p>setting up and running the beamforming</p><pre class="codeinput">    bmf=beamformer();
+    bmf.channel_data=channel_data;
+    bmf.scan=sca;
+
+    bmf.receive_apodization.window=uff.window.none;
+    bmf.receive_apodization.f_number=1.7;
+    bmf.receive_apodization.apex.distance=Inf;
+
+    bmf.transmit_apodization.window=uff.window.none;
+    bmf.transmit_apodization.f_number=1.7;
+    bmf.transmit_apodization.apex.distance=Inf;
+
+    b_data=bmf.go({process.delay_matlab process.coherent_compounding});
+</pre><p>Now we can save this beamformed image to that file, so that we don't have to wait for the beamforming again.</p><pre class="codeinput">    uff_file.write(b_data,<span class="string">'b_data'</span>);
+</pre><pre class="codeoutput">UFF: writting b_data [uff.beamformed_data] at 
+UFF: writting wave [uff.wave] at /b_data
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p>And finally display the image.</p><pre class="codeinput">b_data.plot();
+</pre><img vspace="5" hspace="5" src="CPWC_UFF_Verasonics_01.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Reading data from an UFF file recorded with the Verasonics CPWC_L7 example
+%
+% In this example we show how to read channel and beamformed data from a
+% UFF (Ultrasound File Format) file recorded with the Verasonics example.
+% You will need an internet connectionto download data. Otherwise, you can
+% run the *CPWC_L7.m* Verasonics example so the file 'L7_CPWC_193328.uff'
+% is in the current path.
+%
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 15.05.2017
+%  and Ole Marius Hoel Rindal <olemarius@olemarius.net>_
+
+%% Checking the file is in the path
+%
+% To read data from a UFF file the first we need is, you guessed it, a UFF
+% file. We check if it is on the current path and download it from the USTB
+% websever.
+
+% data location
+url='http://ustb.no/datasets/';   % if not found data will be downloaded from here
+local_path='./';                  % location of example data in this computer
+filename='L7_CPWC_193328.uff';
+
+% check if the file is available in the local path & downloads otherwise
+tools.download(filename, url, local_path);
+
+%% Reading channel data
+%
+% Now that the file is on the path let us create a *UFF* object to interact
+% with the file. We open it in "append" mode.
+
+
+uff_file=uff(filename);
+
+
+%%
+%
+%
+% Let's first check if we are lucky and the file allready contains
+% beamformed_data that we can display.
+display=true;
+content = uff_file.index('/',display);
+
+has_b_data = false;
+for i = 1:length(content)
+    if strcmp(content{i}.class,'uff.beamformed_data')
+        has_b_data = true; % We found a beamformed data object!
+    end
+end
+
+
+%%
+%
+%
+% If it doesn't have any beamformed data at least it should have some
+% channel_data. So let's read that.
+% If the file did have beamformed data, will will jump straight to the
+% display part later on :)
+if ~has_b_data
+    
+    channel_data=uff_file.read('/channel_data');
+    
+    %%
+    %
+    % And then the normal routine of defining the scan,
+    
+    sca=uff.linear_scan();
+    sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
+    sca.z_axis = linspace(0,50e-3,256).';
+    
+    %%
+    %
+    % setting up and running the beamforming
+    bmf=beamformer();
+    bmf.channel_data=channel_data;
+    bmf.scan=sca;
+    
+    bmf.receive_apodization.window=uff.window.none;
+    bmf.receive_apodization.f_number=1.7;
+    bmf.receive_apodization.apex.distance=Inf;
+    
+    bmf.transmit_apodization.window=uff.window.none;
+    bmf.transmit_apodization.f_number=1.7;
+    bmf.transmit_apodization.apex.distance=Inf;
+    
+    b_data=bmf.go({process.delay_matlab process.coherent_compounding});
+    %%
+    %
+    % Now we can save this beamformed image to that file, so that we don't have
+    % to wait for the beamforming again.
+    uff_file.write(b_data,'b_data');
+end
+
+%%
+%
+% And finally display the image.
+b_data.plot();
+
+
+
+##### SOURCE END #####
+--></body></html>

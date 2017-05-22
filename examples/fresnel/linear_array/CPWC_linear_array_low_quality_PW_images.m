@@ -1,4 +1,4 @@
-%% CPWC (low-quality) simulation with the USTB built-in Fresnel simulator
+%% CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
 % to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can

@@ -166,7 +166,7 @@ uff_file.index('/',display);
 % define an array of beamformed data as
 
 b_data_array=uff.beamformed_data();
-for n=1:10
+for n=1:3
     b_data_array(n)=uff.beamformed_data();
     b_data_array(n).copy(b_data);
 end

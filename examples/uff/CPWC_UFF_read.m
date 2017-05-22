@@ -52,9 +52,9 @@ b_data.plot();
 b_data_array=uff_file.read('/b_data_array');
 figure;
 for n=1:length(b_data_array)
-    b_data.plot(subplot(2,5,n));
+    b_data.plot(subplot(1,length(b_data_array),n));
 end
-set(gcf,'Position',[0 0 1000 750])
+set(gcf,'Position',[0 0 1000 420])
 
 %%
 % 

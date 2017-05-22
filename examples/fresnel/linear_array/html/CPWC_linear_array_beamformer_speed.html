@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>CPWC simulation to compare speeds of the various USTB beamformers.</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-19"><meta name="DC.source" content="CPWC_linear_array_beamformer_speed.m"><style type="text/css">
+      --><title>CPWC simulation to compare speeds of the various USTB beamformers.</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_linear_array_beamformer_speed.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -68,24 +68,24 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
   </style></head><body><div class="content"><h1>CPWC simulation to compare speeds of the various USTB beamformers.</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#2">Phantom</a></li><li><a href="#3">Probe</a></li><li><a href="#4">Pulse</a></li><li><a href="#5">Sequence generation</a></li><li><a href="#6">The Fresnel simulator</a></li><li><a href="#7">Scan</a></li><li><a href="#8">Beamformer</a></li></ul></div><p>In this example, we conduct a simple simulation to compare the speeds achieved with USTB's:</p><div><ol><li>MATLAB delay implementation</li><li>Mex delay implementation</li><li>MATLAB delay-and-sum implementation</li><li>Mex delay-and-sum implementation.</li></ol></div><p>This tutorial assumes familiarity with the contents of the <a href="./CPWC_linear_array.html">'CPWC simulation with the USTB built-in Fresnel simulator'</a> tutorial. Please feel free to refer back to that for more details.</p><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> and Arun Asokan Nair <a href="anair8@jhu.edu">anair8@jhu.edu</a> 16.05.2017</i></p><pre class="codeinput">clear <span class="string">all</span>;
 close <span class="string">all</span>;
-</pre><h2 id="2">Phantom</h2><p>Our first step is to define an appropriate <b>phantom</b> structure as input. Our phantom here is simply a collection of point scatterers. USTB's implementation of phantom comes with a <b>plot</b> method for free!</p><pre class="codeinput">x_sca=[zeros(1,7) -15e-3:5e-3:15e-3];
+</pre><h2>Phantom<a name="2"></a></h2><p>Our first step is to define an appropriate <b>phantom</b> structure as input. Our phantom here is simply a collection of point scatterers. USTB's implementation of <b>phantom</b> comes with a <b>plot</b> method for free!</p><pre class="codeinput">x_sca=[zeros(1,7) -15e-3:5e-3:15e-3];
 z_sca=[5e-3:5e-3:35e-3 20e-3*ones(1,7)];
 N_sca=length(x_sca);
 pha=uff.phantom();
 pha.sound_speed=1540;            <span class="comment">% speed of sound [m/s]</span>
 pha.points=[x_sca.', zeros(N_sca,1), z_sca.', ones(N_sca,1)];    <span class="comment">% point scatterer position [m]</span>
 fig_handle=pha.plot();
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_01.png" alt=""> <h2 id="3">Probe</h2><p>The next step is to define the <b>probe</b> structure which contains information about the probe's geometry. This too comes with % a <b>plot</b> method that enables visualization of the probe with respect to the phantom. The probe we will use in our example is a linear array transducer with 128 elements.</p><pre class="codeinput">prb=uff.linear_array();
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_01.png" alt=""> <h2>Probe<a name="3"></a></h2><p>The next step is to define the <b>probe</b> structure which contains information about the probe's geometry. This too comes with % a <b>plot</b> method that enables visualization of the probe with respect to the phantom. The probe we will use in our example is a linear array transducer with 128 elements.</p><pre class="codeinput">prb=uff.linear_array();
 prb.N=128;                  <span class="comment">% number of elements</span>
 prb.pitch=300e-6;           <span class="comment">% probe pitch in azimuth [m]</span>
 prb.element_width=270e-6;   <span class="comment">% element width [m]</span>
 prb.element_height=5000e-6; <span class="comment">% element height [m]</span>
 prb.plot(fig_handle);
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_02.png" alt=""> <h2 id="4">Pulse</h2><p>We then define the pulse-echo signal which is done here using the <b>fresnel</b> simulator's <b>pulse</b> structure. We could also use <a href="http://field-ii.dk/">'Field II'</a> ofr a more accurate model.</p><pre class="codeinput">pul=uff.pulse();
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_02.png" alt=""> <h2>Pulse<a name="4"></a></h2><p>We then define the pulse-echo signal which is done here using the <b>fresnel</b> simulator's <b>pulse</b> structure. We could also use <a href="http://field-ii.dk/">'Field II'</a> for a more accurate model.</p><pre class="codeinput">pul=uff.pulse();
 pul.center_frequency=5.2e6;       <span class="comment">% transducer frequency [MHz]</span>
 pul.fractional_bandwidth=0.6;     <span class="comment">% fractional bandwidth [unitless]</span>
 pul.plot([],<span class="string">'2-way pulse'</span>);
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_03.png" alt=""> <h2 id="5">Sequence generation</h2><p>Now, we shall generate our sequence! Keep in mind that the <b>fresnel</b> simulator takes the same sequence definition as the USTB beamformer. In UFF and USTB a sequence is defined as a collection of <b>wave</b> structures.</p><p>For our example here, we define a sequence of 15 plane-waves covering an angle span of <img src="CPWC_linear_array_beamformer_speed_eq14339125197225071258.png" alt="$[-0.3, 0.3]$"> radians. The <b>wave</b> structure has a <b>plot</b> method which plots the direction of the transmitted plane-wave.</p><pre class="codeinput">N_plane_waves=15;
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_03.png" alt=""> <h2>Sequence generation<a name="5"></a></h2><p>Now, we shall generate our sequence! Keep in mind that the <b>fresnel</b> simulator takes the same sequence definition as the USTB beamformer. In UFF and USTB a sequence is defined as a collection of <b>wave</b> structures.</p><p>For our example here, we define a sequence of 15 plane-waves covering an angle span of <img src="CPWC_linear_array_beamformer_speed_eq14339125197225071258.png" alt="$[-0.3, 0.3]$"> radians. The <b>wave</b> structure has a <b>plot</b> method which plots the direction of the transmitted plane-wave.</p><pre class="codeinput">N_plane_waves=15;
 angles=linspace(-0.3,0.3,N_plane_waves);
 seq=uff.wave();
 <span class="keyword">for</span> n=1:N_plane_waves
@@ -98,7 +98,7 @@ seq=uff.wave();
     <span class="comment">% show source</span>
     fig_handle=seq(n).source.plot(fig_handle);
 <span class="keyword">end</span>
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_04.png" alt=""> <h2 id="6">The Fresnel simulator</h2><p>Finally, we launch the built-in simulator. The simulator takes in a <b>phantom</b>, <b>pulse</b>, <b>probe</b> and a sequence of <b>wave</b> structures along with the desired sampling frequency, and returns a <b>channel_data</b> UFF structure.</p><pre class="codeinput">sim=fresnel();
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_04.png" alt=""> <h2>The Fresnel simulator<a name="6"></a></h2><p>Finally, we launch the built-in simulator. The simulator takes in a <b>phantom</b>, <b>pulse</b>, <b>probe</b> and a sequence of <b>wave</b> structures along with the desired sampling frequency, and returns a <b>channel_data</b> UFF structure.</p><pre class="codeinput">sim=fresnel();
 
 <span class="comment">% setting input data</span>
 sim.phantom=pha;                <span class="comment">% phantom</span>
@@ -111,9 +111,9 @@ sim.sampling_frequency=41.6e6;  <span class="comment">% sampling frequency [Hz]<
 channel_data=sim.go();
 </pre><pre class="codeoutput">USTB's Fresnel impulse response simulator (v1.0.5)
 ---------------------------------------------------------------
-</pre><h2 id="7">Scan</h2><p>The scan area is defines as a collection of pixels spanning our region of interest. For our example here, we use the <b>linear_scan</b> structure, which is defined with just two axes. <b>scan</b> too has a useful <b>plot</b> method it can call.</p><pre class="codeinput">sca=uff.linear_scan(linspace(-20e-3,20e-3,256).', linspace(0e-3,40e-3,256).');
+</pre><h2>Scan<a name="7"></a></h2><p>The scan area is defines as a collection of pixels spanning our region of interest. For our example here, we use the <b>linear_scan</b> structure, which is defined with just two axes. <b>scan</b> too has a useful <b>plot</b> method it can call.</p><pre class="codeinput">sca=uff.linear_scan(linspace(-20e-3,20e-3,256).', linspace(0e-3,40e-3,256).');
 sca.plot(fig_handle,<span class="string">'Scenario'</span>);    <span class="comment">% show mesh</span>
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_05.png" alt=""> <h2 id="8">Beamformer</h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>beamformer</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">bmf=beamformer();
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_05.png" alt=""> <h2>Beamformer<a name="8"></a></h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>beamformer</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
@@ -133,26 +133,32 @@ bmf.transmit_apodization.apex.distance=Inf;
 <span class="comment">% respect to the others for increasing amounts of data.</span>
 
 <span class="comment">% beamforming</span>
-n_frame=1:2:5
+n_frame=1:2:10
 <span class="keyword">for</span> n=1:length(n_frame)
     <span class="comment">% replicate frames</span>
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
 
+    <span class="comment">% Time USTB's MATLAB delay-and-sum implementation</span>
     tic
     b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
     das_matlab_time(n)=toc;
+
+    <span class="comment">% Time USTB's MATLAB delay implementation</span>
     tic
     b_data=bmf.go({process.delay_matlab() process.coherent_compounding()});
     delay_matlab_time(n)=toc;
 
+    <span class="comment">% Time USTB's MEX delay-and-sum implementation</span>
     tic
     b_data=bmf.go({process.das_mex() process.coherent_compounding()});
     das_mex_time(n)=toc;
 
+    <span class="comment">% Time USTB's MEX delay implementation</span>
     tic
     b_data=bmf.go({process.delay_mex() process.coherent_compounding()});
     delay_mex_time(n)=toc;
 
+    <span class="comment">% Plot the runtimes</span>
     figure(101);
     plot(n_frame(1:n),das_matlab_time(1:n),<span class="string">'ro-'</span>,<span class="string">'linewidth'</span>,2); hold <span class="string">on</span>; grid <span class="string">on</span>;
     plot(n_frame(1:n),delay_matlab_time(1:n),<span class="string">'gx-'</span>,<span class="string">'linewidth'</span>,2);
@@ -166,9 +172,9 @@ n_frame=1:2:5
 </pre><pre class="codeoutput">
 n_frame =
 
-     1     3     5
+     1     3     5     7     9
 
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_beamformer_speed_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% CPWC simulation to compare speeds of the various USTB beamformers.
 %
@@ -196,7 +202,7 @@ close all;
 %
 % Our first step is to define an appropriate *phantom* structure as input. 
 % Our phantom here is simply a collection of point scatterers. 
-% USTB's implementation of phantom comes with a *plot* method for free!
+% USTB's implementation of *phantom* comes with a *plot* method for free!
 
 x_sca=[zeros(1,7) -15e-3:5e-3:15e-3];
 z_sca=[5e-3:5e-3:35e-3 20e-3*ones(1,7)];
@@ -225,7 +231,7 @@ prb.plot(fig_handle);
 % 
 % We then define the pulse-echo signal which is done here using the 
 % *fresnel* simulator's *pulse* structure. We could also use 
-% <http://field-ii.dk/ 'Field II'> ofr a more accurate model.
+% <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
 pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
@@ -262,6 +268,7 @@ end
 % *phantom*, *pulse*, *probe* and a sequence of *wave* structures along 
 % with the desired sampling frequency, and returns a *channel_data* UFF 
 % structure.
+
 sim=fresnel();
 
 % setting input data 
@@ -318,26 +325,32 @@ bmf.transmit_apodization.apex.distance=Inf;
 % respect to the others for increasing amounts of data.
 
 % beamforming
-n_frame=1:2:5
+n_frame=1:2:10
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
     
+    % Time USTB's MATLAB delay-and-sum implementation
     tic
-    b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+    b_data=bmf.go({process.das_matlab() process.coherent_compounding()}); 
     das_matlab_time(n)=toc;
+    
+    % Time USTB's MATLAB delay implementation
     tic
     b_data=bmf.go({process.delay_matlab() process.coherent_compounding()});
     delay_matlab_time(n)=toc;
     
+    % Time USTB's MEX delay-and-sum implementation
     tic
     b_data=bmf.go({process.das_mex() process.coherent_compounding()});
     das_mex_time(n)=toc;
 
+    % Time USTB's MEX delay implementation
     tic
     b_data=bmf.go({process.delay_mex() process.coherent_compounding()});
     delay_mex_time(n)=toc;
 
+    % Plot the runtimes
     figure(101);
     plot(n_frame(1:n),das_matlab_time(1:n),'ro-','linewidth',2); hold on; grid on;
     plot(n_frame(1:n),delay_matlab_time(1:n),'gx-','linewidth',2); 

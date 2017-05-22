@@ -5,8 +5,6 @@
 % demonstrate how you can use the coherence factor process to do the USTB
 % beamforming with the "adaptive" coherence factor beamforming.
 %
-% This example needs to be documentet, Ole Marius!! ;)
-%
 % Related materials:
 %
 % * <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058 Montaldo et al. 2009>
@@ -222,19 +220,23 @@ cf_data_tx(1,85).plot(ax,['CF on EL 85']);
 set(gcf,'Position',[ 50 150 1232 300]);
 
 %% "transmit" dimension PCF
-proc_pcf=process.phase_coherence_factor_alternative();
-proc_pcf.beamformed_data=b_data;
-proc_pcf.channel_data=bmf.channel_data;
-proc_pcf.transmit_apodization=bmf.transmit_apodization;
-proc_pcf.receive_apodization=bmf.receive_apodization;
-proc_pcf.dimension=dimension.transmit;
-pcf_data_tx=proc_pcf.go();
-
-figure();
-ax = subplot(1,3,1);
-pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
-ax = subplot(1,3,2);
-pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
-ax = subplot(1,3,3);
-pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
-set(gcf,'Position',[ 50 150 1232 300]);
+%
+% fon: this takes too long to be included in the example. Need to review
+% this.
+%
+% proc_pcf=process.phase_coherence_factor_alternative();
+% proc_pcf.beamformed_data=b_data;
+% proc_pcf.channel_data=bmf.channel_data;
+% proc_pcf.transmit_apodization=bmf.transmit_apodization;
+% proc_pcf.receive_apodization=bmf.receive_apodization;
+% proc_pcf.dimension=dimension.transmit;
+% pcf_data_tx=proc_pcf.go();
+% 
+% figure();
+% ax = subplot(1,3,1);
+% pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
+% ax = subplot(1,3,2);
+% pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
+% ax = subplot(1,3,3);
+% pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
+% set(gcf,'Position',[ 50 150 1232 300]);
