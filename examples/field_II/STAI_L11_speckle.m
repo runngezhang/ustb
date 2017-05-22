@@ -165,6 +165,7 @@ n = n/sum(n)/delta_x;
 theoretical_pdf = (x_axis./b^2).*exp(-x_axis.^2/(2.*b^2));
 
 % Plot
+color=[0.25 1 0.75]
 figure(1);clf;  
 plot(xout,n,'LineWidth',2,'Color','r','DisplayName','Estimated PDF');hold on;
 plot(x_axis,theoretical_pdf,'--','Color',color,'LineWidth',2,'DisplayName','Rayleigh Theoretical PDF');

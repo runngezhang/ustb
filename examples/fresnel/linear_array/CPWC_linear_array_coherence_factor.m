@@ -84,16 +84,11 @@ angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
-    
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
-    
     seq(n).probe=prb;
-    
     seq(n).sound_speed=pha.sound_speed;
-    
-    % show source
-    fig_handle=seq(n).source.plot(fig_handle);
+    fig_handle=seq(n).source.plot(fig_handle);     % show source
 end
 
 %% The Fresnel simulator
@@ -160,7 +155,7 @@ bmf_data_cf = proc_cf.go();
 bmf_data_cf.plot([],'CF both dimensions')
 
 %% PCF on both transmit and receive
-proc_pcf=process.phase_coherence_factor_alternative();
+proc_pcf=process.phase_coherence_factor();
 proc_pcf.beamformed_data=b_data;
 proc_pcf.channel_data=bmf.channel_data;
 proc_pcf.transmit_apodization=bmf.transmit_apodization;
@@ -178,7 +173,7 @@ rx_cf.dimension=dimension.receive;
 bmf_data_rx_cf=rx_cf.go();
 
 %% PCF "receive" dimension resulting in individual CF PW images
-rx_pcf=process.phase_coherence_factor_alternative();
+rx_pcf=process.phase_coherence_factor();
 rx_pcf.beamformed_data=b_data;
 rx_pcf.channel_data=bmf.channel_data;
 rx_pcf.transmit_apodization=bmf.transmit_apodization;
@@ -188,17 +183,17 @@ bmf_data_rx_pcf=rx_pcf.go();
 
 figure();
 ax = subplot(2,3,1);
-bmf_data_rx_cf(1,1).plot(ax,['CF on PW 1']);
+bmf_data_rx_cf.plot(ax,['CF on PW 1'],[],[],[1 1]);
 ax = subplot(2,3,2);
-bmf_data_rx_cf(1,round(end/2)).plot(ax,['CF on PW 3']);
+bmf_data_rx_cf.plot(ax,['CF on PW 3'],[],[],[1 3]);
 ax = subplot(2,3,3);
-bmf_data_rx_cf(1,end).plot(ax,['CF on PW 4']);
+bmf_data_rx_cf.plot(ax,['CF on PW 5'],[],[],[1 5]);
 ax = subplot(2,3,4);
-bmf_data_rx_pcf(1,1).plot(ax,['PCF on PW 1']);
+bmf_data_rx_pcf.plot(ax,['PCF on PW 1'],[],[],[1 1]);
 ax = subplot(2,3,5);
-bmf_data_rx_pcf(1,round(end/2)).plot(ax,['PCF on PW 3']);
+bmf_data_rx_pcf.plot(ax,['PCF on PW 3'],[],[],[1 3]);
 ax = subplot(2,3,6);
-bmf_data_rx_pcf(1,end).plot(ax,['PCF on PW 5']);
+bmf_data_rx_pcf.plot(ax,['PCF on PW 5'],[],[],[1 4]);
 set(gcf,'Position',[ 50 50 1232 592]);
 
 %% "transmit" dimension CF
@@ -212,31 +207,28 @@ cf_data_tx=proc_cf.go();
 
 figure();
 ax = subplot(1,3,1);
-cf_data_tx(1,43).plot(ax,['CF on EL 43']);
+cf_data_tx.plot(ax,['CF on EL 43'],[],[],[43 1]);
 ax = subplot(1,3,2);
-cf_data_tx(1,64).plot(ax,['CF on EL 64']);
+cf_data_tx.plot(ax,['CF on EL 64'],[],[],[64 1]);
 ax = subplot(1,3,3);
-cf_data_tx(1,85).plot(ax,['CF on EL 85']);
+cf_data_tx.plot(ax,['CF on EL 85'],[],[],[85 1]);
 set(gcf,'Position',[ 50 150 1232 300]);
 
 %% "transmit" dimension PCF
-%
-% fon: this takes too long to be included in the example. Need to review
-% this.
-%
-% proc_pcf=process.phase_coherence_factor_alternative();
-% proc_pcf.beamformed_data=b_data;
-% proc_pcf.channel_data=bmf.channel_data;
-% proc_pcf.transmit_apodization=bmf.transmit_apodization;
-% proc_pcf.receive_apodization=bmf.receive_apodization;
-% proc_pcf.dimension=dimension.transmit;
-% pcf_data_tx=proc_pcf.go();
-% 
-% figure();
-% ax = subplot(1,3,1);
-% pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
-% ax = subplot(1,3,2);
-% pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
-% ax = subplot(1,3,3);
-% pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
-% set(gcf,'Position',[ 50 150 1232 300]);
+
+proc_pcf=process.phase_coherence_factor();
+proc_pcf.beamformed_data=b_data;
+proc_pcf.channel_data=bmf.channel_data;
+proc_pcf.transmit_apodization=bmf.transmit_apodization;
+proc_pcf.receive_apodization=bmf.receive_apodization;
+proc_pcf.dimension=dimension.transmit;
+pcf_data_tx=proc_pcf.go();
+
+figure();
+ax = subplot(1,3,1);
+pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
+ax = subplot(1,3,2);
+pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
+ax = subplot(1,3,3);
+pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
+set(gcf,'Position',[ 50 150 1232 300]);

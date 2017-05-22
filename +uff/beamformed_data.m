@@ -28,13 +28,16 @@ classdef beamformed_data < handle
         sequence                   % array of WAVE classes [optional]
         probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
-        beamformer                 % String with the beamformer specification [optional]
-        sampling_frequency         % Sampling frequency in the depth direction in [Hz]      
+        sampling_frequency         % Sampling frequency in the depth direction in [Hz]
+        modulation_frequency       % Modulation frequency in [Hz]
     end
     
     %% dependent properties
     properties  (Dependent)
-        N_pixels                   % number of pixels  
+        N_pixels                    % number of pixels  
+        N_channels                  % number of channels 
+        N_waves                     % number of waves (transmit events)
+        N_frames                    % number of frames  
      end
     
     %% private properties
@@ -87,7 +90,7 @@ classdef beamformed_data < handle
     
     %% plot methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression)
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces)
             %PLOT Plots beamformed data
             %
             % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
@@ -96,6 +99,7 @@ classdef beamformed_data < handle
             %   title           Figure title (default: none)
             %   dynamic_range   Displayed dynamic range (default: 60 dB)
             %   compression     String specifying compression type: 'log','none','sqrt' (default: 'log')
+            %   indeces         Pair of integers [nrx ntx] indicating receive and transmit events (default: [])
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
                     (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
@@ -114,18 +118,23 @@ classdef beamformed_data < handle
             else
                 h.in_title = in_title;
             end
-            if nargin<4
+            if nargin<4||isempty(dynamic_range)
                 dynamic_range=60;
             end
-            if nargin<5
+            if nargin<5||isempty(compression)
                 compression='log';
+            end
+            if nargin<6||isempty(indeces)
+                data=h.data;
+            else
+                data=h.data(:,indeces(1),indeces(2),:);
             end
             
             %Draw the image
-            h.draw_image(axis_handle,h.in_title,dynamic_range,compression);
+            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data);
             
             % If more than one frame, add the GUI buttons
-            [Npixels Nrx Ntx Nframes]=size(h.data);
+            [Npixels Nrx Ntx Nframes]=size(data);
             if Nrx*Ntx*Nframes > 1 
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
@@ -135,22 +144,24 @@ classdef beamformed_data < handle
             end
         end
         
-        function draw_image(h,axis_handle,in_title,dynamic_range,compression)
-            [Npixels Nrx Ntx Nframes]=size(h.data);
+        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
+
+            
+            [Npixels Nrx Ntx Nframes]=size(data);
             
             % compress values
             switch compression
                 case 'log'
-                    envelope=abs(h.data);
+                    envelope=abs(data);
                     envelope=20*log10(envelope./max(envelope(:)));
                     max_value=0;
                     min_value=-dynamic_range;
                 case 'sqrt'
-                    envelope=sqrt(abs(h.data));
+                    envelope=sqrt(abs(data));
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
                 case 'none'
-                    envelope=abs(h.data);
+                    envelope=abs(data);
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
             end
@@ -291,11 +302,20 @@ classdef beamformed_data < handle
         end
     end
     
-    %% get methods
+    %% get methods of dependent variables
     methods
         function value=get.N_pixels(h)
-            value=h.scan.N_pixels;
-        end        
+            value=size(h.data,1);
+        end
+        function value=get.N_channels(h)
+            value=size(h.data,2);
+        end
+        function value=get.N_waves(h)
+            value=size(h.data,3);
+        end
+        function value=get.N_frames(h)
+            value=size(h.data,4);
+        end
     end
     
     %% GUI functions

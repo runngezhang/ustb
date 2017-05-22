@@ -60,6 +60,11 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 
 % we launch the simulation
 channel_data=sim.go();
+
+%% DEMODULATE
+dem=demodulator();
+dem.channel_data=channel_data;
+channel_data=dem.go();
  
 %% SCAN
 z_axis=linspace(39e-3,41e-3,100).';
@@ -116,5 +121,5 @@ pcf.transmit_apodization=bmf.transmit_apodization;
 pcf.receive_apodization=bmf.receive_apodization;
 pcf.beamformed_data=b_data;
 pcf_data=pcf.go();
-pcf.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
+pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);

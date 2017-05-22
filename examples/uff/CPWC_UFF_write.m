@@ -40,16 +40,11 @@ pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 
 % sequence
-N_plane_waves=15; 
-angles=linspace(-0.3,0.3,N_plane_waves);  % angle vector [rad]
 seq=uff.wave();
-for n=1:N_plane_waves 
-    seq(n)=uff.wave();
-    seq(n).probe=prb;
-    seq(n).source.azimuth=angles(n);
-    seq(n).source.distance=Inf;
-    seq(n).sound_speed=pha.sound_speed;
-end
+seq.probe=prb;
+seq.source.azimuth=0;
+seq.source.distance=Inf;
+seq.sound_speed=pha.sound_speed;
 
 % simulator
 sim=fresnel();
@@ -119,7 +114,7 @@ uff_file.write(b_data,'b_data');
 
 %%
 %
-% Now the beamformed data has been saves into the file. If you want to check
+% Now the beamformed data has been saved into the file. If you want to check
 % the contents of the file with a HDF5 viewer such as
 %
 % <https://support.hdfgroup.org/products/java/release/download.html HDFView>
