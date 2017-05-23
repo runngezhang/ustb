@@ -215,7 +215,6 @@ cf_data_tx.plot(ax,['CF on EL 85'],[],[],[85 1]);
 set(gcf,'Position',[ 50 150 1232 300]);
 
 %% "transmit" dimension PCF
-
 proc_pcf=process.phase_coherence_factor();
 proc_pcf.beamformed_data=b_data;
 proc_pcf.channel_data=bmf.channel_data;
@@ -226,9 +225,9 @@ pcf_data_tx=proc_pcf.go();
 
 figure();
 ax = subplot(1,3,1);
-pcf_data_tx(1,43).plot(ax,['PCF on EL 43']);
+pcf_data_tx.plot(ax,['PCF on EL 43'],[],[],[43 1]);
 ax = subplot(1,3,2);
-pcf_data_tx(1,64).plot(ax,['PCF on EL 64']);
+pcf_data_tx.plot(ax,['PCF on EL 64'],[],[],[64 1]);
 ax = subplot(1,3,3);
-pcf_data_tx(1,85).plot(ax,['PCF on EL 85']);
+pcf_data_tx.plot(ax,['PCF on EL 85'],[],[],[85 1]);
 set(gcf,'Position',[ 50 150 1232 300]);
