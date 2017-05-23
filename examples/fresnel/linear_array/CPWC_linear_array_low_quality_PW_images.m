@@ -13,7 +13,8 @@
 % simulator'> tutorial. Please feel free to refer back to that for more 
 % details.
 % 
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun Asokan 
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> ,
+% Ole Marius Hoel Rindal <olemarius@olemarius.net> and Arun Asokan 
 % Nair <anair8@jhu.edu> 16.05.2017_
 
 %% Phantom
