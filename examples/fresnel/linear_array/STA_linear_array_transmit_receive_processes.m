@@ -73,7 +73,7 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go({process.delay_matlab()});
+b_data=bmf.go({process.delay_mex()});
 
 %% PROCESSES
 % coherently compounded
@@ -111,17 +111,17 @@ pcf.transmit_apodization=bmf.transmit_apodization;
 pcf.receive_apodization=bmf.receive_apodization;
 pcf.beamformed_data=b_data;
 pcf_data=pcf.go();
-pcf.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
+pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);
 
 %% Camacho-Fritsch phase coherence factor
-pcf_alt=process.phase_coherence_factor_alternative();
-pcf_alt.dimension = dimension.both;
-pcf_alt.channel_data=bmf.channel_data;
-pcf_alt.transmit_apodization=bmf.transmit_apodization;
-pcf_alt.receive_apodization=bmf.receive_apodization;
-pcf_alt.beamformed_data=b_data;
-pcf_dim_data=pcf_alt.go();
-pcf_alt.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
-pcf_dim_data.plot([],pcf_alt.name);
+% pcf_alt=process.phase_coherence_factor_alternative();
+% pcf_alt.dimension = dimension.both;
+% pcf_alt.channel_data=bmf.channel_data;
+% pcf_alt.transmit_apodization=bmf.transmit_apodization;
+% pcf_alt.receive_apodization=bmf.receive_apodization;
+% pcf_alt.beamformed_data=b_data;
+% pcf_dim_data=pcf_alt.go();
+% pcf_alt.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
+% pcf_dim_data.plot([],pcf_alt.name);
 

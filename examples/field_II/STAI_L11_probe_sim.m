@@ -5,10 +5,9 @@
 % This example uses the L11-4v 128 element Verasonics Transducer
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     11.03.2015
-% updated:  09.05.2017
-% authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
-%           Ole Marius Hoel Rindal <olemarius@olemarius.net>
+% Last updated:  09.05.2017
+% authors:       Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+%                Ole Marius Hoel Rindal <olemarius@olemarius.net>
 
 clear all;
 close all;

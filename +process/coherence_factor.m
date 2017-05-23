@@ -22,7 +22,7 @@ classdef coherence_factor < process
             h.name='Coherence Factor MATLAB';   
             h.reference= 'R. Mallart and M. Fink, Adaptive focusing in scattering media through sound-speed inhomogeneities: The van Cittert Zernike approach and focusing criterion, J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994';                
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
-            h.version='v1.0.2';
+            h.version='v1.0.3';
         end
     end
         
@@ -37,115 +37,55 @@ classdef coherence_factor < process
         function [out_data h]=go(h)
            
             % check if we have information about apodization
-            rx_apodization=ones([h.beamformed_data(1).N_pixels,size(h.beamformed_data,1)]);
-            tx_apodization=ones([h.beamformed_data(1).N_pixels,size(h.beamformed_data,2)]);
+            rx_apodization=ones(h.beamformed_data.N_pixels,h.beamformed_data.N_channels);
+            tx_apodization=ones(h.beamformed_data.N_pixels,h.beamformed_data.N_waves);
             if ~isempty(h.transmit_apodization)&~isempty(h.receive_apodization)&~isempty(h.channel_data.probe)
                 % receive
-                if size(h.beamformed_data,1)>1
-                    h.receive_apodization.scan=h.beamformed_data(1).scan;
+                if h.beamformed_data.N_channels>1
+                    h.receive_apodization.scan=h.beamformed_data.scan;
                     h.receive_apodization.probe=h.channel_data.probe;
                     rx_apodization=h.receive_apodization.data();                
                 end
                 
                 % transmit
-                if size(h.beamformed_data,2)>1
+                if h.beamformed_data.N_waves>1
                     h.transmit_apodization.sequence = h.channel_data.sequence;
-                    h.transmit_apodization.scan=h.beamformed_data(1).scan;
+                    h.transmit_apodization.scan=h.beamformed_data.scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();
                 end
             else
                 warning('Missing probe and apodization data; full aperture is assumed.');
             end
+            tx_apodization=reshape(tx_apodization,[h.beamformed_data.N_pixels, 1, h.beamformed_data.N_waves]);
+            apodization_matrix=bsxfun(@times,tx_apodization,rx_apodization);
+            active_elements=double(apodization_matrix>h.active_element_criterium);
             
-            % declare temporary variables            
-            [Nrx Ntx]=size(h.beamformed_data); 
+            % declare output structure
+            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            h.CF=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+
             switch h.dimension
                 case dimension.both
-                    coherent=zeros(h.beamformed_data(1).N_pixels,1,1);
-                    incoherent=zeros(h.beamformed_data(1).N_pixels,1,1);
-                    M=zeros(h.beamformed_data(1).N_pixels,1,1);
+                    coherent_sum=sum(sum(h.beamformed_data.data,2),3);
+                    incoherent_2_sum=sum(sum(abs(h.beamformed_data.data).^2,2),3);
+                    M=sum(sum(active_elements,2),3);
                 case dimension.transmit
-                    coherent=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
-                    incoherent=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
-                    M=zeros(h.beamformed_data(1).N_pixels,Nrx,1);
+                    coherent_sum=sum(h.beamformed_data.data,3);
+                    incoherent_2_sum=sum(abs(h.beamformed_data.data).^2,3);
+                    M=sum(active_elements,3);
                 case dimension.receive
-                    coherent=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
-                    incoherent=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
-                    M=zeros(h.beamformed_data(1).N_pixels,1,Ntx);
+                    coherent_sum=sum(h.beamformed_data.data,2);
+                    incoherent_2_sum=sum(abs(h.beamformed_data.data).^2,2);
+                    M=sum(active_elements,2);
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
+            % Coherent Factor
+            h.CF.data = bsxfun(@times,abs(coherent_sum).^2./incoherent_2_sum,1./M); 
+            % coherent factor image            
+            out_data.data = h.CF.data .* coherent_sum;
             
-            % loop
-            n=1; N=Ntx*Nrx; tools.workbar(); 
-            for n_rx=1:Nrx
-                for n_tx=1:Ntx
-                    % progress bar
-                    if mod(n,round(N/100))==1
-                        tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
-                    end
-                    n=n+1;
-        
-                    switch h.dimension
-                        case dimension.both
-                            coherent=coherent+h.beamformed_data(n_rx,n_tx).data;
-                            incoherent=incoherent+abs(h.beamformed_data(n_rx,n_tx).data).^2;
-                            M=M+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
-                        case dimension.transmit
-                            coherent(:,n_rx)=coherent(:,n_rx)+h.beamformed_data(n_rx,n_tx).data;
-                            incoherent(:,n_rx)=incoherent(:,n_rx)+abs(h.beamformed_data(n_rx,n_tx).data).^2;
-                            M(:,n_rx)=M(:,n_rx)+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
-                        case dimension.receive
-                            coherent(:,1,n_tx)=coherent(:,1,n_tx)+h.beamformed_data(n_rx,n_tx).data;
-                            incoherent(:,1,n_tx)=incoherent(:,1,n_tx)+abs(h.beamformed_data(n_rx,n_tx).data).^2;
-                            M(:,1,n_tx)=M(:,1,n_tx)+double((tx_apodization(:,n_tx).*rx_apodization(:,n_rx))>h.active_element_criterium);
-                    end
-                            
-                end
-            end
-            tools.workbar(1);
-            
-            switch h.dimension
-                case dimension.both
-                    % declare variables
-                    out_data = uff.beamformed_data(h.beamformed_data(1)); 
-                    h.CF = uff.beamformed_data(h.beamformed_data(1));
-                    
-                    % Coherent Factor
-                    h.CF.data = abs(coherent).^2./incoherent./M; 
-                    % coherent factor image            
-                    out_data.data = h.CF.data .* coherent;
-                    
-                case dimension.receive
-                    % transmit loop
-                    for ntx=1:Ntx
-                        out_data(1,ntx) = uff.beamformed_data(h.beamformed_data(1)); 
-                        CF(1,ntx) = uff.beamformed_data(h.beamformed_data(1));
-                    
-                        % Coherent Factor
-                        CF(1,ntx).data = abs(coherent(:,1,ntx)).^2./incoherent(:,1,ntx)./M(:,1,ntx); 
-                        
-                        % coherent factor image            
-                        out_data(1,ntx).data = CF(1,ntx).data .* coherent(:,1,ntx);
-                    end
-                    h.CF=CF;
-                case dimension.transmit
-                    % receive loop
-                    for nrx=1:Nrx
-                        out_data(nrx) = uff.beamformed_data(h.beamformed_data(1)); 
-                        CF(nrx) = uff.beamformed_data(h.beamformed_data(1));
-                    
-                        % Coherent Factor
-                        CF(nrx).data = abs(coherent(:,nrx)).^2./incoherent(:,nrx)./M(:,nrx); 
-                        
-                        % coherent factor image            
-                        out_data(nrx).data = CF(nrx).data .* coherent(:,nrx);
-                    end                    
-                    h.CF=CF;
-                otherwise
-                    error('Unknown dimension type; check HELP dimension');
-            end
         end   
     end
 end

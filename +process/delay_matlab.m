@@ -39,7 +39,16 @@ classdef delay_matlab < process
             if ~(w0>eps)
                 data=reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data));
             end
+            
+            % create beamformed data class
+            out_data=uff.beamformed_data();
+            out_data.scan=h.scan;
+            N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
+            out_data.sequence=h.channel_data.sequence;
 
+            % auxiliary data
+            aux_data=zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames);
+            
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
@@ -83,7 +92,7 @@ classdef delay_matlab < process
                     zm=bsxfun(@minus,h.channel_data.probe.z.',current_scan.z);
                     RF=sqrt(xm.^2+ym.^2+zm.^2);
                 end
-
+                
                 % receive loop
                 for n_rx=1:h.channel_data.N_elements
                     % progress bar
@@ -93,10 +102,7 @@ classdef delay_matlab < process
                     end
                    
                     % create beamformed data class
-                    out_data(n_rx,n_wave)=uff.beamformed_data();
-                    out_data(n_rx,n_wave).scan=current_scan;
-                    out_data(n_rx,n_wave).wave=h.channel_data.sequence(n_wave);
-                    out_data(n_rx,n_wave).data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
+                    %bb_data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
 
                     % total delay
                     delay=(RF(:,n_rx)+TF)/h.channel_data.sound_speed;
@@ -111,15 +117,17 @@ classdef delay_matlab < process
                         end
 
                         % beamformed signal
-                        out_data(n_rx,n_wave).data(:,n_frame)=tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
+                        aux_data(:,n_rx,n_wave,n_frame)=tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
                     end
                     
                     % assign phase according to 2 times the receive propagation distance
                     if(w0>eps)
-                        out_data(n_rx,n_wave).data=bsxfun(@times,out_data(n_rx,n_wave).data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                        aux_data(:,n_rx,n_wave,:)=bsxfun(@times,aux_data(:,n_rx,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                     end
+                    
                 end
             end
+            out_data.data = aux_data;
             tools.workbar(1);
         end
     end

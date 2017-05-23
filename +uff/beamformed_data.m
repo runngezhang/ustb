@@ -10,7 +10,7 @@ classdef beamformed_data < handle
     
     %% compulsory properties
     properties  (SetAccess = public)
-        scan                       % SCAN class
+        scan                       % SCAN class or array of SCAN classes
         data                       % data
     end
  
@@ -25,16 +25,19 @@ classdef beamformed_data < handle
     %% optional properties
     properties  (SetAccess = public)
         phantom                    % PHANTOM class [optional]
-        wave                       % WAVE class [optional]
+        sequence                   % array of WAVE classes [optional]
         probe                      % PROBE class [optional]
         pulse                      % PULSE class [optional]
-        beamformer                 % String with the beamformer specification [optional]
-       sampling_frequency         % Sampling frequency in depth / z-direction        
+        sampling_frequency         % Sampling frequency in the depth direction in [Hz]
+        modulation_frequency       % Modulation frequency in [Hz]
     end
     
     %% dependent properties
     properties  (Dependent)
-        N_pixels                   % number of pixels  
+        N_pixels                    % number of pixels  
+        N_channels                  % number of channels 
+        N_waves                     % number of waves (transmit events)
+        N_frames                    % number of frames  
      end
     
     %% private properties
@@ -87,7 +90,7 @@ classdef beamformed_data < handle
     
     %% plot methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression)
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces)
             %PLOT Plots beamformed data
             %
             % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
@@ -96,6 +99,7 @@ classdef beamformed_data < handle
             %   title           Figure title (default: none)
             %   dynamic_range   Displayed dynamic range (default: 60 dB)
             %   compression     String specifying compression type: 'log','none','sqrt' (default: 'log')
+            %   indeces         Pair of integers [nrx ntx] indicating receive and transmit events (default: [])
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
                     (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
@@ -114,17 +118,24 @@ classdef beamformed_data < handle
             else
                 h.in_title = in_title;
             end
-            if nargin<4
+            if nargin<4||isempty(dynamic_range)
                 dynamic_range=60;
             end
-            if nargin<5
+            if nargin<5||isempty(compression)
                 compression='log';
             end
-            %Draw the image
-            h.draw_image(axis_handle,h.in_title,dynamic_range,compression);
+            if nargin<6||isempty(indeces)
+                data=h.data;
+            else
+                data=h.data(:,indeces(1),indeces(2),:);
+            end
             
-            %If more than one frame, add the GUI buttons
-            if size(h.data,2) > 1 
+            %Draw the image
+            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data);
+            
+            % If more than one frame, add the GUI buttons
+            [Npixels Nrx Ntx Nframes]=size(data);
+            if Nrx*Ntx*Nframes > 1 
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(figure_handle);
@@ -133,30 +144,33 @@ classdef beamformed_data < handle
             end
         end
         
-        function draw_image(h,axis_handle,in_title,dynamic_range,compression)
+        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
+
+            
+            [Npixels Nrx Ntx Nframes]=size(data);
             
             % compress values
             switch compression
                 case 'log'
-                    envelope=abs(h.data);
+                    envelope=abs(data);
                     envelope=20*log10(envelope./max(envelope(:)));
                     max_value=0;
                     min_value=-dynamic_range;
                 case 'sqrt'
-                    envelope=sqrt(abs(h.data));
+                    envelope=sqrt(abs(data));
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
                 case 'none'
-                    envelope=abs(h.data);
+                    envelope=abs(data);
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
             end
                 
             switch class(h.scan)
                 case 'uff.linear_scan'
-                    x_matrix=reshape(h.scan.x,[h.scan.N_z_axis h.scan.N_x_axis]);
-                    z_matrix=reshape(h.scan.z,[h.scan.N_z_axis h.scan.N_x_axis ]);
-                    h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,2)]);
+                    x_matrix=reshape(h.scan.x,[h.scan(1).N_z_axis h.scan(1).N_x_axis]);
+                    z_matrix=reshape(h.scan.z,[h.scan(1).N_z_axis h.scan(1).N_x_axis ]);
+                    h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis Nrx*Ntx*Nframes]);
                     h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
@@ -169,8 +183,8 @@ classdef beamformed_data < handle
                     title(axis_handle,in_title);
                     drawnow;
                 case 'uff.linear_3D_scan'
-                    [radial_matrix axial_matrix] = meshgrid(h.scan.radial_axis,h.scan.axial_axis);
-                    h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis size(h.data,2)]);
+                    [radial_matrix axial_matrix] = meshgrid(h.scan(1).radial_axis,h.scan(1).axial_axis);
+                    h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis Nrx*Nrx*Nframes]);
                     [az,el] = view();
                     if (el==90) 
                         % plot in 2D
@@ -186,9 +200,9 @@ classdef beamformed_data < handle
                         title(axis_handle,in_title);
                     else
                         % plot in 3D
-                        x_matrix=reshape(h.scan.x,[h.scan.N_axial_axis h.scan.N_radial_axis]);
-                        y_matrix=reshape(h.scan.y,[h.scan.N_axial_axis h.scan.N_radial_axis]);
-                        z_matrix=reshape(h.scan.z,[h.scan.N_axial_axis h.scan.N_radial_axis]);
+                        x_matrix=reshape(h.scan.x,[h.scan(1).N_axial_axis h.scan(1).N_radial_axis]);
+                        y_matrix=reshape(h.scan.y,[h.scan(1).N_axial_axis h.scan(1).N_radial_axis]);
+                        z_matrix=reshape(h.scan.z,[h.scan(1).N_axial_axis h.scan(1).N_radial_axis]);
                         surface(axis_handle);
                         surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
@@ -205,9 +219,9 @@ classdef beamformed_data < handle
                     end
                     drawnow;
                 case 'uff.sector_scan'
-                    x_matrix=reshape(h.scan.x,[h.scan.N_depth_axis h.scan.N_azimuth_axis]);
-                    z_matrix=reshape(h.scan.z,[h.scan.N_depth_axis h.scan.N_azimuth_axis ]);
-                    h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,2)]);
+                    x_matrix=reshape(h.scan.x,[h.scan(1).N_depth_axis h.scan(1).N_azimuth_axis]);
+                    z_matrix=reshape(h.scan.z,[h.scan(1).N_depth_axis h.scan(1).N_azimuth_axis ]);
+                    h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis Nrx*Ntx*Nframes]);
                     h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
@@ -269,10 +283,10 @@ classdef beamformed_data < handle
                 h.probe=in_probe;
             end
         end
-        function h=set.wave(h,in_wave)
+        function h=set.sequence(h,in_wave)
             if ~isempty(in_wave)
                 assert(isa(in_wave,'uff.wave'), 'The input is not a WAVE class. Check HELP WAVE.');
-                h.wave=in_wave;
+                h.sequence=in_wave;
             end
         end
         function h=set.scan(h,in_scan)
@@ -288,11 +302,20 @@ classdef beamformed_data < handle
         end
     end
     
-    %% get methods
+    %% get methods of dependent variables
     methods
         function value=get.N_pixels(h)
-            value=h.scan.N_pixels;
-        end        
+            value=size(h.data,1);
+        end
+        function value=get.N_channels(h)
+            value=size(h.data,2);
+        end
+        function value=get.N_waves(h)
+            value=size(h.data,3);
+        end
+        function value=get.N_frames(h)
+            value=size(h.data,4);
+        end
     end
     
     %% GUI functions

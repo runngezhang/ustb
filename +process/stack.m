@@ -21,36 +21,38 @@ classdef stack < process
         function out_dataset = go(h)
             % check input
             assert(isa(h.beamformed_data(1).scan,'uff.linear_scan')||isa(h.beamformed_data(1).scan,'uff.sector_scan'),'Stack only works with LINEAR_SCAN and SECTOR_SCAN');
-            [Nrx Ntx]=size(h.beamformed_data);
+            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
             N=Nrx*Ntx;
             tools.workbar();
             switch class(h.beamformed_data(1).scan)
                 case 'uff.linear_scan'
-                    for nrx=1:Nrx
-                        out_dataset(nrx,1)=uff.beamformed_data();
-                        x_axis=h.beamformed_data(nrx,1).scan.x(1);
-                        z_axis=h.beamformed_data(nrx,1).scan.z;
-                        for ntx=1:Ntx
-                            n=(nrx-1)*Ntx+ntx;
-                            tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
-                            x_axis(ntx)=h.beamformed_data(nrx,ntx).scan.x(1);
-                            out_dataset(nrx,1).data=[out_dataset(nrx,1).data; h.beamformed_data(nrx,ntx).data];
-                        end
-                        out_dataset(nrx,1).scan=uff.linear_scan(x_axis.',z_axis);
+                    % declare
+                    out_dataset=uff.beamformed_data(h.beamformed_data);     % ToDo: shouldn't copy the data
+                    out_dataset.data=zeros(N_pixels*Ntx,Nrx,1,N_frames);
+    
+                    % loop over scans
+                    depth_axis=h.beamformed_data.scan(1).z;
+                    azimuth_axis=[];
+                    for ntx=1:Ntx
+                        tools.workbar(ntx/Ntx,sprintf('%s (%s)',h.name,h.version),'USTB');
+                        azimuth_axis=[azimuth_axis h.beamformed_data.scan(ntx).x_axis];
+                        out_dataset.data((1:N_pixels)+N_pixels*(ntx-1),:,1,:)=h.beamformed_data.data(:,:,ntx,:);
                     end
+                    out_dataset.scan=uff.linear_scan(azimuth_axis.',depth_axis);
                 case 'uff.sector_scan'
-                    for nrx=1:Nrx
-                        out_dataset(nrx,1)=uff.beamformed_data();
-                        azimuth_axis=h.beamformed_data(nrx,1).scan.azimuth_axis(1);
-                        depth_axis=h.beamformed_data(nrx,1).scan.depth_axis;
-                        for ntx=1:Ntx
-                            n=(nrx-1)*Ntx+ntx;
-                            tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
-                            azimuth_axis(ntx)=h.beamformed_data(nrx,ntx).scan.azimuth_axis(1);
-                            out_dataset(nrx,1).data=[out_dataset(nrx,1).data; h.beamformed_data(nrx,ntx).data];
-                        end
-                        out_dataset(nrx,1).scan=uff.sector_scan(azimuth_axis.',depth_axis);
+                    out_dataset=uff.beamformed_data(h.beamformed_data); % ToDo: shouldn't copy the data
+                    out_dataset.data=zeros(N_pixels*Ntx,Nrx,1,N_frames);
+    
+                    % loop over scans
+                    depth_axis=h.beamformed_data.scan(1).depth_axis;
+                    azimuth_axis=[];
+                    for ntx=1:Ntx
+                        tools.workbar(ntx/Ntx,sprintf('%s (%s)',h.name,h.version),'USTB');
+                        azimuth_axis=[azimuth_axis h.beamformed_data.scan(ntx).azimuth_axis];
+                        out_dataset.data((1:N_pixels)+N_pixels*(ntx-1),:,1,:)=h.beamformed_data.data(:,:,ntx,:);
                     end
+                    out_dataset.scan=uff.sector_scan(azimuth_axis.',depth_axis);
+                    
             end
             tools.workbar(1);
         end

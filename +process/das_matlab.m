@@ -41,6 +41,15 @@ classdef das_matlab < process
                 data=reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data));
             end
             
+            % create beamformed data class
+            out_data=uff.beamformed_data();
+            out_data.scan=h.scan;
+            N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
+            out_data.sequence=h.channel_data.sequence;
+                           
+            % auxiliary data
+            aux_data=zeros(N_pixels,1,numel(h.channel_data.sequence),h.channel_data.N_frames);
+ 
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
@@ -65,12 +74,6 @@ classdef das_matlab < process
                 h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
                 h.transmit_apodization.scan=current_scan;
                 tx_apo=h.transmit_apodization.data;
-
-                % create an intermediate beamformed data class
-                out_data(1,n_wave)=uff.beamformed_data();
-                out_data(1,n_wave).scan=current_scan;
-                out_data(1,n_wave).wave=h.channel_data.sequence(n_wave);
-                out_data(1,n_wave).data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
 
                 % transmit delay
                 if ~isinf(h.channel_data.sequence(n_wave).source.distance)
@@ -112,13 +115,14 @@ classdef das_matlab < process
                         end
 
                         % beamformed signal
-                        out_data(1,n_wave).data(:,n_frame)=out_data(1,n_wave).data(:,n_frame)+tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
+                        aux_data(:,1,n_wave,n_frame)=aux_data(:,1,n_wave,n_frame)+tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
                     end
                 end
 
                 % assign phase according to 2 times the receive propagation distance
-                out_data(1,n_wave).data=bsxfun(@times,out_data(1,n_wave).data,exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                aux_data(:,1,n_wave,:)=bsxfun(@times,aux_data(:,1,n_wave,:),exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
             end
+            out_data.data=aux_data;
             tools.workbar(1);
         end
     end
