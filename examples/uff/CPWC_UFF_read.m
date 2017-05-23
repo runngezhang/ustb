@@ -15,7 +15,8 @@
 
 % data location
 url='http://hirse.medisin.ntnu.no/ustb/data/uff/';   % if not found data will be downloaded from here
-local_path='./';                              % location of example data in this computer                      
+local_path = [ustb_path(),'/data/'];                 % location of example data in this computer                      
+addpath(local_path);
 filename='test02.uff';
     
 % check if the file is available in the local path & downloads otherwise

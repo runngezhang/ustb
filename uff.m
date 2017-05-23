@@ -33,15 +33,15 @@ classdef uff
                     attr_details.AttachType = 'group';
                     hdf5write(filename, attr_details, h.version);
                 case 'read'
-                    assert(length(dir(filename))>0,sprintf('File %s not found. Check the path and filename, or chose ''write'' mode to create it.',filename));
+                    assert(exist(filename,'file')==2,sprintf('File %s not found. Check the path and filename, or chose ''write'' mode to create it.',filename));
 
-                    % check that versions are the same
+				    % check that versions are the same
                     file_version=h5readatt(filename, '/','version');  % read file version
                     file_version=file_version{1};                       % from cell to string
                     file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
                     assert(strcmp(h.version,file_version),sprintf('The file version (%s) differs from UFF current version (%s). You cannot read the data. Contact the dev team.',file_version,h.version));
                 case 'append'
-                    if(length(dir(filename))<1)
+                    if(exist(filename,'file')~=2)
                         % create it
                         fprintf('UFF: file %s not found; it shall be created.\n',filename);
                         attr_details.Name = 'version';

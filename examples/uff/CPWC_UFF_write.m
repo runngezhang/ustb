@@ -94,7 +94,8 @@ b_data.plot();
 % file. We do so by providing the full path (path + filename + extension)
 % to the constructor of the *uff* class, for instance:
 
-uff_file=uff('test02.uff');
+local_path = [ustb_path(),'/data/']; 
+uff_file=uff([local_path,'test02.uff']);
 
 %% 
 %

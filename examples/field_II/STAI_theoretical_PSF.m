@@ -156,7 +156,7 @@ sim.phantom=pha;                % phantom
 sim.pulse=pulse;                  % transmitted pulse
 sim.probe=probe;                  % probe
 sim.sequence=seq;               % beam sequence
-sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
+sim.sampling_frequency=channel_data_field_ii.sampling_frequency;  % sampling frequency [Hz]
 
 % we launch the simulation
 channel_data_fresnel=sim.go();
