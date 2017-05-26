@@ -85,6 +85,21 @@ classdef channel_data < handle
     
     %% plot methods
     methods
+        function print_info(h)
+            fprintf('Name: \t\t %s \n',h.name{:});
+            fprintf('Reference: \t %s \n',h.reference{:});
+            fprintf('Author(s): ');
+            for i = 1:numel(h.author)
+                if i == 1
+                    fprintf('\t %s \n',h.author{i});
+                else
+                    fprintf('\t\t %s \n',h.author{i});
+                end
+            end
+            fprintf('Version: \t %s \n',h.version{:});
+            
+        end
+        
         function plot(h,n_beam)
             if nargin<2
                 n_beam=1;
