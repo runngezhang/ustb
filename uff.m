@@ -294,7 +294,7 @@ classdef uff
             %   See also UFF.WRITE, UFF.UFF, UFF.INDEX
             
             % checking version
-            version='v1.0.0';                                   % this code version
+            version='v1.0.1';                                   % this code version
             file_version=h5readatt(h.filename, '/','version');  % read file version
             file_version=file_version{1};                       % from cell to string
             file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
