@@ -86,7 +86,11 @@ classdef channel_data < handle
     %% plot methods
     methods
         function print_info(h)
-            fprintf('Name: \t\t %s \n',h.name{:});
+            out_name = textwrap([],h.name,50);
+            fprintf('Name: \t\t %s \n',out_name{1});
+            for i = 2:numel(out_name)
+                fprintf('\t\t %s \n',out_name{i});
+            end
             fprintf('Reference: \t %s \n',h.reference{:});
             fprintf('Author(s): ');
             for i = 1:numel(h.author)
