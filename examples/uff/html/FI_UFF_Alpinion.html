@@ -1,0 +1,763 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Reading FI data from an UFF file recorded from an Alpinion scanner</title><meta name="generator" content="MATLAB 9.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-27"><meta name="DC.source" content="FI_UFF_Alpinion.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Reading FI data from an UFF file recorded from an Alpinion scanner</h1><!--introduction--><p>In this example we show how to read channel data from a UFF (Ultrasound File Format) file recorded with an Alpinion scanner. You will need an internet connection to download data.</p><p><i>by Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a>  and Muyinatu Lediju Bell <a href="mledijubell@jhu.edu">mledijubell@jhu.edu</a> 26.05.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Checking the file is in the path</a></li><li><a href="#2">Reading data</a></li><li><a href="#10">Display image</a></li><li><a href="#11">Write info about channel data</a></li></ul></div><h2 id="1">Checking the file is in the path</h2><p>To read data from a UFF file the first we need is, you guessed it, a UFF file. We check if it is on the current path and download it from the USTB websever.</p><pre class="codeinput">clear <span class="string">all</span>; close <span class="string">all</span>;
+<span class="comment">% data location</span>
+url=<span class="string">'http://ustb.no/datasets/'</span>;      <span class="comment">% if not found downloaded from here</span>
+local_path = [ustb_path(),<span class="string">'/data/'</span>]; <span class="comment">% location of example data</span>
+addpath(local_path);
+
+<span class="comment">% We have two different Alpinion CPWC datasets, comment out the one to use</span>
+filename=<span class="string">'Alpinion_L3-8_FI_hyperechoic_scatterers.uff'</span>;
+<span class="comment">%filename='Alpinion_L3-8_FI_hypoechoic.uff';</span>
+
+<span class="comment">% check if the file is available in the local path or downloads otherwise</span>
+tools.download(filename, url, local_path);
+</pre><h2 id="2">Reading data</h2><p>Now that the file is on the path let us create a <b>UFF</b> object to interact with the file. We open it in "append" mode.</p><pre class="codeinput">uff_file=uff(filename)
+</pre><pre class="codeoutput">
+uff_file = 
+
+  uff with properties:
+
+    filename: 'Alpinion_L3-8_FI_hyperechoic_scatterers.uff'
+     version: 'v1.0.1'
+        mode: 'append'
+
+</pre><p>Let's first check if we are lucky and the file allready contains beamformed_data that we can display.</p><pre class="codeinput">display=true;
+content = uff_file.index(<span class="string">'/'</span>,display);
+
+has_b_data = false;
+<span class="keyword">for</span> i = 1:length(content)
+    <span class="keyword">if</span> strcmp(content{i}.class,<span class="string">'uff.beamformed_data'</span>)
+        has_b_data = true; <span class="comment">% We found a beamformed data object!</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">UFF: Contents of Alpinion_L3-8_FI_hyperechoic_scatterers.uff at /
+   - /b_data: b_data [uff.beamformed_data] size(1,1)
+   - /channel_data: channel_data [uff.channel_data] size(1,1)
+</pre><p>If the file had beamformed data, let's read that and the channeldata, before we can jump straight to displaying the data since it's allready beamformed</p><pre class="codeinput"><span class="keyword">if</span> has_b_data
+    b_data=uff_file.read(<span class="string">'/b_data'</span>);
+    channel_data=uff_file.read(<span class="string">'/channel_data'</span>);
+<span class="keyword">else</span>
+</pre><pre class="codeinput">    <span class="comment">%</span>
+    <span class="comment">% If it doesn't have any beamformed data at least it should have some</span>
+    <span class="comment">% channel_data. So let's read that.</span>
+
+    channel_data=uff_file.read(<span class="string">'/channel_data'</span>);
+</pre><p>And then do the normal routine of defining the scan,</p><pre class="codeinput">    z_axis=linspace(1e-3,55e-3,512).';
+    sca=uff.linear_scan();
+    idx = 1;
+    <span class="keyword">for</span> n=1:numel(channel_data.sequence)
+        sca(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
+    <span class="keyword">end</span>
+</pre><p>setting up and running the beamforming</p><pre class="codeinput">    bmf=beamformer();
+    bmf.channel_data=channel_data;
+    bmf.scan=sca;
+
+    bmf.receive_apodization.window=uff.window.tukey25;
+    bmf.receive_apodization.f_number=1.7;
+    bmf.receive_apodization.apex.distance=Inf;
+
+    b_data=bmf.go({process.das_mex process.stack});
+</pre><p>Now we can save this beamformed image to that file, so that we don't have to wait for the beamforming next time.</p><pre class="codeinput">    uff_file.write(b_data,<span class="string">'b_data'</span>);
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><pre class="codeoutput">UFF: reading b_data [uff.beamformed_data]
+UFF: reading sequence [uff.wave]
+UFF: reading sequence_0001 [uff.wave]
+UFF: reading sequence_0002 [uff.wave]
+UFF: reading sequence_0003 [uff.wave]
+UFF: reading sequence_0004 [uff.wave]
+UFF: reading sequence_0005 [uff.wave]
+UFF: reading sequence_0006 [uff.wave]
+UFF: reading sequence_0007 [uff.wave]
+UFF: reading sequence_0008 [uff.wave]
+UFF: reading sequence_0009 [uff.wave]
+UFF: reading sequence_0010 [uff.wave]
+UFF: reading sequence_0011 [uff.wave]
+UFF: reading sequence_0012 [uff.wave]
+UFF: reading sequence_0013 [uff.wave]
+UFF: reading sequence_0014 [uff.wave]
+UFF: reading sequence_0015 [uff.wave]
+UFF: reading sequence_0016 [uff.wave]
+UFF: reading sequence_0017 [uff.wave]
+UFF: reading sequence_0018 [uff.wave]
+UFF: reading sequence_0019 [uff.wave]
+UFF: reading sequence_0020 [uff.wave]
+UFF: reading sequence_0021 [uff.wave]
+UFF: reading sequence_0022 [uff.wave]
+UFF: reading sequence_0023 [uff.wave]
+UFF: reading sequence_0024 [uff.wave]
+UFF: reading sequence_0025 [uff.wave]
+UFF: reading sequence_0026 [uff.wave]
+UFF: reading sequence_0027 [uff.wave]
+UFF: reading sequence_0028 [uff.wave]
+UFF: reading sequence_0029 [uff.wave]
+UFF: reading sequence_0030 [uff.wave]
+UFF: reading sequence_0031 [uff.wave]
+UFF: reading sequence_0032 [uff.wave]
+UFF: reading sequence_0033 [uff.wave]
+UFF: reading sequence_0034 [uff.wave]
+UFF: reading sequence_0035 [uff.wave]
+UFF: reading sequence_0036 [uff.wave]
+UFF: reading sequence_0037 [uff.wave]
+UFF: reading sequence_0038 [uff.wave]
+UFF: reading sequence_0039 [uff.wave]
+UFF: reading sequence_0040 [uff.wave]
+UFF: reading sequence_0041 [uff.wave]
+UFF: reading sequence_0042 [uff.wave]
+UFF: reading sequence_0043 [uff.wave]
+UFF: reading sequence_0044 [uff.wave]
+UFF: reading sequence_0045 [uff.wave]
+UFF: reading sequence_0046 [uff.wave]
+UFF: reading sequence_0047 [uff.wave]
+UFF: reading sequence_0048 [uff.wave]
+UFF: reading sequence_0049 [uff.wave]
+UFF: reading sequence_0050 [uff.wave]
+UFF: reading sequence_0051 [uff.wave]
+UFF: reading sequence_0052 [uff.wave]
+UFF: reading sequence_0053 [uff.wave]
+UFF: reading sequence_0054 [uff.wave]
+UFF: reading sequence_0055 [uff.wave]
+UFF: reading sequence_0056 [uff.wave]
+UFF: reading sequence_0057 [uff.wave]
+UFF: reading sequence_0058 [uff.wave]
+UFF: reading sequence_0059 [uff.wave]
+UFF: reading sequence_0060 [uff.wave]
+UFF: reading sequence_0061 [uff.wave]
+UFF: reading sequence_0062 [uff.wave]
+UFF: reading sequence_0063 [uff.wave]
+UFF: reading sequence_0064 [uff.wave]
+UFF: reading sequence_0065 [uff.wave]
+UFF: reading sequence_0066 [uff.wave]
+UFF: reading sequence_0067 [uff.wave]
+UFF: reading sequence_0068 [uff.wave]
+UFF: reading sequence_0069 [uff.wave]
+UFF: reading sequence_0070 [uff.wave]
+UFF: reading sequence_0071 [uff.wave]
+UFF: reading sequence_0072 [uff.wave]
+UFF: reading sequence_0073 [uff.wave]
+UFF: reading sequence_0074 [uff.wave]
+UFF: reading sequence_0075 [uff.wave]
+UFF: reading sequence_0076 [uff.wave]
+UFF: reading sequence_0077 [uff.wave]
+UFF: reading sequence_0078 [uff.wave]
+UFF: reading sequence_0079 [uff.wave]
+UFF: reading sequence_0080 [uff.wave]
+UFF: reading sequence_0081 [uff.wave]
+UFF: reading sequence_0082 [uff.wave]
+UFF: reading sequence_0083 [uff.wave]
+UFF: reading sequence_0084 [uff.wave]
+UFF: reading sequence_0085 [uff.wave]
+UFF: reading sequence_0086 [uff.wave]
+UFF: reading sequence_0087 [uff.wave]
+UFF: reading sequence_0088 [uff.wave]
+UFF: reading sequence_0089 [uff.wave]
+UFF: reading sequence_0090 [uff.wave]
+UFF: reading sequence_0091 [uff.wave]
+UFF: reading sequence_0092 [uff.wave]
+UFF: reading sequence_0093 [uff.wave]
+UFF: reading sequence_0094 [uff.wave]
+UFF: reading sequence_0095 [uff.wave]
+UFF: reading sequence_0096 [uff.wave]
+UFF: reading sequence_0097 [uff.wave]
+UFF: reading sequence_0098 [uff.wave]
+UFF: reading sequence_0099 [uff.wave]
+UFF: reading sequence_0100 [uff.wave]
+UFF: reading sequence_0101 [uff.wave]
+UFF: reading sequence_0102 [uff.wave]
+UFF: reading sequence_0103 [uff.wave]
+UFF: reading sequence_0104 [uff.wave]
+UFF: reading sequence_0105 [uff.wave]
+UFF: reading sequence_0106 [uff.wave]
+UFF: reading sequence_0107 [uff.wave]
+UFF: reading sequence_0108 [uff.wave]
+UFF: reading sequence_0109 [uff.wave]
+UFF: reading sequence_0110 [uff.wave]
+UFF: reading sequence_0111 [uff.wave]
+UFF: reading sequence_0112 [uff.wave]
+UFF: reading sequence_0113 [uff.wave]
+UFF: reading sequence_0114 [uff.wave]
+UFF: reading sequence_0115 [uff.wave]
+UFF: reading sequence_0116 [uff.wave]
+UFF: reading sequence_0117 [uff.wave]
+UFF: reading sequence_0118 [uff.wave]
+UFF: reading sequence_0119 [uff.wave]
+UFF: reading sequence_0120 [uff.wave]
+UFF: reading sequence_0121 [uff.wave]
+UFF: reading sequence_0122 [uff.wave]
+UFF: reading sequence_0123 [uff.wave]
+UFF: reading sequence_0124 [uff.wave]
+UFF: reading sequence_0125 [uff.wave]
+UFF: reading sequence_0126 [uff.wave]
+UFF: reading sequence_0127 [uff.wave]
+UFF: reading sequence_0128 [uff.wave]
+UFF: reading sequence_0129 [uff.wave]
+UFF: reading sequence_0130 [uff.wave]
+UFF: reading sequence_0131 [uff.wave]
+UFF: reading sequence_0132 [uff.wave]
+UFF: reading sequence_0133 [uff.wave]
+UFF: reading sequence_0134 [uff.wave]
+UFF: reading sequence_0135 [uff.wave]
+UFF: reading sequence_0136 [uff.wave]
+UFF: reading sequence_0137 [uff.wave]
+UFF: reading sequence_0138 [uff.wave]
+UFF: reading sequence_0139 [uff.wave]
+UFF: reading sequence_0140 [uff.wave]
+UFF: reading sequence_0141 [uff.wave]
+UFF: reading sequence_0142 [uff.wave]
+UFF: reading sequence_0143 [uff.wave]
+UFF: reading sequence_0144 [uff.wave]
+UFF: reading sequence_0145 [uff.wave]
+UFF: reading sequence_0146 [uff.wave]
+UFF: reading sequence_0147 [uff.wave]
+UFF: reading sequence_0148 [uff.wave]
+UFF: reading sequence_0149 [uff.wave]
+UFF: reading sequence_0150 [uff.wave]
+UFF: reading sequence_0151 [uff.wave]
+UFF: reading sequence_0152 [uff.wave]
+UFF: reading sequence_0153 [uff.wave]
+UFF: reading sequence_0154 [uff.wave]
+UFF: reading sequence_0155 [uff.wave]
+UFF: reading sequence_0156 [uff.wave]
+UFF: reading sequence_0157 [uff.wave]
+UFF: reading sequence_0158 [uff.wave]
+UFF: reading sequence_0159 [uff.wave]
+UFF: reading sequence_0160 [uff.wave]
+UFF: reading sequence_0161 [uff.wave]
+UFF: reading sequence_0162 [uff.wave]
+UFF: reading sequence_0163 [uff.wave]
+UFF: reading sequence_0164 [uff.wave]
+UFF: reading sequence_0165 [uff.wave]
+UFF: reading sequence_0166 [uff.wave]
+UFF: reading sequence_0167 [uff.wave]
+UFF: reading sequence_0168 [uff.wave]
+UFF: reading sequence_0169 [uff.wave]
+UFF: reading sequence_0170 [uff.wave]
+UFF: reading sequence_0171 [uff.wave]
+UFF: reading sequence_0172 [uff.wave]
+UFF: reading sequence_0173 [uff.wave]
+UFF: reading sequence_0174 [uff.wave]
+UFF: reading sequence_0175 [uff.wave]
+UFF: reading sequence_0176 [uff.wave]
+UFF: reading sequence_0177 [uff.wave]
+UFF: reading sequence_0178 [uff.wave]
+UFF: reading sequence_0179 [uff.wave]
+UFF: reading sequence_0180 [uff.wave]
+UFF: reading sequence_0181 [uff.wave]
+UFF: reading sequence_0182 [uff.wave]
+UFF: reading sequence_0183 [uff.wave]
+UFF: reading sequence_0184 [uff.wave]
+UFF: reading sequence_0185 [uff.wave]
+UFF: reading sequence_0186 [uff.wave]
+UFF: reading sequence_0187 [uff.wave]
+UFF: reading sequence_0188 [uff.wave]
+UFF: reading sequence_0189 [uff.wave]
+UFF: reading sequence_0190 [uff.wave]
+UFF: reading sequence_0191 [uff.wave]
+UFF: reading sequence_0192 [uff.wave]
+UFF: reading sequence_0193 [uff.wave]
+UFF: reading sequence_0194 [uff.wave]
+UFF: reading sequence_0195 [uff.wave]
+UFF: reading sequence_0196 [uff.wave]
+UFF: reading sequence_0197 [uff.wave]
+UFF: reading sequence_0198 [uff.wave]
+UFF: reading sequence_0199 [uff.wave]
+UFF: reading sequence_0200 [uff.wave]
+UFF: reading sequence_0201 [uff.wave]
+UFF: reading sequence_0202 [uff.wave]
+UFF: reading sequence_0203 [uff.wave]
+UFF: reading sequence_0204 [uff.wave]
+UFF: reading sequence_0205 [uff.wave]
+UFF: reading sequence_0206 [uff.wave]
+UFF: reading sequence_0207 [uff.wave]
+UFF: reading sequence_0208 [uff.wave]
+UFF: reading sequence_0209 [uff.wave]
+UFF: reading sequence_0210 [uff.wave]
+UFF: reading sequence_0211 [uff.wave]
+UFF: reading sequence_0212 [uff.wave]
+UFF: reading sequence_0213 [uff.wave]
+UFF: reading sequence_0214 [uff.wave]
+UFF: reading sequence_0215 [uff.wave]
+UFF: reading sequence_0216 [uff.wave]
+UFF: reading sequence_0217 [uff.wave]
+UFF: reading sequence_0218 [uff.wave]
+UFF: reading sequence_0219 [uff.wave]
+UFF: reading sequence_0220 [uff.wave]
+UFF: reading sequence_0221 [uff.wave]
+UFF: reading sequence_0222 [uff.wave]
+UFF: reading sequence_0223 [uff.wave]
+UFF: reading sequence_0224 [uff.wave]
+UFF: reading sequence_0225 [uff.wave]
+UFF: reading sequence_0226 [uff.wave]
+UFF: reading sequence_0227 [uff.wave]
+UFF: reading sequence_0228 [uff.wave]
+UFF: reading sequence_0229 [uff.wave]
+UFF: reading sequence_0230 [uff.wave]
+UFF: reading sequence_0231 [uff.wave]
+UFF: reading sequence_0232 [uff.wave]
+UFF: reading sequence_0233 [uff.wave]
+UFF: reading sequence_0234 [uff.wave]
+UFF: reading sequence_0235 [uff.wave]
+UFF: reading sequence_0236 [uff.wave]
+UFF: reading sequence_0237 [uff.wave]
+UFF: reading sequence_0238 [uff.wave]
+UFF: reading sequence_0239 [uff.wave]
+UFF: reading sequence_0240 [uff.wave]
+UFF: reading sequence_0241 [uff.wave]
+UFF: reading sequence_0242 [uff.wave]
+UFF: reading sequence_0243 [uff.wave]
+UFF: reading sequence_0244 [uff.wave]
+UFF: reading sequence_0245 [uff.wave]
+UFF: reading sequence_0246 [uff.wave]
+UFF: reading sequence_0247 [uff.wave]
+UFF: reading sequence_0248 [uff.wave]
+UFF: reading sequence_0249 [uff.wave]
+UFF: reading sequence_0250 [uff.wave]
+UFF: reading sequence_0251 [uff.wave]
+UFF: reading sequence_0252 [uff.wave]
+UFF: reading sequence_0253 [uff.wave]
+UFF: reading sequence_0254 [uff.wave]
+UFF: reading sequence_0255 [uff.wave]
+UFF: reading sequence_0256 [uff.wave]
+UFF: reading channel_data [uff.channel_data]
+UFF: reading sequence [uff.wave]
+UFF: reading sequence_0001 [uff.wave]
+UFF: reading sequence_0002 [uff.wave]
+UFF: reading sequence_0003 [uff.wave]
+UFF: reading sequence_0004 [uff.wave]
+UFF: reading sequence_0005 [uff.wave]
+UFF: reading sequence_0006 [uff.wave]
+UFF: reading sequence_0007 [uff.wave]
+UFF: reading sequence_0008 [uff.wave]
+UFF: reading sequence_0009 [uff.wave]
+UFF: reading sequence_0010 [uff.wave]
+UFF: reading sequence_0011 [uff.wave]
+UFF: reading sequence_0012 [uff.wave]
+UFF: reading sequence_0013 [uff.wave]
+UFF: reading sequence_0014 [uff.wave]
+UFF: reading sequence_0015 [uff.wave]
+UFF: reading sequence_0016 [uff.wave]
+UFF: reading sequence_0017 [uff.wave]
+UFF: reading sequence_0018 [uff.wave]
+UFF: reading sequence_0019 [uff.wave]
+UFF: reading sequence_0020 [uff.wave]
+UFF: reading sequence_0021 [uff.wave]
+UFF: reading sequence_0022 [uff.wave]
+UFF: reading sequence_0023 [uff.wave]
+UFF: reading sequence_0024 [uff.wave]
+UFF: reading sequence_0025 [uff.wave]
+UFF: reading sequence_0026 [uff.wave]
+UFF: reading sequence_0027 [uff.wave]
+UFF: reading sequence_0028 [uff.wave]
+UFF: reading sequence_0029 [uff.wave]
+UFF: reading sequence_0030 [uff.wave]
+UFF: reading sequence_0031 [uff.wave]
+UFF: reading sequence_0032 [uff.wave]
+UFF: reading sequence_0033 [uff.wave]
+UFF: reading sequence_0034 [uff.wave]
+UFF: reading sequence_0035 [uff.wave]
+UFF: reading sequence_0036 [uff.wave]
+UFF: reading sequence_0037 [uff.wave]
+UFF: reading sequence_0038 [uff.wave]
+UFF: reading sequence_0039 [uff.wave]
+UFF: reading sequence_0040 [uff.wave]
+UFF: reading sequence_0041 [uff.wave]
+UFF: reading sequence_0042 [uff.wave]
+UFF: reading sequence_0043 [uff.wave]
+UFF: reading sequence_0044 [uff.wave]
+UFF: reading sequence_0045 [uff.wave]
+UFF: reading sequence_0046 [uff.wave]
+UFF: reading sequence_0047 [uff.wave]
+UFF: reading sequence_0048 [uff.wave]
+UFF: reading sequence_0049 [uff.wave]
+UFF: reading sequence_0050 [uff.wave]
+UFF: reading sequence_0051 [uff.wave]
+UFF: reading sequence_0052 [uff.wave]
+UFF: reading sequence_0053 [uff.wave]
+UFF: reading sequence_0054 [uff.wave]
+UFF: reading sequence_0055 [uff.wave]
+UFF: reading sequence_0056 [uff.wave]
+UFF: reading sequence_0057 [uff.wave]
+UFF: reading sequence_0058 [uff.wave]
+UFF: reading sequence_0059 [uff.wave]
+UFF: reading sequence_0060 [uff.wave]
+UFF: reading sequence_0061 [uff.wave]
+UFF: reading sequence_0062 [uff.wave]
+UFF: reading sequence_0063 [uff.wave]
+UFF: reading sequence_0064 [uff.wave]
+UFF: reading sequence_0065 [uff.wave]
+UFF: reading sequence_0066 [uff.wave]
+UFF: reading sequence_0067 [uff.wave]
+UFF: reading sequence_0068 [uff.wave]
+UFF: reading sequence_0069 [uff.wave]
+UFF: reading sequence_0070 [uff.wave]
+UFF: reading sequence_0071 [uff.wave]
+UFF: reading sequence_0072 [uff.wave]
+UFF: reading sequence_0073 [uff.wave]
+UFF: reading sequence_0074 [uff.wave]
+UFF: reading sequence_0075 [uff.wave]
+UFF: reading sequence_0076 [uff.wave]
+UFF: reading sequence_0077 [uff.wave]
+UFF: reading sequence_0078 [uff.wave]
+UFF: reading sequence_0079 [uff.wave]
+UFF: reading sequence_0080 [uff.wave]
+UFF: reading sequence_0081 [uff.wave]
+UFF: reading sequence_0082 [uff.wave]
+UFF: reading sequence_0083 [uff.wave]
+UFF: reading sequence_0084 [uff.wave]
+UFF: reading sequence_0085 [uff.wave]
+UFF: reading sequence_0086 [uff.wave]
+UFF: reading sequence_0087 [uff.wave]
+UFF: reading sequence_0088 [uff.wave]
+UFF: reading sequence_0089 [uff.wave]
+UFF: reading sequence_0090 [uff.wave]
+UFF: reading sequence_0091 [uff.wave]
+UFF: reading sequence_0092 [uff.wave]
+UFF: reading sequence_0093 [uff.wave]
+UFF: reading sequence_0094 [uff.wave]
+UFF: reading sequence_0095 [uff.wave]
+UFF: reading sequence_0096 [uff.wave]
+UFF: reading sequence_0097 [uff.wave]
+UFF: reading sequence_0098 [uff.wave]
+UFF: reading sequence_0099 [uff.wave]
+UFF: reading sequence_0100 [uff.wave]
+UFF: reading sequence_0101 [uff.wave]
+UFF: reading sequence_0102 [uff.wave]
+UFF: reading sequence_0103 [uff.wave]
+UFF: reading sequence_0104 [uff.wave]
+UFF: reading sequence_0105 [uff.wave]
+UFF: reading sequence_0106 [uff.wave]
+UFF: reading sequence_0107 [uff.wave]
+UFF: reading sequence_0108 [uff.wave]
+UFF: reading sequence_0109 [uff.wave]
+UFF: reading sequence_0110 [uff.wave]
+UFF: reading sequence_0111 [uff.wave]
+UFF: reading sequence_0112 [uff.wave]
+UFF: reading sequence_0113 [uff.wave]
+UFF: reading sequence_0114 [uff.wave]
+UFF: reading sequence_0115 [uff.wave]
+UFF: reading sequence_0116 [uff.wave]
+UFF: reading sequence_0117 [uff.wave]
+UFF: reading sequence_0118 [uff.wave]
+UFF: reading sequence_0119 [uff.wave]
+UFF: reading sequence_0120 [uff.wave]
+UFF: reading sequence_0121 [uff.wave]
+UFF: reading sequence_0122 [uff.wave]
+UFF: reading sequence_0123 [uff.wave]
+UFF: reading sequence_0124 [uff.wave]
+UFF: reading sequence_0125 [uff.wave]
+UFF: reading sequence_0126 [uff.wave]
+UFF: reading sequence_0127 [uff.wave]
+UFF: reading sequence_0128 [uff.wave]
+UFF: reading sequence_0129 [uff.wave]
+UFF: reading sequence_0130 [uff.wave]
+UFF: reading sequence_0131 [uff.wave]
+UFF: reading sequence_0132 [uff.wave]
+UFF: reading sequence_0133 [uff.wave]
+UFF: reading sequence_0134 [uff.wave]
+UFF: reading sequence_0135 [uff.wave]
+UFF: reading sequence_0136 [uff.wave]
+UFF: reading sequence_0137 [uff.wave]
+UFF: reading sequence_0138 [uff.wave]
+UFF: reading sequence_0139 [uff.wave]
+UFF: reading sequence_0140 [uff.wave]
+UFF: reading sequence_0141 [uff.wave]
+UFF: reading sequence_0142 [uff.wave]
+UFF: reading sequence_0143 [uff.wave]
+UFF: reading sequence_0144 [uff.wave]
+UFF: reading sequence_0145 [uff.wave]
+UFF: reading sequence_0146 [uff.wave]
+UFF: reading sequence_0147 [uff.wave]
+UFF: reading sequence_0148 [uff.wave]
+UFF: reading sequence_0149 [uff.wave]
+UFF: reading sequence_0150 [uff.wave]
+UFF: reading sequence_0151 [uff.wave]
+UFF: reading sequence_0152 [uff.wave]
+UFF: reading sequence_0153 [uff.wave]
+UFF: reading sequence_0154 [uff.wave]
+UFF: reading sequence_0155 [uff.wave]
+UFF: reading sequence_0156 [uff.wave]
+UFF: reading sequence_0157 [uff.wave]
+UFF: reading sequence_0158 [uff.wave]
+UFF: reading sequence_0159 [uff.wave]
+UFF: reading sequence_0160 [uff.wave]
+UFF: reading sequence_0161 [uff.wave]
+UFF: reading sequence_0162 [uff.wave]
+UFF: reading sequence_0163 [uff.wave]
+UFF: reading sequence_0164 [uff.wave]
+UFF: reading sequence_0165 [uff.wave]
+UFF: reading sequence_0166 [uff.wave]
+UFF: reading sequence_0167 [uff.wave]
+UFF: reading sequence_0168 [uff.wave]
+UFF: reading sequence_0169 [uff.wave]
+UFF: reading sequence_0170 [uff.wave]
+UFF: reading sequence_0171 [uff.wave]
+UFF: reading sequence_0172 [uff.wave]
+UFF: reading sequence_0173 [uff.wave]
+UFF: reading sequence_0174 [uff.wave]
+UFF: reading sequence_0175 [uff.wave]
+UFF: reading sequence_0176 [uff.wave]
+UFF: reading sequence_0177 [uff.wave]
+UFF: reading sequence_0178 [uff.wave]
+UFF: reading sequence_0179 [uff.wave]
+UFF: reading sequence_0180 [uff.wave]
+UFF: reading sequence_0181 [uff.wave]
+UFF: reading sequence_0182 [uff.wave]
+UFF: reading sequence_0183 [uff.wave]
+UFF: reading sequence_0184 [uff.wave]
+UFF: reading sequence_0185 [uff.wave]
+UFF: reading sequence_0186 [uff.wave]
+UFF: reading sequence_0187 [uff.wave]
+UFF: reading sequence_0188 [uff.wave]
+UFF: reading sequence_0189 [uff.wave]
+UFF: reading sequence_0190 [uff.wave]
+UFF: reading sequence_0191 [uff.wave]
+UFF: reading sequence_0192 [uff.wave]
+UFF: reading sequence_0193 [uff.wave]
+UFF: reading sequence_0194 [uff.wave]
+UFF: reading sequence_0195 [uff.wave]
+UFF: reading sequence_0196 [uff.wave]
+UFF: reading sequence_0197 [uff.wave]
+UFF: reading sequence_0198 [uff.wave]
+UFF: reading sequence_0199 [uff.wave]
+UFF: reading sequence_0200 [uff.wave]
+UFF: reading sequence_0201 [uff.wave]
+UFF: reading sequence_0202 [uff.wave]
+UFF: reading sequence_0203 [uff.wave]
+UFF: reading sequence_0204 [uff.wave]
+UFF: reading sequence_0205 [uff.wave]
+UFF: reading sequence_0206 [uff.wave]
+UFF: reading sequence_0207 [uff.wave]
+UFF: reading sequence_0208 [uff.wave]
+UFF: reading sequence_0209 [uff.wave]
+UFF: reading sequence_0210 [uff.wave]
+UFF: reading sequence_0211 [uff.wave]
+UFF: reading sequence_0212 [uff.wave]
+UFF: reading sequence_0213 [uff.wave]
+UFF: reading sequence_0214 [uff.wave]
+UFF: reading sequence_0215 [uff.wave]
+UFF: reading sequence_0216 [uff.wave]
+UFF: reading sequence_0217 [uff.wave]
+UFF: reading sequence_0218 [uff.wave]
+UFF: reading sequence_0219 [uff.wave]
+UFF: reading sequence_0220 [uff.wave]
+UFF: reading sequence_0221 [uff.wave]
+UFF: reading sequence_0222 [uff.wave]
+UFF: reading sequence_0223 [uff.wave]
+UFF: reading sequence_0224 [uff.wave]
+UFF: reading sequence_0225 [uff.wave]
+UFF: reading sequence_0226 [uff.wave]
+UFF: reading sequence_0227 [uff.wave]
+UFF: reading sequence_0228 [uff.wave]
+UFF: reading sequence_0229 [uff.wave]
+UFF: reading sequence_0230 [uff.wave]
+UFF: reading sequence_0231 [uff.wave]
+UFF: reading sequence_0232 [uff.wave]
+UFF: reading sequence_0233 [uff.wave]
+UFF: reading sequence_0234 [uff.wave]
+UFF: reading sequence_0235 [uff.wave]
+UFF: reading sequence_0236 [uff.wave]
+UFF: reading sequence_0237 [uff.wave]
+UFF: reading sequence_0238 [uff.wave]
+UFF: reading sequence_0239 [uff.wave]
+UFF: reading sequence_0240 [uff.wave]
+UFF: reading sequence_0241 [uff.wave]
+UFF: reading sequence_0242 [uff.wave]
+UFF: reading sequence_0243 [uff.wave]
+UFF: reading sequence_0244 [uff.wave]
+UFF: reading sequence_0245 [uff.wave]
+UFF: reading sequence_0246 [uff.wave]
+UFF: reading sequence_0247 [uff.wave]
+UFF: reading sequence_0248 [uff.wave]
+UFF: reading sequence_0249 [uff.wave]
+UFF: reading sequence_0250 [uff.wave]
+UFF: reading sequence_0251 [uff.wave]
+UFF: reading sequence_0252 [uff.wave]
+UFF: reading sequence_0253 [uff.wave]
+UFF: reading sequence_0254 [uff.wave]
+UFF: reading sequence_0255 [uff.wave]
+UFF: reading sequence_0256 [uff.wave]
+</pre><h2 id="10">Display image</h2><p>And finally display the image.</p><pre class="codeinput">b_data.plot([],strrep(filename,<span class="string">'_'</span>,<span class="string">' '</span>));
+</pre><img vspace="5" hspace="5" src="FI_UFF_Alpinion_01.png" style="width:600px;height:700px;" alt=""> <h2 id="11">Write info about channel data</h2><p>Let's look at the info given about this dataset</p><pre class="codeinput">channel_data.print_info()
+</pre><pre class="codeoutput">Name: 		 FI dataset of hyperechoic cyst and points  
+		 scatterers recorded on an Alpinion scanner with a  
+		 L3-8 Probe from a CIRC General Purpose Ultrasound  
+		 Phantom 
+Reference: 	 www.ultrasoundtoolbox.com 
+Author(s): 	 Ole Marius Hoel Rindal &lt;olemarius@olemarius.no&gt; 
+		 Muyinatu Lediju Bell &lt;mledijubell@jhu.edu&gt; 
+Version: 	 1.0.1 
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Reading FI data from an UFF file recorded from an Alpinion scanner
+%
+% In this example we show how to read channel data from a
+% UFF (Ultrasound File Format) file recorded with an Alpinion scanner.
+% You will need an internet connection to download data.
+%
+% _by Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%  and Muyinatu Lediju Bell <mledijubell@jhu.edu> 26.05.2017_
+
+%% Checking the file is in the path
+%
+% To read data from a UFF file the first we need is, you guessed it, a UFF
+% file. We check if it is on the current path and download it from the USTB
+% websever.
+
+clear all; close all;
+% data location
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+local_path = [ustb_path(),'/data/']; % location of example data
+addpath(local_path);
+
+% We have two different Alpinion CPWC datasets, comment out the one to use
+filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
+%filename='Alpinion_L3-8_FI_hypoechoic.uff';
+
+% check if the file is available in the local path or downloads otherwise
+tools.download(filename, url, local_path);
+
+%% Reading data
+%
+% Now that the file is on the path let us create a *UFF* object to interact
+% with the file. We open it in "append" mode.
+
+uff_file=uff(filename)
+
+%%
+%
+% Let's first check if we are lucky and the file allready contains
+% beamformed_data that we can display.
+display=true;
+content = uff_file.index('/',display);
+
+has_b_data = false;
+for i = 1:length(content)
+    if strcmp(content{i}.class,'uff.beamformed_data')
+        has_b_data = true; % We found a beamformed data object!
+    end
+end
+
+%%
+% If the file had beamformed data, let's read that and the channeldata, 
+% before we can jump straight to displaying the data since it's allready
+% beamformed
+
+if has_b_data
+    b_data=uff_file.read('/b_data');
+    channel_data=uff_file.read('/channel_data');
+else
+    %
+    % If it doesn't have any beamformed data at least it should have some
+    % channel_data. So let's read that.
+    
+    channel_data=uff_file.read('/channel_data');
+    
+    %%
+    %
+    % And then do the normal routine of defining the scan,
+    
+    z_axis=linspace(1e-3,55e-3,512).';
+    sca=uff.linear_scan();
+    idx = 1;
+    for n=1:numel(channel_data.sequence)
+        sca(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
+    end
+    
+    %%
+    %
+    % setting up and running the beamforming
+    bmf=beamformer();
+    bmf.channel_data=channel_data;
+    bmf.scan=sca;
+    
+    bmf.receive_apodization.window=uff.window.tukey25;
+    bmf.receive_apodization.f_number=1.7;
+    bmf.receive_apodization.apex.distance=Inf;
+    
+    b_data=bmf.go({process.das_mex process.stack});
+   
+    %%
+    %
+    % Now we can save this beamformed image to that file, so that we don't
+    % have to wait for the beamforming next time.
+    uff_file.write(b_data,'b_data');
+end
+
+%% Display image
+%
+% And finally display the image.
+b_data.plot([],strrep(filename,'_',' '));
+
+%% Write info about channel data
+%
+% Let's look at the info given about this dataset
+channel_data.print_info()
+
+##### SOURCE END #####
+--></body></html>
