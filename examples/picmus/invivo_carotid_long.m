@@ -1,12 +1,11 @@
-%% PICMUS challenge: experiment, contrast-speckle test
+%% PICMUS challenge: in vivo carotid longitudinal-section
 %
 % This example reads (or downloads if the data is not local) a 
 % dataset used in the <http://ieeexplore.ieee.org/document/7728908/ PICMUS challenge>
 % and beamforms it with USTB's general beamformer.
 % A 75 plane-wave sequence was recorded with a Verasonics Vantage 256 research 
 % scanner and a L11 probe (Verasonics Inc., Redmond, WA). The dataset was recorded on 
-% a CIRS Multi-Purpose Ultrasound Phantom (Model 040GSE) to estimate 
-% the method contrast and speckle statistics. 
+% the carotid artery of a volunteer. 
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
 %  and Olivier Bernard <olivier.bernard@insa-lyon.fr> 26.05.2017_
@@ -19,7 +18,7 @@
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data in this computer
 addpath(local_path);
-filename='PICMUS_experiment_contrast_speckle.uff';
+filename='PICMUS_carotid_long.uff';
 
 % check if the file is available in the local path & downloads otherwise
 tools.download(filename, url, local_path);
@@ -68,8 +67,6 @@ b_data.plot();
 channel_data=uff_file.read('/channel_data');
 scan=uff_file.read('/scan');
 
-scan=uff.linear_scan(linspace(-18e-3,18e-3,1024).',linspace(20e-3,35e-3,430).');
-
 %% Beamforming
 %
 % We define a beamformer, and the corresponding transmit and apodization
@@ -100,5 +97,3 @@ figure;
 b_data.plot(subplot(1,2,1),'Original');
 b_data_new.plot(subplot(1,2,2),'New');
 set(gcf,'Position',[100   100   750   450])
-
-b_data_new.plot()
