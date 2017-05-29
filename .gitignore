@@ -6,7 +6,7 @@
 *.pptx
 *.png
 development/
-data/
+!*.keep_this_folder_in_git
 +mex/include/
 +mex/lib/win64/microsoft/libmwcoder_connectivity_comm.lib
 +mex/lib/
@@ -25,14 +25,9 @@ examples/huff/recording.h5
 .mex/examples/
 .mex/include/
 .mex/lib/
-<<<<<<< HEAD
 *.uff
 *.mat
-=======
 .mex
-<<<<<<< HEAD
 *.mat
 *.uff
-=======
->>>>>>> master
->>>>>>> uff
+
