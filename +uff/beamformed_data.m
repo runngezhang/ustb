@@ -238,14 +238,24 @@ classdef beamformed_data < handle
             end
         end
         
-        function img = get_image(h)
-            envelope=abs(h.data);
-            envelope=20*log10(envelope./max(envelope(:)));
+        function img = get_image(h,compression)
+            if nargin < 2
+                compression = 'log';
+            end
+            switch compression
+                case 'log'
+                    envelope=abs(h.data);
+                    envelope=20*log10(envelope./max(envelope(:)));
+                case 'sqrt'
+                    envelope=sqrt(abs(h.data));
+                case 'none'
+                    envelope=abs(h.data);
+            end
             switch class(h.scan)
                 case 'uff.linear_scan'
-                    img = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,2)]);
+                    img = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis size(h.data,4)]);
                 case 'uff.sector_scan'
-                    img = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,3)]);
+                    img = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis size(h.data,4)]);
                 otherwise
                     error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
             end
