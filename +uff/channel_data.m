@@ -185,6 +185,14 @@ classdef channel_data < handle
                 h.PRF=in_PRF;
             end
         end
+        function h=set.N_frames(h,in_N_frames)
+            if ~isempty(in_N_frames)
+                assert(numel(in_N_frames)==1, 'The N_frames must be a scalar');
+                assert(in_N_frames <= size(h.data,4), 'There is not that many frames in the channel_data.data');
+                h.data = h.data(:,:,:,1:in_N_frames);
+                warning(['You just deleted all frames except frames 1 to ',num2str(in_N_frames),', I hope you meant to!']);
+            end
+        end
     end
     
     %% get methods
