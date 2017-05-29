@@ -146,9 +146,10 @@ classdef delay_multiply_and_sum < process
             
             y_dmas_signed = zeros(size(data_cube,1),size(data_cube,2));
             
-            wb =  waitbar(1/size(data_cube,1),'DMAS')
+            tools.workbar(0,sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
             for z = 1:size(data_cube,1)
-                waitbar(z/size(data_cube,1))
+                tools.workbar(z/size(data_cube,1),sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
+            
                 for x = 1:size(data_cube,2)
                     
                     %Find idx with valid data according to expanding aperture
@@ -164,8 +165,7 @@ classdef delay_multiply_and_sum < process
                     
                 end
             end
-            close(wb)
-            
+            tools.workbar(1,sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
             
             
             %% filter specification

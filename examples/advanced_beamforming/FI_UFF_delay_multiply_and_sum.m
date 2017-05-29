@@ -9,6 +9,7 @@
 % websever.
 
 clear all; close all;
+tic
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
@@ -134,3 +135,4 @@ plot(b_data_das.scan.x_axis*10^3,das_img(line_idx,:),...
 xlabel('x [mm]');xlim([-15 5]);ylabel('Amplitude [dB]');legend show
 title(sprintf('Lateral line through %.2f mm',...
                                   b_data_dmas.scan.z_axis(line_idx)*10^3));
+toc();
