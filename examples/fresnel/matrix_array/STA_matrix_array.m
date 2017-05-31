@@ -24,8 +24,8 @@ prb.N_x=32;                 % number of elements
 prb.N_y=4;                  % number of elements 
 prb.pitch_x=400e-6;         % probe pitch in azimuth [m]
 prb.pitch_y=400e-6;         % probe pitch in azimuth [m]
-prb.element_width=570e-6;   % element width [m]
-prb.element_height=570e-6;  % element height [m]
+prb.element_width=370e-6;   % element width [m]
+prb.element_height=370e-6;  % element height [m]
 prb.plot(fig_handle);
 
 %% PULSE
