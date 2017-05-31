@@ -85,10 +85,21 @@ t_out=0:dt:((cropat-1)*dt);                 % output time vector
 STA=zeros(cropat,probe.N,probe.N);    % impulse response channel data
 %% Compute STA signals
 disp('Field II: Computing STA dataset');
-wb = waitbar(0, 'Field II: Computing STA dataset');
-for n=1:probe.N
-    waitbar(n/probe.N, wb);
-
+disp('No waitbar possible for parfor, so just be patient :)');
+parfor n=1:probe.N
+    %Since we are using parfor, we have to initate Field II and the arrays
+    %for every worker as well.
+    field_init(0);
+    Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
+    Rh = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]);
+    xdc_excitation (Th, excitation);
+    xdc_impulse (Th, impulse_response);
+    xdc_baffle(Th, 0);
+    xdc_center_focus(Th,[0 0 0]);
+    xdc_impulse (Rh, impulse_response);
+    xdc_baffle(Rh, 0);
+    xdc_center_focus(Rh,[0 0 0]);
+    
     % transmit aperture
     xdc_apodization(Th, 0, [zeros(1,n-1) 1 zeros(1,probe.N-n)]);
     xdc_focus_times(Th, 0, zeros(1,probe.N));
@@ -113,7 +124,6 @@ for n=1:probe.N
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
 end
-close(wb);
 
 %% CHANNEL DATA
 channel_data = uff.channel_data();
@@ -140,7 +150,7 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % Delay and sum on receive, then coherent compounding
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 % Display image
 b_data.plot()
 
