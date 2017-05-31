@@ -79,8 +79,7 @@ xxp_speckle=random('unif',-5e-3,5e-3,number_of_scatterers,1);
 zzp_speckle=random('unif',15e-3,20e-3,number_of_scatterers,1);
 sca = [xxp_speckle zeros(length(xxp_speckle),1) zzp_speckle];  % list with the scatterers coordinates [m]
 amp=randn(length(sca));                   % list with the scatterers amplitudes
-cropat=round(2*20e-3/c0/dt); % maximum time sample, samples after this will be dumped
-
+cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 %% output data
 t_out=0:dt:((cropat-1)*dt);                 % output time vector
 STA=zeros(cropat,probe.N,probe.N);    % impulse response channel data
@@ -127,12 +126,12 @@ channel_data.sequence = seq;
 channel_data.data = STA*10^29;
 
 %% SCAN
-sca=uff.linear_scan(linspace(-5e-3,5e-3,256).', linspace(15e-3,20e-3,256).');
+scan=uff.linear_scan(linspace(-5e-3,5e-3,256).', linspace(15e-3,20e-3,256).');
 
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
-bmf.scan=sca;
+bmf.scan=scan;
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;

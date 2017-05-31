@@ -80,9 +80,7 @@ pha=uff.phantom();
 pha.sound_speed=1540;            % speed of sound [m/s]
 pha.points=[0,  0, 20e-3, 1];    % point scatterer position [m]
 fig_handle=pha.plot();   
-%sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
-%amp=1;                       % list with the scatterers amplitudes
-cropat=round(2*40e-3/c0/dt); % maximum time sample, samples after this will be dumped
+cropat=round(1.1*2*sqrt((max(pha.points(:,1))-min(probe.x))^2+max(pha.points(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
 t_out=0:dt:((cropat-1)*dt);                 % output time vector
