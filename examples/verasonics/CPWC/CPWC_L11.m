@@ -24,7 +24,7 @@ P.endDepth = 192;   % This should preferrably be a multiple of 128 samples.
 frames = 1;
 PRF=6250;
 alpha_max= 36;
-na = 7;      % Set na = number of angles.
+na = 15;      % Set na = number of angles.
 if (na > 1), 
     dtheta = (alpha_max*pi/180)/(na-1); 
     P.startAngle = -alpha_max*pi/180/2; 
@@ -39,7 +39,7 @@ Resource.Parameters.numRcvChannels = 128;    % number of receive channels.
 Resource.Parameters.speedOfSound = 1540;    % set speed of sound in m/sec before calling computeTrans
 Resource.Parameters.verbose = 2;
 Resource.Parameters.initializeOnly = 0;
-Resource.Parameters.simulateMode = 1;
+Resource.Parameters.simulateMode = 0;
 %  Resource.Parameters.simulateMode = 1 forces simulate mode, even if hardware is present.
 %  Resource.Parameters.simulateMode = 2 stops sequence and processes RcvData continuously.
 
@@ -249,7 +249,7 @@ UI(2).Callback = text2cell('%RangeChangeCallback');
 frameRateFactor = 5;
 
 % Save all the structures to a .mat file.
-filename ='L11-4vFlashAngles';
+filename ='a';
 save(filename);
 
 % call VSX
@@ -373,10 +373,10 @@ b_data=bmf.go({process.delay_mex process.coherent_compounding});
 b_data.plot();
 
 %% write channel_data to path
-% uff_filename = 'CPWC_simulation_L11';
-% uff_file=uff([ustb_path '/data/' uff_filename],'write');
-% uff_file.write(channel_data,'channel_data');
-% uff_file.write(b_data,'beamformed_data');
+uff_filename = 'CPWC_experiment_L11';
+uff_file=uff([ustb_path '/data/' uff_filename],'write');
+uff_file.write(channel_data,'channel_data');
+uff_file.write(b_data,'beamformed_data');
 
 %% Verasonics vs USTB beamforming
 vb=abs(ImgData{1}(:,:,1,1));

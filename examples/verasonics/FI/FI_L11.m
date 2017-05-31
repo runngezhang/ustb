@@ -23,9 +23,9 @@ P.endDepth = 192;   % This should preferrably be a multiple of 128 samples.
 % DW sequence
 frames = 1;
 PRF=6250;
-alpha_max= 36; % in degress
-radius = 40e-3;
-na = 7;      % Set na = number of angles.
+alpha_max= 45; % in degress
+radius = 60e-3;
+na = 15;      % Set na = number of angles.
 if (na > 1), 
     dtheta = (alpha_max*pi/180)/(na-1); 
     P.startAngle = -alpha_max*pi/180/2; 
@@ -119,6 +119,7 @@ Receive = repmat(struct('Apod', ones(1,Trans.numelements), ...
                         'framenum', 1, ...
                         'acqNum', 1, ...
                         'sampleMode', 'NS200BW', ...
+                        'samplesPerWave',4,...
                         'mode', 0, ...
                         'callMediaFunc', 0), 1, na*Resource.RcvBuffer(1).numFrames);
                     
@@ -250,7 +251,7 @@ UI(2).Callback = text2cell('%RangeChangeCallback');
 frameRateFactor = 5;
 
 % Save all the structures to a .mat file.
-filename ='L11-4vFlashAngles';
+filename ='a';
 save(filename);
 
 % call VSX
@@ -282,9 +283,15 @@ for n_angle=1:na
     dst = sqrt(sum(bsxfun(@plus,source,-probe_geometry).^2,2));
     dst0 = sqrt(sum(bsxfun(@plus,source,[0 0 0]).^2,2));
     
-    t0_1(n_angle)=-dst0/c0-min(-dst)/c0;
-    plot(probe_geometry(:,1),TX(n_angle).Delay*lambda/Resource.Parameters.speedOfSound,'b-'); grid on; hold on;
-    plot(probe_geometry(:,1),TX(n_angle).Delay*lambda/Resource.Parameters.speedOfSound-t0_1(n_angle),'r--'); grid on; hold on;
+    if TX(n_angle).focus>0
+        delay=max(dst)/c0-dst/c0;
+        t0_1(n_angle)=-(dst0-max(dst))/c0;
+    else
+        delay=dst/c0-min(dst)/c0;
+        t0_1(n_angle)=(dst0-min(dst))/c0;
+    end
+    plot(probe_geometry(:,1),TX(n_angle).Delay*lambda/Resource.Parameters.speedOfSound-t0_1(n_angle),'b-'); grid on; hold on;
+    plot(probe_geometry(:,1),delay-t0_1(n_angle),'r--'); grid on; hold on;
     plot(0,0,'bo');
     %pause();
 end
@@ -313,8 +320,8 @@ for n_frame = 1:Resource.RcvBuffer(1).numFrames
             z0=20e-3;
             x0=0;
             source = [TX(n_angle).focus*lambda*sin(angles(n_angle)) 0 TX(n_angle).focus*lambda*cos(angles(n_angle))]; 
-
-            delay= - sqrt(sum((source - [x0 0 z0]).^2))/c0 + sqrt(z0^2+(probe_geometry(:,1)-x0).^2)/c0 + sqrt(sum((source - [0 0 0]).^2))/c0;
+%            delay= sqrt(z0^2+(probe_geometry(:,1)-x0).^2)/c0 + sqrt(sum((source - [0 0 0]).^2))/c0 - sqrt(sum((source - [x0 0 z0]).^2))/c0;
+            delay=  sqrt(z0^2+(probe_geometry(:,1)-x0).^2)/c0 + sign(TX(n_angle).focus).*( sqrt(sum((source - [0 0 0]).^2))/c0 - sqrt(sum((source - [x0 0 z0]).^2))/c0);
 
             delayeddata=zeros(128,length(t00));
             for nch=1:128
@@ -385,10 +392,10 @@ b_data=bmf.go({process.delay_mex process.coherent_compounding});
 b_data.plot();
 
 %% write channel_data to path
-uff_filename = 'FI_simulation_L11';
-uff_file=uff([ustb_path '/data/' uff_filename],'write');
-uff_file.write(channel_data,'channel_data');
-uff_file.write(b_data,'beamformed_data');
+% uff_filename = 'FI_simulation_L11';
+% uff_file=uff([ustb_path '/data/' uff_filename],'write');
+% uff_file.write(channel_data,'channel_data');
+% uff_file.write(b_data,'beamformed_data');
 
 %% Verasonics vs USTB beamforming
 vb=abs(ImgData{1}(:,:,1,1));
@@ -398,14 +405,6 @@ subplot(1,2,1)
 imagesc(20*log10(vb/max(vb(:)))); caxis([-60 0]); colormap gray; colorbar; title('Verasonics')
 subplot(1,2,2)
 imagesc(20*log10(ub/max(ub(:)))); caxis([-60 0]); colormap gray; colorbar; title('USTB')
-
-
-%% Verasonics vs USTB beamforming
-figure;
-imagesc(20*log10(vb/max(vb(:)))); caxis([-60 0]); colormap gray; colorbar; title('Verasonics')
-figure;
-imagesc(20*log10(ub/max(ub(:)))); caxis([-60 0]); colormap gray; colorbar; title('USTB')
-
 
 return
 
