@@ -6,6 +6,7 @@
 *.pptx
 *.png
 development/
+data/
 !*.keep_this_folder_in_git
 +mex/include/
 +mex/lib/win64/microsoft/libmwcoder_connectivity_comm.lib
