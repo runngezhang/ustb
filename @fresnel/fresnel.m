@@ -91,7 +91,8 @@ classdef fresnel
                   
             % the frame loop
             data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
-            wb = waitbar(0,'Fresnel simulator');
+            tools.workbar();
+            N=h.N_points*h.N_waves*h.N_frames;
             for n_f=1:h.N_frames
                 
                 % the wave loop
@@ -109,9 +110,12 @@ classdef fresnel
 
                     %% points loop
                     for n_p=1:h.N_points
-                        % waitbar
-                        waitbar((n_p+h.N_points*(n_w-1)+h.N_points*h.N_waves*(n_f-1))/(h.N_points*h.N_waves*h.N_frames),wb);
-
+                        % progress bar
+                        n=(n_p+h.N_points*(n_w-1)+h.N_points*h.N_waves*(n_f-1));
+                        if 1%mod(n,round(N/100))==1
+                            tools.workbar(n/N,sprintf('Fresnel simulator (%s)',h.version),'USTB');
+                        end
+                        
                         % computing geometry relations to the point
                         distance  = sqrt(sum((h.probe.geometry(:,1:3)-ones(h.N_elements,1)*current_phantom.points(n_p,1:3)).^2,2));
                         theta     = atan2(current_phantom.x(n_p)-h.probe.x, current_phantom.z(n_p)-h.probe.z)-h.probe.theta;
@@ -129,21 +133,12 @@ classdef fresnel
                         % computing the receive signal
                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
                         data(:,:,n_w,n_f)=data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-current_phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
-                    end
-                    
-%                     %% all in one
-%                     delayed_time_1w=ones(h.N_elements,1)*time_1w-(propagation_delay)*ones(size(time_1w));  
-%                     delayed_time_2w=ones(h.N_elements,1)*time_2w-(propagation_delay)*ones(1,N_samples);  
-%                     DDT=repmat(delayed_time_1w,[1 1 h.N_waves]);
-%                     mf=h.phantom(n_e).Gamma(n_p).*10.^(-h.phantom(n_e).alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)/20).*directivity./(4*pi*distance);
-%                     AMF=bsxfun(@times,apodization,mf);
-%                     transmit_signal=squeeze(sum(bsxfun(@times,h.pulse.signal(bsxfun(@minus,DDT,focusing_delay)),AMF),1));
-%                     data=data+permute(bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time_2w,'linear',0),mf),[2 1 3]);
+                    end                   
                 end
             end
-            delete(wb);
+            tools.workbar(1);
             
-            % save the data into a RAW_DATA structure
+            % save the data into a CHANNEL_DATA structure
             out_dataset=uff.channel_data();
             out_dataset.probe=h.probe();
             out_dataset.pulse=h.pulse();
