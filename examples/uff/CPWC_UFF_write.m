@@ -40,11 +40,16 @@ pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 
 % sequence
+N=31;                           % number of plane waves
+angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
-seq.probe=prb;
-seq.source.azimuth=0;
-seq.source.distance=Inf;
-seq.sound_speed=pha.sound_speed;
+for n=1:N 
+    seq(n)=uff.wave();
+    seq(n).source.azimuth=angles(n);
+    seq(n).source.distance=Inf;
+    seq(n).probe=prb;
+    seq(n).sound_speed=pha.sound_speed;
+end
 
 % simulator
 sim=fresnel();
@@ -181,6 +186,8 @@ uff_file.index('/',display);
 % of data. Here we save *scan* and *channel_data*
 
 uff_file.write(scan,'scan');
+
 uff_file.write(channel_data,'channel_data');
+
 uff_file.index('/',display);
  

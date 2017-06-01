@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Writting data to a UFF file</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_UFF_write.m"><style type="text/css">
+      --><title>Writting data to a UFF file</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-06-01"><meta name="DC.source" content="CPWC_UFF_write.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -87,14 +87,14 @@ pul.center_frequency=5.2e6;       <span class="comment">% transducer frequency [
 pul.fractional_bandwidth=0.6;     <span class="comment">% fractional bandwidth [unitless]</span>
 
 <span class="comment">% sequence</span>
-N_plane_waves=15;
-angles=linspace(-0.3,0.3,N_plane_waves);  <span class="comment">% angle vector [rad]</span>
+N=31;                           <span class="comment">% number of plane waves</span>
+angles=linspace(-0.3,0.3,N);    <span class="comment">% angle vector [rad]</span>
 seq=uff.wave();
-<span class="keyword">for</span> n=1:N_plane_waves
+<span class="keyword">for</span> n=1:N
     seq(n)=uff.wave();
-    seq(n).probe=prb;
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
+    seq(n).probe=prb;
     seq(n).sound_speed=pha.sound_speed;
 <span class="keyword">end</span>
 
@@ -134,14 +134,14 @@ bmf.transmit_apodization.apex.distance=Inf;
 <span class="comment">% beamforming</span>
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
 b_data.plot();
-</pre><img vspace="5" hspace="5" src="CPWC_UFF_write_01.png" alt=""> <h2>Defining a UFF object<a name="3"></a></h2><p>Now that we have data to save we define a <b>uff</b> object to handle the UFF file. We do so by providing the full path (path + filename + extension) to the constructor of the <b>uff</b> class, for instance:</p><pre class="codeinput">uff_file=uff(<span class="string">'test02.uff'</span>);
-</pre><pre class="codeoutput">UFF: file test02.uff not found; it shall be created.
+</pre><img vspace="5" hspace="5" src="CPWC_UFF_write_01.png" alt=""> <h2>Defining a UFF object<a name="3"></a></h2><p>Now that we have data to save we define a <b>uff</b> object to handle the UFF file. We do so by providing the full path (path + filename + extension) to the constructor of the <b>uff</b> class, for instance:</p><pre class="codeinput">local_path = [ustb_path(),<span class="string">'/data/'</span>];
+uff_file=uff([local_path,<span class="string">'test02.uff'</span>]);
+</pre><pre class="codeoutput">UFF: file C:\Users\alfonsom\Documents\ustb/data/test02.uff not found; it shall be created.
 </pre><p>This will open 'test02.uff' file in the current folder. The constructor can take an additional parameter: <i>mode</i> a string that specifies whether the file is meant to be for read-only ("read"), to read and write ("append"), or if we want to overwrite the file ("write"). By default the constructor opens the file in "append" mode.</p><h2>Saving beamformed data<a name="5"></a></h2><p>It's about time we start saving some data. To do so we use the method <b>write</b> of the <b>uff</b> class. We must specify the object we want to save and the name it will have in the uff_data</p><pre class="codeinput">uff_file.write(b_data,<span class="string">'b_data'</span>);
 </pre><pre class="codeoutput">UFF: writting b_data [uff.beamformed_data] at 
-UFF: writting wave [uff.wave] at /b_data
-</pre><p>Now the beamformed data has been saves into the file. If you want to check the contents of the file with a HDF5 viewer such as</p><p><a href="https://support.hdfgroup.org/products/java/release/download.html">HDFView</a></p><p>But we can check the contents of the file with the <b>index</b> method of <b>uff</b> with</p><pre class="codeinput">display=true;
+</pre><p>Now the beamformed data has been saved into the file. If you want to check the contents of the file with a HDF5 viewer such as</p><p><a href="https://support.hdfgroup.org/products/java/release/download.html">HDFView</a></p><p>But we can check the contents of the file with the <b>index</b> method of <b>uff</b> with</p><pre class="codeinput">display=true;
 index=uff_file.index(<span class="string">'/'</span>,display);
-</pre><pre class="codeoutput">UFF: Contents of test02.uff at /
+</pre><pre class="codeoutput">UFF: Contents of C:\Users\alfonsom\Documents\ustb/data/test02.uff at /
    - /b_data: b_data [uff.beamformed_data] size(1,1)
 </pre><p><b>uff/index</b> returns a cell with information on the datasets and groups in the specified location, see:</p><pre class="codeinput">index{:}
 </pre><pre class="codeoutput">
@@ -162,8 +162,7 @@ MATLAB:imagesci:h5create:datasetAlreadyExists: The dataset '/b_data/scan/x_axis'
 </pre><p>...we get an error. Different datasets must have different names or be placed in different locations. For instance by:</p><pre class="codeinput">uff_file.write(b_data,<span class="string">'b_data_copy'</span>);
 uff_file.index(<span class="string">'/'</span>,display);
 </pre><pre class="codeoutput">UFF: writting b_data_copy [uff.beamformed_data] at 
-UFF: writting wave [uff.wave] at /b_data_copy
-UFF: Contents of test02.uff at /
+UFF: Contents of C:\Users\alfonsom\Documents\ustb/data/test02.uff at /
    - /b_data: b_data [uff.beamformed_data] size(1,1)
    - /b_data_copy: b_data_copy [uff.beamformed_data] size(1,1)
 </pre><p>It is also possible to save arrays of UFF structures. We can for instance define an array of beamformed data as</p><pre class="codeinput">b_data_array=uff.beamformed_data();
@@ -173,37 +172,23 @@ UFF: Contents of test02.uff at /
 <span class="keyword">end</span>
 </pre><p>and store the whole array into the UFF file</p><pre class="codeinput">uff_file.write(b_data_array,<span class="string">'b_data_array'</span>);
 uff_file.index(<span class="string">'/'</span>,display);
-</pre><pre class="codeoutput">UFF: writting b_data_array_0001 [uff.beamformed_data] at /b_data_array
-UFF: writting wave [uff.wave] at /b_data_array/b_data_array_0001
-UFF: writting b_data_array_0002 [uff.beamformed_data] at /b_data_array
-UFF: writting wave [uff.wave] at /b_data_array/b_data_array_0002
-UFF: writting b_data_array_0003 [uff.beamformed_data] at /b_data_array
-UFF: writting wave [uff.wave] at /b_data_array/b_data_array_0003
-UFF: Contents of test02.uff at /
+</pre><pre class="codeoutput">UFF: writting b_data_array [uff.beamformed_data] at 
+UFF: writting b_data_array_0001 [uff.beamformed_data] at /b_data_array
+Processed 1/3UFF: writting b_data_array_0002 [uff.beamformed_data] at /Processed 2/3UFF: writting b_data_array_0003 [uff.beamformed_data] at /Processed 3/3
+UFF: Contents of C:\Users\alfonsom\Documents\ustb/data/test02.uff at /
    - /b_data: b_data [uff.beamformed_data] size(1,1)
    - /b_data_array: b_data_array [uff.beamformed_data] size(1,3)
    - /b_data_copy: b_data_copy [uff.beamformed_data] size(1,1)
 </pre><h2>Saving channel data<a name="13"></a></h2><p>Saving channel data (or any other <b>uff</b> structure) is exactly as with beamformed data. It might just take a bit more due to the larger amount of data. Here we save <b>scan</b> and <b>channel_data</b></p><pre class="codeinput">uff_file.write(scan,<span class="string">'scan'</span>);
+
 uff_file.write(channel_data,<span class="string">'channel_data'</span>);
+
 uff_file.index(<span class="string">'/'</span>,display);
 </pre><pre class="codeoutput">UFF: writting channel_data [uff.channel_data] at 
-UFF: writting sequence_0001 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0002 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0003 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0004 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0005 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0006 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0007 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0008 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0009 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0010 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0011 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0012 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0013 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0014 [uff.wave] at /channel_data/sequence
-UFF: writting sequence_0015 [uff.wave] at /channel_data/sequence
+UFF: writting sequence [uff.wave] at /channel_data
+Processed 31/31
 UFF: writting phantom [uff.phantom] at /channel_data
-UFF: Contents of test02.uff at /
+UFF: Contents of C:\Users\alfonsom\Documents\ustb/data/test02.uff at /
    - /b_data: b_data [uff.beamformed_data] size(1,1)
    - /b_data_array: b_data_array [uff.beamformed_data] size(1,3)
    - /b_data_copy: b_data_copy [uff.beamformed_data] size(1,1)
@@ -253,14 +238,14 @@ pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 
 % sequence
-N_plane_waves=15; 
-angles=linspace(-0.3,0.3,N_plane_waves);  % angle vector [rad]
+N=31;                           % number of plane waves
+angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
-for n=1:N_plane_waves 
+for n=1:N 
     seq(n)=uff.wave();
-    seq(n).probe=prb;
     seq(n).source.azimuth=angles(n);
     seq(n).source.distance=Inf;
+    seq(n).probe=prb;
     seq(n).sound_speed=pha.sound_speed;
 end
 
@@ -312,7 +297,8 @@ b_data.plot();
 % file. We do so by providing the full path (path + filename + extension)
 % to the constructor of the *uff* class, for instance:
 
-uff_file=uff('test02.uff');
+local_path = [ustb_path(),'/data/']; 
+uff_file=uff([local_path,'test02.uff']);
 
 %% 
 %
@@ -332,7 +318,7 @@ uff_file.write(b_data,'b_data');
 
 %%
 %
-% Now the beamformed data has been saves into the file. If you want to check
+% Now the beamformed data has been saved into the file. If you want to check
 % the contents of the file with a HDF5 viewer such as
 %
 % <https://support.hdfgroup.org/products/java/release/download.html HDFView>
@@ -398,7 +384,9 @@ uff_file.index('/',display);
 % of data. Here we save *scan* and *channel_data*
 
 uff_file.write(scan,'scan');
+
 uff_file.write(channel_data,'channel_data');
+
 uff_file.index('/',display);
  
 

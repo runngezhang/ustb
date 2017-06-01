@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Reading data from an UFF file</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_UFF_read.m"><style type="text/css">
+      --><title>Reading data from an UFF file</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-06-01"><meta name="DC.source" content="CPWC_UFF_read.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -68,7 +68,8 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
   </style></head><body><div class="content"><h1>Reading data from an UFF file</h1><!--introduction--><p>In this example we show how to read channel and beamformed data from a UFF (Ultrasound File Format) file. You will need an internet connection to download data. Otherwise, you can run the <b>CPWC_UFF_write.m</b> first so the file 'test02.uff' is in the current path.</p><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> 15.05.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Checking the file is in the path</a></li><li><a href="#2">Reading beamformed data</a></li><li><a href="#7">Reading channel data</a></li><li><a href="#10">Reading once and for all</a></li></ul></div><h2>Checking the file is in the path<a name="1"></a></h2><p>To read data from a UFF file the first we need is, you guessed it, a UFF file. We check if it is on the current path and download it from the NTNU server otherwise.</p><pre class="codeinput"><span class="comment">% data location</span>
 url=<span class="string">'http://hirse.medisin.ntnu.no/ustb/data/uff/'</span>;   <span class="comment">% if not found data will be downloaded from here</span>
-local_path=<span class="string">'./'</span>;                              <span class="comment">% location of example data in this computer</span>
+local_path = [ustb_path(),<span class="string">'/data/'</span>];                 <span class="comment">% location of example data in this computer</span>
+addpath(local_path);
 filename=<span class="string">'test02.uff'</span>;
 
 <span class="comment">% check if the file is available in the local path &amp; downloads otherwise</span>
@@ -85,7 +86,6 @@ uff_file.index(<span class="string">'/'</span>,display);
 </pre><p>We see there is a <b>beamformed_data</b> dataset with name <i>b_data</i>. Let us load it and plot it.</p><pre class="codeinput">b_data=uff_file.read(<span class="string">'/b_data'</span>);
 b_data.plot();
 </pre><pre class="codeoutput">UFF: reading b_data [uff.beamformed_data]
-UFF: reading wave [uff.wave]
 </pre><img vspace="5" hspace="5" src="CPWC_UFF_read_01.png" alt=""> <p>There is also an array of beamformed images with name <i>b_data_array</i>. Let us load it too</p><pre class="codeinput">b_data_array=uff_file.read(<span class="string">'/b_data_array'</span>);
 figure;
 <span class="keyword">for</span> n=1:length(b_data_array)
@@ -93,32 +93,15 @@ figure;
 <span class="keyword">end</span>
 set(gcf,<span class="string">'Position'</span>,[0 0 1000 420])
 </pre><pre class="codeoutput">UFF: reading b_data_array [uff.beamformed_data]
+UFF: reading b_data_array [uff.beamformed_data]
 UFF: reading b_data_array_0001 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
-UFF: reading b_data_array_0002 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
-UFF: reading b_data_array_0003 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
+Processed 1/3UFF: reading b_data_array_0002 [uff.beamProcessed 2/3UFF: reading b_data_array_0003 [uff.beamProcessed 3/3
 </pre><img vspace="5" hspace="5" src="CPWC_UFF_read_02.png" alt=""> <p>Not very interesting, actually.</p><h2>Reading channel data<a name="7"></a></h2><p>There are also two other structures in the file: a uff.scan and a uff.channel_data objects. Let us read them both</p><pre class="codeinput">scan=uff_file.read(<span class="string">'/scan'</span>);
 channel_data=uff_file.read(<span class="string">'/channel_data'</span>);
 </pre><pre class="codeoutput">UFF: reading channel_data [uff.channel_data]
 UFF: reading phantom [uff.phantom]
 UFF: reading sequence [uff.wave]
-UFF: reading sequence_0001 [uff.wave]
-UFF: reading sequence_0002 [uff.wave]
-UFF: reading sequence_0003 [uff.wave]
-UFF: reading sequence_0004 [uff.wave]
-UFF: reading sequence_0005 [uff.wave]
-UFF: reading sequence_0006 [uff.wave]
-UFF: reading sequence_0007 [uff.wave]
-UFF: reading sequence_0008 [uff.wave]
-UFF: reading sequence_0009 [uff.wave]
-UFF: reading sequence_0010 [uff.wave]
-UFF: reading sequence_0011 [uff.wave]
-UFF: reading sequence_0012 [uff.wave]
-UFF: reading sequence_0013 [uff.wave]
-UFF: reading sequence_0014 [uff.wave]
-UFF: reading sequence_0015 [uff.wave]
+Processed 31/31
 </pre><p>And let us beamform that data with USTB</p><pre class="codeinput">bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=scan;
@@ -134,34 +117,15 @@ b_data=bmf.go({process.das_mex() process.coherent_compounding()});
 b_data.plot();
 </pre><img vspace="5" hspace="5" src="CPWC_UFF_read_03.png" alt=""> <p>which matches the images we saw previously.</p><h2>Reading once and for all<a name="10"></a></h2><p>It is possible to load all the data in the file into matlab memory without having to access each dataset individually. It suffices to call the <b>read</b> method without parameters and...</p><pre class="codeinput">vars=uff_file.read();
 </pre><pre class="codeoutput">UFF: reading b_data [uff.beamformed_data]
-UFF: reading wave [uff.wave]
+UFF: reading b_data_array [uff.beamformed_data]
 UFF: reading b_data_array [uff.beamformed_data]
 UFF: reading b_data_array_0001 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
-UFF: reading b_data_array_0002 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
-UFF: reading b_data_array_0003 [uff.beamformed_data]
-UFF: reading wave [uff.wave]
+Processed 1/3UFF: reading b_data_array_0002 [uff.beamProcessed 2/3UFF: reading b_data_array_0003 [uff.beamProcessed 3/3
 UFF: reading b_data_copy [uff.beamformed_data]
-UFF: reading wave [uff.wave]
 UFF: reading channel_data [uff.channel_data]
 UFF: reading phantom [uff.phantom]
 UFF: reading sequence [uff.wave]
-UFF: reading sequence_0001 [uff.wave]
-UFF: reading sequence_0002 [uff.wave]
-UFF: reading sequence_0003 [uff.wave]
-UFF: reading sequence_0004 [uff.wave]
-UFF: reading sequence_0005 [uff.wave]
-UFF: reading sequence_0006 [uff.wave]
-UFF: reading sequence_0007 [uff.wave]
-UFF: reading sequence_0008 [uff.wave]
-UFF: reading sequence_0009 [uff.wave]
-UFF: reading sequence_0010 [uff.wave]
-UFF: reading sequence_0011 [uff.wave]
-UFF: reading sequence_0012 [uff.wave]
-UFF: reading sequence_0013 [uff.wave]
-UFF: reading sequence_0014 [uff.wave]
-UFF: reading sequence_0015 [uff.wave]
+Processed 31/31
 </pre><p>... we get all the objects in the file into a cell structure</p><pre class="codeinput">vars{1}.plot();
 </pre><img vspace="5" hspace="5" src="CPWC_UFF_read_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
@@ -182,7 +146,8 @@ UFF: reading sequence_0015 [uff.wave]
 
 % data location
 url='http://hirse.medisin.ntnu.no/ustb/data/uff/';   % if not found data will be downloaded from here
-local_path='./';                              % location of example data in this computer                      
+local_path = [ustb_path(),'/data/'];                 % location of example data in this computer                      
+addpath(local_path);
 filename='test02.uff';
     
 % check if the file is available in the local path & downloads otherwise
