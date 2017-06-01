@@ -44,7 +44,7 @@ classdef delay_matlab < process
             out_data=uff.beamformed_data();
             out_data.scan=h.scan;
             N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
-            out_data.sequence=h.channel_data.sequence;
+            %out_data.sequence=h.channel_data.sequence; % not included by default
 
             % auxiliary data
             aux_data=zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames);

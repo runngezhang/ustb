@@ -61,7 +61,7 @@ classdef das_mex < process
                 out_data.scan=h.scan;
                 N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
                 out_data.data=zeros(N_pixels,1,numel(h.channel_data.sequence),h.channel_data.N_frames);
-                out_data.sequence=h.channel_data.sequence;
+                %out_data.sequence=h.channel_data.sequence; % not included by default
                 
                 % wave loop
                 tools.workbar();
