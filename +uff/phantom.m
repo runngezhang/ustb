@@ -75,15 +75,15 @@ classdef phantom
                 figure_handle=figure();
                 view(-30,30);
             end
-            [az,el] = view();
-            if (el==90) 
-                plot(h.points(:,1)*1e3,h.points(:,3)*1e3,'ro'); grid on; axis equal; hold on;
-            else
+            %[az,el] = view();
+            %if (el==90) 
+                %plot(h.points(:,1)*1e3,h.points(:,3)*1e3,'ro'); grid on; axis equal; hold on;
+            %else
                 plot3(h.points(:,1)*1e3,h.points(:,2)*1e3,h.points(:,3)*1e3,'ro'); grid on; axis equal; hold on;
                 xlabel('x[mm]'); ylabel('y[mm]'); zlabel('z[mm]');
                 set(gca,'ZDir','Reverse');
                 set(gca,'fontsize',14);
-            end
+            %end
             
             if nargin>2
                 title(title_in);
