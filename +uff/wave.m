@@ -31,7 +31,6 @@ classdef wave
             %
             %   See also WAVE, SOURCE, PHANTOM, PROBE, PULSE
             
-            %h.probe=probe();
             h.source=uff.point();
             h.apodization=uff.apodization();
         end
