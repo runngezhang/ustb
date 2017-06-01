@@ -77,6 +77,7 @@ classdef sector_scan < uff.scan
         function h=set.apex(h,in_apex)
             assert(isa(in_apex,'uff.point'), 'The input is not a SOURCE class. Check HELP SOURCE');
             h.apex=in_apex;
+            h=h.update_pixel_position();
         end
     end
     

@@ -119,10 +119,8 @@ classdef apodization
                 return;
             end
             
-            % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
-            %x_dist=abs(h.element_position_matrix(:,:,1) - h.origin(:,1)*ones(1,h.probe.N_elements));
+            % compute lateral distance 
             x_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,1),h.origin(:,1)));
-            %y_dist=abs(h.element_position_matrix(:,:,2) - h.origin(:,2)*ones(1,h.probe.N_elements));    
             y_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,2),h.origin(:,2)));
             
             % computing aperture
@@ -205,7 +203,7 @@ classdef apodization
             else
                 % the transmit aperture in a synthetic scenario (CPWC, DW)
                 % is dependant on the pixel location according to 10.1109/TUFFC.2015.007183 
-                % (assuming flat apertures, not accurate for curvilinear probes)
+                % (TODO: this is assuming a flat aperture, not accurate for curvilinear probes)
                 for n=1:length(h.sequence)
                     if isinf(h.sequence(n).source.distance)
                         element(:,1)=h.scan.x+h.scan.z*tan(h.sequence(n).source.azimuth);
