@@ -13,6 +13,7 @@ classdef uff
         filename
         version = 'v1.0.1';
         mode = 'append';
+        verbose = true;
     end
     
     %% constructor
@@ -43,7 +44,7 @@ classdef uff
                 case 'append'
                     if(exist(filename,'file')~=2)
                         % create it
-                        fprintf('UFF: file %s not found; it shall be created.\n',filename);
+                        if h.verbose fprintf('UFF: file %s not found; it shall be created.\n',filename); end
                         attr_details.Name = 'version';
                         attr_details.AttachedTo = '/';
                         attr_details.AttachType = 'group';
@@ -178,8 +179,10 @@ classdef uff
                         else
                             % here we process non-array UFF structures
                             switch class(object)
-                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.wave' 'uff.phantom'}
-                                    fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location);
+                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.phantom'}
+                                    if h.verbose fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location); end
+                                case 'uff.wave'
+                                    if h.verbose fprintf('.'); end
                             end
                             
                             % dump all fields in struct (or properties in class)
@@ -342,8 +345,10 @@ classdef uff
                         % rest of UFF structures
                         if (findstr('uff.',class_name))
                             switch class_name
-                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.wave' 'uff.phantom'}
-                                    fprintf('UFF: reading %s [%s]\n',data_name,class_name);
+                                case {'uff.channel_data' 'uff.beamformed_data' 'uff.phantom'}
+                                    if h.verbose fprintf('UFF: reading %s [%s]\n',data_name,class_name); end
+                                case 'uff.wave'
+                                    if h.verbose fprintf('.'); end
                             end
                             data_size=h5readatt(h.filename, location ,'size');
                             N=prod(data_size);
