@@ -163,11 +163,19 @@ classdef uff
                     if (findstr('uff.',class(object)))
                         if numel(object)>1
                             
+                            if h.verbose fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location); end
                             % call write for all members in the array
                             dumped_objects=0;
+                            previous_msg='';
                             for n=1:numel(object)
                                 dumped_objects=dumped_objects+h.write(object(n), [name '_' sprintf('%04d',n)],[location '/' name]);
+                                if h.verbose
+                                    msg = sprintf('Processed %d/%d', n, numel(object));
+                                    fprintf([previous_msg, msg]);
+                                    previous_msg = repmat(sprintf('\b'), 1, length(msg));
+                                end
                             end
+                            if h.verbose fprintf('\n'); end
                             
                             % group attributes
                             if dumped_objects
@@ -181,8 +189,6 @@ classdef uff
                             switch class(object)
                                 case {'uff.channel_data' 'uff.beamformed_data' 'uff.phantom'}
                                     if h.verbose fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location); end
-                                case 'uff.wave'
-                                    if h.verbose fprintf('.'); end
                             end
                             
                             % dump all fields in struct (or properties in class)
@@ -347,17 +353,25 @@ classdef uff
                             switch class_name
                                 case {'uff.channel_data' 'uff.beamformed_data' 'uff.phantom'}
                                     if h.verbose fprintf('UFF: reading %s [%s]\n',data_name,class_name); end
-                                case 'uff.wave'
-                                    if h.verbose fprintf('.'); end
+%                                 case 'uff.wave'
+%                                     if h.verbose fprintf('.'); end
                             end
                             data_size=h5readatt(h.filename, location ,'size');
                             N=prod(data_size);
                             if(N>1)
                                 item=h.index( location );
                                 if length(item)~=N error('Size attribute does not match number of subgroups'); end
+                                if h.verbose fprintf('UFF: reading %s [%s]\n',data_name,class_name); end
+                                previous_msg = '';
                                 for n=1:N
                                     out(n)=h.read(item{n}.location);
+                                    if h.verbose
+                                        msg = sprintf('Processed %d/%d', n, N);
+                                        fprintf([previous_msg, msg]);
+                                        previous_msg = repmat(sprintf('\b'), 1, length(msg));
+                                    end
                                 end
+                                if h.verbose fprintf('\n'); end
                                 reshape(out,data_size.');
                             else
                                 out=feval(class_name);
