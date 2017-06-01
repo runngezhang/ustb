@@ -40,7 +40,12 @@ classdef uff
                     file_version=h5readatt(filename, '/','version');  % read file version
                     file_version=file_version{1};                       % from cell to string
                     file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
-                    assert(strcmp(h.version,file_version),sprintf('The file version (%s) differs from UFF current version (%s). You cannot read the data. Contact the dev team.',file_version,h.version));
+                    switch file_version
+                        case h.version
+                        case 'v1.0.0'
+                        otherwise
+                            error(sprintf('Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,h.version));
+                    end
                 case 'append'
                     if(exist(filename,'file')~=2)
                         % create it
@@ -54,7 +59,12 @@ classdef uff
                         file_version=h5readatt(filename, '/','version');  % read file version
                         file_version=file_version{1};                       % from cell to string
                         file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
-                        assert(strcmp(h.version,file_version),sprintf('The file version (%s) differs from UFF current version (%s). You cannot append data. Please choose a new file instead.',file_version,h.version));
+                        switch file_version
+                            case h.version
+                            case 'v1.0.0'
+                            otherwise
+                                error(sprintf('Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,h.version));
+                        end
                     end
                 otherwise
                     error(sprintf('Mode %s not supported',mode));
@@ -304,11 +314,17 @@ classdef uff
             %   See also UFF.WRITE, UFF.UFF, UFF.INDEX
             
             % checking version
-            version='v1.0.1';                                   % this code version
             file_version=h5readatt(h.filename, '/','version');  % read file version
             file_version=file_version{1};                       % from cell to string
             file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
-            assert(strcmp(version,file_version),sprintf('The file version (%s) and the READ function version (%s) do not match.',file_version,version));
+            
+            switch file_version
+                case h.version
+                case 'v1.0.0'
+                % here we will forward the read of obsolete versions to previous read functions
+                otherwise
+                    error(sprintf('Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,h.version));
+            end
             
             % check for root folder
             if nargin<2 || strcmp(location,'/')
