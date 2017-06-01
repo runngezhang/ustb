@@ -7,7 +7,7 @@ function ok = TE_ps_cpw_rf(h)
     
     % data location
     url='http://hirse.medisin.ntnu.no/ustb/data/ps/';   % if not found data will be downloaded from here
-    local_path='data/ps/';                              % location of example data in this computer                      
+    local_path=[ustb_path() '/data/ps/'];                              % location of example data in this computer                      
     raw_data_filename='ps_cpw_rf.mat';
     beamformed_data_filename='beamformed_ps_cpw_rf.mat';
     

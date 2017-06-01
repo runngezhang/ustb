@@ -31,7 +31,7 @@ classdef unit_test
             allok=1;
             
             % create log file
-            filename=['logs/log_' sprintf('%d',round(datevec(datetime))) '.txt'];
+            filename=[ustb_path() '/logs/log_' sprintf('%d',round(datevec(datetime))) '.txt'];
             fid = fopen(filename,'w');
             
             % who is running this?
