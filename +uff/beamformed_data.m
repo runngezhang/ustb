@@ -251,6 +251,8 @@ classdef beamformed_data < handle
                     envelope=sqrt(abs(h.data));
                 case 'none'
                     envelope=abs(h.data);
+                case 'none-complex' %If we want the complex data before envelope detection
+                    envelope=h.data;
             end
             switch class(h.scan)
                 case 'uff.linear_scan'
