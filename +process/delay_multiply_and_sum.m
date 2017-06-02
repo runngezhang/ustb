@@ -151,18 +151,17 @@ classdef delay_multiply_and_sum < process
                 tools.workbar(z/size(data_cube,1),sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
             
                 for x = 1:size(data_cube,2)
-                    
                     %Find idx with valid data according to expanding aperture
                     idx = find(logical(squeeze(apod_matrix(z,x,:))));
+                    count = 0;
                     for i = idx(1:end-1)'
-                        for j = idx(2:end)'
+                        count = count + 1;
+                        for j = idx(1+count:end)'
                             sisj_signed = sign(data_cube(z,x,i)*data_cube(z,x,j))*sqrt(abs(data_cube(z,x,i)*data_cube(z,x,j)));
                             
                             y_dmas_signed(z,x) = y_dmas_signed(z,x) + sisj_signed;
                         end
-                    end
-                    
-                    
+                    end                    
                 end
             end
             tools.workbar(1,sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
