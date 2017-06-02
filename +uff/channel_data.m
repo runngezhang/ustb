@@ -27,7 +27,6 @@ classdef channel_data < handle
     
     %% optional properties
     properties  (SetAccess = public)
-        phantom                    % PHANTOM class [optional]
         pulse                      % PULSE class [optional]
         PRF                        % pulse repetition frequency [Hz]
         N_active_elements          % number of active transducers on receive
@@ -42,6 +41,7 @@ classdef channel_data < handle
         N_frames           % number of frames
         time
         lambda             % wavelength [m]
+        phantom            % PHANTOM class [optional]
     end
         
     %% constructor
