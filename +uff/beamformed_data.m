@@ -20,6 +20,7 @@ classdef beamformed_data < handle
         reference={}         % reference to the publication where it was used/acquired
         author={}            % contact of the authors
         version={}           % version of the dataset
+        info={}              % Information about the beamforming parameters used
     end
     
     %% optional properties
