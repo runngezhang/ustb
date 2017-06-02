@@ -30,6 +30,7 @@ classdef channel_data < handle
         pulse                      % PULSE class [optional]
         PRF                        % pulse repetition frequency [Hz]
         N_active_elements          % number of active transducers on receive
+        phantom            % PHANTOM class [optional]
     end
     
     %% dependent properties
@@ -41,7 +42,6 @@ classdef channel_data < handle
         N_frames           % number of frames
         time
         lambda             % wavelength [m]
-        phantom            % PHANTOM class [optional]
     end
         
     %% constructor
