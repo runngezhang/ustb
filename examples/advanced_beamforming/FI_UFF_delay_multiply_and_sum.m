@@ -49,11 +49,6 @@ end
 
 channel_data=uff_file.read('/channel_data');
 
-%Actually, to save some time, let's hack the channel data and only use one
-%of the frames in the dataset.
-
-channel_data.N_frames = 1;
-
 %% Define Scan
 %
 % And then do the normal routine of defining the scan,
@@ -78,7 +73,7 @@ bmf.receive_apodization.apex.distance=Inf;
 
 bmf.transmit_apodization.window=uff.window.none;
 
-b_data=bmf.go({process.delay_mex process.stack});
+b_data=bmf.go({process.delay_matlab_light process.stack});
 
 %%
 dmas = process.delay_multiply_and_sum()
