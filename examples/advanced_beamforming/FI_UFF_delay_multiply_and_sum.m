@@ -76,6 +76,7 @@ bmf.transmit_apodization.window=uff.window.none;
 b_data=bmf.go({process.delay_matlab_light process.stack});
 
 %%
+tic 
 dmas = process.delay_multiply_and_sum()
 dmas.dimension = dimension.receive();
 dmas.receive_apodization = bmf.receive_apodization;
@@ -84,8 +85,21 @@ dmas.beamformed_data = b_data;
 dmas.channel_data = channel_data;
 dmas.scan = sca;
 b_data_dmas = dmas.go();    % Launch beamformer
-b_data_dmas.plot(100,'DMAS'); % Display image
+b_data_dmas.plot(101,'DMAS'); % Display image
+toc
 
+%%
+tic 
+dmas = process.delay_multiply_and_sum_2()
+dmas.dimension = dimension.receive();
+dmas.receive_apodization = bmf.receive_apodization;
+dmas.transmit_apodization = bmf.transmit_apodization;
+dmas.beamformed_data = b_data;
+dmas.channel_data = channel_data;
+dmas.scan = sca;
+b_data_dmas = dmas.go();    % Launch beamformer
+b_data_dmas.plot(100,'DMAS_2'); % Display image
+toc
 %% DAS
 das = process.coherent_compounding();
 das.beamformed_data = b_data;
