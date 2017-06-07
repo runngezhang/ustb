@@ -24,7 +24,11 @@ tools.download(filename, url, local_path);
 %% Reading channel data from UFF file
 uff_file=uff(filename)
 channel_data=uff_file.read('/channel_data');
-
+% Check that the user have the correct version of the dataset
+if(strcmp(channel_data.version{1},'1.0.2')~=1)
+    error(['Wrong version of the dataset. Please delete ',local_path,...
+                                        filename,' and rerun script.']);
+end
 %%
 %Print info about the dataset
 channel_data.print_info
