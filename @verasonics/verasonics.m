@@ -232,13 +232,17 @@ classdef verasonics < handle
         
         %%%%
         %    Save to channeldata for Focused Imaging with phased array imaging
-        function channel_data = create_FI_phased_array_channeldata(h)
+        function channel_data = create_FI_phased_array_channeldata(h,number_of_frames)
             %% Create channel_data object and set some parameters
             channel_data = uff.channel_data();
             channel_data.sampling_frequency = h.Fs;
             channel_data.sound_speed = h.c0;
             channel_data.initial_time = 0;
             channel_data.probe=create_probe_object(h);
+            
+            if nargin < 2
+               number_of_frames = h.Resource.RcvBuffer(1).numFrames;
+            end
             
             %% SEQUENCE GENERATION
             N=length(h.TX);                      % number of focused beams
@@ -260,15 +264,17 @@ classdef verasonics < handle
             end
             channel_data.sequence = seq;
             
+            channel_data.pulse = uff.pulse(h.Trans.frequency*10^6);
+            
             %% Convert channel data from Verasonics format to USTB format
             no_samples = h.Receive(1).endSample;
-            data = zeros(no_samples, channel_data.probe.N, length(seq), h.Resource.RcvBuffer(1).numFrames);
+            data = (zeros(no_samples, channel_data.probe.N, length(seq), number_of_frames));
             
             offset_time = calculate_delay_offset(h); % Get offset time 
             time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
             plot_delayed_signal=0;
             n=1;
-            for n_frame = 1:h.Resource.RcvBuffer(1).numFrames
+            for n_frame = 1:number_of_frames
                 for n_tx = 1:length(seq)
                     % compute time vector for this line
                     t_ini=2*h.Receive(n).startDepth*h.lambda/h.c0;
