@@ -20,6 +20,7 @@ classdef beamformed_data < handle
         reference={}         % reference to the publication where it was used/acquired
         author={}            % contact of the authors
         version={}           % version of the dataset
+        info={}              % Information about the beamforming parameters used
     end
     
     %% optional properties
@@ -250,6 +251,8 @@ classdef beamformed_data < handle
                     envelope=sqrt(abs(h.data));
                 case 'none'
                     envelope=abs(h.data);
+                case 'none-complex' %If we want the complex data before envelope detection
+                    envelope=h.data;
             end
             switch class(h.scan)
                 case 'uff.linear_scan'

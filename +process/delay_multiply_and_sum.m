@@ -22,13 +22,12 @@ classdef delay_multiply_and_sum < process
             h.name='Delay Multiply and Sum';
             h.reference= 'Matrone, G., Savoia, A. S., & Magenes, G. (2015). The Delay Multiply and Sum Beamforming Algorithm in Ultrasound B-Mode Medical Imaging, 34(4), 940?949.';
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
-            h.version='v1.0.1';
+            h.version='v1.0.2';
         end
     end
     
     %% Additional properties
     properties
-        active_element_criterium=0.16;                % value to decide whether an element is used or not
         dimension
     end
     
@@ -144,32 +143,28 @@ classdef delay_multiply_and_sum < process
                 ' times more samples in the z-direction in the image to be able to do DMAS with filtering around 2 times the center frequency. And for the Hilbert transform']);
             %%
             
-            y_dmas_signed = zeros(size(data_cube,1),size(data_cube,2));
+            y_dmas_signed = zeros(size(data_cube,1),size(data_cube,2),'single');
             
             tools.workbar(0,sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
             for z = 1:size(data_cube,1)
                 tools.workbar(z/size(data_cube,1),sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
-            
                 for x = 1:size(data_cube,2)
-                    
                     %Find idx with valid data according to expanding aperture
                     idx = find(logical(squeeze(apod_matrix(z,x,:))));
+                    count = 0;
                     for i = idx(1:end-1)'
-                        for j = idx(2:end)'
-                            sisj_signed = sign(data_cube(z,x,i)*data_cube(z,x,j))*sqrt(abs(data_cube(z,x,i)*data_cube(z,x,j)));
-                            
-                            y_dmas_signed(z,x) = y_dmas_signed(z,x) + sisj_signed;
-                        end
-                    end
-                    
-                    
+                        count = count + 1;
+                        j_idx = idx(1+count:end)'; %Get all j indices                 
+                        y_dmas_signed(z,x) = y_dmas_signed(z,x) + sum(sign(data_cube(z,x,i).*data_cube(z,x,j_idx)).*sqrt(abs(data_cube(z,x,i).*data_cube(z,x,j_idx))));
+                    end                    
                 end
             end
             tools.workbar(1,sprintf('%s %s (%s)',h.name,h.version,progress),'DMAS');
             
+            orig_plot = (abs(fftshift(fft(sum(data_cube,3)))));
+            clear data_cube %Save some precious memory
             
             %% filter specification
-            p = y_dmas_signed;
             
             A=[0 1 0];                % band type: 0='stop', 1='pass'
             dev=[1e-3 1e-3 1e-3];     % ripple/attenuation spec
@@ -178,7 +173,7 @@ classdef delay_multiply_and_sum < process
             
             % filtering
             filt_delay=round((length(b)-1)/2);
-            filtered_p=filter(b,1,[p; zeros(filt_delay,size(p,2),size(p,3),size(p,4))],[],1);
+            filtered_p=filter(b,1,[y_dmas_signed; zeros(filt_delay,size(y_dmas_signed,2),size(y_dmas_signed,3),size(y_dmas_signed,4))],[],1);
             
             % correcting the delay
             filtered_p=filtered_p((filt_delay+1):end,:,:);
@@ -192,7 +187,7 @@ classdef delay_multiply_and_sum < process
                 freq_axis = linspace(-fs/2,fs/2,length(filtered_y_dmas_signed));
                 figure(100);clf;
                 subplot(411)
-                plot(freq_axis*10^-6,(abs(fftshift(fft(sum(data_cube,3))))));
+                plot(freq_axis*10^-6,orig_plot);
                 subplot(412)
                 F_temp = (abs(fftshift(fft(sum(y_dmas_signed,3)))));
                 plot(freq_axis(floor(end/2):end)*10^-6,F_temp(floor(end/2):end,:));hold on
