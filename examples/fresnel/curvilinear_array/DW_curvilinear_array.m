@@ -75,4 +75,3 @@ b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
 h_fig=b_data.plot();hold on;
-pha.plot(h_fig)

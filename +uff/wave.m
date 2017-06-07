@@ -16,8 +16,8 @@ classdef wave
     
     %% dependent properties
     properties  (Dependent)   
-        N_elements       % number of elements 
-        delay            % delay [s]        
+        N_elements         % number of elements 
+        delay              % delay [s]        
         apodization_values % apodization [unitless]
     end
     
@@ -32,7 +32,6 @@ classdef wave
             %   See also WAVE, SOURCE, PHANTOM, PROBE, PULSE
             
             h.source=uff.point();
-            h.apodization=uff.apodization();
         end
     end
     
@@ -93,6 +92,7 @@ classdef wave
         function value=get.N_elements(h)
             value=h.probe.N_elements;
         end
+        
         function value=get.delay(h)
             assert(~isempty(h.probe),'The PROBE must be inserted for delay calculation');
             assert(~isempty(h.sound_speed),'The sound speed must be inserted for delay calculation');
@@ -108,10 +108,14 @@ classdef wave
                 value=h.probe.x*sin(h.source.azimuth)/h.sound_speed+h.probe.y*sin(h.source.elevation)/h.sound_speed;
             end
         end
+        
         function value=get.apodization_values(h)
-            % set values not yet in apodization
-            h.apodization.probe=h.probe;
-            value=h.apodization.data();
+            if isempty(h.apodization) 
+                value=ones(1,h.probe.N_elements);
+            else
+                h.apodization.probe=h.probe; % set values not yet in apodization
+                value=h.apodization.data();
+            end
         end
     end
     

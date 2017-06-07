@@ -81,8 +81,6 @@ for n=1:N
     seq(n).source.azimuth=tx_angles(n);
     seq(n).source.distance=Inf;
     
-    seq(n).apodization.window=uff.window.none;
-    
     seq(n).sound_speed=pha.sound_speed;
     
     % show source

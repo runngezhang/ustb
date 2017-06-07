@@ -34,6 +34,7 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.apex=seq(n).source;
     

@@ -49,6 +49,7 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.apex=seq(n).source;
     
@@ -98,6 +99,7 @@ for n=1:sca.N_x_axis
     seq(n).probe=prb;
     seq(n).source.xyz=[sca.x_axis(n) 0 z0];
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uwindow;
     seq(n).apodization.f_number=F_number;
     seq(n).apodization.apex.distance=Inf;

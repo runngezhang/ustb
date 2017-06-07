@@ -37,6 +37,7 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[x_axis(n) 0 z0];
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
     seq(n).apodization.apex.distance=Inf;
