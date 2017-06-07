@@ -56,6 +56,10 @@ classdef verasonics < handle
             h.c0 = Resource.Parameters.speedOfSound;
             h.lambda = h.c0/h.f0;
         end
+        function set.TW(h,TW)
+            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
+            h.TW=TW;
+        end
     end
     
     %% Create datasets
@@ -343,6 +347,12 @@ classdef verasonics < handle
             channel_data.sound_speed = h.c0;
             channel_data.initial_time = 0;
             channel_data.probe=create_probe_object(h);
+            
+            if strcmp(h.TW.type,'parametric') % read pulse fr. from TW
+               channel_data.pulse=uff.pulse(h.TW.Parameters(1)*1e6,0,0);
+            else % read pulse fr. from transducer
+               channel_data.pulse=uff.pulse(h.f0,0,0);
+            end
             
             
             %% SEQUENCE GENERATION
