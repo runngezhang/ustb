@@ -138,5 +138,12 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 % Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
-% Display image
+% Display imagexs
 b_data.plot()
+
+%% Save UFF dataset
+uff_file=uff('FieldII_PSF_simulation.uff');
+uff_file.write(channel_data,'channel_data');
+%uff_file.write(b_data,'b_data');
+
+save 'FieldII_PSF_simulation.mat' 'channel_data'
