@@ -115,6 +115,7 @@ for n=1:probe.N
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
     
+    seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.apex=seq(n).source;
 end
