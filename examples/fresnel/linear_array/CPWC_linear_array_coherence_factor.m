@@ -11,6 +11,11 @@
 % * R. Mallart and M. Fink, "Adaptive focusing in scattering media through 
 %   sound-speed inhomogeneities: The van Cittert Zernike approach and focusing 
 %   criterion", J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994
+% 
+% This tutorial assumes familiarity with the contents of the 
+% <./CPWC_linear_array.html 'CPWC simulation with the USTB built-in Fresnel 
+% simulator'> tutorial. Please feel free to refer back to that for more 
+% details.
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 05.05.2017
 %  and Ole Marius Hoel Rindal <olemarius@olemarius.net> _
@@ -51,6 +56,7 @@ prb.plot(fig_handle);
 %
 % In order to define the pulse-echo signal in the *fresnel* simulator the 
 % structure *pulse* is used:
+
 pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
@@ -72,7 +78,7 @@ pul.plot([],'2-way pulse');
 % and reference sound speed. That adds some data overhead, since the probe
 % and sound speed are often the same for all transmit events in the sequence. But it 
 % makes it possible to process each transmitting event independently. On the other
-% hand it also simplifies the handling of probes with multiplexors and even
+% hand it also simplifies the handling of probes with multiplexers and even
 % allows for a more efficient use of the memory in those cases.
 %
 % We define a sequence of 31 plane-waves covering an angle span of $[-0.3,
@@ -120,6 +126,7 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
+
 sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
@@ -137,7 +144,7 @@ bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex.distance=Inf;
 
-%We set this to none since we want to examin the low quality PW images
+%We set this to none since we want to examine the low quality PW images
 bmf.transmit_apodization.window=uff.window.none; 
 bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;

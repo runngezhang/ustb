@@ -1,19 +1,41 @@
-% Example of Diverging Waves simulation with the USTB built-in Fresnel simulator
+%% DW simulation with a curvilinear array using the USTB built-in Fresnel simulator
+%
+% In this example, we show how to use the built-in Fresnel simulator in
+% USTB to generate a Diverging Wave (DW) dataset on a curvilinear array,
+% and then beamform it with USTB.
+% 
+% This tutorial assumes familiarity with the contents of the 
+% <../../linear_array/html/CPWC_linear_array.html 'CPWC simulation with the USTB built-in Fresnel 
+% simulator'> tutorial. Please feel free to refer back to that for more 
+% details.
+% 
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun Asokan 
+% Nair <anair8@jhu.edu> 23.02.2017_
 
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/02/23$
-
+%%
 clear all;
 close all;
 
-%% PHANTOM
+%% Phantom
+%
+% First step - define our phantom. Here, our phantom a collection of point 
+% scatterers in the shape of a cross. USTB's implementation of *phantom* 
+% comes with a *plot* method for free!
+
 pha=uff.phantom();
 pha.sound_speed=1540;            % speed of sound [m/s]
 pha.points=[zeros(11,1),  zeros(11,1), linspace(10e-3,160e-3,11).', ones(11,1);...
             linspace(-70e-3,70e-3,11).',  zeros(11,1), 70e-3*ones(11,1), ones(11,1)];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
-%% PROBE
+%% Probe
+%
+% The next step is to define the *probe* structure which contains
+% information about the probe's geometry. This too comes with a *plot* 
+% method that enables visualization of the probe with respect to the phantom.
+% The probe we will use in our example is a curvilinear array transducer with
+% 128 elements.
+
 prb=uff.curvilinear_array();
 prb.N=128;                  % number of elements 
 prb.pitch=508e-6;
@@ -21,13 +43,27 @@ prb.element_width=408e-6;
 prb.radius=60e-3;
 prb.plot(fig_handle);
 
-%% PULSE
+%% Pulse
+% 
+% We then define the pulse-echo signal which is done here using the 
+% *fresnel* simulator's *pulse* structure. We could also use 
+% <http://field-ii.dk/ 'Field II'> for a more accurate model.
+
 pul=uff.pulse();
 pul.center_frequency=3.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
-%% SEQUENCE GENERATION
+%% Sequence generation
+%
+% Now, we shall generate our sequence! Keep in mind that the *fresnel* simulator
+% takes the same sequence definition as the USTB beamformer. In UFF and
+% USTB a sequence is defined as a collection of *wave* structures. 
+% 
+% For our example here, we define a sequence of 15 diverging waves. The 
+% *wave* structure has a *plot* method which plots the direction of 
+% the transmitted waves.
+
 N=15;                             % number of diverging waves
 x0=linspace(-30e-3,30e-3,N);
 z0=-prb.radius;
@@ -42,7 +78,13 @@ for n=1:N
     fig_handle=seq(n).source.plot(fig_handle);
 end
 
-%% SIMULATOR
+%% The Fresnel simulator
+%
+% Finally, we launch the built-in simulator. The simulator takes in a
+% *phantom*, *pulse*, *probe* and a sequence of *wave* structures along 
+% with the desired sampling frequency, and returns a *channel_data* UFF 
+% structure.
+
 sim=fresnel();
 
 % setting input data 
@@ -55,23 +97,48 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% SCAN
+%% Scan
+%
+% The scan area is defines as a collection of pixels spanning our region of 
+% interest. For our example here, we use the *sector_scan* structure, 
+% which is defined with two axes - the azimuth axis and the depth axis, 
+% along with the position of the apex. *scan* too has a useful *plot*
+% method it can call.
+
 sca=uff.sector_scan();
 sca.azimuth_axis=linspace(-prb.maximum_angle,prb.maximum_angle,256).';
 sca.depth_axis=linspace(prb.radius,prb.radius+180e-3,256).';
 sca.apex.xyz=[0 0 -prb.radius];
 sca.plot(fig_handle,'Scenario');    % show mesh
 
-%% BEAMFORMER
+%% Beamformer
+%
+% With *channel_data* and a *scan* we have all we need to produce an
+% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan*.
+
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
+
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
 bmf.receive_apodization.apex=sca.apex;
 
+%% 
+%
+% The *beamformer* structure allows you to implement different beamformers 
+% by combination of multiple built-in *processes*. By changing the *process*
+% chain other beamforming sequences can be implemented. It returns yet 
+% another *UFF* structure: *beamformed_data*.
+
+% We use the *das_matlab* process followed by the *coherent_compounding*
+% process in order to produce coherently compounded output images.
+
 % beamforming
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
-% show
+%%
+% Finally, show our results
+
 h_fig=b_data.plot();hold on;
