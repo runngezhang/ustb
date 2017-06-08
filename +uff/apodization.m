@@ -1,5 +1,5 @@
 classdef apodization 
-%APDOIZATION   apodization definition
+%UFF.APODIZATION   apodization definition
 %
 %   See also POINT, PHANTOM, PROBE, PULSE
 
@@ -54,7 +54,7 @@ classdef apodization
             else
                 h.apex=uff.point();
             end
-            h.scan=uff.scan(0,0,0);
+            %h.scan=uff.scan(0,0,0);
             h.f_number=[1 1];
             h.tilt=[0 0];
         end
@@ -114,10 +114,12 @@ classdef apodization
         function value=get.data(h)
            
             % checking we have all we need
-            %assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-            assert(numel(h.scan)>0,'The SCAN parameter is not set.');
-            assert(numel(h.apex)>0,'The APEX parameter is not set.');
-            %assert(all(h.scan.z>0),'Cannot compute apodization for points behind the XY plane');
+            if isempty(h.scan)
+                h.scan=uff.scan([0 0 0]);
+            end
+            if isempty(h.apex)
+                h.apex=uff.point([0 0 0]);
+            end
             
             % NONE APODIZATION
             if(h.window==uff.window.none)

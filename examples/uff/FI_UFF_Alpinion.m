@@ -19,26 +19,19 @@ url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 
-% We have two different Alpinion CPWC datasets, comment out the one to use
-filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
-%filename='Alpinion_L3-8_FI_hypoechoic.uff';
+% FI datasets
+short_filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
+filename=[local_path short_filename];
 
 % check if the file is available in the local path or downloads otherwise
-tools.download(filename, url, local_path);
+tools.download(short_filename, url, local_path);
 
 %% Reading data
-%
-% Now that the file is on the path let us create a *UFF* object to interact
-% with the file. We open it in "append" mode.
-
-uff_file=uff(filename)
-
-%%
 %
 % Let's first check if we are lucky and the file allready contains
 % beamformed_data that we can display.
 display=true;
-content = uff_file.index('/',display);
+content = uff.index(filename,'/',display);
 
 has_b_data = false;
 for i = 1:length(content)
@@ -53,14 +46,14 @@ end
 % beamformed
 
 if has_b_data
-    b_data=uff_file.read('/b_data');
-    channel_data=uff_file.read('/channel_data');
+    b_data=uff_file.read(filename,'/b_data');
+    channel_data=uff.read_object(filename,'/channel_data');
 else
     %%
     % If it doesn't have any beamformed data at least it should have some
     % channel_data. So let's read that.
     
-    channel_data=uff_file.read('/channel_data');
+    channel_data=uff.read_object(filename,'/channel_data');
     
     %%
     %
@@ -90,15 +83,15 @@ else
     %
     % Now we can save this beamformed image to that file, so that we don't
     % have to wait for the beamforming next time.
-    uff_file.write(b_data,'b_data');
+    b_data.write(filename);
 end
 
 %% Display image
 %
 % And finally display the image.
-b_data.plot([],strrep(filename,'_',' '));
+b_data.plot([],strrep(short_filename,'_',' '));
 
 %% Write info about channel data
 %
 % Let's look at the info given about this dataset
-channel_data.print_info()
+channel_data.print_authorship()

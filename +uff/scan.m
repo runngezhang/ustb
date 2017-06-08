@@ -1,10 +1,25 @@
-classdef scan 
-%scan Class defining a scan area  
-%
-%   See also WAVE, RAW_DATA, PROBE
+classdef scan < uff
+    %SCAN   UFF class to define a scan 
+    %   SCAN contains the position of a collection of pixels. It is a
+    %   superclass for more easy-to-handle classes such as UFF.LINEAR_SCAN
+    %   or UFF.SECTOR_SCAN
+    %
+    %   Compulsory properties:
+    %         x                  % Vector containing the x coordinates of each pixel in [m]
+    %         y                  % Vector containing the y coordinates of each pixel in [m]
+    %         z                  % Vector containing the z coordinates of each pixel in [m]
+    %
+    %   Example:
+    %         sca = uff.scan();
+    %         x_axis=linspace(-20e-3,20e-3,256);
+    %         z_axis=linspace(0e-3,40e-3,256);
+    %         [X Z]=meshgrid(x_axis,z_axis);
+    %         sca.x=X(:);
+    %         sca.y=zeros(size(X(:)));
+    %         sca.z=Z(:);
+    %
+    %   See also UFF.LINEAR_SCAN, UFF.SECTOR_SCAN
 
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/02/24 $
 
     properties  (SetAccess = public)
         x                  % Vector containing the x coordinate of each pixel in the matrix
@@ -17,25 +32,23 @@ classdef scan
         xyz                % location of the source [m m m] if the source is not at infinity    
     end
     
-    %% Constructor
+    %% constructor
     methods (Access = public)
-        function h = scan(in_x,in_y,in_z)
-            %scan   Constructor of scan class
+        function h=scan(in_scan)
+            %SCAN   Constructor of scan class
             %
             %   Syntax:
-            %   h = scan(x,y,z)
-            %       x    Vector with the x coordinates of each pixel
-            %       z    Vector with the z coordinates of each pixel
+            %   h = uff.scan()
             %
-            %   See also scan
-            if nargin>0
-                h.x=in_x;
-            end
-            if nargin>1
-                h.y=in_y;
-            end            
-            if nargin>2
-                h.z=in_z;
+            %   See also UFF.LINEAR_SCAN, UFF.SECTOR_SCAN
+            if nargin>0 && ~isempty(in_scan)
+                if isa(in_scan,class(h))
+                    % scan class
+                    h.copy(in_scan);
+                else
+                    % xyz matrix 
+                    h.xyz=in_scan;
+                end
             end
         end
     end

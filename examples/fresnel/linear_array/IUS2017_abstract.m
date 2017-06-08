@@ -103,7 +103,7 @@ for n=1:sca.N_x_axis
     seq(n).apodization.window=uwindow;
     seq(n).apodization.f_number=F_number;
     seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.scan=uff.scan(seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
 end

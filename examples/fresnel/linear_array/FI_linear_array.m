@@ -42,7 +42,7 @@ for n=1:N
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
     seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.scan=uff.scan(seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     

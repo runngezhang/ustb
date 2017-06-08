@@ -1,35 +1,46 @@
-classdef beamformed_data < handle
-    %BEAMFORMED_DATA   beamformed_data definition. Children of HANDLE class
+classdef beamformed_data < uff
+    %BEAMFORMED_DATA   UFF class to hold beamformed data
+    %   BEAMFORMED_DATA contains beamformed ultrasound data, i.e. a spacial
+    %   map. Data is stored in the property _data_ with
+    %   dimensions:
     %
-    %   See also PULSE, PHANTOM, PROBE
-    
+    %   [pixel dimension x channel dimension x wave dimension x frame dimension]
+    %
+    %   Compulsory properties:
+    %       scan                       % SCAN object or array of SCAN objects
+    %       data                       % data [pixel x channel x wave x frame]
+    %
+    %   Optional properties:
+    %       phantom                    % PHANTOM object
+    %       sequence                   % array of WAVE objects
+    %       probe                      % PROBE object
+    %       pulse                      % PULSE object
+    %       sampling_frequency         % Sampling frequency in the depth direction in [Hz] 
+    %       modulation_frequency       % Modulation frequency in [Hz]
+    %
+    %   Example:
+    %         beam_dta = uff.beamformed_data();
+    %
+    %   See also UFF.CHANNEL_DATA, UFF.BEAMFORMED_DATA, UFF.SCAN
+        
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
     %
-    %   $Last updated: 2017/03/20 $
+    %   $Last updated: 2017/06/07$
     
     %% compulsory properties
     properties  (SetAccess = public)
-        scan                       % SCAN class or array of SCAN classes
-        data                       % data
+        scan                       % SCAN object or array of SCAN objects
+        data                       % data [pixel x channel x wave x frame]
     end
  
-    %% Logistics 
-    properties  (SetAccess = public)
-        name={}              % name of the dataset
-        reference={}         % reference to the publication where it was used/acquired
-        author={}            % contact of the authors
-        version={}           % version of the dataset
-        info={}              % Information about the beamforming parameters used
-    end
-    
     %% optional properties
     properties  (SetAccess = public)
-        phantom                    % PHANTOM class [optional]
-        sequence                   % array of WAVE classes [optional]
-        probe                      % PROBE class [optional]
-        pulse                      % PULSE class [optional]
-        sampling_frequency         % Sampling frequency in the depth direction in [Hz]
+        phantom                    % PHANTOM object
+        sequence                   % array of WAVE objects
+        probe                      % PROBE object
+        pulse                      % PULSE object
+        sampling_frequency         % Sampling frequency in the depth direction in [Hz] 
         modulation_frequency       % Modulation frequency in [Hz]
     end
     
@@ -64,32 +75,8 @@ classdef beamformed_data < handle
             end
         end
     end
-    
-    %% copy 
-    methods (Access = public)
-        function copy(h,object)
-            %COPY    Copy the values from another BEAMFORMED_DATA class
-            %
-            %   Syntax:
-            %   COPY(object)
-            %       object       Instance of a BEAMFORMED_DATA class
-            %
-            %   See also SCAN, WAVE, SOURCE
-            assert(isa(object,class(h)),'Class of the input object is not identical');
-            
-            % we copy all non-dependent public properties
-            list_properties=properties(object);
-            for n=1:numel(list_properties)
-                property_name=list_properties{n};
-                mp = findprop(h,property_name);
-                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
-                    eval(sprintf('h.%s = object.%s;',property_name,property_name));
-                end
-            end
-        end
-    end
-    
-    %% plot methods
+        
+    %% display methods
     methods (Access = public)
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces)
             %PLOT Plots beamformed data
@@ -146,8 +133,7 @@ classdef beamformed_data < handle
         end
         
         function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
-
-            
+        
             [Npixels Nrx Ntx Nframes]=size(data);
             
             % compress values
@@ -281,36 +267,35 @@ classdef beamformed_data < handle
         function h=set.phantom(h,in_phantom)
             if ~isempty(in_phantom)
                 assert(isa(in_phantom,'uff.phantom'), 'The input is not a PHANTOM class. Check HELP PHANTOM.');
-                h.phantom=in_phantom;
             end
+            h.phantom=in_phantom;
         end
         function h=set.pulse(h,in_pulse)
             if ~isempty(in_pulse)
                 assert(isa(in_pulse,'uff.pulse'), 'The input is not a PULSE class. Check HELP PULSE.');
-                h.pulse=in_pulse;
             end
+            h.pulse=in_pulse;
         end
         function h=set.probe(h,in_probe)
             if ~isempty(in_probe)
                 assert(isa(in_probe,'uff.probe'), 'The input is not a PROBE class. Check HELP PROBE.');
-                h.probe=in_probe;
             end
+            h.probe=in_probe;
         end
         function h=set.sequence(h,in_wave)
             if ~isempty(in_wave)
                 assert(isa(in_wave,'uff.wave'), 'The input is not a WAVE class. Check HELP WAVE.');
-                h.sequence=in_wave;
             end
+            h.sequence=in_wave;
         end
         function h=set.scan(h,in_scan)
             if ~isempty(in_scan)
                 assert(isa(in_scan,'uff.scan'), 'The input is not a SCAN class. Check HELP SCAN.');
-                h.scan=in_scan;
             end
+            h.scan=in_scan;
         end
         function h=set.data(h,in_data)
             % some checking is due here
-            
             h.data=in_data;
         end
     end
@@ -367,27 +352,6 @@ classdef beamformed_data < handle
                 drawnow();
                 pause(0.05);
             end
-        end
-    end
-    
-    % get object name
-    methods
-    	function  out  = objname(h)
-            out = evalin('caller','inputname(1)');
-        end
-    end
-    
-    %% Ultrasound File Format (UFF)
-    methods (Access = public)    
-        function write(h, uff_object, location)
-            assert(isa(uff_object,'uff'),'The input is not a UFF object')
-            if nargin<3 location=[]; end
-
-            fprintf('UFF write: %s -> %s',h.objname,uff_object.filename);
-            tic;
-            uff_object.write(location,h,h.objname);
-            fprintf(' [%0.1fs]\n',toc);
-            
         end
     end
 end

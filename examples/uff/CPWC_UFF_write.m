@@ -93,43 +93,27 @@ bmf.transmit_apodization.apex.distance=Inf;
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
 b_data.plot();
 
-%% Defining a UFF object
-%
-% Now that we have data to save we define a *uff* object to handle the UFF
-% file. We do so by providing the full path (path + filename + extension)
-% to the constructor of the *uff* class, for instance:
-
-local_path = [ustb_path(),'/data/']; 
-uff_file=uff([local_path,'test02.uff']);
-
-%% 
-%
-% This will open 'test02.uff' file in the current folder. The constructor
-% can take an additional parameter: _mode_ a string that specifies whether
-% the file is meant to be for read-only ("read"), to read and write ("append"),
-% or if we want to overwrite the file ("write"). By default the constructor
-% opens the file in "append" mode.
-
 %% Saving beamformed data
 %
 % It's about time we start saving some data. To do so we use the method
-% *write* of the *uff* class. We must specify the object we want to save
-% and the name it will have in the uff_data
+% *write* of the *uff* class. To do we just have to pass the path to the
+% *uff* file to the *write* method of any uff class.
 
-uff_file.write(b_data,'b_data');
+filename = [ustb_path(),'/data/test01.uff']; 
+b_data.write(filename);
 
 %%
 %
-% Now the beamformed data has been saved into the file. If you want to check
+% Now the beamformed data has been saved into the file. You can check
 % the contents of the file with a HDF5 viewer such as
 %
 % <https://support.hdfgroup.org/products/java/release/download.html HDFView>
 % 
-% But we can check the contents of the file with the *index* method of
-% *uff* with
+% But the UFF packet provides a function that list the contents of a UFF
+% file: the *index* function.
 
 display=true;
-index=uff_file.index('/',display);
+index=uff.index(filename,'/',display);
 
 %% 
 % 
@@ -141,53 +125,33 @@ index{:}
 %%
 % If the flag *display* is set then the
 % function displays that information on screen. *uff/index* is not
-% recursive: it only shows the contents of the specified location. 
+% recursive: it only shows the contents of the specified location. Notice 
+% that name of the dataset inside the UFF file matches the object's name in 
+% MATLAB's workspace 
 
 %%
 %
-% If we try saving the data again with the same name...
+% If we try saving the data again then ...
 
-try
-    uff_file.write(b_data,'b_data');
-catch me
-    fprintf(2,[me.identifier ': ' me.message '\n']);
-end
+b_data.write(filename);
 
 %%
 %
-% ...we get an error. Different datasets must have different names or be
-% placed in different locations. For instance by:
+% ... a dialog will open asking if we want to overwrite the dataset. This
+% dialog has a timeout of 5 seconds. If you're not quick it will not
+% overwrite the data. Of course to avoid overwritting we can change the
+% name of the dataset within the *uff* file by
 
-uff_file.write(b_data,'b_data_copy');
-uff_file.index('/',display);
-
-%%
-%
-% It is also possible to save arrays of UFF structures. We can for instance
-% define an array of beamformed data as
-
-b_data_array=uff.beamformed_data();
-for n=1:3
-    b_data_array(n)=uff.beamformed_data();
-    b_data_array(n).copy(b_data);
-end
-
-%%
-%
-% and store the whole array into the UFF file
-
-uff_file.write(b_data_array,'b_data_array');
-uff_file.index('/',display);
+b_data.write(filename,'b_data_copy');
+uff.index(filename,'/',display);
 
 %% Saving channel data
 % 
-% Saving channel data (or any other *uff* structure) is exactly as with
-% beamformed data. It might just take a bit more due to the larger amount
-% of data. Here we save *scan* and *channel_data*
+% Saving channel data (or any other *uff* structure) is exactly as we have
+% just shown. It might just take a bit more time due to the larger amount
+% of data. Here we save *uff.scan* and *uff.channel_data*
 
-uff_file.write(scan,'scan');
-
-uff_file.write(channel_data,'channel_data');
-
-uff_file.index('/',display);
+%scan.write(filename);
+channel_data.write(filename);
+uff.index(filename,'/',display);
  

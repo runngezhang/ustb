@@ -17,57 +17,53 @@
 url='http://hirse.medisin.ntnu.no/ustb/data/uff/';   % if not found data will be downloaded from here
 local_path = [ustb_path(),'/data/'];                 % location of example data in this computer                      
 addpath(local_path);
-filename='test02.uff';
-    
+short_filename='test01.uff';
+filename=[local_path short_filename];
+
 % check if the file is available in the local path & downloads otherwise
-tools.download(filename, url, local_path);
+tools.download(short_filename, url, local_path);
 
 %% Reading beamformed data
 %
-% Now that the file is on the path let us create a *UFF* object to interact
-% with the file.
+% Now that the file is in the machine we can start loading data. The first 
+% would be to check what is in there with the *uff.index* function 
+uff.index(filename,'/',display);
 
-uff_file=uff(filename,'read');
-
-%%
-%
-% We don't want to screw up the file so we open it in "read-only" mode. Now
-% we can have a peek at what is inside with the *index* method
-
-display=true;
-uff_file.index('/',display);
 
 %%
 % 
 % We see there is a *beamformed_data* dataset with name _b_data_. Let us
-% load it and plot it.
+% load it and plot it. There are two ways of reading data from file: 
+%
+% * we can define an object of the correct class and use the method *read*:
 
-b_data=uff_file.read('/b_data');
-b_data.plot();
+b_data=uff.beamformed_data();
+b_data.read(filename,'/b_data');
 
 %%
 % 
-% There is also an array of beamformed images with name _b_data_array_. Let
-% us load it too
+% * or we can use the function *uff.read_object* and let the function
+% create the correct object class for us
 
-b_data_array=uff_file.read('/b_data_array');
+b_data2=uff.read_object(filename,'/b_data');
+
+%%
+% 
+% Either way the result is the correct uff.beamformed_data
+
 figure;
-for n=1:length(b_data_array)
-    b_data.plot(subplot(1,length(b_data_array),n));
-end
-set(gcf,'Position',[0 0 1000 420])
-
-%%
-% 
-% Not very interesting, actually.
+h1=subplot(1,2,1)
+b_data.plot(h1,'read');
+h2=subplot(1,2,2)
+b_data2.plot(h2,'read object');
 
 %% Reading channel data
 %
 % There are also two other structures in the file: a uff.scan and a
 % uff.channel_data objects. Let us read them both
 
-scan=uff_file.read('/scan');
-channel_data=uff_file.read('/channel_data');
+%scan=uff.read_object(filename,'/scan');
+channel_data=uff.read_object(filename,'/channel_data');
 
 %%
 %
@@ -97,7 +93,7 @@ b_data.plot();
 % without having to access each dataset individually. It suffices to call
 % the *read* method without parameters and...
 
-vars=uff_file.read();
+vars=uff.read_object(filename);
 
 %%
 %

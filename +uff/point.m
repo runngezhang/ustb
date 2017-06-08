@@ -1,4 +1,4 @@
-classdef point 
+classdef point < uff
 %POINT   POINT definition
 %
 
@@ -22,7 +22,7 @@ classdef point
     
     %% constructor
     methods (Access = public)
-        function h=point()
+        function h=point(in_point)
             %POINT   Constructor of point class
             %
             %   Syntax:
@@ -33,6 +33,16 @@ classdef point
             h.distance=0;     % distance from the point location to the origin of coordinates [m]
             h.azimuth=0;      % angle from the point location to the plane YZ [rad]
             h.elevation=0;    % angle from the point location to the plane XZ [rad]
+            
+            if nargin>0 && ~isempty(in_point)
+                if isa(in_point,class(h))
+                    % point class
+                    h.copy(in_point);
+                else
+                    % xyz matrix 
+                    h.xyz=in_scan;
+                end
+            end
         end
     end
     
