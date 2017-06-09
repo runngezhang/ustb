@@ -8,9 +8,15 @@
 %
 % * <http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058 Montaldo et al. 2009>
 %
+% This tutorial assumes familiarity with the contents of the 
+% <./CPWC_linear_array.html 'CPWC simulation with the USTB built-in Fresnel 
+% simulator'> tutorial. Please feel free to refer back to that for more 
+% details.
+%
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 13.03.2017 and 
 % Arun Asokan nair <anair8@jhu.edu>_
 
+%%
 clear all;
 close all;
 
@@ -23,9 +29,9 @@ close all;
 
 alpha=-45*pi/180;                 % velocity direction [rad]
 N_sca=1;                          % number of scatterers
-% x_sca=random('unif',-10e-3,10e-3,N_sca,1); % Uncomment this if using
+% x_sca=random('unif',-2e-3,2e-3,N_sca,1); % Uncomment this if using
                                             % multiple scatterers
-% z_sca=random('unif',15e-3,25e-3,N_sca,1);  % Uncomment this if using
+% z_sca=random('unif',18e-3,22e-3,N_sca,1);  % Uncomment this if using
                                             % multiple scatterers
 x_sca=-1e-3;                      % Comment this out if using multiple scatterers
 z_sca=21e-3;                      % Comment this out if using multiple scatterers
@@ -149,8 +155,10 @@ bmf.transmit_apodization.apex.distance=Inf;
 % implementation too that we could call with *process.das_mex()*. In
 % addition, we shall chain it with the *process.coherent_compounding()* to
 % coherently compound the individual plane wave images.
+
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 %%
 % Finally, show our results
+
 b_data.plot([],['Beamformed data'],40);
