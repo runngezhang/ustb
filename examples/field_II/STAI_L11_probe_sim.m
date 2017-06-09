@@ -120,7 +120,7 @@ channel_data.initial_time = 0;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
-channel_data.data = STA;
+channel_data.data = STA./max(STA(:));
 
 %% SCAN
 sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
