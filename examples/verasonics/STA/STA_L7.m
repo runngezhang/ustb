@@ -29,24 +29,23 @@ close all;
 s = strsplit(pwd,filesep);
 assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
-filename='a.mat';
-% filehandling not ready yet
-%folderdata=['data/' datestr(now,'yyyymmdd')];
-%mkdir(folderdata);            
-%filedata=['L7_STA_' datestr(now,'HHMMSS') '.h5'];
-%hufffile=[folderdata '/' filedata];
-scan_area=[-19e-3 0e-3 19e-3 40e-3];
+filename='STA_L7.mat'; % This is the filename for the Verasonics .mat setup file
+folderdata=['data/' datestr(now,'yyyymmdd')];
+mkdir(folderdata);            
+filedata=['L7_STA_' datestr(now,'HHMMSS') '.uff'];
+uff_filename=[folderdata '/' filedata];
+scan_area=[-19e-3 0e-3 19e-3 50e-3];
 pixels=[255 255];
 
 %% SI units
 c0=1540;                % reference speed of sound [m/s]
-f0=5.2e6;               % central frequency [Hz]
+f0=5.1e6;               % central frequency [Hz]
 ex_cycles = 2.5;        % number of cycles of the excitation signal
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
 ex_polarity = 1;        % easy way of changing the polarity
 no_Frame = 1;           % number of frames to be acquired
-no_Apert = 128;         % number of apertures per image
-PRF=9000;               % Pulse repetition frequency [pulses/s]
+no_Waves = 128;         % number of apertures per image
+PRF=1000;               % Pulse repetition frequency [pulses/s]
 FN=1.2;                 % F-number
 Fs=4*f0;                % sampling frequency
 
@@ -91,7 +90,7 @@ Media.MP=[0, 0, 20e-3/lambda, 1; Trans.ElementPos];
 
 %% Specify Resources.
 Resource.RcvBuffer(1).datatype = 'int16';
-Resource.RcvBuffer(1).rowsPerFrame = no_Apert*4096; % this size allows for 3 acqs ???, maximum range
+Resource.RcvBuffer(1).rowsPerFrame = no_Waves*4096; % this size allows for 3 acqs ???, maximum range
 Resource.RcvBuffer(1).colsPerFrame = 256;
 Resource.RcvBuffer(1).numFrames = no_Frame;     % 40 frames used for RF cineloop.
 Resource.InterBuffer(1).datatype = 'complex';
@@ -122,9 +121,9 @@ TX = repmat(struct('waveform', 1, ...
                    'Apod', zeros(1,Resource.Parameters.numTransmit), ...
                    'focus', 0.0, ...
                    'Steer', [0.0,0.0], ...
-                   'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_Apert); % number of apertures + 2 extra dummy transmits
+                   'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_Waves); % number of apertures + 2 extra dummy transmits
 % writing sequence angles
-for n = 1:no_Apert
+for n = 1:no_Waves
     TX(n).Apod(n) = 1.0;
     TX(n).Delay = computeTXDelays(TX(n)); 
 end
@@ -150,11 +149,11 @@ Receive = repmat(struct('Apod', ones(1,128), ...
                         'acqNum', 1, ...
                         'samplesPerWave', 4, ...
                         'mode', 0, ...
-                        'callMediaFunc', 0),1,no_Apert*no_Frame);
+                        'callMediaFunc', 0),1,no_Waves*no_Frame);
 %% - Set event specific Receive attributes.
 for i = 1:Resource.RcvBuffer(1).numFrames  % no_Apert*acquisitions per frame
-    k = no_Apert*(i-1);
-    for n = 1:no_Apert; % for each aperture acquire all angles    
+    k = no_Waves*(i-1);
+    for n = 1:no_Waves; % for each aperture acquire all angles    
         Receive(k+n).framenum = i;
         Receive(k+n).acqNum = n;
     end
@@ -166,20 +165,20 @@ Recon = struct('senscutoff', 0.6, ...
                'rcvBufFrame', -1, ...     % use most recently transferred frame
                'IntBufDest', [1,1], ...
                'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
-               'RINums', (1:no_Apert)');
+               'RINums', (1:no_Waves)');
 % Define ReconInfo structures.
 ReconInfo = repmat(struct('mode', 4, ...  % default is to accumulate IQ data.
                    'txnum', 1, ...
                    'rcvnum', 1, ...
-                   'regionnum', 0), 1, no_Apert);
+                   'regionnum', 0), 1, no_Waves);
 % - Set specific ReconInfo attributes.
 ReconInfo(1).mode = 3;
-for n=1:no_Apert
+for n=1:no_Waves
     ReconInfo(n).rcvnum = n;
     ReconInfo(n).txnum = n;  
 end
 
-ReconInfo(no_Apert).mode = 5;
+ReconInfo(no_Waves).mode = 5;
 
 %% Specify Process structure array.
 Process(1).classname = 'Image';
@@ -213,8 +212,8 @@ nsc = 6; % nsc is count of SeqControl objects
 %% Specify Event structure arrays.
 n = 1; % n is count of Events
 for i = 1:Resource.RcvBuffer(1).numFrames
-    k = no_Apert*(i-1);
-    for j = 1:no_Apert
+    k = no_Waves*(i-1);
+    for j = 1:no_Waves
         % first transmit - first receive
         Event(n).tx = j;         % use 1st TX structure.
         Event(n).rcv = k+j;      % use 1st Rcv structure.
@@ -261,10 +260,10 @@ UI(2).Control = {'UserA1','Style','VsSlider','Label','Range',...
 UI(2).Callback = text2cell('%-UI#2Callback');
 
 % Specify factor for converting sequenceRate to frameRate.
-frameRateFactor = no_Apert;
+frameRateFactor = no_Waves;
 
 % Save all the structures to a .mat file.
-save('a');
+save(['MatFiles/',filename]);
 
 %% call VSX
 VSX;
@@ -294,7 +293,7 @@ channel_data = ver.create_sta_channeldata();
 %% SCAN
 sca=uff.linear_scan();
 sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
-sca.z_axis = linspace(0,40e-3,256).'
+sca.z_axis = linspace(0,50e-3,256).'
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
@@ -309,10 +308,18 @@ bmf.transmit_apodization.f_number=FN;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.coherent_compound);
+b_data=bmf.go({process.das_mex() process.coherent_compounding()});
 
 % show
 b_data.plot();
+
+%% Save UFF dataset
+uff_file=uff(uff_filename);
+uff_file.write(channel_data,'channel_data');
+uff_file.write(b_data,'b_data');
+
+%save([uff_filename,'.mat'],'channel_data')
+
 return
 
 
