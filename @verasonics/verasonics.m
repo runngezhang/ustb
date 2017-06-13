@@ -173,6 +173,8 @@ classdef verasonics < handle
                 seq(n)=uff.wave();
                 seq(n).probe=channel_data.probe;
                 seq(n).source.xyz=[channel_data.probe.x(n) channel_data.probe.y(n) channel_data.probe.z(n)];
+               
+                seq(n).apodization = uff.apodization();
                 seq(n).apodization.window=uff.window.sta;
                 seq(n).apodization.apex=seq(n).source;
                 seq(n).sound_speed=channel_data.sound_speed;
@@ -260,6 +262,7 @@ classdef verasonics < handle
                 seq(n).source.azimuth=azimuth_axis(n);
                 seq(n).source.distance=h.TX(n).focus*h.lambda;
                 
+                seq(n).apodization = uff.apodization();
                 seq(n).apodization.window=uff.window.tukey50;
                 seq(n).apodization.f_number=1.7;
                 seq(n).apodization.scan.xyz=seq(n).source.xyz;
@@ -362,7 +365,8 @@ classdef verasonics < handle
                 seq(n)=uff.wave();
                 seq(n).probe=channel_data.probe;
                 seq(n).source.xyz=[h.TX(n).Origin(1)*h.lambda 0 h.TX(n).focus*h.lambda];
-                
+
+                seq(n).apodization = uff.apodization();
                 seq(n).apodization.window=uff.window.tukey50;
                 seq(n).apodization.f_number=1.7;
                 seq(n).apodization.apex.distance=Inf;
