@@ -336,8 +336,10 @@ classdef verasonics < handle
                     end
                 end
             end
-            
+            %data = bandpass_filter_data(h,data,channel_data,1);
             channel_data.data = data;
+            
+            %%
             
         end
     
@@ -495,6 +497,55 @@ classdef verasonics < handle
             %plot(h.TX(n_tx).Delay*h.lambda)
             
             trans_delays = D/channel_data.sound_speed;
+        end
+        
+        function data = bandpass_filter_data(h,data,channel_data,do_plot)
+            % power spectrum
+            [fx pw] = tools.power_spectrum(data,channel_data.sampling_frequency);
+            assert(sum(pw)>0,'Dataset is zero, error in bandpass_filter');
+
+            % computing central frequency and bandwidth
+            fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)];
+            [dc ic]=max(fpw.*(fx>0).'); fc=fx(ic);
+            bw_up=min(fx((fx>fc)&(fpw<dc/2).')); % -6dB upper limit
+            bw_do=max(fx((fx<fc)&(fpw<dc/2).')); % -6dB down limit
+            fc=(bw_up+bw_do)/2;                  % center frequency
+            bw=(bw_up-fc);
+
+            for frame = 1:size(data,4)
+                tools.workbar((frame-1)/size(data,4),'Bandpass filtering, might take some time...','Bandpass filtering')
+
+                % band pass filtering
+                transition=bw/10;
+                low_freq=max([0 fc-2*bw]);
+                high_freq=min([channel_data.sampling_frequency/2*0.99 fc+2*bw]);
+                bandpass_frequency_vector=[low_freq low_freq+transition high_freq-transition high_freq];
+                [data(:,:,:,frame)]= tools.band_pass(data(:,:,:,frame),channel_data.sampling_frequency,bandpass_frequency_vector);
+
+            end
+            tools.workbar(1,'Bandpass filtering, might take some time...','Bandpass filtering')
+
+           
+            if do_plot
+                figure();
+                subplot(1,2,1);
+                plot(fx*1e-6,db(pw),'k'); hold on; axis manual; grid on;
+                xlabel('f [MHz]');
+                ylabel('Relative amplitude');
+                title('Before bandpass filter');
+                ax(1) = gca;
+                subplot(1,2,2)
+                % power spectrum
+
+                [fx pw_after] = tools.power_spectrum(data,channel_data.sampling_frequency);
+                plot(fx*1e-6,db(pw_after),'k'); hold on; axis manual; grid on;
+                xlabel('f [MHz]');
+                ylabel('Relative amplitude');
+                title('After bandpass filter');
+                ax(2) = gca;
+                linkaxes(ax);
+            end
+
         end
     end
 end
