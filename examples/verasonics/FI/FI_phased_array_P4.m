@@ -18,7 +18,7 @@
 %  1.- Freeze
 %  2.- Close the VSX window
 
-close all
+%close all
 clear all
 
 % Check that user is standing in a Verasonics Vantage folder
@@ -26,14 +26,14 @@ s = strsplit(pwd,filesep);
 assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
 
 % filename handling
-filename='a.mat';
+filename='FI_phased_array_p4.mat';
 % Filehandling not ready for USTB yet
 % folderdata=['data/' datestr(now,'yyyymmdd')];
 % mkdir(folderdata);            
 % filedata=['P4_PHA_' datestr(now,'HHMMSS') '.h5'];
 % hufffile=[folderdata '/' filedata];
 
-frames = 3;
+frames = 1;
 
 P.numRays = 128;      % no. of Rays (1 for Flash transmit)
 P.startDepth = 0;
@@ -312,27 +312,36 @@ ver.angles = Angles;
 channel_data = ver.create_FI_phased_array_channeldata();
 
 %%
-depth_axis=linspace(0e-3,80e-3,256).';
+depth_axis=linspace(0e-3,80e-3,2048*2).';
 sca=uff.sector_scan();
 for n=1:length(TX)
     sca(n)=uff.sector_scan(Angles(n),depth_axis);
 end
- 
 
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
+bmf.receive_apodization.window=uff.window.none;
 bmf.receive_apodization.f_number=1.7;
+bmf.receive_apodization.apex.distance = Inf;
 
 % beamforming
-b_data=bmf.go(@bmf.matlab,@postprocess.stack);
+b_data=bmf.go({process.das_mex() process.stack()});
 
 %% show
-b_data.plot();
+b_data.plot(1,[],80);
 
+%%
+answer = questdlg('Do you want to save this dataset?');
+if strcmp(answer,'Yes')
+    % write channel_data to path
+    uff_filename = 'FI_P4';
+    uff_file=uff([ustb_path '/data/' uff_filename],'write');
+    uff_file.write(channel_data,'channel_data');
+    uff_file.write(b_data,'beamformed_data');
+end
 return
 
 
