@@ -3,7 +3,7 @@ classdef verasonics < handle
     
     %   authors:    Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %               Alfonso Rodriques-Morales <alfonso.r.molares@ntnu.no>
-    %               
+    %
     %   $Date: 2017/03/16$
     
     properties (SetAccess = public)
@@ -34,19 +34,19 @@ classdef verasonics < handle
     
     %% Set methods
     
-    methods 
+    methods
         function set.Trans(h,Trans)
             assert(strcmp(Trans.units,'mm'),'Please use mm as units in Verasonics.');
             h.Trans = Trans;
             h.f0 = Trans.frequency*10^6;
         end
-       
+        
         function set.Receive(h,Receive)
             assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Receive = Receive;
             h.Fs = h.f0*Receive(1).samplesPerWave;
             if isfield(Receive,'aperture') == 0 % Then this is a no-mux probe and we set this to one
-               h.Receive(1).aperture = 1; 
+                h.Receive(1).aperture = 1;
             end
         end
         
@@ -91,7 +91,7 @@ classdef verasonics < handle
             no_samples = h.Receive(1).endSample;
             data = zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames);
             
-            offset_time = calculate_delay_offset(h); % Get offset time 
+            offset_time = calculate_delay_offset(h); % Get offset time
             n=1;
             time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
             plot_delayed_signal=0;
@@ -113,7 +113,7 @@ classdef verasonics < handle
                         figure(100);hold all;
                         plot(h.TX(n_tx).Delay)
                         plot((h.TX(n_tx).Delay(end/2))*ones(1,128),'r')
-                        plot(mean(h.TX(n_tx).Delay)*ones(1,128),'b')               
+                        plot(mean(h.TX(n_tx).Delay)*ones(1,128),'b')
                     end
                     
                     t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
@@ -173,7 +173,7 @@ classdef verasonics < handle
                 seq(n)=uff.wave();
                 seq(n).probe=channel_data.probe;
                 seq(n).source.xyz=[channel_data.probe.x(n) channel_data.probe.y(n) channel_data.probe.z(n)];
-               
+                
                 seq(n).apodization = uff.apodization();
                 seq(n).apodization.window=uff.window.sta;
                 seq(n).apodization.apex=seq(n).source;
@@ -185,7 +185,7 @@ classdef verasonics < handle
             no_samples = h.Receive(1).endSample;
             data = zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames);
             
-            offset_time = calculate_delay_offset(h); % Get offset time 
+            offset_time = calculate_delay_offset(h); % Get offset time
             time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
             plot_delayed_signal=0;
             n=1;
@@ -247,7 +247,7 @@ classdef verasonics < handle
             channel_data.probe=create_probe_object(h);
             
             if nargin < 2
-               number_of_frames = h.Resource.RcvBuffer(1).numFrames;
+                number_of_frames = h.Resource.RcvBuffer(1).numFrames;
             end
             
             %% SEQUENCE GENERATION
@@ -276,10 +276,10 @@ classdef verasonics < handle
             %% Convert channel data from Verasonics format to USTB format
             no_samples = h.Receive(1).endSample;
             data = (zeros(no_samples, channel_data.probe.N, length(seq), number_of_frames));
-            
-            offset_time = calculate_delay_offset(h); % Get offset time 
-            time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
+            offset_time = calculate_delay_offset(h); % Get offset time
             plot_delayed_signal=0;
+            interpolation_factor = 10;
+        
             n=1;
             for n_frame = 1:number_of_frames
                 for n_tx = 1:length(seq)
@@ -294,14 +294,15 @@ classdef verasonics < handle
                     % even numbered probe, and the center transmit delay
                     % for a odd elemtn probe
                     t0_1 = mean(h.TX(n_tx).Delay(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)))...
-                            *h.lambda/h.Resource.Parameters.speedOfSound; 
-                    
-                    t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
-                    
-                    % read data
-                    data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame)),time,'linear',0);
+                        *h.lambda/h.Resource.Parameters.speedOfSound;
+                    t_out = linspace(t_ini,t_end,no_t);
+                    t_in=t_out-offset_time-t0_1;
+
+                    data_in = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
+                    data(:,:,n_tx,n_frame) = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data);
                     n=n+1;
                     
+                    %%
                     % to check delay calculation
                     % NB! For phased array this is only correct when you
                     % are firing at angle=0
@@ -312,8 +313,8 @@ classdef verasonics < handle
                         % example. This seems to be correct, but the delays
                         % are slighty off for transmit angles > 0 but not
                         % for angles < 0. Strange. Is there somthing wrong
-                        % with the Verasonics simulation?? :)   
-                       
+                        % with the Verasonics simulation?? :)
+                        
                         [z_all,x_all] = pol2cart(h.angles,ones(1,length(h.angles))*40e-3);
                         x = x_all(n_tx);
                         y = 0;
@@ -336,14 +337,14 @@ classdef verasonics < handle
                     end
                 end
             end
-            %data = bandpass_filter_data(h,data,channel_data,1);
+
             channel_data.data = data;
             
             %%
             
         end
-    
-    %%%%
+        
+        %%%%
         %    Save to channeldata for Focused Imaging with phased array imaging
         function channel_data = create_FI_linear_array_channeldata(h)
             %% Create channel_data object and set some parameters
@@ -354,9 +355,9 @@ classdef verasonics < handle
             channel_data.probe=create_probe_object(h);
             
             if strcmp(h.TW.type,'parametric') % read pulse fr. from TW
-               channel_data.pulse=uff.pulse(h.TW.Parameters(1)*1e6,0,0);
+                channel_data.pulse=uff.pulse(h.TW.Parameters(1)*1e6,0,0);
             else % read pulse fr. from transducer
-               channel_data.pulse=uff.pulse(h.f0,0,0);
+                channel_data.pulse=uff.pulse(h.f0,0,0);
             end
             
             
@@ -367,7 +368,7 @@ classdef verasonics < handle
                 seq(n)=uff.wave();
                 seq(n).probe=channel_data.probe;
                 seq(n).source.xyz=[h.TX(n).Origin(1)*h.lambda 0 h.TX(n).focus*h.lambda];
-
+                
                 seq(n).apodization = uff.apodization();
                 seq(n).apodization.window=uff.window.tukey50;
                 seq(n).apodization.f_number=1.7;
@@ -383,9 +384,9 @@ classdef verasonics < handle
             no_samples = h.Receive(1).endSample;
             data = zeros(no_samples, channel_data.probe.N, length(seq), h.Resource.RcvBuffer(1).numFrames);
             
-            offset_time = calculate_delay_offset(h); % Get offset time 
-            time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
+            offset_time = calculate_delay_offset(h); % Get offset time
             plot_delayed_signal=0;
+            interpolation_factor = 10;
             n=1;
             for n_frame = 1:h.Resource.RcvBuffer(1).numFrames
                 for n_tx = 1:length(seq)
@@ -403,12 +404,14 @@ classdef verasonics < handle
                     % Tx.Delay is cropped to only the active elements.
                     trans_delays = calculate_trans_delays(h,channel_data,n_tx);
                     t0_1 = mean(trans_delays(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)));
-
-                    t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
-                                        
-                    % read data
-                    data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n_tx).startSample:h.Receive(n_tx).endSample,h.Trans.Connector,n_frame)),time,'linear',0);
-      
+                    
+                    t_out = linspace(t_ini,t_end,no_t);
+                    t_in=t_out-offset_time-t0_1;
+                    
+                    data_in = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
+                    data(:,:,n_tx,n_frame) = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data);
+                    
+                    n=n+1;
                     if plot_delayed_signal
                         %% Point to beamform to (where the scatterer is in the simulation)
                         % Need to change to correct scatter setup in the
@@ -416,9 +419,9 @@ classdef verasonics < handle
                         % example. This seems to be correct, but the delays
                         % are slighty off for transmit angles > 0 but not
                         % for angles < 0. Strange. Is there somthing wrong
-                        % with the Verasonics simulation?? :)   
+                        % with the Verasonics simulation?? :)
                         
-
+                        
                         %[z_all,x_all] = pol2cart(h.angles,ones(1,length(h.angles))*40e-3);
                         x = channel_data.sequence(n_tx).source.x;
                         y = 0;
@@ -487,7 +490,7 @@ classdef verasonics < handle
             FocalPt(3) = channel_data.sequence(n_tx).source.z * cos(angle);
             % Compute distance to focal point from each active element.
             X = channel_data.probe.geometry(:,1)' - FocalPt(1);
-            D = sqrt(X.*X + FocalPt(3)*FocalPt(3)); 
+            D = sqrt(X.*X + FocalPt(3)*FocalPt(3));
             Indices = find(logical(h.TX(n_tx).Apod));
             D = max(D) - D;
             D = D - D(Indices(end));
@@ -499,53 +502,21 @@ classdef verasonics < handle
             trans_delays = D/channel_data.sound_speed;
         end
         
-        function data = bandpass_filter_data(h,data,channel_data,do_plot)
-            % power spectrum
-            [fx pw] = tools.power_spectrum(data,channel_data.sampling_frequency);
-            assert(sum(pw)>0,'Dataset is zero, error in bandpass_filter');
-
-            % computing central frequency and bandwidth
-            fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)];
-            [dc ic]=max(fpw.*(fx>0).'); fc=fx(ic);
-            bw_up=min(fx((fx>fc)&(fpw<dc/2).')); % -6dB upper limit
-            bw_do=max(fx((fx<fc)&(fpw<dc/2).')); % -6dB down limit
-            fc=(bw_up+bw_do)/2;                  % center frequency
-            bw=(bw_up-fc);
-
-            for frame = 1:size(data,4)
-                tools.workbar((frame-1)/size(data,4),'Bandpass filtering, might take some time...','Bandpass filtering')
-
-                % band pass filtering
-                transition=bw/10;
-                low_freq=max([0 fc-2*bw]);
-                high_freq=min([channel_data.sampling_frequency/2*0.99 fc+2*bw]);
-                bandpass_frequency_vector=[low_freq low_freq+transition high_freq-transition high_freq];
-                [data(:,:,:,frame)]= tools.band_pass(data(:,:,:,frame),channel_data.sampling_frequency,bandpass_frequency_vector);
-
-            end
-            tools.workbar(1,'Bandpass filtering, might take some time...','Bandpass filtering')
-
-           
-            if do_plot
-                figure();
-                subplot(1,2,1);
-                plot(fx*1e-6,db(pw),'k'); hold on; axis manual; grid on;
-                xlabel('f [MHz]');
-                ylabel('Relative amplitude');
-                title('Before bandpass filter');
-                ax(1) = gca;
-                subplot(1,2,2)
-                % power spectrum
-
-                [fx pw_after] = tools.power_spectrum(data,channel_data.sampling_frequency);
-                plot(fx*1e-6,db(pw_after),'k'); hold on; axis manual; grid on;
-                xlabel('f [MHz]');
-                ylabel('Relative amplitude');
-                title('After bandpass filter');
-                ax(2) = gca;
-                linkaxes(ax);
-            end
-
+        function data_out = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data)
+            % First do a sinc interpolation
+            t_in_interp = linspace(t_in(1),t_in(end)+((interpolation_factor-1)/interpolation_factor)*(1/channel_data.sampling_frequency),length(t_in)*interpolation_factor); 
+            data_tx_interpolated = interpft(double(data_in),length(t_in)*interpolation_factor);
+            %%
+            %                     channel = 64;
+            %                     figure(99);clf;hold all;
+            %                     subplot(211);hold all
+            %                     plot(t_in_interp,data_tx_interpolated(:,channel),'Displayname','interpolated');
+            %                     plot(t_in,data_tx(:,channel),'Displayname','original');
+            %                     subplot(212);hold all
+            
+            %%
+            % read data
+            data_out=interp1(t_in_interp,data_tx_interpolated,t_out,'linear',0);
         end
     end
 end

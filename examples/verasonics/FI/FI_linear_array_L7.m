@@ -1,19 +1,19 @@
-% Notice: 
+% Notice:
 %   This file is provided by Verasonics to end users as a programming
 %   example for the Verasonics Vantage Research Ultrasound System.
 %   Verasonics makes no claims as to the functionality or intended
-%   application of this program and the user assumes all responsibility 
+%   application of this program and the user assumes all responsibility
 %   for its use
 %
-% File name: SetUpL7_4_128RyLns.m - Example of linear array imaging with 
+% File name: SetUpL7_4_128RyLns.m - Example of linear array imaging with
 %                                     focused transmits
-% Description: 
+% Description:
 %   Sequence programming file for L7-4 linear array using 128 ray lines
 %   (focused transmits) and receive acquisitions. Of the 128 transmit channels,
-%   only numTx are used, with numTx/2 transmitters on each side of the center 
-%   element (where possible). All 128 receive channels are active for each 
-%   acquisition. 
-% 
+%   only numTx are used, with numTx/2 transmitters on each side of the center
+%   element (where possible). All 128 receive channels are active for each
+%   acquisition.
+%
 %
 % Last update:
 % 12/13/2015 - modified for SW 3.0
@@ -23,7 +23,7 @@ clear all; close all;
 
 filename='MatFiles/FI_L7.mat'; % This is the filename for the Verasonics .mat setup file
 folderdata=['data/' datestr(now,'yyyymmdd')];
-mkdir(folderdata);            
+mkdir(folderdata);
 filedata=['L7_FI_' datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
 
@@ -31,7 +31,7 @@ P.startDepth = 0;
 P.endDepth = 192;
 P.txFocus = 100;     % Initial transmit focus.
 P.numTx = 32;        % number of transmit elements in TX aperture (where possible).
-number_of_frames = 1 % The number of frames
+number_of_frames = 3 % The number of frames
 
 % Define system parameters.
 Resource.Parameters.numTransmit = 128;      % number of transmit channels.
@@ -58,10 +58,10 @@ PData(1).Size(3) = 1;      % single image page
 PData(1).Origin = [-Trans.spacing*(Trans.numelements-1)/2,0,P.startDepth]; % x,y,z of upper lft crnr
 % - specify 128 Region structures.
 PData(1).Region = repmat(struct('Shape',struct( ...
-                    'Name','Rectangle',...
-                    'Position',[0,0,P.startDepth],...
-                    'width',Trans.spacing,...
-                    'height',P.endDepth-P.startDepth)),1,128);
+    'Name','Rectangle',...
+    'Position',[0,0,P.startDepth],...
+    'width',Trans.spacing,...
+    'height',P.endDepth-P.startDepth)),1,128);
 % - set position of regions to correspond to beam spacing.
 for i = 1:128
     PData(1).Region(i).Shape.Position(1) = (-63.5 + (i-1))*Trans.spacing;
@@ -81,7 +81,7 @@ ScrnSize = get(0,'ScreenSize');
 DwWidth = ceil(PData(1).Size(2)*PData(1).PDelta(1)/Resource.DisplayWindow(1).pdelta);
 DwHeight = ceil(PData(1).Size(1)*PData(1).PDelta(3)/Resource.DisplayWindow(1).pdelta);
 Resource.DisplayWindow(1).Position = [250,(ScrnSize(4)-(DwHeight+150))/2, ...  % lower left corner position
-                                      DwWidth, DwHeight];
+    DwWidth, DwHeight];
 Resource.DisplayWindow(1).ReferencePt = [PData(1).Origin(1),0,PData(1).Origin(3)];   % 2D imaging is in the X,Z plane
 Resource.DisplayWindow(1).numFrames = 20;
 Resource.DisplayWindow(1).AxesUnits = 'mm';
@@ -93,11 +93,11 @@ TW(1).Parameters = [Trans.frequency,0.67,2,1];
 
 % Specify nr TX structure arrays. Transmit centered on element n in the array for event n.
 TX = repmat(struct('waveform', 1, ...
-                   'Origin', [0.0,0.0,0.0], ...
-                   'focus', P.txFocus, ...
-                   'Steer', [0.0,0.0], ...
-                   'Apod', zeros(1,Trans.numelements), ...
-                   'Delay', zeros(1,Trans.numelements)), 1, 128);          
+    'Origin', [0.0,0.0,0.0], ...
+    'focus', P.txFocus, ...
+    'Steer', [0.0,0.0], ...
+    'Apod', zeros(1,Trans.numelements), ...
+    'Delay', zeros(1,Trans.numelements)), 1, 128);
 % - Set event specific TX attributes.
 for n = 1:128   % scan_lines transmit events
     % Set transmit Origins to positions of elements.
@@ -121,19 +121,19 @@ Media.numPoints = length(Media.MP);
 %Media.function = 'movePoints';
 
 
-% Specify Receive structure arrays. 
+% Specify Receive structure arrays.
 % - We need 128 Receives for every frame.
 maxAcqLength = ceil(sqrt(P.endDepth^2 + ((Trans.numelements-1)*Trans.spacing)^2));
 Receive = repmat(struct('Apod', ones(1,Trans.numelements), ...
-                        'startDepth', P.startDepth, ...
-                        'endDepth', maxAcqLength, ...
-                        'TGC', 1, ...
-                        'bufnum', 1, ...
-                        'framenum', 1, ...
-                        'acqNum', 1, ...
-                        'sampleMode', 'NS200BW',...
-                        'mode', 0, ...
-                        'callMediaFunc', 0), 1, 128*Resource.RcvBuffer(1).numFrames);
+    'startDepth', P.startDepth, ...
+    'endDepth', maxAcqLength, ...
+    'TGC', 1, ...
+    'bufnum', 1, ...
+    'framenum', 1, ...
+    'acqNum', 1, ...
+    'sampleMode', 'NS200BW',...
+    'mode', 0, ...
+    'callMediaFunc', 0), 1, 128*Resource.RcvBuffer(1).numFrames);
 % - Set event specific Receive attributes.
 for i = 1:Resource.RcvBuffer(1).numFrames
     k = 128*(i-1);
@@ -149,21 +149,21 @@ TGC.CntrlPts = [0,138,260,287,385,593,674,810];
 TGC.rangeMax = P.endDepth;
 TGC.Waveform = computeTGCWaveform(TGC);
 
-% Specify Recon structure array. 
+% Specify Recon structure array.
 Recon = struct('senscutoff', 0.5, ...
-               'pdatanum', 1, ...
-               'rcvBufFrame',-1, ...
-               'IntBufDest', [1,1], ...
-               'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
-               'RINums', 1:128);
+    'pdatanum', 1, ...
+    'rcvBufFrame',-1, ...
+    'IntBufDest', [1,1], ...
+    'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
+    'RINums', 1:128);
 
 % Define ReconInfo structures.
 ReconInfo = repmat(struct('mode', 'replaceIntensity', ...
-                   'txnum', 1, ...
-                   'rcvnum', 1, ...
-                   'regionnum', 0), 1, 128);
+    'txnum', 1, ...
+    'rcvnum', 1, ...
+    'regionnum', 0), 1, 128);
 % - Set specific ReconInfo attributes.
-for j = 1:128 
+for j = 1:128
     ReconInfo(j).txnum = j;
     ReconInfo(j).rcvnum = j;
     ReconInfo(j).regionnum = j;
@@ -174,21 +174,21 @@ pers = 20;
 Process(1).classname = 'Image';
 Process(1).method = 'imageDisplay';
 Process(1).Parameters = {'imgbufnum',1,...   % number of buffer to process.
-                         'framenum',-1,...   % (-1 => lastFrame)
-                         'pdatanum',1,...    % number of PData structure to use
-                         'pgain',1.0,...            % pgain is image processing gain
-                         'reject',2,...      % reject level 
-                         'persistMethod','simple',...
-                         'persistLevel',pers,...
-                         'interpMethod','4pt',...  %method of interp. (1=4pt)
-                         'grainRemoval','none',...
-                         'processMethod','none',...
-                         'averageMethod','none',...
-                         'compressMethod','power',...
-                         'compressFactor',40,...
-                         'mappingMethod','full',...
-                         'display',1,...      % display image after processing
-                         'displayWindow',1};
+    'framenum',-1,...   % (-1 => lastFrame)
+    'pdatanum',1,...    % number of PData structure to use
+    'pgain',1.0,...            % pgain is image processing gain
+    'reject',2,...      % reject level
+    'persistMethod','simple',...
+    'persistLevel',pers,...
+    'interpMethod','4pt',...  %method of interp. (1=4pt)
+    'grainRemoval','none',...
+    'processMethod','none',...
+    'averageMethod','none',...
+    'compressMethod','power',...
+    'compressFactor',40,...
+    'mappingMethod','full',...
+    'display',1,...      % display image after processing
+    'displayWindow',1};
 
 % Specify SeqControl structure arrays.
 %  - Time between acquisitions in usec
@@ -197,7 +197,7 @@ SeqControl(1).command = 'timeToNextAcq';
 SeqControl(1).argument = t1;
 %  - Time between frames at 20 fps at max endDepth.
 SeqControl(2).command = 'timeToNextAcq';
-SeqControl(2).argument = 50000; 
+SeqControl(2).argument = 50000;
 %  - Return to Matlab
 SeqControl(3).command = 'returnToMatlab';
 %  - Jump back to start.
@@ -211,26 +211,26 @@ for i = 1:Resource.RcvBuffer(1).numFrames
     for j = 1:128                      % Acquire frame
         Event(n).info = 'Aqcuisition.';
         Event(n).tx = j;   % use next TX structure.
-        Event(n).rcv = 128*(i-1)+j;   
+        Event(n).rcv = 128*(i-1)+j;
         Event(n).recon = 0;      % no reconstruction.
         Event(n).process = 0;    % no processing
         Event(n).seqControl = 1; % seqCntrl
         n = n+1;
     end
     % Replace last events SeqControl for inter-frame timeToNextAcq.
-   Event(n-1).seqControl = 2;
+    Event(n-1).seqControl = 2;
     
     Event(n).info = 'Transfer frame to host.';
     Event(n).tx = 0;        % no TX
     Event(n).rcv = 0;       % no Rcv
     Event(n).recon = 0;     % no Recon
-    Event(n).process = 0; 
-    Event(n).seqControl = nsc; 
-       SeqControl(nsc).command = 'transferToHost'; % transfer frame to host buffer
-       nsc = nsc+1;
+    Event(n).process = 0;
+    Event(n).seqControl = nsc;
+    SeqControl(nsc).command = 'transferToHost'; % transfer frame to host buffer
+    nsc = nsc+1;
     n = n+1;
-
-    Event(n).info = 'recon and process'; 
+    
+    Event(n).info = 'recon and process';
     Event(n).tx = 0;         % no transmit
     Event(n).rcv = 0;        % no rcv
     Event(n).recon = 1;      % reconstruction
@@ -246,15 +246,15 @@ Event(n).info = 'Jump back';
 Event(n).tx = 0;        % no TX
 Event(n).rcv = 0;       % no Rcv
 Event(n).recon = 0;     % no Recon
-Event(n).process = 0; 
+Event(n).process = 0;
 Event(n).seqControl = 4;
 
 
 % User specified UI Control Elements
 % - Sensitivity Cutoff
 UI(1).Control =  {'UserB7','Style','VsSlider','Label','Sens. Cutoff',...
-                  'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
-                  'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
+    'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
+    'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
 UI(1).Callback = text2cell('%SensCutoffCallback');
 
 % - Range Change
@@ -267,17 +267,17 @@ if isfield(Resource.DisplayWindow(1),'AxesUnits')&&~isempty(Resource.DisplayWind
     end
 end
 UI(2).Control = {'UserA1','Style','VsSlider','Label',['Range (',AxesUnit,')'],...
-                 'SliderMinMaxVal',[64,300,P.endDepth]*wls2mm,'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
+    'SliderMinMaxVal',[64,300,P.endDepth]*wls2mm,'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
 UI(2).Callback = text2cell('%RangeChangeCallback');
-             
+
 % - Transmit focus change
 UI(3).Control = {'UserB4','Style','VsSlider','Label',['TX Focus (',AxesUnit,')'],...
-                 'SliderMinMaxVal',[20,320,P.txFocus]*wls2mm,'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
+    'SliderMinMaxVal',[20,320,P.txFocus]*wls2mm,'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
 UI(3).Callback = text2cell('%TxFocusCallback');
-             
+
 % - F number change
 UI(4).Control = {'UserB3','Style','VsSlider','Label','F Number',...
-                 'SliderMinMaxVal',[1,20,round(P.txFocus/(P.numTx*Trans.spacing))],'SliderStep',[0.05,0.1],'ValueFormat','%2.0f'};
+    'SliderMinMaxVal',[1,20,round(P.txFocus/(P.numTx*Trans.spacing))],'SliderStep',[0.05,0.1],'ValueFormat','%2.0f'};
 UI(4).Callback = text2cell('%FNumCallback');
 
 % Specify factor for converting sequenceRate to frameRate.
@@ -292,7 +292,7 @@ ver = verasonics();
 % The Verasonics class needs these structs to create a USTB dataset
 % NB! The Trans struct should be given first.
 ver.Trans = Trans;
-ver.RcvData = RcvData;          
+ver.RcvData = RcvData;
 ver.Receive = Receive;
 ver.Resource = Resource;
 ver.TW = TW;
@@ -305,7 +305,7 @@ channel_data = ver.create_FI_linear_array_channeldata();
 z_axis=linspace(3e-3,50e-3,2048).';
 scan=uff.linear_scan();
 for n=1:numel(channel_data.sequence)
-    scan(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);   
+    scan(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
 end
 
 %% BEAMFORMER
@@ -319,15 +319,17 @@ bmf.receive_apodization.apex.distance = Inf;
 
 % beamforming
 b_data=bmf.go({process.das_mex process.stack})
-% show
+%% show
 b_data.plot(1,'DAS',60);
 
-%% Save UFF dataset
-uff_file=uff(uff_filename);
-uff_file.write(channel_data,'channel_data');
-uff_file.write(b_data,'b_data');
-uff_file.write(scan,'scan');
-
+answer = questdlg('Do you want to save this dataset?');
+if strcmp(answer,'Yes')
+    %% Save UFF dataset
+    uff_file=uff(uff_filename);
+    uff_file.write(channel_data,'channel_data');
+    uff_file.write(b_data,'b_data');
+    uff_file.write(scan,'scan');
+end
 return
 
 % **** Callback routines to be converted by text2cell function. ****
@@ -359,7 +361,7 @@ P = evalin('base','P');
 P.endDepth = UIValue;
 if isfield(Resource.DisplayWindow(1),'AxesUnits')&&~isempty(Resource.DisplayWindow(1).AxesUnits)
     if strcmp(Resource.DisplayWindow(1).AxesUnits,'mm');
-        P.endDepth = UIValue*scaleToWvl;    
+        P.endDepth = UIValue*scaleToWvl;
     end
 end
 assignin('base','P',P);
@@ -367,10 +369,10 @@ assignin('base','P',P);
 PData = evalin('base','PData');
 PData(1).Size(1) = ceil((P.endDepth-P.startDepth)/PData(1).PDelta(3));
 PData(1).Region = repmat(struct('Shape',struct( ...
-                    'Name','Rectangle',...
-                    'Position',[0,0,P.startDepth],...
-                    'width',Trans.spacing,...
-                    'height',P.endDepth-P.startDepth)),1,128);
+    'Name','Rectangle',...
+    'Position',[0,0,P.startDepth],...
+    'width',Trans.spacing,...
+    'height',P.endDepth-P.startDepth)),1,128);
 % - set position of regions to correspond to beam spacing.
 for i = 1:128
     PData(1).Region(i).Shape.Position(1) = (-63.5 + (i-1))*Trans.spacing;
@@ -410,7 +412,7 @@ P = evalin('base','P');
 P.txFocus = UIValue;
 if isfield(Resource.DisplayWindow(1),'AxesUnits')&&~isempty(Resource.DisplayWindow(1).AxesUnits)
     if strcmp(Resource.DisplayWindow(1).AxesUnits,'mm');
-        P.txFocus = UIValue*scaleToWvl;    
+        P.txFocus = UIValue*scaleToWvl;
     end
 end
 assignin('base','P',P);
