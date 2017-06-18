@@ -28,18 +28,32 @@ classdef apodization
     
     %% constructor
     methods (Access = public)
-        function h=apodization()
+        function h=apodization(window, probe, point)
             %apodization   Constructor of apodization class
             %
             %   Syntax:
-            %   h = apodization()
+            %   h=apodization(window, probe, point)unit
             %           apex      % apex class
             %
             %   See also apodization, apex, PHANTOM, PROBE, PULSE
             
-            h.window=uff.window.none;
-            h.probe=uff.probe();
-            h.apex=uff.point();
+            if (nargin>0)
+                h.window=window
+            else
+                h.window=uff.window.none;
+            end
+            
+            if (nargin>1)
+                h.probe=probe;
+            else
+                h.probe=uff.probe();
+            end
+            
+            if (nargin>2)
+                h.apex=uff.point();
+            else
+                h.apex=uff.point();
+            end
             h.scan=uff.scan(0,0,0);
             h.f_number=[1 1];
             h.tilt=[0 0];

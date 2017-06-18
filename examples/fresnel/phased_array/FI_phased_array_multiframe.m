@@ -98,6 +98,7 @@ for n=1:N_beams
     seq(n).source.azimuth=azimuth_axis(n);
     seq(n).source.distance=depth;
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
     seq(n).apodization.scan.xyz=seq(n).source.xyz;

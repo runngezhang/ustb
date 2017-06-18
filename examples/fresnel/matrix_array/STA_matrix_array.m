@@ -83,6 +83,7 @@ for n=1:prb.N_elements
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
+    seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.apex=seq(n).source;
     
@@ -137,7 +138,7 @@ bmf.receive_apodization.f_number=F_number;
 bmf.receive_apodization.apex.distance=Inf;
 
 bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=F_number;udo
+bmf.transmit_apodization.f_number=F_number;
 bmf.transmit_apodization.apex.distance=Inf;
 
 %% 

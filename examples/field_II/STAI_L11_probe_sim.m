@@ -120,7 +120,7 @@ channel_data.initial_time = 0;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
-channel_data.data = STA;
+channel_data.data = STA./max(STA(:));
 
 %% SCAN
 sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
@@ -138,5 +138,12 @@ bmf.transmit_apodization.apex.distance=Inf;
 
 % Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
-% Display image
+% Display imagexs
 b_data.plot()
+
+%% Save UFF dataset
+uff_file=uff('FieldII_PSF_simulation.uff');
+uff_file.write(channel_data,'channel_data');
+%uff_file.write(b_data,'b_data');
+
+save 'FieldII_PSF_simulation.mat' 'channel_data'
