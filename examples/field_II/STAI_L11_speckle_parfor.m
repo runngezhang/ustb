@@ -74,7 +74,7 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% phantom of speckle
-number_of_scatterers = 100;
+number_of_scatterers = 20000;
 xxp_speckle=random('unif',-5e-3,5e-3,number_of_scatterers,1);
 zzp_speckle=random('unif',15e-3,20e-3,number_of_scatterers,1);
 sca = [xxp_speckle zeros(length(xxp_speckle),1) zzp_speckle];  % list with the scatterers coordinates [m]
@@ -187,3 +187,5 @@ legend('show');
 uff_file=uff('FieldII_speckle_simulation.uff');
 uff_file.write(channel_data,'channel_data');
 uff_file.write(b_data,'b_data');
+
+save 'FieldII_speckle_simulation.mat' 'channel_data' %There is a bug in UFF STAI
