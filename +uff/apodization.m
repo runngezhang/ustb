@@ -1,20 +1,38 @@
-classdef apodization 
-%UFF.APODIZATION   apodization definition
-%
-%   See also POINT, PHANTOM, PROBE, PULSE
-
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/07 $
+classdef apodization < uff
+    %APODIZATION   UFF class to hold apodization data
+    %   APODIZATION contains data to define transmit, receive & synthetic 
+    %   beams. Different parameters are needed depending on the use.
+    %
+    %   Properties:
+    %         probe               % UFF.PROBE class (needed for transmit & receive apodization)
+    %         focus               % UFF.SCAN class (needed for transmit, receive & synthetic apodization)       
+    %         sequence            % collection of UFF.WAVE classes (needed for synthetic apodizaton)
+    %         
+    %         window              % UFF.WINDOW class, default uff.window.noen
+    %         f_number            % F-number [Fx Fy] [unitless unitless] 
+    %         
+    %         origo               % POINT class
+    %         tilt                % tilt angle [azimuth elevation] [rad rad] 
+    %
+    %   Example:
+    %         apo = uff.apodization();
+    %
+    %   See also UFF.CHANNEL_DATA, UFF.BEAMFORMED_DATA, UFF.SCAN
+    
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Last updated: 2017/06/09$
 
     %% public properties
     properties  (SetAccess = public)
-        probe               % PROBE class
-        apex                % POINT class
-        scan                % SCAN class        
-        window              % apodization window
-        f_number            % F-number [Fx Fy] [unitless unitless] 
-        sequence            % collection of WAVE classes (for computation of transmit apodization in synthetic scenarios)
-        tilt                % tilt angle [azimuth elevation] [rad rad] 
+        probe                           % UFF.PROBE class (needed for transmit & receive apodization)
+        focus                           % UFF.SCAN class (needed for transmit, receive & synthetic apodization)       
+        sequence                        % collection of UFF.WAVE classes (needed for synthetic apodizaton)
+        
+        window    = uff.window.none     % UFF.WINDOW class, default uff.window.noen
+        f_number  = [1 1]               % F-number [Fx Fy] [unitless unitless] 
+        
+        origo     = uff.point()         % POINT class
+        tilt      = [0 0]               % tilt angle [azimuth elevation] [rad rad] 
     end
     
     %% dependent properties
@@ -28,51 +46,24 @@ classdef apodization
     
     %% constructor
     methods (Access = public)
-        function h=apodization(window, probe, point)
-            %apodization   Constructor of apodization class
-            %
-            %   Syntax:
-            %   h=apodization(window, probe, point)unit
-            %           apex      % apex class
-            %
-            %   See also apodization, apex, PHANTOM, PROBE, PULSE
-            
-            if (nargin>0)
-                h.window=window
-            else
-                h.window=uff.window.none;
-            end
-            
-            if (nargin>1)
-                h.probe=probe;
-            else
-                h.probe=uff.probe();
-            end
-            
-            if (nargin>2)
-                h.apex=uff.point();
-            else
-                h.apex=uff.point();
-            end
-            %h.scan=uff.scan(0,0,0);
-            h.f_number=[1 1];
-            h.tilt=[0 0];
+        function h=apodization(varargin)
+            h = h@uff(varargin{:});
         end
     end
     
     %% set methods
     methods  
-        function h=set.apex(h,in_source)
-            assert(isa(in_source,'uff.point'), 'The input apex is not a POINT class. Check HELP POINT');
-            h.apex=in_source;
+        function h=set.origo(h,in_source)
+            assert(isa(in_source,'uff.point'), 'The input origo is not a POINT class. Check HELP POINT');
+            h.origo=in_source;
         end
         function h=set.probe(h,in_probe)
             assert(isa(in_probe,'uff.probe'), 'The input probe is not a PROBE class. Check HELP PROBE');
             h.probe=in_probe;
         end
-        function h=set.scan(h,in_scan)
-            assert(isa(in_scan,'uff.scan'), 'The input scan is not a SCAN class. Check HELP SCAN');
-            h.scan=in_scan;
+        function h=set.focus(h,in_scan)
+            assert(isa(in_scan,'uff.scan'), 'The input focus is not a SCAN class. Check HELP SCAN');
+            h.focus=in_scan;
         end
         function h=set.f_number(h,in_f_number)
             if(numel(in_f_number)==1) % we allow for escalar input
@@ -114,24 +105,24 @@ classdef apodization
         function value=get.data(h)
            
             % checking we have all we need
-            if isempty(h.scan)
-                h.scan=uff.scan([0 0 0]);
+            if isempty(h.focus)
+                h.focus=uff.scan('xyz',[0 0 0]);
             end
-            if isempty(h.apex)
-                h.apex=uff.point([0 0 0]);
+            if isempty(h.origo)
+                h.origo=uff.point('xyz',[0 0 0]);
             end
             
             % NONE APODIZATION
             if(h.window==uff.window.none)
-                value=ones(h.scan.N_pixels,h.N_elements);
+                value=ones(h.focus.N_pixels,h.N_elements);
                 return;
             end
             
-            % STA APODIZATION (just the element closest to apex)
+            % STA APODIZATION (just the element closest to origo)
             if (h.window==uff.window.sta)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-                dist=sqrt((h.probe.x-h.apex.x).^2+(h.probe.y-h.apex.y).^2+(h.probe.z-h.apex.z).^2);
-                value=ones(h.scan.N_pixels,1)*double(dist==min(dist(:)));
+                dist=sqrt((h.probe.x-h.origo.x).^2+(h.probe.y-h.origo.y).^2+(h.probe.z-h.origo.z).^2);
+                value=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
                 return;
             end
             
@@ -140,8 +131,8 @@ classdef apodization
             y_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,2),h.origin(:,2)));
             
             % computing aperture
-            Aperture_x=(abs(h.scan.z)./h.f_number(1))*ones(1,h.N_elements);
-            Aperture_y=(abs(h.scan.z)./h.f_number(2))*ones(1,h.N_elements);
+            Aperture_x=(abs(h.focus.z)./h.f_number(1))*ones(1,h.N_elements);
+            Aperture_y=(abs(h.focus.z)./h.f_number(2))*ones(1,h.N_elements);
 
             % SWITCH
             switch(h.window)
@@ -178,7 +169,7 @@ classdef apodization
 %             if(size(apo,2)>(2*(beam.smoothing+1)))
 %                 % compute edge smoothing mask
 %                 mask=0.5-0.5*cos((0:beam.smoothing)/beam.smoothing*pi);  % vector mask
-%                 mask=(ones(h.scan.pixels,1)*mask(2:(beam.smoothing+1))); % matrix mask
+%                 mask=(ones(h.focus.pixels,1)*mask(2:(beam.smoothing+1))); % matrix mask
 %                 
 %                 % modifying apodization edges
 %                 apo(:,1:beam.smoothing)=apo(:,1:beam.smoothing).*mask;
@@ -188,17 +179,17 @@ classdef apodization
         
         function value=get.origin(h)
             % checking we have all we need
-            assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-            assert(numel(h.scan)>0,'The SCAN parameter is not set.');
-            assert(numel(h.apex)>0,'The APEX parameter is not set.');
+            %assert(numel(h.probe)>0,'The PROBE parameter is not set.');
+            assert(h.focus.N_pixels>0,'The focus parameter is not set.');
+            assert(numel(h.origo)>0,'The origo parameter is not set.');
             
             % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
-            if isinf(h.apex.distance)
-                origin(:,1)=h.scan.x+h.scan.z*tan(h.apex.azimuth)+h.scan.z*tan(h.tilt(1));
-                origin(:,2)=h.scan.y+h.scan.z*tan(h.apex.elevation)+h.scan.z*tan(h.tilt(2));
+            if isinf(h.origo.distance)
+                origin(:,1)=h.focus.x+h.focus.z*tan(h.origo.azimuth)+h.focus.z*tan(h.tilt(1));
+                origin(:,2)=h.focus.y+h.focus.z*tan(h.origo.elevation)+h.focus.z*tan(h.tilt(2));
             else
-                origin(:,1)=h.apex.x-h.apex.z*(h.scan.x-h.apex.x)./(h.scan.z-h.apex.z)+h.scan.z*tan(h.tilt(1));
-                origin(:,2)=(h.scan.y-h.apex.y)./(h.scan.x-h.apex.x).*(origin(:,1)-h.apex.x)+h.scan.y+h.scan.z*tan(h.tilt(2));
+                origin(:,1)=h.origo.x-h.origo.z*(h.focus.x-h.origo.x)./(h.focus.z-h.origo.z)+h.focus.z*tan(h.tilt(1));
+                origin(:,2)=(h.focus.y-h.origo.y)./(h.focus.x-h.origo.x).*(origin(:,1)-h.origo.x)+h.focus.y+h.focus.z*tan(h.tilt(2));
             end
             origin(:,3)=0;
             origin(isnan(origin))=0; % solve divisions by 0
@@ -207,26 +198,26 @@ classdef apodization
         end
         
         function value=get.propagation_distance(h)
-            value=sqrt(sum(([h.scan.x-h.origin(:,1) h.scan.y-h.origin(:,2) h.scan.z-h.origin(:,3)]).^2,2));
+            value=sqrt(sum(([h.focus.x-h.origin(:,1) h.focus.y-h.origin(:,2) h.focus.z-h.origin(:,3)]).^2,2));
         end
         
         function value=get.element_position_matrix(h)
             if isempty(h.sequence)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-                value(:,:,1)=ones(h.scan.N_pixels,1)*(h.probe.x.'); 
-                value(:,:,2)=ones(h.scan.N_pixels,1)*(h.probe.y.'); 
-                value(:,:,3)=ones(h.scan.N_pixels,1)*(h.probe.z.'); 
+                value(:,:,1)=ones(h.focus.N_pixels,1)*(h.probe.x.'); 
+                value(:,:,2)=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
+                value(:,:,3)=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
             else
                 % the transmit aperture in a synthetic scenario (CPWC, DW)
                 % is dependant on the pixel location according to 10.1109/TUFFC.2015.007183 
                 % (TODO: this is assuming a flat aperture, not accurate for curvilinear probes)
                 for n=1:length(h.sequence)
                     if isinf(h.sequence(n).source.distance)
-                        element(:,1)=h.scan.x+h.scan.z*tan(h.sequence(n).source.azimuth);
-                        element(:,2)=h.scan.y+h.scan.z*tan(h.sequence(n).source.elevation);
+                        element(:,1)=h.focus.x+h.focus.z*tan(h.sequence(n).source.azimuth);
+                        element(:,2)=h.focus.y+h.focus.z*tan(h.sequence(n).source.elevation);
                     else
-                        element(:,1)=h.sequence(n).source.x-h.sequence(n).source.z*(h.scan.x-h.sequence(n).source.x)./(h.scan.z-h.sequence(n).source.z);
-                        element(:,2)=h.sequence(n).source.y-h.sequence(n).source.z*(h.scan.y-h.sequence(n).source.y)./(h.scan.z-h.sequence(n).source.z);
+                        element(:,1)=h.sequence(n).source.x-h.sequence(n).source.z*(h.focus.x-h.sequence(n).source.x)./(h.focus.z-h.sequence(n).source.z);
+                        element(:,2)=h.sequence(n).source.y-h.sequence(n).source.z*(h.focus.y-h.sequence(n).source.y)./(h.focus.z-h.sequence(n).source.z);
                     end
                     element(:,3)=0;
                     element(isnan(element))=0; % solve divisions by 0

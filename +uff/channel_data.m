@@ -58,22 +58,10 @@ classdef channel_data < uff
         lambda                          % wavelength [m]
     end
         
-    % constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h=channel_data(in_channel_data)
-            %UFF.CHANNEL_DATA   Constructor of UFF.CHANNEL_DATA class
-            %
-            %   Examples:
-            %       obj = uff.channel_data()
-            %       obj = uff.channel_data(other_channel_data_object)
-            %
-            %   See also BEAM, PHANTOM, PROBE, PULSE
-
-            % if we input an object we copy it
-            if nargin > 0 && ~isempty(in_channel_data)
-                h.copy(in_channel_data);
-            end
-            
+        function h=channel_data(varargin)
+            h = h@uff(varargin{:});
         end
     end
     

@@ -15,14 +15,14 @@ classdef beamformed_data < uff
     %       sequence                   % array of WAVE objects
     %       probe                      % PROBE object
     %       pulse                      % PULSE object
-    %       sampling_frequency         % Sampling frequency in the depth direction in [Hz] 
+    %       sampling_frequency         % Sampling frequency in the depth direction in [Hz]
     %       modulation_frequency       % Modulation frequency in [Hz]
     %
     %   Example:
     %         beam_dta = uff.beamformed_data();
     %
     %   See also UFF.CHANNEL_DATA, UFF.BEAMFORMED_DATA, UFF.SCAN
-        
+    
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %            Ole Marius Hoel Rindal (olemarius@olemarius.net)
     %
@@ -33,49 +33,41 @@ classdef beamformed_data < uff
         scan                       % SCAN object or array of SCAN objects
         data                       % data [pixel x channel x wave x frame]
     end
- 
+    
     %% optional properties
     properties  (SetAccess = public)
         phantom                    % PHANTOM object
         sequence                   % array of WAVE objects
         probe                      % PROBE object
         pulse                      % PULSE object
-        sampling_frequency         % Sampling frequency in the depth direction in [Hz] 
+        sampling_frequency         % Sampling frequency in the depth direction in [Hz]
         modulation_frequency       % Modulation frequency in [Hz]
     end
     
     %% dependent properties
     properties  (Dependent)
-        N_pixels                    % number of pixels  
-        N_channels                  % number of channels 
+        N_pixels                    % number of pixels
+        N_channels                  % number of channels
         N_waves                     % number of waves (transmit events)
-        N_frames                    % number of frames  
-     end
+        N_frames                    % number of frames
+    end
     
     %% private properties
     properties (Access = private)
-       current_frame             % If multi frame, this is the current frame shown 
-       all_images
-       image_handle
-       in_title
-       play_loop
+        current_frame             % If multi frame, this is the current frame shown
+        all_images
+        image_handle
+        in_title
+        play_loop
     end
     
-    %% constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h=beamformed_data(in_beamformed_data)
-            %BEAMFORMED_DATA   Constructor of beamformed_data class
-            %
-            %   Syntax:
-            %   h = beamformed_data()
-            %
-            %   See also BEAM, PHANTOM, PROBE, PULSE
-            if nargin>0 && ~isempty(in_beamformed_data)
-                h.copy(in_beamformed_data);
-            end
+        function h=beamformed_data(varargin)
+            h = h@uff(varargin{:});
         end
     end
-        
+    
     %% display methods
     methods (Access = public)
         function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces)
@@ -100,7 +92,7 @@ classdef beamformed_data < uff
                 figure_handle=figure();
                 axis_handle = gca(figure_handle);
             end
-
+            
             if nargin<3
                 h.in_title='Beamformed data';
             else
@@ -123,7 +115,7 @@ classdef beamformed_data < uff
             
             % If more than one frame, add the GUI buttons
             [Npixels Nrx Ntx Nframes]=size(data);
-            if Nrx*Ntx*Nframes > 1 
+            if Nrx*Ntx*Nframes > 1
                 set(figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(figure_handle);
@@ -133,7 +125,7 @@ classdef beamformed_data < uff
         end
         
         function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
-        
+            
             [Npixels Nrx Ntx Nframes]=size(data);
             
             % compress values
@@ -152,7 +144,7 @@ classdef beamformed_data < uff
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
             end
-                
+            
             switch class(h.scan)
                 case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan(1).N_z_axis h.scan(1).N_x_axis]);
@@ -173,7 +165,7 @@ classdef beamformed_data < uff
                     [radial_matrix axial_matrix] = meshgrid(h.scan(1).radial_axis,h.scan(1).axial_axis);
                     h.all_images = reshape(envelope,[h.scan.N_axial_axis h.scan.N_radial_axis Nrx*Nrx*Nframes]);
                     [az,el] = view();
-                    if (el==90) 
+                    if (el==90)
                         % plot in 2D
                         h.image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
@@ -198,11 +190,11 @@ classdef beamformed_data < uff
                         axis(axis_handle,'tight','equal');
                         colorbar(axis_handle);
                         colormap(axis_handle,'gray');
-                        xlabel(axis_handle,'x[mm]'); 
+                        xlabel(axis_handle,'x[mm]');
                         ylabel(axis_handle,'y[mm]');
                         zlabel(axis_handle,'z[mm]');
                         caxis(axis_handle,[min_value max_value]);
-                        title(axis_handle,in_title);                        
+                        title(axis_handle,in_title);
                     end
                     drawnow;
                 case 'uff.sector_scan'
@@ -254,11 +246,11 @@ classdef beamformed_data < uff
             assert(exist('c')==1,'Please give speed of sound as input');
             % calculate sampling frequency
             if isa(h.scan,'uff.linear_scan')
-               dz = h.scan.z_step;
+                dz = h.scan.z_step;
             elseif isa(h.scan,'uff.sector_scan')
-               dz = h.scan.depth_step;
-            end  
-            h.sampling_frequency = (c/dz/2); % effective sampling frequency (Hz)      
+                dz = h.scan.depth_step;
+            end
+            h.sampling_frequency = (c/dz/2); % effective sampling frequency (Hz)
         end
     end
     

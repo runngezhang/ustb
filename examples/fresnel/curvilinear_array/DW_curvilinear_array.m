@@ -59,19 +59,20 @@ channel_data=sim.go();
 sca=uff.sector_scan();
 sca.azimuth_axis=linspace(-prb.maximum_angle,prb.maximum_angle,256).';
 sca.depth_axis=linspace(prb.radius,prb.radius+180e-3,256).';
-sca.apex.xyz=[0 0 -prb.radius];
+sca.apex=uff.point('xyz',[0 0 -prb.radius]);
 sca.plot(fig_handle,'Scenario');    % show mesh
 
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
+
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex=sca.apex;
+bmf.receive_apodization.origo=sca.apex;
 
 % beamforming
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % show
-h_fig=b_data.plot();hold on;
+h_fig=b_data.plot();

@@ -16,6 +16,39 @@ classdef uff < handle
         info={}                         % other information
     end
     
+        %% constructor
+    methods (Access = public)
+        function h=uff(varargin)
+            %UFF   Constructor of UFF class
+            %
+            %   Syntax:
+            %   h = uff(varaguin)
+            %
+            %   See also UFF.CHANNEL_DATA, UFF.BEAMFORMED_DATA
+
+            if nargin==1 && ~isempty(varargin) 
+                % copy
+                h.copy(varargin{1});
+            elseif nargin>1
+                eval(['mco = ?' class(h) ';']);
+                plist = mco.PropertyList;
+                % varagin 
+                for n=1:2:(2*floor(nargin/2))
+                    found=false;
+                    for m=1:length(plist)
+                        if strcmp(plist(m).Name,varargin{n})
+                            h.(plist(m).Name)=varargin{n+1};
+                            found=true;
+                            continue;
+                        end
+                    end
+                    if ~found warning(sprintf('Parameter %s not in %s',varargin{n},class(h))); end
+                end                
+            end
+        end
+    end
+
+    
     %% copy
     methods (Access = public)
         function copy(h,object)

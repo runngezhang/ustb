@@ -34,9 +34,8 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization=uff.apodization('window',uff.window.sta);
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -58,7 +57,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
@@ -67,11 +66,11 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf])
 
 bmf.transmit_apodization.window=uff.window.tukey25;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.delay_mex()});
@@ -115,14 +114,4 @@ pcf_data=pcf.go();
 pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);
 
-%% Camacho-Fritsch phase coherence factor
-% pcf_alt=process.phase_coherence_factor_alternative();
-% pcf_alt.dimension = dimension.both;
-% pcf_alt.channel_data=bmf.channel_data;
-% pcf_alt.transmit_apodization=bmf.transmit_apodization;
-% pcf_alt.receive_apodization=bmf.receive_apodization;
-% pcf_alt.beamformed_data=b_data;
-% pcf_dim_data=pcf_alt.go();
-% pcf_alt.PCF.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
-% pcf_dim_data.plot([],pcf_alt.name);
 

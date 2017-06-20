@@ -35,9 +35,8 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization=uff.apodization('window',uff.window.sta);
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -59,7 +58,7 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% PARENT BEAMFORMER
@@ -67,12 +66,14 @@ bmf_parent=beamformer();
 % input
 bmf_parent.channel_data=channel_data;
 bmf_parent.scan=sca;
+
 bmf_parent.receive_apodization.window=uff.window.tukey50;
 bmf_parent.receive_apodization.f_number=1.7;
-bmf_parent.receive_apodization.apex.distance=Inf;
+bmf_parent.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+
 bmf_parent.transmit_apodization.window=uff.window.tukey50;
 bmf_parent.transmit_apodization.f_number=1.7;
-bmf_parent.transmit_apodization.apex.distance=Inf;
+bmf_parent.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data_parent=bmf_parent.go({process.das_matlab() process.coherent_compounding()});
@@ -80,35 +81,19 @@ b_data_parent=bmf_parent.go({process.das_matlab() process.coherent_compounding()
 % show
 b_data_parent.plot();
 
-%% CHILD BEAMFORMER WITH STANDALONE CODE
-bmf_child=beamformer.das_cc_standalone();
-% input
-bmf_child.channel_data=channel_data;
-bmf_child.scan=sca;
-bmf_child.receive_apodization.window=uff.window.tukey50;
-bmf_child.receive_apodization.f_number=1.7;
-bmf_child.receive_apodization.apex.distance=Inf;
-bmf_child.transmit_apodization.window=uff.window.tukey50;
-bmf_child.transmit_apodization.f_number=1.7;
-bmf_child.transmit_apodization.apex.distance=Inf;
-
-% beamforming
-b_data_child=bmf_child.go();
-
-% show
-b_data_child.plot();
-
 %% CHILD BEAMFORMER WITH PROCESSES
 bmf_child=beamformer.das_cc_processes();
 % input
 bmf_child.channel_data=channel_data;
 bmf_child.scan=sca;
+
 bmf_child.receive_apodization.window=uff.window.tukey50;
 bmf_child.receive_apodization.f_number=1.7;
-bmf_child.receive_apodization.apex.distance=Inf;
+bmf_child.receive_apodization.origo=uff.point('xyz',[0 0 Inf]);
+
 bmf_child.transmit_apodization.window=uff.window.tukey50;
 bmf_child.transmit_apodization.f_number=1.7;
-bmf_child.transmit_apodization.apex.distance=Inf;
+bmf_child.transmit_apodization.origo=uff.point('xyz',[0 0 Inf]);
 
 % beamforming
 b_data_child=bmf_child.go();

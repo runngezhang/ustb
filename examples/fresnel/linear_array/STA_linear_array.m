@@ -34,9 +34,8 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization=uff.apodization('window',uff.window.sta);
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -58,19 +57,21 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).','z_axis', linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
+
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
+
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 % beamforming
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});

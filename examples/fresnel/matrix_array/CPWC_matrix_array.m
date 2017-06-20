@@ -129,11 +129,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 %% 
 %

@@ -1,10 +1,25 @@
-classdef probe 
-%probe   Probe definition
-%
-%   See also BEAM, PHANTOM
+classdef probe < uff
+    %PROBE   UFF class to define arbitrary probe geometries
+    %   PROBE contains the position and attitude of all elements of a
+    %   probe.  Optionally PROBE can hold each element width and height,
+    %   assuming the elements were rectangular. Information is stored in a 
+    %   single matrix form called geometry, one row per element containing:
+    %
+    %   [x y z azimuth elevation width height]
+    %
+    %   Compulsory properties:
+    %         geometry  = 0   % distance from the point location to the origin of coordinates [m]
+    %
+    %   Example:
+    %         prb = uff.probe();
+    %         pnt.distance = 20e-3;
+    %         pnt.azimuth = 0.3*pi;
+    %         pnt.elevation = 0;
+    %
+    %   See also UFF.WAVE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2016/09/01 $
+    %   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+    %   $Date: 2017/06/09 $
 
     %% public properties
     properties  (SetAccess = public)
@@ -26,18 +41,8 @@ classdef probe
     
     %% constructor
     methods (Access = public)
-        function h=probe(in_geometry)
-            %PROBE   Constructor of PROBE class
-            %
-            %   Syntax:
-            %   h = probe(geometry)
-            %        geometry         % matrix of point scaterers [x y z theta phi width height] - [m m m rad rad m m]
-            %
-            %   See also BEAM, PHANTOM
-                        
-            if nargin>0
-               h.geometry=in_geometry;
-            end
+        function h=probe(varargin)
+            h = h@uff(varargin{:});
         end
     end
     

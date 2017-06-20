@@ -1,17 +1,44 @@
 classdef linear_array < uff.probe 
-%LINEAR_ARRAY   Linear array definition. Child of PROBE class
-%
-%   See also PROBE, BEAM, PHANTOM
+    %LINEAR_ARRAY   UFF class to define a linear array probe geometry
+    %   LINEAR_ARRAY defines an array of elements regularly place along a line. 
+    %   Optionally LINEAR_ARRAY specifies element width and height
+    %   assuming the they are rectangular. 
+    %
+    %   Compulsory properties:
+    %         N              % number of elements 
+    %         pitch          % distance between the elements in the azimuth direction [m]
+    % 
+    %   Optional properties
+    %         element_width  % width of the elements in the azimuth direction [m]
+    %         element_height % height of the elements in the elevation direction [m]
+    % 
+    %   Example:
+    %         prb = uff.linear_array();
+    %         prb.N = 128;
+    %         prb.pitch = 300e-6;
+    %
+    %   See also UFF.PROBE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2017/03/11 $
+    %   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+    %   $Last updated: 2017/06/09$
 
-    %% public properties
+    %% compulsory properties
     properties  (SetAccess = public)
-        pitch          % distance between the elements in the azimuth direction [m]
         N              % number of elements 
+        pitch          % distance between the elements in the azimuth direction [m]
+    end
+
+    %% optional properties
+    properties  (SetAccess = public)
         element_width  % width of the elements in the azimuth direction [m]
         element_height % height of the elements in the elevation direction [m]
+    end
+    
+    %% constructor
+    methods (Access = public)
+        function h=linear_array(varargin)
+            h = h@uff.probe(varargin{:});
+        end
     end
 
     %% update method
@@ -59,6 +86,5 @@ classdef linear_array < uff.probe
             h.element_height=in_height;
             h=h.update();
         end
-    end
-    
+    end    
 end

@@ -25,7 +25,7 @@ classdef das_matlab < process
 
             % precalculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
-            h.receive_apodization.scan=h.scan(1);
+            h.receive_apodization.focus=h.scan(1);
             rx_apo=h.receive_apodization.data;
             rx_propagation_distance=h.receive_apodization.propagation_distance;
             
@@ -64,7 +64,7 @@ classdef das_matlab < process
 
                 % calculate receive apodization for multiple scan
                 if numel(h.scan)>1
-                    h.receive_apodization.scan=current_scan;
+                    h.receive_apodization.focus=current_scan;
                     rx_apo=h.receive_apodization.data;
                     rx_propagation_distance=h.receive_apodization.propagation_distance;
                 end 
@@ -72,7 +72,7 @@ classdef das_matlab < process
                 % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
                 % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
                 h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
-                h.transmit_apodization.scan=current_scan;
+                h.transmit_apodization.focus=current_scan;
                 tx_apo=h.transmit_apodization.data;
 
                 % transmit delay

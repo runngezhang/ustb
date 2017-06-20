@@ -32,24 +32,10 @@ classdef scan < uff
         xyz                % location of the source [m m m] if the source is not at infinity    
     end
     
-    %% constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h=scan(in_scan)
-            %SCAN   Constructor of scan class
-            %
-            %   Syntax:
-            %   h = uff.scan()
-            %
-            %   See also UFF.LINEAR_SCAN, UFF.SECTOR_SCAN
-            if nargin>0 && ~isempty(in_scan)
-                if isa(in_scan,class(h))
-                    % scan class
-                    h.copy(in_scan);
-                else
-                    % xyz matrix 
-                    h.xyz=in_scan;
-                end
-            end
+        function h=scan(varargin)
+            h = h@uff(varargin{:});
         end
     end
     

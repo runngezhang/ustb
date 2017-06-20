@@ -1,15 +1,30 @@
 classdef point < uff
-%POINT   POINT definition
-%
+    %POINT   UFF class to define a point location
+    %   POINT contains the position of a point in a tridimensional space. It
+    %   express that location in spherical coordinates which allows to place 
+    %   points at infinity but in a given direction. 
+    %
+    %   Compulsory properties:
+    %         distance  = 0   % distance from the point location to the origin of coordinates [m]
+    %         azimuth   = 0   % angle from the point location to the plane YZ [rad]
+    %         elevation = 0   % angle from the point location to the plane XZ [rad]
+    %
+    %   Example:
+    %         pnt = uff.point();
+    %         pnt.distance = 20e-3;
+    %         pnt.azimuth = 0.3*pi;
+    %         pnt.elevation = 0;
+    %
+    %   See also UFF.WAVE
 
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/02/21 $
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Date: 2017/06/09 $
 
     %% public properties
     properties  (SetAccess = public)
-        distance     % distance from the point location to the origin of coordinates [m]
-        azimuth      % angle from the point location to the plane YZ [rad]
-        elevation    % angle from the point location to the plane XZ [rad]
+        distance  = 0   % distance from the point location to the origin of coordinates [m]
+        azimuth   = 0   % angle from the point location to the plane YZ [rad]
+        elevation = 0   % angle from the point location to the plane XZ [rad]
     end
     
     %% dependent properties
@@ -20,29 +35,10 @@ classdef point < uff
         z
     end    
     
-    %% constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h=point(in_point)
-            %POINT   Constructor of point class
-            %
-            %   Syntax:
-            %   h = point()
-            %   All input parameters can be inserted after declaration.
-            %
-            %   See also point
-            h.distance=0;     % distance from the point location to the origin of coordinates [m]
-            h.azimuth=0;      % angle from the point location to the plane YZ [rad]
-            h.elevation=0;    % angle from the point location to the plane XZ [rad]
-            
-            if nargin>0 && ~isempty(in_point)
-                if isa(in_point,class(h))
-                    % point class
-                    h.copy(in_point);
-                else
-                    % xyz matrix 
-                    h.xyz=in_scan;
-                end
-            end
+        function h=point(varargin)
+            h = h@uff(varargin{:});
         end
     end
     
@@ -65,7 +61,11 @@ classdef point < uff
              h.distance=norm(in_xyz,2);
              h.azimuth=atan2(in_xyz(1),in_xyz(3));
              if(h.distance>0)
-                h.elevation=asin(in_xyz(2)/h.distance);
+                 if isinf(in_xyz(2))
+                    h.elevation=pi/2*sign(in_xyz(2));
+                 else
+                    h.elevation=asin(in_xyz(2)/h.distance);
+                 end
              else
                 h.elevation=0;
              end
@@ -114,25 +114,24 @@ classdef point < uff
              value=[h.x h.y h.z];
          end
          function value=get.x(h)
-             if isinf(h.distance)
-                value=Inf;
-             else
-                value=h.distance.*sin(h.azimuth).*cos(h.elevation);
-             end
+               if (h.azimuth==pi)||(h.azimuth==0)
+                   value=0;
+               else
+                   value=h.distance.*sin(h.azimuth).*cos(h.elevation);
+               end
          end
          function value=get.y(h)
-             if isinf(h.distance)
-                value=Inf;
+             if (h.elevation==0)
+                value=0;
              else
                 value=h.distance.*sin(h.elevation);
              end
          end
          function value=get.z(h)
-             if isinf(h.distance)
-                value=Inf;
+             if abs(h.azimuth)==pi/2||abs(h.elevation)==pi/2
+                 value=0;
              else
-                %value=h.distance.*cos(h.azimuth).*cos(h.elevation);
-                value=h.distance.*cosd(h.azimuth*180/pi).*cosd(h.elevation*180/pi); % trick to get exact representation of 0
+                value=h.distance.*cosd(h.azimuth*180/pi).*cosd(h.elevation*180/pi); 
              end
          end
     end

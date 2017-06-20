@@ -101,7 +101,7 @@ for n=1:N_beams
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -137,7 +137,7 @@ channel_data=sim.go();
 depth_axis=linspace(5e-3,80e-3,256).';
 sca=uff.sector_scan();
 for n=1:N_beams
-    sca(n)=uff.sector_scan(azimuth_axis(n),depth_axis);
+    sca(n)=uff.sector_scan('azimuth_axis',azimuth_axis(n),'depth_axis',depth_axis);
     sca(n).plot(fig_handle,'Scenario');    
 end
  

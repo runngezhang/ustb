@@ -53,30 +53,6 @@ classdef beamformer < handle
         end
     end
     
-    %% copy 
-    methods (Access = public)
-        function copy(h,object)
-            %COPY    Copy the values from another BEAMFORMER class
-            %
-            %   Syntax:
-            %   COPY(object)
-            %       object       Instance of a BEAMFORMER class
-            %
-            %   See also SCAN, WAVE, SOURCE
-            assert(isa(object,class(h)),'Class of the input object is not identical');
-            
-            % we copy all non-dependent public properties
-            list_properties=properties(object);
-            for n=1:numel(list_properties)
-                property_name=list_properties{n};
-                mp = findprop(h,property_name);
-                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
-                    eval(sprintf('h.%s = object.%s',property_name,property_name));
-                end
-            end
-        end
-    end
-    
     %% go method
     methods 
         function out_dataset = go(h,process_list)
