@@ -18,7 +18,7 @@
 % The run and chose "Add to Path"
 %
 % To save the data:
-%  
+%
 %  1.- Freeze
 %  2.- Close the VSX window
 
@@ -31,7 +31,7 @@ assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not be
 
 filename='STA_L7.mat'; % This is the filename for the Verasonics .mat setup file
 folderdata=['data/' datestr(now,'yyyymmdd')];
-mkdir(folderdata);            
+mkdir(folderdata);
 filedata=['L7_STA_' datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
 scan_area=[-19e-3 0e-3 19e-3 50e-3];
@@ -41,7 +41,7 @@ pixels=[255 255];
 c0=1540;                % reference speed of sound [m/s]
 f0=5.1e6;               % central frequency [Hz]
 ex_cycles = 2.5;        % number of cycles of the excitation signal
-ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
+ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element
 ex_polarity = 1;        % easy way of changing the polarity
 no_Frame = 1;           % number of frames to be acquired
 no_Waves = 128;         % number of apertures per image
@@ -110,24 +110,24 @@ Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner positi
 Resource.DisplayWindow(1).ReferencePt = [PData.Origin(1),PData.Origin(3)];   % 2D imaging is in the X,Z plane
 Resource.DisplayWindow(1).Colormap = gray(256);
 
-%% Specify Transmit waveform structure.  
+%% Specify Transmit waveform structure.
 TW.type = 'parametric';
 % pulse expecification in [MHz, duty-cycle, number-of-half-cycles, boolean]
 TW.Parameters = [f0/1e6, ex_power, ex_cycles*2, ex_polarity];
 
-%% Specify TX structure array.  
+%% Specify TX structure array.
 TX = repmat(struct('waveform', 1, ...
-                   'Origin', [0.0,0.0,0.0], ...
-                   'Apod', zeros(1,Resource.Parameters.numTransmit), ...
-                   'focus', 0.0, ...
-                   'Steer', [0.0,0.0], ...
-                   'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_Waves); % number of apertures + 2 extra dummy transmits
+    'Origin', [0.0,0.0,0.0], ...
+    'Apod', zeros(1,Resource.Parameters.numTransmit), ...
+    'focus', 0.0, ...
+    'Steer', [0.0,0.0], ...
+    'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_Waves); % number of apertures + 2 extra dummy transmits
 % writing sequence angles
 for n = 1:no_Waves
     TX(n).Apod(n) = 1.0;
-    TX(n).Delay = computeTXDelays(TX(n)); 
+    TX(n).Delay = computeTXDelays(TX(n));
 end
-              
+
 %% Specify TGC Waveform structure.
 TGC.CntrlPts = [139,535,650,710,770,932,992,1012];
 TGC.rangeMax = SFormat.endDepth;
@@ -141,19 +141,19 @@ TGC.Waveform = computeTGCWaveform(TGC);
 maxAcqLength = sqrt(SFormat.endDepth^2 + (Trans.numelements*Trans.spacing)^2) - SFormat.startDepth;
 wlsPer128 = 128/(4*2); % wavelengths in 128 samples for 4 samplesPerWave
 Receive = repmat(struct('Apod', ones(1,128), ...
-                        'startDepth', SFormat.startDepth, ...
-                        'endDepth', SFormat.startDepth + wlsPer128*ceil(maxAcqLength/wlsPer128), ...
-                        'TGC', 1, ...
-                        'bufnum', 1, ...
-                        'framenum', 1, ...
-                        'acqNum', 1, ...
-                        'samplesPerWave', 4, ...
-                        'mode', 0, ...
-                        'callMediaFunc', 0),1,no_Waves*no_Frame);
+    'startDepth', SFormat.startDepth, ...
+    'endDepth', SFormat.startDepth + wlsPer128*ceil(maxAcqLength/wlsPer128), ...
+    'TGC', 1, ...
+    'bufnum', 1, ...
+    'framenum', 1, ...
+    'acqNum', 1, ...
+    'samplesPerWave', 4, ...
+    'mode', 0, ...
+    'callMediaFunc', 0),1,no_Waves*no_Frame);
 %% - Set event specific Receive attributes.
 for i = 1:Resource.RcvBuffer(1).numFrames  % no_Apert*acquisitions per frame
     k = no_Waves*(i-1);
-    for n = 1:no_Waves; % for each aperture acquire all angles    
+    for n = 1:no_Waves; % for each aperture acquire all angles
         Receive(k+n).framenum = i;
         Receive(k+n).acqNum = n;
     end
@@ -161,21 +161,21 @@ end
 
 %% Specify Recon structure arrays.
 Recon = struct('senscutoff', 0.6, ...
-               'pdatanum', 1, ...
-               'rcvBufFrame', -1, ...     % use most recently transferred frame
-               'IntBufDest', [1,1], ...
-               'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
-               'RINums', (1:no_Waves)');
+    'pdatanum', 1, ...
+    'rcvBufFrame', -1, ...     % use most recently transferred frame
+    'IntBufDest', [1,1], ...
+    'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
+    'RINums', (1:no_Waves)');
 % Define ReconInfo structures.
 ReconInfo = repmat(struct('mode', 4, ...  % default is to accumulate IQ data.
-                   'txnum', 1, ...
-                   'rcvnum', 1, ...
-                   'regionnum', 0), 1, no_Waves);
+    'txnum', 1, ...
+    'rcvnum', 1, ...
+    'regionnum', 0), 1, no_Waves);
 % - Set specific ReconInfo attributes.
 ReconInfo(1).mode = 3;
 for n=1:no_Waves
     ReconInfo(n).rcvnum = n;
-    ReconInfo(n).txnum = n;  
+    ReconInfo(n).txnum = n;
 end
 
 ReconInfo(no_Waves).mode = 5;
@@ -184,18 +184,18 @@ ReconInfo(no_Waves).mode = 5;
 Process(1).classname = 'Image';
 Process(1).method = 'imageDisplay';
 Process(1).Parameters = {'imgbufnum',1,...   % number of buffer to process.
-                         'framenum',-1,...   % (-1 => lastFrame)
-                         'pdatanum',1,...    % number of PData structure to use
-                         'norm',1,...        % normalization method(1 means fixed)
-                         'pgain',2.0,...            % pgain is image processing gain
-                         'persistMethod','simple',...
-                         'persistLevel',30,...
-                         'interp',1,...      % method of interpolation (1=4pt interp)
-                         'compression',0.5,...      % X^0.5 normalized to output word size
-                         'reject',2,...
-                         'mappingMode','full',...
-                         'display',1,...      % display image after processing
-                         'displayWindow',1};
+    'framenum',-1,...   % (-1 => lastFrame)
+    'pdatanum',1,...    % number of PData structure to use
+    'norm',1,...        % normalization method(1 means fixed)
+    'pgain',2.0,...            % pgain is image processing gain
+    'persistMethod','simple',...
+    'persistLevel',30,...
+    'interp',1,...      % method of interpolation (1=4pt interp)
+    'compression',0.5,...      % X^0.5 normalized to output word size
+    'reject',2,...
+    'mappingMode','full',...
+    'display',1,...      % display image after processing
+    'displayWindow',1};
 
 %% Specify SeqControl structure arrays.
 SeqControl(1).command = 'jump'; % jump back to start.
@@ -224,16 +224,16 @@ for i = 1:Resource.RcvBuffer(1).numFrames
     end
     % Replace last Event's seqControl value.
     Event(n-1).seqControl = [3,nsc]; % time between frames, SeqControl struct defined below.
-       SeqControl(nsc).command = 'transferToHost';
-       nsc = nsc + 1;
+    SeqControl(nsc).command = 'transferToHost';
+    nsc = nsc + 1;
     
-    Event(n).info = 'Reconstruct & process'; 
+    Event(n).info = 'Reconstruct & process';
     Event(n).tx = 0;         % no transmit
     Event(n).rcv = 0;        % no rcv
     Event(n).recon = 1;      % reconstruction
     Event(n).process = 1;    % processing
     Event(n).seqControl = 0;
-    if floor(i/2) == i/2     % Exit to Matlab every 4th frame 
+    if floor(i/2) == i/2     % Exit to Matlab every 4th frame
         Event(n).seqControl = 4;
     end
     n = n+1;
@@ -243,20 +243,20 @@ Event(n).info = 'Jump back to first event';
 Event(n).tx = 0;        % no TX
 Event(n).rcv = 0;       % no Rcv
 Event(n).recon = 0;     % no Recon
-Event(n).process = 0; 
+Event(n).process = 0;
 Event(n).seqControl = 1; % jump command
 
 
 %% User specified UI Control Elements
 % - Sensitivity Cutoff
 UI(1).Control =  {'UserB7','Style','VsSlider','Label','Sens. Cutoff',...
-                  'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
-                  'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
+    'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
+    'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
 UI(1).Callback = text2cell('%-UI#1Callback');
 
 % - Range Change
 UI(2).Control = {'UserA1','Style','VsSlider','Label','Range',...
-                 'SliderMinMaxVal',[64,320,SFormat.endDepth],'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
+    'SliderMinMaxVal',[64,320,SFormat.endDepth],'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
 UI(2).Callback = text2cell('%-UI#2Callback');
 
 % Specify factor for converting sequenceRate to frameRate.
@@ -269,11 +269,11 @@ save(['MatFiles/',filename]);
 VSX;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% converting the format to USTB 
+%% converting the format to USTB
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Converting data format to USTB');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% converting the format to USTB 
+%% converting the format to USTB
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Converting data format to USTB');
 %% create USTB data class structure with Verasonics class
@@ -281,7 +281,7 @@ ver = verasonics();
 % The Verasonics class needs these structs to create a USTB dataset
 % NB! The Trans struct should be given first.
 ver.Trans = Trans;
-ver.RcvData = RcvData;          
+ver.RcvData = RcvData;
 ver.Receive = Receive;
 ver.Resource = Resource;
 ver.TW = TW;
@@ -313,13 +313,15 @@ b_data=bmf.go({process.das_mex() process.coherent_compounding()});
 % show
 b_data.plot();
 
-%% Save UFF dataset
-uff_file=uff(uff_filename);
-uff_file.write(channel_data,'channel_data');
-uff_file.write(b_data,'b_data');
-
-%save([uff_filename,'.mat'],'channel_data')
-
+answer = questdlg('Do you want to save this dataset?');
+if strcmp(answer,'Yes')
+    %% Save UFF dataset
+    uff_file=uff(uff_filename);
+    uff_file.write(channel_data,'channel_data');
+    uff_file.write(b_data,'b_data');
+    
+    save([uff_filename,'.mat'],'channel_data')
+end
 return
 
 

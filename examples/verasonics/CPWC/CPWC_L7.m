@@ -229,9 +229,7 @@ SeqControl(2).argument = 1/PRF*1e6;       % PRF
 SeqControl(3).command = 'timeToNextAcq';  % time between frames
 SeqControl(3).argument = max([1/PRF*1e6 1/framerate*1e6 - no_planes/PRF*1e6]); % framerate = PRF
 SeqControl(4).command = 'returnToMatlab';
-SeqControl(5).command = 'triggerOut';
-SeqControl(5).condition = 'syncADC_CLK'; 
-nsc = 6; % nsc is count of SeqControl objects
+nsc = 5; % nsc is count of SeqControl objects
 
 %% Specify Event structure arrays.
 n = 1; % n is count of Events
@@ -246,7 +244,7 @@ for i = 1:no_frames
             Event(n).rcv = I+J+k;    % use 1st Rcv structure.
             Event(n).recon = 0;      % no reconstruction.
             Event(n).process = 0;    % no processing
-            Event(n).seqControl = [2,5]; % time between syn. aper. acqs.
+            Event(n).seqControl = [2]; % time between syn. aper. acqs.
             n = n+1;
         end
     end
@@ -337,7 +335,7 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go({process.delay_matlab process.coherent_compounding});
+b_data=bmf.go({process.das_mex process.coherent_compounding});
 
 %% show
 b_data.plot();
