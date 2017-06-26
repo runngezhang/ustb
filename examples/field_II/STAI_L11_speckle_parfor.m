@@ -74,11 +74,11 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% phantom of speckle
-number_of_scatterers = 20000;
+number_of_scatterers = 500000;
 xxp_speckle=random('unif',-5e-3,5e-3,number_of_scatterers,1);
 zzp_speckle=random('unif',15e-3,20e-3,number_of_scatterers,1);
 sca = [xxp_speckle zeros(length(xxp_speckle),1) zzp_speckle];  % list with the scatterers coordinates [m]
-amp=randn(length(sca));                   % list with the scatterers amplitudes
+amp=randn(length(sca),1);                   % list with the scatterers amplitudes
 cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 %% output data
 t_out=0:dt:((cropat-1)*dt);                 % output time vector
