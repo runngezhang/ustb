@@ -358,14 +358,23 @@ classdef beamformed_data < handle
         function play_movie_loop(h,var1,var2,var3)
             h.play_loop = ~h.play_loop;
             while(h.play_loop)
-                h.current_frame = h.current_frame+1;
-                if h.current_frame > size(h.all_images,3)
-                    h.current_frame = 1;
+                try
+                        h.current_frame = h.current_frame+1;
+                        if h.current_frame > size(h.all_images,3)
+                        h.current_frame = 1;
+                        end
+                        
+                        set(h.image_handle,'CData',h.all_images(:,:,h.current_frame));
+                        title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
+                        drawnow();
+                        pause(0.05);
+                catch ME
+                    if strcmp(ME.identifier,'MATLAB:class:InvalidHandle')
+                        %The Figure was closed while the video was running
+                    else
+                        rethrow(ME)
+                    end
                 end
-                set(h.image_handle,'CData',h.all_images(:,:,h.current_frame));
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
-                drawnow();
-                pause(0.05);
             end
         end
     end
