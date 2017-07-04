@@ -26,6 +26,9 @@ classdef verasonics < handle
         % For CPW
         angles                 % The transmit angles of the planewaves in radians, or for pha the transmit beam angles
         
+        % For "superframes" used for Share Wave Elastography
+        frames_in_superframe
+        
         %
     end
     
