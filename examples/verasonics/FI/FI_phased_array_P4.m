@@ -31,7 +31,7 @@ mkdir(folderdata);
 filedata=['P4_FI_' datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
 
-frames = 3;
+frames = 6;
 
 P.numRays = 128;      % no. of Rays (1 for Flash transmit)
 P.startDepth = 0;
