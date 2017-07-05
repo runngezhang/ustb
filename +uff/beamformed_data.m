@@ -48,6 +48,7 @@ classdef beamformed_data < handle
        image_handle
        in_title
        play_loop
+       figure_handle
     end
     
     %% constructor
@@ -104,14 +105,15 @@ classdef beamformed_data < handle
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
                     (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
-                figure_handle=figure(figure_handle_in);
-                axis_handle = gca(figure_handle);
+                h.figure_handle=figure(figure_handle_in);
+                axis_handle = gca(h.figure_handle);
                 hold on;
             elseif nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.graphics.axis.Axes')
+                h.figure_handle = figure_handle_in;
                 axis_handle = figure_handle_in;
             else
-                figure_handle=figure();
-                axis_handle = gca(figure_handle);
+                h.figure_handle=figure();
+                axis_handle = gca(h.figure_handle);
             end
 
             if nargin<3
@@ -137,12 +139,14 @@ classdef beamformed_data < handle
             % If more than one frame, add the GUI buttons
             [Npixels Nrx Ntx Nframes]=size(data);
             if Nrx*Ntx*Nframes > 1 
-                set(figure_handle, 'Position', [100, 100, 600, 700]);
+                set(h.figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
-                h.add_buttons(figure_handle);
+                h.add_buttons(h.figure_handle);
                 h.play_loop = 0;
                 title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
             end
+            
+            figure_handle = h.figure_handle;
         end
         
         function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
@@ -164,7 +168,7 @@ classdef beamformed_data < handle
                 case 'none'
                     envelope=abs(data);
                     max_value=max(envelope(:));
-                    min_value=10^(-dynamic_range/20);
+                    min_value=min(envelope(:));
             end
                 
             switch class(h.scan)
@@ -334,9 +338,10 @@ classdef beamformed_data < handle
     %% GUI functions
     methods (Access = private)
         function add_buttons(h,figure_handle)
-            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Previous frame','Units','normalized','Position',[0.22 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_previous_frame,h});
-            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Play movie loop','Units','normalized','Position',[0.42 0.95 0.2 0.05],'Visible','on','Callback',{@h.play_movie_loop,h});
-            ButtonH=uicontrol('Parent',figure_handle,'Style','pushbutton','String','Next frame','Units','normalized','Position',[0.62 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_next_frame,h});
+            uicontrol('Parent',figure_handle,'Style','pushbutton','String','Previous frame','Units','normalized','Position',[0.12 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_previous_frame,h});
+            uicontrol('Parent',figure_handle,'Style','pushbutton','String','Play movie loop','Units','normalized','Position',[0.32 0.95 0.2 0.05],'Visible','on','Callback',{@h.play_movie_loop,h});
+            uicontrol('Parent',figure_handle,'Style','pushbutton','String','Next frame','Units','normalized','Position',[0.52 0.95 0.2 0.05],'Visible','on','Callback',{@h.plot_next_frame,h});
+            uicontrol('Parent',figure_handle,'Style','pushbutton','String','Save','Units','normalized','Position',[0.72 0.95 0.2 0.05],'Visible','on','Callback',{@h.save_movie_loop,h});
         end
         
         function plot_previous_frame(h,var1,var2,var3)
@@ -376,6 +381,23 @@ classdef beamformed_data < handle
                     end
                 end
             end
+        end
+        
+         function save_movie_loop(h,var1,var2,var3)
+             FileName = uiputfile('movie.mp4','Save movie loop as');
+             vidObj = VideoWriter(FileName,'MPEG-4');
+             vidObj.Quality = 100;
+             vidObj.FrameRate = 25;
+             open(vidObj);
+             for i = 1:size(h.all_images,3)
+                 
+                 set(h.image_handle,'CData',h.all_images(:,:,i));
+                 title([h.in_title,', Frame = ',num2str(i),'/',num2str(size(h.all_images,3))]);
+                 drawnow();
+                 writeVideo(vidObj, getframe(h.figure_handle));
+                 
+             end
+             close(vidObj)
         end
     end
     
