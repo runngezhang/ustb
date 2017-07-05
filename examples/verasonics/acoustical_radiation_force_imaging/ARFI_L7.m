@@ -678,6 +678,7 @@ b_data=bmf.go({process.das_mex process.coherent_compounding});
 %% show
 b_data.plot();
 
+%%
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     %% write channel_data to file the filname that was created in the beginning of this script
