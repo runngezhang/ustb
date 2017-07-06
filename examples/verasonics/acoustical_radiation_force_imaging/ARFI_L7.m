@@ -6,7 +6,7 @@
 %
 % _Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.07.2017_
 
-clear all;close all;
+clear all;
 
 %% UFF file for USTB
 
@@ -642,6 +642,7 @@ ver.TW = TW(1);
 ver.TX = TX(1);
 ver.angles = 0;%This should be the zero times the na defined in the beginning!!
 ver.frames_in_superframe = na;
+ver.number_of_superframes = Resource.RcvBuffer(2).numFrames;
 
 % Create channel_data object
 channel_data = ver.create_cpw_superframe_channeldata();

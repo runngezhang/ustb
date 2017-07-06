@@ -32,7 +32,7 @@ plot_delayed_signal=0;
 
 frame_number = 1;
 
-for n_frame = 1:h.Resource.RcvBuffer(2).numFrames
+for n_frame = 1:h.number_of_superframes
     for n_tx = 1:h.frames_in_superframe
         %% compute time vector for this line
         t_ini=2*h.Receive(n).startDepth*h.lambda/h.c0;
@@ -62,7 +62,11 @@ for n_frame = 1:h.Resource.RcvBuffer(2).numFrames
             validChannels = [1:128];
         end
         %% read data
-        data(:,:,1,frame_number)=interp1(t_in,double(h.RcvData(h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).startSample:h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).endSample,validChannels,n_frame)),time,'linear',0);
+        if length(h.Resource.RcvBuffer) == 1 % If this is one we only have "superframes"
+            data(:,:,1,frame_number)=interp1(t_in,double(h.RcvData{1}(h.Receive(n_tx).startSample:h.Receive(n_tx).endSample,validChannels,n_frame)),time,'linear',0);
+        else
+            data(:,:,1,frame_number)=interp1(t_in,double(h.RcvData(h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).startSample:h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).endSample,validChannels,n_frame)),time,'linear',0);
+        end
         frame_number = frame_number + 1;
         %%
         % to check delay calculation

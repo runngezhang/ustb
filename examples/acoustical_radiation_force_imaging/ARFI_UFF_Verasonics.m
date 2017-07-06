@@ -9,7 +9,7 @@
 % _Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.07.2017_
 
 %% Reading the file channel data from the UFF file
-clear all; close all;
+clear all; %close all;
 
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
