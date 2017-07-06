@@ -1,20 +1,12 @@
-% Copyright 2001-2016 Verasonics, Inc.  All world-wide rights and remedies under all intellectual property laws and industrial property laws are reserved.
+% Acoustical Radiation Force Imaging Example with Verasonics
 %
-% File name SetUpL7-4ShearWaveImaging.m:
-% Generate .mat Sequence Object file for L7-4 Linear flash transmit with Shearwave visualization.
-% An example for Changing startevent on conditional coding
+% A modified version of the original Verasonics script adding the
+% interaction with the USTB code. The USTB code only displayes the
+% estimated delay, and not the b-mode.
 %
-% All 128 transmit channels are used, with receive on the 64 central elements.
-% Update:
-% Peter K finished the pushtest using Ron's IQ processing function
-% YT, 08/29/2014: Focus adjusment and movie save is added
-% YT, 12/02/2014: SWI on/off is added for customer to have regular imaging
-% YT, 02/10/2015: add dragable ROI ability to move ROI around
-% YT, 02/18/2015: modify the first set of events to regular flash imaging
-% YT, 11/23/2015: make it compatible with 3.0
+% _Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.07.2017_
 
-clear all;
-
+clear all;close all;
 
 %% UFF file for USTB
 
@@ -28,7 +20,7 @@ uff_filename=[folderdata '/' filedata];
 filename = ('L7-4ShearWave');
 
 na          = 50;      % Set na = number of detect acquisitions.
-SWIFrames   = 3;
+SWIFrames   = 4;
 BmodeFrames = 20;
 
 powermax   = 250;      % scaling of the display function
@@ -673,10 +665,13 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go({process.das_mex process.coherent_compounding});
+b_data=bmf.go({process.das_mex process.coherent_compounding process.pulsed_doppler_speckle_tracking});
 
 %% show
-b_data.plot();
+f100 = figure(100);
+b_data.plot(f100,'Displacement',[],'none');
+caxis([0.01*10^-6 0.3*10^-6]); % Updating the colorbar
+colormap(gca(f100),'jet');       % Changing the colormap
 
 %%
 answer = questdlg('Do you want to save this dataset?');
