@@ -82,7 +82,7 @@ classdef pulsed_doppler_speckle_tracking < process
             R_1_0 = conv2(R_1_0, ones(1,V), 'valid');
             
             %Estimated doppler frequency
-            f_hat = abs(angle((R_0_1))/(2*pi));
+            f_hat = (angle((R_0_1))/(2*pi));
             
             %Estimated centeral frequency
             fc_hat = abs((angle(R_1_0))/(2*pi*1/fs));
@@ -94,9 +94,9 @@ classdef pulsed_doppler_speckle_tracking < process
             C = (O/(O-1))*abs(R_0_1)./C;
             
             %Autocorrelation method
-            d_1 = abs(c*f_hat/(2*fc));
+            d_1 = c*f_hat/(2*fc);
             %Modified autocorrelation method
-            d_2 = abs(c*f_hat./(2*fc_hat));
+            d_2 = c*f_hat./(2*fc_hat);
         end
         
         

@@ -166,6 +166,10 @@ classdef beamformed_data < handle
                     max_value=max(envelope(:));
                     min_value=10^(-dynamic_range/20);
                 case 'none'
+                    envelope=data;
+                    max_value=max(envelope(:));
+                    min_value=min(envelope(:));
+                case 'abs'
                     envelope=abs(data);
                     max_value=max(envelope(:));
                     min_value=min(envelope(:));
@@ -253,9 +257,11 @@ classdef beamformed_data < handle
                     envelope=20*log10(envelope./max(envelope(:)));
                 case 'sqrt'
                     envelope=sqrt(abs(h.data));
-                case 'none'
+                case 'abs'
                     envelope=abs(h.data);
                 case 'none-complex' %If we want the complex data before envelope detection
+                    envelope=h.data;
+                case 'none'
                     envelope=h.data;
             end
             switch class(h.scan)
