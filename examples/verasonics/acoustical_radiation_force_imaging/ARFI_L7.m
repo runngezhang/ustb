@@ -630,6 +630,9 @@ VSX
 %% converting the format to USTB 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Converting data format to USTB');
+
+assert(sum(RcvData{2}(:))~=0,'The RcvData is empty, did you fire a push pulse?');
+
 %% create USTB data class structure with Verasonics class
 ver = verasonics();
 % The Verasonics class needs these structs to create a USTB dataset
@@ -671,8 +674,8 @@ b_data=bmf.go({process.das_mex process.coherent_compounding process.pulsed_doppl
 %% show
 f100 = figure(100);
 b_data.plot(f100,'Displacement',[],'none');
-caxis([0.01*10^-6 0.3*10^-6]); % Updating the colorbar
-colormap(gca(f100),'jet');       % Changing the colormap
+caxis([-0.1*10^-6 0.3*10^-6]); % Updating the colorbar
+colormap(gca(f100),'hot');       % Changing the colormap
 
 %%
 answer = questdlg('Do you want to save this dataset?');
