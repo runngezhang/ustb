@@ -28,7 +28,7 @@ classdef verasonics < handle
         
         % For "superframes" used for Share Wave Elastography
         frames_in_superframe
-        
+        number_of_superframes
         %
     end
     
