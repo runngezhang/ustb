@@ -3,7 +3,7 @@ classdef delay_mex < process
     %
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %
-    %   $Last updated: 2017/06/02$
+    %   $Last updated: 2017/07/09$
     
     %% constructor
     methods (Access = public)
@@ -11,7 +11,7 @@ classdef delay_mex < process
             h.name='USTB Delay General Beamformer MEX';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.4';
+            h.version='v1.0.7';
         end
     end
     
@@ -96,7 +96,12 @@ classdef delay_mex < process
                         % point sources
                         TF=(-1).^(current_scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-current_scan.x).^2+(h.channel_data.sequence(n_wave).source.y-current_scan.y).^2+(h.channel_data.sequence(n_wave).source.z-current_scan.z).^2);
                         % add distance from source to origin
-                        TF=TF+sign(cos(h.channel_data.sequence(n_wave).source.azimuth)).*h.channel_data.sequence(n_wave).source.distance;
+                        %OLD VERSION with rounding problem: TF=TF+sign(cos(h.channel_data.sequence(n_wave).source.azimuth)).*h.channel_data.sequence(n_wave).source.distance;
+                        if (h.channel_data.sequence(n_wave).source.z<-1e-3)
+                            TF=TF-h.channel_data.sequence(n_wave).source.distance;
+                        else
+                            TF=TF+h.channel_data.sequence(n_wave).source.distance;                        
+                        end
                     else
                         % plane waves
                         TF=current_scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
