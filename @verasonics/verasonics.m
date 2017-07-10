@@ -97,7 +97,7 @@ classdef verasonics < handle
         
         % Generate a USTB probe object from the Verasonics parameters
         function prb = create_probe_object(h)
-            if strcmp(h.Trans.name,'L7-4') || strcmp(h.Trans.name,'P4-2v')
+            if strcmp(h.Trans.name,'L7-4') || strcmp(h.Trans.name,'P4-2v') || strcmp(h.Trans.name,'L11-4v')
                 prb=uff.linear_array();
                 prb.N=h.Trans.numelements;                  % number of elements
                 prb.pitch=h.Trans.spacingMm/1000;           % probe pitch in azimuth [m]
