@@ -32,9 +32,10 @@ no_samples = h.Receive(1).endSample;
 data = zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames);
 
 offset_time = calculate_delay_offset(h); % Get offset time
-time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
+%time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
 plot_delayed_signal=0;
 n=1;
+interpolation_factor = 10;
 for n_frame = h.frame_order
     for n_tx = 1:length(seq)
         % compute time vector for this line
@@ -46,10 +47,13 @@ for n_frame = h.frame_order
         % element to get correct t_0
         element_offset = channel_data.probe.r(n_tx)/channel_data.sound_speed;
         
-        t_in=linspace(t_ini,t_end,no_t)-offset_time+element_offset;
+        t_out = linspace(t_ini,t_end,no_t);
+        t_in=t_out-offset_time+element_offset;
         
         % read data
-        data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,:,n_frame)),time,'linear',0);
+        data_in = double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,:,n_frame));
+        data(:,:,n_tx,n_frame) = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data);
+        %data(:,:,n_tx,n_frame)=interp1(t_in,,time,'linear',0);
         n=n+1;
         
         
