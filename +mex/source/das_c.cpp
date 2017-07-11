@@ -199,27 +199,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// Beamforming loop
 	if (verbose) { mexPrintf("Beamforming started\n"); mexEvalString("drawnow;"); }
     
-// #if defined (_WIN_)    
-// 	Concurrency::parallel_for(0, P, [&](int pp) { // pixel loop -> WIN
-// #elif defined(_UNIX_)
-//     tbb::strict_ppl::parallel_for(0, P, [&](int pp) { // pixel loop -> UNIX
-// #endif          
-// 
-//         for (int rx = 0; rx<N; rx++) for (int w = 0; w<W; w++) { // channel & wave loop
-
 #if defined (_WIN_)    
-	Concurrency::parallel_for(0, N, [&](int rx) { // channel loop -> WIN
+	Concurrency::parallel_for(0, P, [&](int pp) { // pixel loop -> WIN
 #elif defined(_UNIX_)
-    tbb::strict_ppl::parallel_for(0, N, [&](int rx) { // channel loop -> UNIX
+    tbb::strict_ppl::parallel_for(0, P, [&](int pp) { // pixel loop -> UNIX
 #endif          
 
-        for (int pp = 0; pp<P; pp++) for (int w = 0; w<W; w++) { // pixel & wave loop
+        for (int rx = 0; rx<N; rx++) for (int w = 0; w<W; w++) { // channel & wave loop
+
+// PARALLEL LOOP OPEN CHANNELS -> FASTER BUT CONCURRENCY PROBLEMS
+//
+// #if defined (_WIN_)    
+// 	Concurrency::parallel_for(0, N, [&](int rx) { // channel loop -> WIN
+// #elif defined(_UNIX_)
+//     tbb::strict_ppl::parallel_for(0, N, [&](int rx) { // channel loop -> UNIX
+// #endif          
+//     
+//         for (int pp = 0; pp<P; pp++) for (int w = 0; w<W; w++) { // pixel & wave loop
     
             // references
             float& c_delay = delay[w][rx][pp];      // delay
             float& c_apo = apo[w][rx][pp];          // apodization
             
-            if(c_apo>1e-3) { // we skip any apodization value smaller than -60 dB
+            if (c_apo>1e-3) { // we skip any apodization value smaller than -60 dB
             
                 float denay = (c_delay - t0)*Fs;		// untruncated sample number 
                 int n0 = (int)floor(denay);             // truncated sample number
@@ -256,7 +258,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
             }
         } // end channel & wave loop
-    }); // end pixel loop 
+   }); // end pixel loop 
      
 	if (verbose) {
 		mexPrintf("Beamforming done\n");
