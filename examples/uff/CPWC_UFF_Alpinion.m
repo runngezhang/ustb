@@ -5,7 +5,9 @@
 % You will need an internet connection to download data.
 %
 % _by Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%  and Muyinatu Lediju Bell <mledijubell@jhu.edu> 27.05.2017_
+%  and Muyinatu Lediju Bell <mledijubell@jhu.edu>_ 
+%
+% Last update 07.08.2017
 
 %% Checking the file is in the path
 %
@@ -18,7 +20,6 @@ clear all; close all;
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
-addpath(local_path);
 
 % We have to different Alpinion CPWC datasets, comment out the one to use
 short_filename='Alpinion_L3-8_CPWC_hyperechoic_scatterers.uff';
@@ -47,8 +48,8 @@ end
 % beamformed
 
 if has_b_data
-    b_data=uff_file.read('/b_data');
-    channel_data=uff_file.read('/channel_data');
+    b_data=uff.read_object(filename,'/b_data');
+    channel_data=uff.read_object(filename,'/channel_data');
 else
     %%
     % If it doesn't have any beamformed data at least it should have some

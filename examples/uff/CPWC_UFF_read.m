@@ -5,7 +5,7 @@
 % to download data. Otherwise, you can run the *CPWC_UFF_write.m* first so
 % the file 'test02.uff' is in the current path.
 %
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 15.05.2017_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 07.08.2017_
 
 %% Checking the file is in the path
 %
@@ -53,9 +53,9 @@ b_data2=uff.read_object(filename,'/b_data');
 
 figure;
 h1=subplot(1,2,1)
-b_data.plot(h1,'read');
+b_data.plot(h1,'object.read');
 h2=subplot(1,2,2)
-b_data2.plot(h2,'read object');
+b_data2.plot(h2,'uff.read_object');
 
 %% Reading channel data
 %
@@ -72,12 +72,14 @@ channel_data=uff.read_object(filename,'/channel_data');
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=scan;
+
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});

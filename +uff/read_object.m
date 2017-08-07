@@ -16,6 +16,8 @@ function object = read_object(filename, location, verbose)
 %
 %   See also UFF.READ, UFF.WRITE, UFF.INFO
 
+flag_v10X=false;
+
 if nargin<2||isempty(location) location='/'; end
 if nargin<3 verbose=true; end
 
@@ -35,9 +37,12 @@ file_version=h5readatt(filename, '/','version');    % read file version
 file_version=file_version{1};                       % from cell to string
 file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
 if ~strcmp(file_version, uff.version)
-    % TODO: we should be backcompatible. Use obsolete read
-    % functions to handle previous versions.
-    error(sprintf('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version));
+    % Flags to enable backcompatibility. 
+    if strcmp(file_version, 'v1.0.0')||strcmp(file_version, 'v1.0.1')
+        flag_v10X=true;
+    else
+        error(sprintf('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version));
+    end
 end
 
 % check if location exist
@@ -119,7 +124,14 @@ else
                     % add properties
                     prop=uff.index(filename, location);
                     for m=1:length(prop)
-                        object.(prop{m}.name)=uff.read_object(filename,prop{m}.location,verbose);
+                        % exceptions from backcompatibility
+                        if flag_v10X&&strcmp(class_name,'uff.apodization')&&strcmp(prop{m}.name,'apex')
+                            object.('origo')=uff.read_object(filename,prop{m}.location,verbose);                        
+                        elseif flag_v10X&&strcmp(class_name,'uff.apodization')&&strcmp(prop{m}.name,'scan')
+                            object.('focus')=uff.read_object(filename,prop{m}.location,verbose);                        
+                        else
+                            object.(prop{m}.name)=uff.read_object(filename,prop{m}.location,verbose);
+                        end
                     end
                 end
             else

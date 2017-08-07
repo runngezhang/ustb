@@ -4,7 +4,7 @@
 % UFF (Ultrasound File Format) file. The handling couldn't be simpler so
 % this is going to be brief.
 %
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 15.05.2017_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 07.08.2017_
 
 
 %% Getting channel data
@@ -76,18 +76,20 @@ channel_data.reference = {'www.ustb.no'};
 % to run.
 
 % scan
-scan=uff.linear_scan(linspace(-20e-3,20e-3,256).', linspace(0e-3,40e-3,256).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(0e-3,40e-3,256).');
  
 % beamformer
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=scan;
+
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});

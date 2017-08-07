@@ -45,7 +45,7 @@ file_version=h5readatt(filename, '/','version');  % read file version
 file_version=file_version{1};                       % from cell to string
 file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
 if ~strcmp(file_version, uff.version)
-    error(sprintf('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version));
+    error(sprintf('UFF: Unsupported file version (%s). Current UFF version (%s). The file you want to write to is obsolete, create a new file instead.',file_version,uff.version));
 end
 
 % check if location exist
