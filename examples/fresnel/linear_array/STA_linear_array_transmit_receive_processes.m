@@ -66,7 +66,7 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf])
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey25;
 bmf.transmit_apodization.f_number=1.7;
