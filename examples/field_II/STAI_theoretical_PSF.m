@@ -117,7 +117,7 @@ for n=1:probe.N
     
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=seq(n).source;
 end
 close(wb);
 
@@ -132,17 +132,18 @@ channel_data_field_ii.sequence = seq;
 channel_data_field_ii.data = STA;
 
 %% SCAN
-sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
- %% BEAMFORMER
+sca=uff.linear_scan('x_axis',linspace(-4e-3,4e-3,256).','z_axis', linspace(16e-3,24e-3,256).');
+
+%% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data_field_ii;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 %%
 % Delay and sum on receive, then coherent compounding
 b_data_field_ii =bmf.go({process.das_mex() process.coherent_compounding()});

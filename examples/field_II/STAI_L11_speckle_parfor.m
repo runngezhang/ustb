@@ -136,7 +136,7 @@ channel_data.sequence = seq;
 channel_data.data = STA*10^29;
 
 %% SCAN
-scan=uff.linear_scan(linspace(-5e-3,5e-3,256).', linspace(15e-3,20e-3,256).');
+scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e-3,20e-3,256).');
 
 %% BEAMFORMER
 bmf=beamformer();
@@ -144,10 +144,10 @@ bmf.channel_data=channel_data;
 bmf.scan=scan;
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
@@ -184,6 +184,6 @@ ylabel('Probability')
 legend('show');
 
 %% Save UFF dataset
-uff_file=uff('FieldII_speckle_simulation.uff');
-uff_file.write(channel_data,'channel_data');
-uff_file.write(b_data,'b_data');
+filename=[ustb_path(),'/data/FieldII_speckle_simulation_parfor.uff'];
+channel_data.write(filename);
+b_data.write(filename);

@@ -5,9 +5,10 @@
 % This example uses the L11-4v 128 element Verasonics Transducer
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% Last updated:  09.05.2017
 % authors:       Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %                Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%
+% Last updated: 07.08.2017
 
 clear all;
 close all;
@@ -123,7 +124,7 @@ channel_data.sequence = seq;
 channel_data.data = STA;
 
 %% SCAN
-sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
+sca=uff.linear_scan('x_axis',linspace(-4e-3,4e-3,256).', 'z_axis', linspace(16e-3,24e-3,256).');
 
 %% BEAMFORMER
 bmf=beamformer();
@@ -131,10 +132,10 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
