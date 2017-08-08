@@ -222,9 +222,4 @@ b_data.plot()
 %% Save UFF dataset
 % 
 % Finally, we save the data into a UFF file.
-
-uff_file=uff('FieldII_PSF_simulation.uff');
-uff_file.write(channel_data,'channel_data');
-%uff_file.write(b_data,'b_data');
-
-save 'FieldII_PSF_simulation.mat' 'channel_data'
+channel_data.write('./FieldII_PSF_simulation.uff','channel_data');

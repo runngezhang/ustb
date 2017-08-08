@@ -14,7 +14,6 @@ clear all; close all;
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data on this computer
-addpath(local_path);
 filename='ARFI_dataset.uff';
 
 % check if the file is available in the local path & downloads otherwise
@@ -24,9 +23,8 @@ tools.download(filename, url, local_path);
 % Reading channel data from the UFF file
 % and print out information about the dataset.
 
-uff_file=uff(filename)
-channel_data = uff_file.read('/channel_data');
-channel_data.print_info
+channel_data = uff.read_object([local_path filename],'/channel_data');
+channel_data.print_authorship
 
 %% Beamform images 
 % First, we need to beamform the images from the channel data. We'll do the
@@ -44,11 +42,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
 
 % Do beamforming
 b_data=bmf.go({process.das_mex process.coherent_compounding});

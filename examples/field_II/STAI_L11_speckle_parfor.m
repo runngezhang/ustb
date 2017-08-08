@@ -23,7 +23,7 @@ addpath(local_path);
 
 if exist([local_path,'FieldII_speckle_simulation.mat']) %If the file exists load the file
     
-    disp('We were lucky, and the data was allready simulated, so we can simply load it!');
+    disp('We were lucky, and the data was already simulated, so we can simply load it!');
     
     %There is a bug in UFF with STAI, so we'll wait for that
     %uff_file=uff([local_path,'FieldII_speckle_simulation.uff']);
@@ -207,11 +207,10 @@ else % Else, run the simulation
     %
     % Finally, we save the data into a UFF file.
     % There is a 
-%     uff_file=uff([local_path,'FieldII_speckle_simulation.uff']);
-%     uff_file.write(channel_data,'channel_data');
-%     uff_file.write(b_data,'b_data');
+    filename=[ustb_path(),'/data/FieldII_speckle_simulation.uff'];
+    channel_data.write(filename);
+    b_data.write(filename);
     
-    save([local_path,'FieldII_speckle_simulation.mat'],'channel_data') %There is a bug in UFF STAI
 end
 %% Scan
 %
