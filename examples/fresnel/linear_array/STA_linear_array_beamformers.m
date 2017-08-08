@@ -138,26 +138,6 @@ b_data_parent=bmf_parent.go({process.das_matlab() process.coherent_compounding()
 % and show the data.
 b_data_parent.plot();
 
-%% Child Beamformer with Standalone Code
-
-bmf_child=beamformer.das_cc_standalone();
-bmf_child.channel_data=channel_data;
-bmf_child.scan=sca;
-
-bmf_child.receive_apodization.window=uff.window.tukey50;
-bmf_child.receive_apodization.f_number=1.7;
-bmf_child.receive_apodization.origo=uff.point('xyz',[0 0 Inf]);
-
-bmf_child.transmit_apodization.window=uff.window.tukey50;
-bmf_child.transmit_apodization.f_number=1.7;
-bmf_child.transmit_apodization.origo=uff.point('xyz',[0 0 Inf]);
-
-% beamforming
-b_data_child=bmf_child.go();
-
-% show
-b_data_child.plot();
-
 %% Child Beamformer with Process
 
 bmf_child=beamformer.das_cc_processes();
