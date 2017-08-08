@@ -1,10 +1,23 @@
 classdef linear_3D_scan < uff.scan
-%linear_3D_scan Class defining a linear_3D_scan area. Child of SCAN class 
-%
-%   See also linear_3D_scan/linear_3D_scan, SCAN/SCAN
-
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/27$
+    %LINEAR_3D_SCAN   UFF class to define a linear scan 
+    %   LINEAR_3D_SCAN contains the position of the x and z axis
+    %
+    %   Compulsory properties:
+    %         radial_axis         % Vector containing the coordinates in the radial direction axis [m]
+    %         axial_axis          % Vector containing the coordinates in the axial direction axis [m]
+    %         roll                % Angle between the radial axis and the x-axis [rad]
+    %
+    %   Example:
+    %         sca = uff.linear_3D_scan();
+    %         sca.radial_axis=linspace(-20e-3,20e-3,256);
+    %         sca.axial_axis=linspace(0e-3,40e-3,256);
+    %         sca.roll=0;
+    %         sca.plot();
+    %
+    %   See also UFF.SCAN, UFF.SECTOR_SCAN
+    
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Date: 2017/06/18$
 
     properties  (SetAccess = public)
         radial_axis         % Vector containing the coordinates in the radial direction axis [m]
@@ -17,31 +30,11 @@ classdef linear_3D_scan < uff.scan
         N_axial_axis              % number of pixels in the z_axis
     end
     
-    %% Constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h = linear_3D_scan(in_radial_axis,in_axial_axis,in_roll)
-            %linear_3D_scan   Constructor of linear_3D_scan class
-            %
-            %   Syntax:
-            %   h = linear_3D_scan(in_radial_axis,in_axial_axis,in_roll)
-            %       radial_axis         Vector containing the coordinates in the radial direction axis [m]
-            %       axial_axis          Vector containing the coordinates in the axial direction axis [m]
-            %       roll                Angle between the radial axis and the x-axis [rad]
-            %
-            %   See also SCAN
-            if nargin>0
-                h.radial_axis=in_radial_axis;
-            end
-            if nargin>1
-                h.axial_axis=in_axial_axis;
-            end
-            if nargin>2
-                h.roll=in_roll;
-            else
-                h.roll=0;
-            end
-            
-            h=h.update_pixel_position();
+        function h=linear_3D_scan(varargin)
+            h = h@uff.scan(varargin{:});
+            h.update_pixel_position();
         end
     end
     

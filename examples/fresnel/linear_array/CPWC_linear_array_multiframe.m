@@ -127,7 +127,7 @@ channel_data=sim.go();
 % which is defined with just two axes. *scan* too has a useful *plot*
 % method it can call.
 
-sca=uff.linear_scan(linspace(-5e-3,5e-3,256).', linspace(15e-3,25e-3,256).');
+sca=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).','z_axis', linspace(15e-3,25e-3,256).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
@@ -142,11 +142,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 %% 
 % Go beamformer! % The *beamformer* structure allows you to implement 

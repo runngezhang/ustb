@@ -1,136 +1,99 @@
-classdef channel_data < handle
-    %CHANNEL_DATA   CHANNEL_DATA definition. Children of HANDLE class
+classdef channel_data < uff
+    %CHANNEL_DATA   UFF class to hold channel data
+    %   CHANNEL_DATA contains raw ultrasound data as acquired from an 
+    %   ultrasound scanner. Data is stored in the property _data_ with
+    %   dimensions:
     %
-    %   See also CHANNEL_DATA/CHANNEL_DATA, BEAMFORMED_DATA, PHANTOM, PROBE
+    %   [time dimension x channel dimension x wave dimension x frame dimension]
+    %
+    %   Compulsory properties:
+    %         sampling_frequency         sampling frequency [Hz]
+    %         initial_time               time of the initial sample [s]
+    %         sound_speed                reference sound speed [m/s]
+    %         modulation_frequency       modulation frequency [Hz]
+    %         sequence                   collection of UFF.WAVE objects
+    %         probe                      UFF.PROBE object
+    %         data                       data [time dim. x channel dim. x wave dim. x frame dim.]
+    %
+    %   Optional properties:
+    %         pulse                      UFF.PULSE object
+    %         phantom                    UFF.PHANTOM object
+    %         PRF                        pulse repetition frequency [Hz]
+    %
+    %   Example:
+    %         chn_dta = uff.channel_data();
+    %
+    %   See also UFF.CHANNEL_DATA, UFF.BEAMFORMED_DATA, UFF.PROBE
     
-    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-    %   $Date: 2017/02/24 $
+    %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+    %   $last updated: 2017/02/24 $
     
     %% compulsory properties
     properties  (SetAccess = public)
-        sampling_frequency         % sampling frequency [Hz]
-        initial_time               % time of the initial sample [s]
-        sound_speed     =1540      % reference sound speed [m/s]
-        sequence                   % collection of WAVE classes
-        probe                      % PROBE class
-        data                       % data
-        modulation_frequency       % modulation frequency [Hz]
-    end
-    
-    %% Logistics 
-    properties  (SetAccess = public)
-        name={}              % name of the dataset
-        reference={}         % reference to the publication where it was used/acquired
-        author={}            % contact of the authors
-        version={}           % version of the dataset
+        sampling_frequency              % sampling frequency [Hz]
+        initial_time                    % time of the initial sample [s]
+        sound_speed             = 1540  % reference sound speed [m/s]
+        modulation_frequency    = 0     % modulation frequency [Hz]
+        sequence                        % collection of UFF.WAVE objects
+        probe                           % UFF.PROBE object
+        data                            % channel data [time dim. x channel dim. x wave dim. x frame dim.]
     end
     
     %% optional properties
     properties  (SetAccess = public)
-        pulse                      % PULSE class [optional]
-        PRF                        % pulse repetition frequency [Hz]
-        N_active_elements          % number of active transducers on receive
-        phantom                    % PHANTOM class [optional]
+        PRF                             % pulse repetition frequency [Hz]
+        pulse                           % UFF.PULSE object
+        phantom                         % UFF.PHANTOM object
+        N_active_elements               % number of active transducers on receive
     end
-    
+        
     %% dependent properties
     properties  (Dependent)
-        N_samples          % number of samples in the data
-        N_elements         % number of elements in the probe
-        N_channels         % number of elements in the probe
-        N_waves            % number of transmitted waves
-        N_frames           % number of frames
-        time
-        lambda             % wavelength [m]
+        N_samples                       % number of samples in the data
+        N_elements                      % number of elements in the probe
+        N_channels                      % number of elements in the probe
+        N_waves                         % number of transmitted waves
+        N_frames                        % number of frames
+        time                            % time vector [s]
+        lambda                          % wavelength [m]
     end
         
-    %% constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h=channel_data()
-            %CHANNEL_DATA   Constructor of CHANNEL_DATA class
-            %
-            %   Syntax:
-            %   h = channel_data()
-            %
-            %   See also BEAM, PHANTOM, PROBE, PULSE
-            
-            h.modulation_frequency=0;
-            h.sampling_frequency=0;
+        function h=channel_data(varargin)
+            h = h@uff(varargin{:});
         end
     end
     
-    %% copy
-    methods (Access = public)
-        function copy(h,object)
-            %COPY    Copy the values from another channel_data
-            %
-            %   Syntax:
-            %   COPY(object)
-            %       object       Instance of a channel_data class
-            %
-            %   See also SCAN, WAVE, SOURCE
-            assert(isa(object,class(h)),'Class of the input object is not identical');
-            
-            % we copy all non-dependent public properties
-            list_properties=properties(object);
-            for n=1:numel(list_properties)
-                property_name=list_properties{n};
-                mp = findprop(h,property_name);
-                if strcmp(mp.GetAccess,'public')&&~mp.Dependent
-                    if eval(sprintf('~isempty(object.%s)',property_name)) 
-                        eval(sprintf('h.%s = object.%s;',property_name,property_name));
-                    end
-                end
-            end
-        end
-    end
-    
-    %% plot methods
+    %% display methods 
     methods
-        function print_info(h)
-            out_name = textwrap([],h.name,50);
-            fprintf('Name: \t\t %s \n',out_name{1});
-            for i = 2:numel(out_name)
-                fprintf('\t\t %s \n',out_name{i});
-            end
-            fprintf('Reference: \t %s \n',h.reference{:});
-            fprintf('Author(s): ');
-            for i = 1:numel(h.author)
-                if i == 1
-                    fprintf('\t %s \n',h.author{i});
-                else
-                    fprintf('\t\t %s \n',h.author{i});
-                end
-            end
-            fprintf('Version: \t %s \n',h.version{:});
-            
-        end
-        
-        function plot(h,n_beam)
+        function plot(h,n_wave)
+            % PLOT Plots channel data
+
             if nargin<2
-                n_beam=1;
+                n_wave=1;
             end
             
             figure;
             if abs(h.modulation_frequency)>eps
                 subplot(1,2,1);
-                imagesc(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_beam))); grid on; axis tight;
+                imagesc(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_wave))); grid on; axis tight;
                 xlabel('Channel');
                 ylabel('time [\mus]');
                 set(gca,'fontsize',14);
-                title(sprintf('Real Part - Beam %d',n_beam));
+                title(sprintf('Real Part - Beam %d',n_wave));
                 subplot(1,2,2);                
-                imagesc(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_beam))); grid on; axis tight;
+                imagesc(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_wave))); grid on; axis tight;
                 xlabel('Channel');
                 ylabel('time [\mus]');
                 set(gca,'fontsize',14);
-                title(sprintf('Imaginary Part - Beam %d',n_beam));
+                title(sprintf('Imaginary Part - Beam %d',n_wave));
             else
-                imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_beam)); grid on; axis tight;
+                imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_wave)); grid on; axis tight;
                 xlabel('Channel');
                 ylabel('time [\mus]');
                 set(gca,'fontsize',14);
-                title(sprintf('Beam %d',n_beam));
+                title(sprintf('Beam %d',n_wave));
             end
         end
     end
@@ -138,44 +101,60 @@ classdef channel_data < handle
     %% set methods
     methods
         function h=set.phantom(h,in_phantom)
-            assert(isa(in_phantom,'uff.phantom'), 'The _phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
+            if ~isempty(in_phantom)
+                assert(isa(in_phantom,'uff.phantom'), 'The _phantom_ is not a PHANTOM class. Check HELP PHANTOM.');
+            end    
             h.phantom=in_phantom;
         end
         function h=set.pulse(h,in_pulse)
-            assert(isa(in_pulse,'uff.pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
+            if ~isempty(in_pulse)
+                assert(isa(in_pulse,'uff.pulse'), 'The pulse is not a PULSE class. Check HELP PULSE.');
+            end
             h.pulse=in_pulse;
         end
         function h=set.probe(h,in_probe)
-            assert(isa(in_probe,'uff.probe'), 'The probe is not a PROBE class. Check HELP PROBE.');
+            if ~isempty(in_probe)
+                assert(isa(in_probe,'uff.probe'), 'The probe is not a UFF.PROBE class. Check HELP UFF.PROBE.');
+            end
             h.probe=in_probe;
         end
         function h=set.sequence(h,in_sequence)
-            assert(isa(in_sequence,'uff.wave'), 'The sequence is not a WAVE class. Check HELP WAVE.');
+            if ~isempty(in_sequence)
+                assert(isa(in_sequence,'uff.wave'), 'The sequence is not a UFF.WAVE class. Check HELP UFF.WAVE.');
+            end
             h.sequence=in_sequence;
         end
         function h=set.sampling_frequency(h,in_sampling_frequency)
-            assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a scalar');
+            if ~isempty(in_sampling_frequency)
+                assert(numel(in_sampling_frequency)==1, 'The sampling frequency must be a scalar in [Hz]');
+            end
             h.sampling_frequency=in_sampling_frequency;
         end
         function h=set.modulation_frequency(h,in_modulation_frequency)
-            assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a scalar');
+            if ~isempty(in_modulation_frequency)
+                assert(numel(in_modulation_frequency)==1, 'The sampling frequency must be a scalar in [Hz]');
+            end
             h.modulation_frequency=in_modulation_frequency;
         end
         function h=set.sound_speed(h,in_sound_speed)
-            assert(numel(in_sound_speed)==1, 'The sound speed must be a scalar');
+            if ~isempty(in_sound_speed)
+                assert(numel(in_sound_speed)==1, 'The sound speed must be a scalar in [m/s]');
+            end
             h.sound_speed=in_sound_speed;
         end
         function h=set.initial_time(h,in_initial_time)
-            assert(numel(in_initial_time)==1, 'The initial time must be a scalar');
+            if ~isempty(in_initial_time)            
+                assert(numel(in_initial_time)==1, 'The initial time must be a scalar in [s]');
+            end
             h.initial_time=in_initial_time;
         end
         function h=set.data(h,in_data)
-            % checking needed inputs
+            % checking needed inputs -> We cannot set an order in which
+            % users will define data
 %            assert(~isempty(h.probe), 'The probe structure must be set before inserting the data.');
 %            assert(~isempty(h.sequence), 'The sequence structure must be set before inserting the data.');
 %            assert(~isempty(h.sampling_frequency), 'The sampling_frequency must be set before inserting the data.');
 %            assert(~isempty(h.initial_time), 'The initial_time must be set before inserting the data.');
-            
 %            assert(size(in_data,2)==h.N_elements, 'The number of elements in the probe does not match the channels in the inserted data (2nd dimension).');
 %            assert(size(in_data,3)==h.N_waves, 'The number of waves in the sequence does not match the waves in the inserted data (3th dimension).');
             
@@ -183,11 +162,16 @@ classdef channel_data < handle
         end
         function h=set.PRF(h,in_PRF)
             if ~isempty(in_PRF)
-                assert(numel(in_PRF)==1, 'The PRF must be a scalar');
-                h.PRF=in_PRF;
+                assert(numel(in_PRF)==1, 'The PRF must be a scalar in [Hz]');
             end
+            h.PRF=in_PRF;
         end
         function h=set.N_frames(h,in_N_frames)
+            % FON: Don't like this :(
+            %
+            % A dependent variable that is used to crop the number of
+            % frames. I like to reuse things, but this might be a step too
+            % far
             if ~isempty(in_N_frames)
                 assert(numel(in_N_frames)==1, 'The N_frames must be a scalar');
                 assert(in_N_frames <= size(h.data,4), 'There is not that many frames in the channel_data.data');
@@ -221,26 +205,6 @@ classdef channel_data < handle
             assert(~isempty(h.sound_speed),'You need to set the channel_data.sound_speed')
             assert(~isempty(h.pulse),'You need to set the pulse and the pulse center frequency.')
             value = h.sound_speed/h.pulse.center_frequency;
-        end
-    end
-    
-    methods
-    	function  out  = objname(h)
-            out = evalin('caller','inputname(1)');
-        end
-    end
-    
-    %% Ultrasound File Format (UFF)
-    methods (Access = public)    
-        function write(h, uff_object, location)
-            assert(isa(uff_object,'uff'),'The input is not a UFF object')
-            if nargin<3 location=[]; end
-
-            fprintf('UFF write: %s -> %s',h.objname,uff_object.filename);
-            tic;
-            uff_object.write(location,h,h.objname);
-            fprintf(' [%0.1fs]\n',toc);
-
         end
     end
 end

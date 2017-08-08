@@ -36,7 +36,7 @@ for n=1:N
     
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -63,7 +63,7 @@ dem.channel_data=channel_data;
 channel_data=dem.go();
  
 %% SCAN
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
 
 %channel_data.data=repmat(channel_data.data,[1 1 1 2]);
@@ -74,11 +74,11 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey25;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_matlab()});

@@ -38,7 +38,7 @@ classdef stack < process
                         azimuth_axis=[azimuth_axis h.beamformed_data.scan(ntx).x_axis];
                         out_dataset.data((1:N_pixels)+N_pixels*(ntx-1),:,1,:)=h.beamformed_data.data(:,:,ntx,:);
                     end
-                    out_dataset.scan=uff.linear_scan(azimuth_axis.',depth_axis);
+                    out_dataset.scan=uff.linear_scan('x_axis',azimuth_axis.','z_axis',depth_axis);
                 case 'uff.sector_scan'
                     out_dataset=uff.beamformed_data(h.beamformed_data); % ToDo: shouldn't copy the data
                     out_dataset.data=zeros(N_pixels*Ntx,Nrx,1,N_frames);
@@ -51,7 +51,7 @@ classdef stack < process
                         azimuth_axis=[azimuth_axis h.beamformed_data.scan(ntx).azimuth_axis];
                         out_dataset.data((1:N_pixels)+N_pixels*(ntx-1),:,1,:)=h.beamformed_data.data(:,:,ntx,:);
                     end
-                    out_dataset.scan=uff.sector_scan(azimuth_axis.',depth_axis);
+                    out_dataset.scan=uff.sector_scan('azimuth_axis',azimuth_axis.','depth_axis',depth_axis);
                     
             end
             tools.workbar(1);

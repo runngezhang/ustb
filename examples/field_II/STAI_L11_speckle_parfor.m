@@ -220,7 +220,7 @@ end
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,19e-3,256).');
+scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e-3,20e-3,256).');
 
 %% Beamformer
 %
@@ -236,16 +236,14 @@ bmf.scan=scan;
 bmf.receive_apodization.window=uff.window.none;
 bmf.transmit_apodization.window=uff.window.none;
 
-%%
-%
-% The *beamformer* structure allows you to implement different beamformers
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet
-% another *UFF* structure: *beamformed_data*.
-%
-% To achieve the goal of this example, we use delay-and-sum (implemented in
-% the *das_matlab()* process) as well as coherent compounding.
+% bmf.receive_apodization.window=uff.window.none;
+% bmf.receive_apodization.f_number=1.7;
+% bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+% bmf.transmit_apodization.window=uff.window.none;
+% bmf.transmit_apodization.f_number=1.7;
+% bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
+% Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % Display image
@@ -280,5 +278,3 @@ title('PDF of envelope');
 xlabel('Normalized amplitude');
 ylabel('Probability')
 legend('show');
-
-

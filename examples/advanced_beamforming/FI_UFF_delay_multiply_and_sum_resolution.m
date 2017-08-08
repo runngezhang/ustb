@@ -13,7 +13,7 @@ clear all; close all;
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
-addpath(local_path);
+
 
 % Choose dataset
 filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
@@ -22,8 +22,7 @@ filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
 tools.download(filename, url, local_path);
 
 %% Reading channel data from UFF file
-uff_file=uff(filename)
-channel_data=uff_file.read('/channel_data');
+channel_data=uff.read_object([local_path filename],'/channel_data');
 % Check that the user have the correct version of the dataset
 if(strcmp(channel_data.version{1},'1.0.2')~=1)
     error(['Wrong version of the dataset. Please delete ',local_path,...
@@ -31,7 +30,7 @@ if(strcmp(channel_data.version{1},'1.0.2')~=1)
 end
 %%
 %Print info about the dataset
-channel_data.print_info
+channel_data.print_authorship
 
 %% Define Scan
 % Define the image coordinates we want to beamform in the scan object.
@@ -44,7 +43,7 @@ z_axis=linspace(25e-3,45e-3,1024).';
 sca=uff.linear_scan();
 idx = 1;
 for n=1:numel(channel_data.sequence)
-    sca(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
+    sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 
 %% Set up delay part of beamforming
@@ -55,7 +54,7 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.none;
 b_data=bmf.go({process.delay_matlab_light process.stack});

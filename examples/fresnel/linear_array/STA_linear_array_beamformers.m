@@ -76,9 +76,8 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization=uff.apodization('window',uff.window.sta);
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -112,7 +111,7 @@ channel_data=sim.go();
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(39e-3,41e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Parent Beamformer
@@ -127,11 +126,11 @@ bmf_parent.scan=sca;
 
 bmf_parent.receive_apodization.window=uff.window.tukey50;
 bmf_parent.receive_apodization.f_number=1.7;
-bmf_parent.receive_apodization.apex.distance=Inf;
+bmf_parent.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf_parent.transmit_apodization.window=uff.window.tukey50;
 bmf_parent.transmit_apodization.f_number=1.7;
-bmf_parent.transmit_apodization.apex.distance=Inf;
+bmf_parent.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % then do the beamforming
 b_data_parent=bmf_parent.go({process.das_matlab() process.coherent_compounding()});
@@ -147,11 +146,11 @@ bmf_child.scan=sca;
 
 bmf_child.receive_apodization.window=uff.window.tukey50;
 bmf_child.receive_apodization.f_number=1.7;
-bmf_child.receive_apodization.apex.distance=Inf;
+bmf_child.receive_apodization.origo=uff.point('xyz',[0 0 Inf]);
 
 bmf_child.transmit_apodization.window=uff.window.tukey50;
 bmf_child.transmit_apodization.f_number=1.7;
-bmf_child.transmit_apodization.apex.distance=Inf;
+bmf_child.transmit_apodization.origo=uff.point('xyz',[0 0 Inf]);
 
 % beamforming
 b_data_child=bmf_child.go();
@@ -167,11 +166,11 @@ bmf_child.scan=sca;
 
 bmf_child.receive_apodization.window=uff.window.tukey50;
 bmf_child.receive_apodization.f_number=1.7;
-bmf_child.receive_apodization.apex.distance=Inf;
+bmf_child.receive_apodization.origo=uff.point('xyz',[0 0 Inf]);
 
 bmf_child.transmit_apodization.window=uff.window.tukey50;
 bmf_child.transmit_apodization.f_number=1.7;
-bmf_child.transmit_apodization.apex.distance=Inf;
+bmf_child.transmit_apodization.origo=uff.point('xyz',[0 0 Inf]);
 
 % beamforming
 b_data_child=bmf_child.go();

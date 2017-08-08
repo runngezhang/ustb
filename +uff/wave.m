@@ -12,6 +12,7 @@ classdef wave
         source           % SOURCE class
         apodization      % APODIZATION class
         sound_speed      % reference speed of sound
+        event            % index of the transmit/receive events this wave refers to
     end
     
     %% dependent properties

@@ -1,15 +1,27 @@
 classdef sector_scan < uff.scan
-%SECTOR_SCAN Class defining a SECTOR_SCAN area. Child of SCAN class 
-%
-%   See also SECTOR_SCAN/SECTOR_SCAN, SCAN/SCAN
+    %SECTOR_SCAN   UFF class to define a linear scan 
+    %   SECTOR_SCAN contains the position of the azimuth and depth axis
+    %   from a position apex.
+    %
+    %   Compulsory properties:
+    %         x_axis           % Vector containing the x coordinates of the x - axis [m]
+    %         z_axis           % Vector containing the z coordinates of the z - axis [m]
+    %
+    %   Example:
+    %         sca = uff.linear_scan();
+    %         sca.x_axis=linspace(-20e-3,20e-3,256);
+    %         sca.z_axis=linspace(0e-3,40e-3,256);
+    %         scan.plot()
+    %
+    %   See also UFF.SCAN, UFF.LINEAR_SCAN
 
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/14 $
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Date: 2017/06/18 $
 
     properties  (SetAccess = public)
-        azimuth_axis     % Vector containing the azimuth coordinates of the azimuth axis [rad]
-        depth_axis       % Vector containing the distance coordinates of the distance axis [m]
-        apex             % POINT class
+        azimuth_axis                % Vector containing the azimuth coordinates of the azimuth axis [rad]
+        depth_axis                  % Vector containing the distance coordinates of the distance axis [m]
+        apex         = uff.point()  % POINT class
     end
     
     properties  (Dependent)
@@ -18,40 +30,19 @@ classdef sector_scan < uff.scan
         depth_step                % the step size in m of the depth samples
     end
     
-    %% Constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h = sector_scan(in_azimuth_axis,in_depth_axis,apex)
-            %sector_scan   Constructor of sector_scan class
-            %
-            %   Syntax:
-            %   h = sector_scan(x_axis,y_axis)
-            %       x    Vector with the x coordinates of each pixel
-            %       z    Vector with the z coordinates of each pixel
-            %
-            %   See also SCAN
-
-            % this goes first, otherwise we cannot update
-            if nargin>2
-                h.apex=in_apex;
-            else
-                h.apex=uff.point();
-                h.apex.xyz=[0 0 0];
-            end
-
-            if nargin>0
-                h.azimuth_axis=in_azimuth_axis;
-            end
-            if nargin>1
-                h.depth_axis=in_depth_axis;
-            end
-            
-            h=h.update_pixel_position();
+        function h=sector_scan(varargin)
+            h = h@uff.scan(varargin{:});
+            h.update_pixel_position();
         end
     end
     
     %% update pixel position
     methods 
         function h=update_pixel_position(h)
+            if isempty(h.azimuth_axis)||isempty(h.depth_axis)||isempty(h.apex) return; end
+            
             % defining the pixel mesh 
             [T R]=meshgrid(h.azimuth_axis,h.depth_axis);
             

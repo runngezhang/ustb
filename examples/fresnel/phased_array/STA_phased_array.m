@@ -76,7 +76,7 @@ for n=1:prb.N_elements
     
     seq(n).apodization=uff.apodization()
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -110,7 +110,7 @@ channel_data=sim.go();
 % which is defined with two components: the azimuthal(angle) range and the 
 % depth(radial) range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.sector_scan(linspace(-10*pi/180,10*pi/180,200).', linspace(35e-3,45e-3,100).');
+sca=uff.sector_scan('azimuth_axis',linspace(-10*pi/180,10*pi/180,200).','depth_axis', linspace(35e-3,45e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer

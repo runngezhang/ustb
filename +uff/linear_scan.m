@@ -1,10 +1,21 @@
 classdef linear_scan < uff.scan
-%LINEAR_SCAN Class defining a linear_scan area. Child of SCAN class 
-%
-%   See also LINEAR_SCAN/LINEAR_SCAN, SCAN/SCAN
+    %LINEAR_SCAN   UFF class to define a linear scan 
+    %   LINEAR_SCAN contains the position of the x and z axis
+    %
+    %   Compulsory properties:
+    %         x_axis           % Vector containing the x coordinates of the x - axis [m]
+    %         z_axis           % Vector containing the z coordinates of the z - axis [m]
+    %
+    %   Example:
+    %         sca = uff.linear_scan();
+    %         sca.x_axis=linspace(-20e-3,20e-3,256);
+    %         sca.z_axis=linspace(0e-3,40e-3,256);
+    %         scan.plot()
+    %
+    %   See also UFF.SCAN, UFF.SECTOR_SCAN
 
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/03/28 $
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   $Date: 2017/06/18 $
 
     properties  (SetAccess = public)
         x_axis           % Vector containing the x coordinates of the x - axis [m]
@@ -17,31 +28,18 @@ classdef linear_scan < uff.scan
         z_step                % the step size in m of the z samples
     end
     
-    %% Constructor
+    %% constructor -> uff constructor
     methods (Access = public)
-        function h = linear_scan(in_x_axis,in_z_axis)
-            %LINEAR_SCAN   Constructor of LINEAR_SCAN class
-            %
-            %   Syntax:
-            %   h = linear_scan(x_axis,y_axis)
-            %       x    Vector with the x coordinates of each pixel
-            %       z    Vector with the z coordinates of each pixel
-            %
-            %   See also SCAN
-            if nargin>0
-                h.x_axis=in_x_axis;
-            end
-            if nargin>1
-                h.z_axis=in_z_axis;
-            end
-            
-            h=h.update_pixel_position();
+        function h=linear_scan(varargin)
+            h = h@uff.scan(varargin{:});
+            h.update_pixel_position();
         end
     end
     
     %% update pixel position
     methods 
         function h=update_pixel_position(h)
+            
             % defining the pixel mesh 
             [X Z]=meshgrid(h.x_axis,h.z_axis);
             

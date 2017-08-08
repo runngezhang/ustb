@@ -32,7 +32,7 @@ pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SCAN
-sca=uff.linear_scan(linspace(-2e-3,2e-3,200).', linspace(z0-1e-3,z0+1e-3,100).');
+sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(z0-1e-3,z0+1e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,9 +49,7 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization=uff.apodization('window',uff.window.sta,'origo',seq(n).source);
     
     seq(n).sound_speed=pha.sound_speed;
 end
@@ -73,12 +71,14 @@ channel_data=sim.go();
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
+
 bmf.receive_apodization.window=uwindow;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
+
 bmf.transmit_apodization.window=uwindow;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 % beamforming
 stai_data=bmf.go({process.das_matlab() process.coherent_compounding()});
@@ -102,8 +102,8 @@ for n=1:sca.N_x_axis
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uwindow;
     seq(n).apodization.f_number=F_number;
-    seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.origo.distance=Inf;
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
 end
@@ -124,7 +124,7 @@ channel_data=sim.go();
 %% SCAN
 fi_sca=uff.linear_scan();
 for n=1:sca.N_x_axis
-    fi_sca(n)=uff.linear_scan(sca.x_axis(n),sca.z_axis);
+    fi_sca(n)=uff.linear_scan('x_axis',sca.x_axis(n),'z_axis',sca.z_axis);
     fi_sca(n).plot(fig_handle,'Scenario');    
 end
  
@@ -134,7 +134,7 @@ bmf.channel_data=channel_data;
 bmf.scan=fi_sca;
 bmf.receive_apodization.window=uwindow;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 % beamforming
 fi_data=bmf.go({process.das_matlab() process.stack()});
@@ -182,11 +182,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uwindow;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 bmf.transmit_apodization.window=uwindow;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 % beamforming
 cpwc_data=bmf.go({process.das_matlab() process.coherent_compounding()});
@@ -232,11 +232,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uwindow;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 bmf.transmit_apodization.window=uwindow;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 % beamforming
 dwi_data=bmf.go({process.das_matlab() process.coherent_compounding()});
@@ -285,11 +285,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uwindow;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 bmf.transmit_apodization.window=uwindow;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 % beamforming
 rtb_data=bmf.go({process.das_matlab() process.coherent_compounding()});
