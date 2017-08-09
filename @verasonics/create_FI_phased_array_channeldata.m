@@ -10,7 +10,9 @@ channel_data.initial_time = 0;
 channel_data.probe=create_probe_object(h);
 
 if nargin < 2
-    number_of_frames = h.Resource.RcvBuffer(1).numFrames;
+    h.number_of_frames = h.Resource.RcvBuffer(1).numFrames;
+else
+    h.number_of_frames = number_of_frames;
 end
 
 %% SEQUENCE GENERATION
@@ -44,7 +46,9 @@ plot_delayed_signal=0;
 interpolation_factor = 10;
 
 n=1;
+frame_idx = 0;
 for n_frame = h.frame_order
+    frame_idx = frame_idx + 1;
     for n_tx = 1:length(seq)
         % compute time vector for this line
         t_ini=2*h.Receive(n).startDepth*h.lambda/h.c0;
@@ -61,8 +65,8 @@ for n_frame = h.frame_order
         t_out = linspace(t_ini,t_end,no_t);
         t_in=t_out-offset_time-t0_1;
         
-        data_in = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
-        data(:,:,n_tx,n_frame) = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data);
+        data_in = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,h.frame_order(frame_idx));
+        data(:,:,n_tx,frame_idx) = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data);
         n=n+1;
         
         %%

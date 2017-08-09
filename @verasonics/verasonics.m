@@ -21,6 +21,7 @@ classdef verasonics < handle
         f0                     % The center frequency in Hz
         c0                     % The speed of sound in m/s
         lambda                 % The wavelength in m
+        number_of_frames       % The desired number of frames wanted
         frame_order            % The order of the frame in RcvData
         
         % For CPW
@@ -71,10 +72,14 @@ classdef verasonics < handle
         function frame_order = get.frame_order(h)
             % The order of the frames in the RcvBuffer is not necesarrily
             % in order. We need to check which one was the "last frame"
-            if exist('h.Resource.RcvBuffer.lastFrame')
+            if isfield(h.Resource.RcvBuffer,'lastFrame')
                 frame_order = [h.Resource.RcvBuffer.lastFrame+1:h.Resource.RcvBuffer.numFrames 1:h.Resource.RcvBuffer.lastFrame];
             else %If the Verasonics Vantage is ran in simulation mode we don't have the lastFrame field
                 frame_order = 1:h.Resource.RcvBuffer.numFrames;
+            end
+            
+            if isempty(h.number_of_frames) ~= 1 %If number of frames is set, use that!
+                frame_order = frame_order(1:h.number_of_frames);
             end
         end
     end
