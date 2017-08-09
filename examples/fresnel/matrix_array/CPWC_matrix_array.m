@@ -114,7 +114,7 @@ channel_data=sim.go();
 % the z-dimension (depth) range and the y-dimension (elevational) range. 
 % *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_3D_scan(linspace(-4e-3,4e-3,200).', linspace(18e-3,22e-3,100).',0);
+sca=uff.linear_3D_scan('radial_axis',linspace(-4e-3,4e-3,200).','axial_axis',linspace(18e-3,22e-3,100).','roll',0);
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
@@ -129,11 +129,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 %% 
 %

@@ -85,7 +85,7 @@ for n=1:prb.N_elements
     
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -120,7 +120,7 @@ channel_data=sim.go();
 % z-dimension range and the y-dimension range. *scan* too has a useful 
 % *plot* method it can call.
 
-sca=uff.linear_3D_scan(linspace(-6.4e-3,6.4e-3,200).', linspace(z0-3.2e-3,z0+3.2e-3,100).',0);
+sca=uff.linear_3D_scan('radial_axis',linspace(-6.4e-3,6.4e-3,200).','axial_axis',linspace(z0-3.2e-3,z0+3.2e-3,100).','roll',0);
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
@@ -135,11 +135,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 %% 
 %

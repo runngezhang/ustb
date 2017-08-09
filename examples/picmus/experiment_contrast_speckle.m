@@ -9,7 +9,9 @@
 % the method contrast and speckle statistics. 
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
-%  and Olivier Bernard <olivier.bernard@insa-lyon.fr> 26.05.2017_
+%  and Olivier Bernard <olivier.bernard@insa-lyon.fr>_
+%
+% Last updated 07.08.2017
 
 %% Getting the data
 %
@@ -18,20 +20,12 @@
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data in this computer
-addpath(local_path);
 filename='PICMUS_experiment_contrast_speckle.uff';
 
 % check if the file is available in the local path & downloads otherwise
 tools.download(filename, url, local_path);
 
-%% Reading channel data
-%
-% Now that the file is on the path we deine a *UFF* object to interact
-% with it.
-
-uff_file=uff(filename,'read');
-
-%%
+%% What's inside?
 %
 % This dataset should contain the following structures:
 % * *channel_data*,
@@ -40,24 +34,13 @@ uff_file=uff(filename,'read');
 %
 % We can check it out with the *index* function
 display=true;
-content = uff_file.index('/',display);
-
-%%
-%
-% This dataset should contain the following structures:
-% * *channel_data*,
-% * *beamformed_data* and,
-% * *scan*
-%
-% We can check it out with the *index* function
-display=true;
-content = uff_file.index('/',display);
+content = uff.index([local_path filename],'/',display);
 
 %% Plotting beamformed_data
 %
 % We can read the *beamformed_data* object and plot it 
 
-b_data=uff_file.read('/beamformed_data');
+b_data=uff.read_object([local_path filename],'/beamformed_data');
 b_data.plot();
 
 %% Loading channel data & scan
@@ -65,10 +48,8 @@ b_data.plot();
 % The file also contain channel_data and scan. We read it so we can
 % replicate the beamformed image in the UFF file.
 
-channel_data=uff_file.read('/channel_data');
-scan=uff_file.read('/scan');
-
-scan=uff.linear_scan(linspace(-18e-3,18e-3,1024).',linspace(20e-3,35e-3,430).');
+channel_data=uff.read_object([local_path filename],'/channel_data');
+scan=uff.read_object([local_path filename],'/scan');
 
 %% Beamforming
 %
@@ -82,12 +63,12 @@ bmf.scan=scan;
 % receive apodization
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
 
 % transmit apodization
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
 
 % launch beamforming
 b_data_new=bmf.go({process.das_mex process.coherent_compounding});

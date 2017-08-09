@@ -47,7 +47,7 @@ classdef phase_coherence_factor < process
             if ~isempty(h.transmit_apodization)&~isempty(h.receive_apodization)&~isempty(h.channel_data.probe)
                 % receive
                 if h.beamformed_data.N_channels>1
-                    h.receive_apodization.scan=h.beamformed_data.scan;
+                    h.receive_apodization.focus=h.beamformed_data.scan;
                     h.receive_apodization.probe=h.channel_data.probe;
                     rx_apodization=h.receive_apodization.data();                
                 end
@@ -55,7 +55,7 @@ classdef phase_coherence_factor < process
                 % transmit
                 if h.beamformed_data.N_waves>1
                     h.transmit_apodization.sequence = h.channel_data.sequence;
-                    h.transmit_apodization.scan=h.beamformed_data.scan;
+                    h.transmit_apodization.focus=h.beamformed_data.scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();
                 end

@@ -23,7 +23,7 @@ addpath(local_path);
 
 if exist([local_path,'FieldII_speckle_simulation.mat']) %If the file exists load the file
     
-    disp('We were lucky, and the data was allready simulated, so we can simply load it!');
+    disp('We were lucky, and the data was already simulated, so we can simply load it!');
     
     %There is a bug in UFF with STAI, so we'll wait for that
     %uff_file=uff([local_path,'FieldII_speckle_simulation.uff']);
@@ -207,11 +207,10 @@ else % Else, run the simulation
     %
     % Finally, we save the data into a UFF file.
     % There is a 
-%     uff_file=uff([local_path,'FieldII_speckle_simulation.uff']);
-%     uff_file.write(channel_data,'channel_data');
-%     uff_file.write(b_data,'b_data');
+    filename=[ustb_path(),'/data/FieldII_speckle_simulation.uff'];
+    channel_data.write(filename);
+    b_data.write(filename);
     
-    save([local_path,'FieldII_speckle_simulation.mat'],'channel_data') %There is a bug in UFF STAI
 end
 %% Scan
 %
@@ -220,7 +219,7 @@ end
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,19e-3,256).');
+scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e-3,20e-3,256).');
 
 %% Beamformer
 %
@@ -236,16 +235,14 @@ bmf.scan=scan;
 bmf.receive_apodization.window=uff.window.none;
 bmf.transmit_apodization.window=uff.window.none;
 
-%%
-%
-% The *beamformer* structure allows you to implement different beamformers
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet
-% another *UFF* structure: *beamformed_data*.
-%
-% To achieve the goal of this example, we use delay-and-sum (implemented in
-% the *das_matlab()* process) as well as coherent compounding.
+% bmf.receive_apodization.window=uff.window.none;
+% bmf.receive_apodization.f_number=1.7;
+% bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+% bmf.transmit_apodization.window=uff.window.none;
+% bmf.transmit_apodization.f_number=1.7;
+% bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
+% Delay and sum on receive, then coherent compounding
 b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
 
 % Display image
@@ -280,5 +277,3 @@ title('PDF of envelope');
 xlabel('Normalized amplitude');
 ylabel('Probability')
 legend('show');
-
-

@@ -126,8 +126,9 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-
-sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
+sca=uff.linear_scan();
+sca.x_axis=linspace(-3e-3,3e-3,200).';
+sca.z_axis=linspace(39e-3,43e-3,200).';
 sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Beamformer
@@ -142,12 +143,12 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo.distance=Inf;
 
 %We set this to none since we want to examine the low quality PW images
 bmf.transmit_apodization.window=uff.window.none; 
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo.distance=Inf;
 
 %% delay beamforming
 b_data = bmf.go({process.delay_matlab()});

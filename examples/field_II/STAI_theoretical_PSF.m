@@ -166,7 +166,7 @@ for n=1:probe.N
     
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=seq(n).source;
 end
 close(wb);
 
@@ -191,7 +191,8 @@ channel_data_field_ii.data = STA;
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_scan(linspace(-4e-3,4e-3,256).', linspace(16e-3,24e-3,256).');
+sca=uff.linear_scan('x_axis',linspace(-4e-3,4e-3,256).','z_axis', linspace(16e-3,24e-3,256).');
+
 %% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
@@ -204,11 +205,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
-
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 bmf.transmit_apodization.window=uff.window.boxcar;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+
 %% 
 %
 % The *beamformer* structure allows you to implement different beamformers 

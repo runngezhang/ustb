@@ -1,20 +1,52 @@
 classdef matrix_array < uff.probe 
-%MATRIX_ARRAY   2D matrix array definition. Child of PROBE class
-%
-%   See also PROBE, BEAM, PHANTOM
+    %MATRIX_ARRAY   UFF class to define a matrix array probe geometry
+    %   MATRIX_ARRAY contains defines an 2D array of elements with regularly 
+    %   spaced in both dimmensions. 
+    %
+    %   Compulsory properties
+    %     properties  (SetAccess = public)
+    %         pitch_x        % distance between the elements in the azimuth direction [m]
+    %         pitch_y        % distance between the elements in the elevation direction [m]
+    %         N_x            % number of elements in the azimuth direction
+    %         N_y            % number of elements in the elevation direction
+    %     end
+    % 
+    %  Optional properties
+    %     properties  (SetAccess = public)
+    %         element_width  % width of the elements in the azimuth direction [m]
+    %         element_height % height of the elements in the elevation direction [m]
+    %     end
+    % 
+    %   Example:
+    %         prb = uff.matrix_array('N_x',32,'N_y',32,'pitch_x',300e-6,'pitch_y',300e-6);
+    %         prb.plot();
+    %
+    %   See also UFF.PROBE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2017/03/11 $
+    %   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+    %   $Last updated: 2017/06/11$
 
-    %% public properties
+    %% compulsory properties
     properties  (SetAccess = public)
         pitch_x        % distance between the elements in the azimuth direction [m]
         pitch_y        % distance between the elements in the elevation direction [m]
         N_x            % number of elements in the azimuth direction
         N_y            % number of elements in the elevation direction
+    end
+
+    %% optional properties
+    properties  (SetAccess = public)
         element_width  % width of the elements in the azimuth direction [m]
         element_height % height of the elements in the elevation direction [m]
     end
+
+    %% constructor
+    methods (Access = public)
+        function h=matrix_array(varargin)
+            h = h@uff.probe(varargin{:});
+        end
+    end
+
 
     %% update method
     methods 

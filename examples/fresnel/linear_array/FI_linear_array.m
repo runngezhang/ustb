@@ -80,8 +80,8 @@ for n=1:N
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.scan=uff.scan(seq(n).source.xyz(1),seq(n).source.xyz(2),seq(n).source.xyz(3));
+    seq(n).apodization.origo=uff.point('xyz',[0 0 -Inf]);
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -117,7 +117,7 @@ channel_data=sim.go();
 z_axis=linspace(39e-3,41e-3,100).';
 sca=uff.linear_scan();
 for n=1:length(x_axis)
-    sca(n)=uff.linear_scan(x_axis(n),z_axis);
+    sca(n)=uff.linear_scan('x_axis',x_axis(n),'z_axis',z_axis);
     sca(n).plot(fig_handle,'Scenario');    
 end
  
@@ -133,7 +133,7 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 %% 
 %

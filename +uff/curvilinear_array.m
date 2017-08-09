@@ -1,24 +1,56 @@
 classdef curvilinear_array < uff.probe 
-%CURVILINEAR_ARRAY   Curvilinear array definition. Child of PROBE class
-%
-%   See also PROBE, BEAM, PHANTOM
+    %CURVILINEAR_ARRAY   UFF class to define a curvilinear array probe geometry
+    %   CURVILINEAR_ARRAY defines a array of regularly space elements on an 
+    %   arc in the azimuth dimensions.  Optionally it can hold each element 
+    %   width and height, assuming the elements are rectangular. 
+    %
+    %   Compulsory properties:
+    %         N              % number of elements 
+    %         pitch          % distance between the elements in the azimuth direction [m]
+    %         radius         % radius of the curvilinear array [m]
+    % 
+    %   Optional properties
+    %         element_width  % width of the elements in the azimuth direction [m]
+    %         element_height % height of the elements in the elevation direction [m]
+    % 
+    %   Example:
+    %         prb = uff.curvilinear_probe();
+    %         prb.N = 128;
+    %         prb.pitch = 500e-6;
+    %         prb.radius = 70e-3;
+    %         prb.plot();
+    %
+    %   See also UFF.PROBE
 
-%   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
-%   $Date: 2017/06/01 $
+    %   authors: Alfonso Rodriguez-Molares (alfonsom@ntnu.no)
+    %   $Last updated: 2017/06/09$
 
-    %% public properties
+    %% compulsory properties
     properties  (SetAccess = public)
-        pitch          % distance between the elements in the radial direction [m]
         N              % number of elements
+        pitch          % distance between the elements in the radial direction [m]
         radius         % radius of the curvilinear array [m]
+    end
+    
+    %% optional properties
+    properties  (SetAccess = public)
         element_width  % width of the elements in the azimuth direction [m]
         element_height % height of the elements in the elevation direction [m]
     end
     
      properties  (Dependent)
         maximum_angle  % angle of the outermost elements in the array
-    end 
+     end 
 
+    %% constructor
+    methods (Access = public)
+        function h=curvilinear_array(varargin)
+            h = h@uff.probe(varargin{:});
+        end
+    end
+
+
+     
     %% update method
     methods 
         function h=update(h)
