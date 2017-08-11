@@ -662,11 +662,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex process.coherent_compounding process.pulsed_doppler_speckle_tracking});
