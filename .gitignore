@@ -32,3 +32,4 @@ examples/huff/recording.h5
 *.mat
 *.uff
 
+*.mp4
