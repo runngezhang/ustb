@@ -176,7 +176,11 @@ classdef uff < handle
             for i = 2:numel(out_name)
                 fprintf('\t\t %s \n',out_name{i});
             end
-            fprintf('Reference: \t %s \n',h.reference{:});
+            out_reference = textwrap([],h.reference,50);
+            fprintf('Reference: \t %s \n',out_reference{1});
+            for i = 2:numel(out_reference)
+                fprintf('\t\t %s \n',out_reference{i});
+            end
             fprintf('Author(s): ');
             for i = 1:numel(h.author)
                 if i == 1
