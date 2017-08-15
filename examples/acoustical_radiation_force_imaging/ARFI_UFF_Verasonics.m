@@ -6,7 +6,7 @@
 % need an internet connection to download the data. Otherwise, you can run 
 % the *ARFI_L7.m* Verasonics example and create your own .uff file.
 %
-% _Ole Marius Hoel Rindal <olemarius@olemarius.net> 07.07.2017_
+% _Ole Marius Hoel Rindal <olemarius@olemarius.net> 15.08.2017_
 
 %% Reading the channel data from the UFF file
 clear all; close all;
@@ -59,24 +59,38 @@ b_data=bmf.go({process.das_mex process.coherent_compounding});
 
 b_data.plot(1,['B-mode'],[30]);
 
-%% Estimate displacement with speckle tracking
+%% Estimate displacement
 % To actually see the shear wave propagation we need to estimate the
 % displacement. This is done using a USTB *process* called
-% *pulsed_doppler_speckle_tracking*. Have a look at its references to see
+% *autocorrelation_displacement_estimation*. Have a look at its references to see
 % the details.
+%
 
-% Notice that we call the speckle tracking implemenetation
-% *pulsed_doppler_speckle_tracking* this is because it's basically the same
-% algorithm that is used for color doppler blood flow imaging. Anyway...
+disp = process.autocorrelation_displacement_estimation();
+disp.channel_data = channel_data;
+disp.beamformed_data = b_data;
+disp.z_gate = 4;        % Nbr of samples to average estimate in depth / z
+disp.x_gate = 2;        % Nbr of samples to average estimate in lateral / x
+disp.packet_size = 6;   % How many frames to use in the estimate
+displacement_estimation = disp.go();
+disp.print_reference    % This is the references
+disp.print_implemented_by    % Credits to the people who implemented it ;)
 
-pdst = process.pulsed_doppler_speckle_tracking();
-pdst.channel_data = channel_data;
-pdst.beamformed_data = b_data;
-pdst.z_gate = 4;        % Nbr of samples to average estimate in depth / z
-pdst.x_gate = 2;        % Nbr of samples to average estimate in lateral / x
-pdst.packet_size = 6;   % How many frames to use in the estimate
-displacement_estimation = pdst.go();
+%%
+% We also have an alternative implementation also estimating the center
+% frequency. This is the
+% *modified_autocorrelation_displacement_estimation*. Please see the
+% individiual implementations and references for more details.
 
+disp_mod = process.modified_autocorrelation_displacement_estimation();
+disp_mod.channel_data = channel_data;
+disp_mod.beamformed_data = b_data;
+disp_mod.z_gate = 4;        % Nbr of samples to average estimate in depth / z
+disp_mod.x_gate = 2;        % Nbr of samples to average estimate in lateral / x
+disp_mod.packet_size = 6;   % How many frames to use in the estimate
+displacement_estimation_modified = disp_mod.go();
+disp_mod.print_reference    % This is the references
+disp_mod.print_implemented_by    % Credits to the people who implemented it ;)
 %% Display the displacement estimate
 % Now, we can finally show the estimated displacement. This is nice to
 % visualize as a movie.
@@ -97,20 +111,32 @@ handle = displacement_estimation.plot(f2,['Displacement'],[],'none');
 caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
 colormap(gca(f2),'hot');       % Changing the colormap
 
+f3 = figure(3);clf;
+handle = displacement_estimation_modified.plot(f3,['Displacement modified estimation'],[],'none');
+caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
+colormap(gca(f3),'hot');       % Changing the colormap
+
+%%
+% Let's check the estimated center frequency and make sure that it is 
+% around 5 MHz as it should be. It is, but is the estimate any better?
+figure(4);
+imagesc(disp_mod.scan.x_axis*1000,disp_mod.scan.z_axis*1000,disp_mod.estimated_center_frequency(:,:,10));
+xlabel('X [mm]');ylabel('Z [mm]');title('Estimated Center Frequency');
+colorbar;
+
 %% We can do it all in once!!
-% Since the *pulsed_doppler_speckle_tracking* is a process, we can trust
+% Since the *autocorrelation_displacement_estimation* is a process, we can trust
 % the default paramters (which are the same as the ones used above) and do
 % the beamforming and the displacement estimation all in one call!
 %
 % Isn't the USTB great?!
 
 disp = bmf.go({process.das_mex process.coherent_compounding ...
-                                process.pulsed_doppler_speckle_tracking});
-
+                                process.autocorrelation_displacement_estimation});
 %%
 % Display the displacement 
 % Which gives us the same result as above.
-f3 = figure(3);clf;
-disp.plot(f3,['Displacement'],[],'none');
-caxis([0.01*10^-6 0.3*10^-6]); % Updating the colorbar
-colormap(gca(f3),'hot');       % Changing the colormap
+f5 = figure(5);clf;
+disp.plot(f5,['Displacement'],[],'none');
+caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
+colormap(gca(f5),'hot');       % Changing the colormap
