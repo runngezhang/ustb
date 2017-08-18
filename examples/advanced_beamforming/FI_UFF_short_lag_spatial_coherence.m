@@ -68,7 +68,7 @@ das_image = das.go();
 figure(1);
 das_image.plot(subplot(121),['DAS'],60,'log');
 
-%% Create the Short-Lag-Spatial-Coherence image
+%% Create the Short Lag Spatial Coherence (SLSC) image
 % We are using a kernel size equal to one wavelength, and use M = 10. See
 % the article referenced for more details.
 slsc = process.short_lag_spatial_coherence();
@@ -100,17 +100,17 @@ slsc_data.plot(subplot(122),['SLSC M = ',num2str(slsc.maxM)],[],'none');
 caxis([0 1])
 
 %% Calculate the full correlation for all 63 lags
-%  The dataset was receving on 64 elements, thus we can calculate the full
-%  correlation values for all 63 lags if we want. Then, we can reproduce
-%  Fig 1. from Lediju, M. A., Trahey, G. E., Byram, B. C., & Dahl, J. J. (2011). 
-%  Short-lag spatial coherence of backscattered echoes: Imaging characteristics.
-%  IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 58(7),
-%  1377?1388. https://doi.org/10.1109/TUFFC.2011.1957
+% The dataset was receving on 64 elements, thus we can calculate the full
+% correlation values for all 63 lags if we want. Then, we can reproduce
+% Fig 1. from Lediju, M. A., Trahey, G. E., Byram, B. C., & Dahl, J. J. (2011). 
+% Short-lag spatial coherence of backscattered echoes: Imaging characteristics.
+% IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 58(7),
+% 1377?1388. https://doi.org/10.1109/TUFFC.2011.1957
 
 slsc.maxM = 63;
 slsc_data = slsc.go();
 
-z_speckle = 327%327
+z_speckle = 327
 x_speckle = 100
 
 figure(2);clf;hold all;
@@ -142,7 +142,7 @@ url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long_2.uff';
+filename='Verasonics_P2-4_parasternal_long.uff';
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
@@ -152,7 +152,6 @@ scan = uff.read_object([local_path, filename],'/scan');
 % Print info about the dataset. Remeber that if you want to use this dataset
 % you have to reference this article!
 channel_data.print_authorship
-
 
 %% Create the images of the heart.
 % Let's do the same as we did above and create the DAS and the SLSC image
