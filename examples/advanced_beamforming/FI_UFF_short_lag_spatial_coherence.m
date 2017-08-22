@@ -8,26 +8,25 @@
 %
 % The algorithm is demonstrated on a dataset recorded from a standard
 % CIRS phantom of string targets and a hyperechoic cyst. Also, the second part
-% of the example a dataset recorded from the parasternal long axis of a human heart. 
-% The cardiac SLSC image reproduses the results in the article:
+% of the example uses a dataset recorded from the parasternal long axis of a
+% human heart. The cardiac SLSC image reproduces the results in the article:
 % Lediju Bell, M. A., Goswami, R., Kisslo, J. A., Dahl, J. J., 
 % & Trahey, G. E. (2013). Short-Lag Spatial Coherence (SLSC) Imaging of 
 % Cardiac Ultrasound Data: Initial Clinical Results. Ultrasound in Medicine
 % & Biology, 39(10), 1861-1874. https://doi.org/10.1016/j.ultrasmedbio.2013.03.029
-%
-% However, those results were on a parasternal short axis, and an apical
-% four chamber view, while we show images of the parasternal long axis.
+% However, those results were from parasternal short axis and apical four 
+% chamber views, while we show images of the parasternal long axis.
 %   
 % _by Ole Marius Hoel Rindal <olemarius@olemarius.net> and 
-%  Muyinatu Lediju Bell <mledijubell@jhu.edu> 14.08.2017_
+%  Muyinatu Lediju Bell <mledijubell@jhu.edu> 21.08.2017_
 
 %% Reading the UFF dataset
-% We'll start of reading the UFF dataset recorded from a CIRS phantom
+% We'll start with reading the UFF dataset recorded from a CIRS phantom
  
 clear all; close all;
 
 % data location
-url='http://ustb.no/datasets/';      % if not found downloaded from here
+url='http://ustb.no/datasets/';      % if not found download from here
 local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 
@@ -52,8 +51,8 @@ for n=1:numel(channel_data.sequence)
 end
 
 %% Delay the channel data
-% We are using none apodization since the SLSC needs all the data for all
-% elements
+% We are using no apodization because the SLSC algorithm requires equally
+% weighted channel data from all receive elements
 
 bmf=beamformer();
 bmf.channel_data=channel_data;
@@ -131,7 +130,7 @@ title('Reproducing Fig. 1 in SLSC article');
 
 
 %% SLSC on a cardiac image
-% Next, lets reproduce some of the results from the article : 
+% Next, let's reproduce some of the results from the article : 
 % Lediju Bell, M. A., Goswami, R., Kisslo, J. A., Dahl, J. J., 
 % & Trahey, G. E. (2013). Short-Lag Spatial Coherence (SLSC) Imaging of 
 % Cardiac Ultrasound Data: Initial Clinical Results. Ultrasound in Medicine
