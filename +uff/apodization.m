@@ -28,7 +28,7 @@ classdef apodization < uff
         focus                           % UFF.SCAN class (needed for transmit, receive & synthetic apodization)       
         sequence                        % collection of UFF.WAVE classes (needed for synthetic apodizaton)
         
-        window    = uff.window.none     % UFF.WINDOW class, default uff.window.noen
+        window    = uff.window.none     % UFF.WINDOW class, default uff.window.none
         f_number  = [1 1]               % F-number [Fx Fy] [unitless unitless] 
         
         origo     = uff.point()         % POINT class

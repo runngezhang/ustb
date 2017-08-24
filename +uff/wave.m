@@ -9,10 +9,10 @@ classdef wave
     %% public properties
     properties  (SetAccess = public)
         probe            % PROBE class
-        source           % SOURCE class
         apodization      % APODIZATION class
-        sound_speed      % reference speed of sound
+        source           % POINT class
         event            % index of the transmit/receive events this wave refers to
+        sound_speed      % reference speed of sound
     end
     
     %% dependent properties

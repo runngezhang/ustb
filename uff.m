@@ -158,16 +158,7 @@ classdef uff < handle
             end
         end
     end
-    
-    %% Private UFF file read/write
-    methods (Access = private)
-      
-        
-        
        
-        
-    end
-    
     %% display methods
     methods
         function print_authorship(h)

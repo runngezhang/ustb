@@ -4,7 +4,7 @@ function dumped_objects = write_object(filename,object,name,location,verbose)
 %   This UFF method writes the object provided into the specified location
 %   of a UFF file.
 %
-%   WRITE(filename, object, name, location, verbose)
+%   WRITE_OBJECT(filename, object, name, location, verbose)
 %
 %   Parameters:
 %       filename    Name and path to the UFF file

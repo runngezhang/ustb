@@ -23,7 +23,8 @@ classdef probe < uff
 
     %% public properties
     properties  (SetAccess = public)
-        geometry         % matrix of point scaterers [x y z theta phi width height] - [m m m rad rad m m]
+        origo            % uff.point class location of the probe respect to origin of coordinates
+        geometry         % matrix with attitude of rectangular elements [x y z theta phi width height] - [m m m rad rad m m]
     end
     
     %% dependent properties
