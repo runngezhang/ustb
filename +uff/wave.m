@@ -1,4 +1,4 @@
-classdef wave 
+classdef wave < uff
 %wave   Wave definition
 %
 %   See also WAVE, SOURCE, PHANTOM, PROBE, PULSE
