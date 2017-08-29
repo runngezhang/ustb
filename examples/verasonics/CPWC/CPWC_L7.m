@@ -22,8 +22,7 @@
 %  1.- Freeze
 %  2.- Close the VSX window
 
-clear all;
-close all;
+clear all; %close all;
 
 % Check that user is standing in a Verasonics Vantage folder
 s = strsplit(pwd,filesep);
@@ -48,7 +47,7 @@ ex_cycles = 2.5;        % number of cycles of the excitation signal (NOT half-cy
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
 ex_polarity = 1;        % easy way of changing the polarity
 
-no_frames = 3;          % number of frames to be acquired
+no_frames = 2;          % number of frames to be acquired
 no_packets = 1;         % number of apertures per plane wave
 no_planes = 15;         % number of acquisitions (ergo plane waves)
 buffer_size = 4096;     % number of samples in the buffer
@@ -328,11 +327,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex process.coherent_compounding});
@@ -341,8 +340,10 @@ b_data=bmf.go({process.das_mex process.coherent_compounding});
 b_data.plot();
 
 %% write channel_data to file the filname that was created in the beginning of this script
-uff_file=uff(uff_filename);
-uff_file.write(channel_data,'channel_data');
+answer = questdlg('Do you want to save this dataset?');
+if strcmp(answer,'Yes')
+    channel_data.write(uff_filename,'channel_data');
+end
 return
 
 % **** Callback routines to be converted by text2cell function. ****
