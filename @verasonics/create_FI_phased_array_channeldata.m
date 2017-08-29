@@ -30,7 +30,7 @@ for n=1:N
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=channel_data.sound_speed;
 end
@@ -40,7 +40,7 @@ channel_data.pulse = uff.pulse(h.Trans.frequency*10^6);
 
 %% Convert channel data from Verasonics format to USTB format
 no_samples = h.Receive(1).endSample;
-data = (zeros(no_samples, channel_data.probe.N, length(seq), number_of_frames));
+data = (zeros(no_samples, channel_data.probe.N, length(seq), h.number_of_frames));
 offset_time = calculate_delay_offset(h); % Get offset time
 plot_delayed_signal=0;
 interpolation_factor = 10;

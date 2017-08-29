@@ -313,7 +313,7 @@ channel_data = ver.create_FI_phased_array_channeldata();
 depth_axis=linspace(0e-3,99e-3,2048).';
 sca=uff.sector_scan();
 for n=1:length(TX)
-    sca(n)=uff.sector_scan(Angles(n),depth_axis);
+    sca(n)=uff.sector_scan('azimuth_axis',Angles(n),'depth_axis',depth_axis);
 end
 
 %% BEAMFORMER
@@ -323,7 +323,7 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.none;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance = Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex() process.stack()});
@@ -335,9 +335,8 @@ b_data.plot(4,['USTB'],60);
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     % write channel_data to path
-    uff_file=uff([uff_filename],'write');
-    uff_file.write(channel_data,'channel_data');
-    uff_file.write(b_data,'beamformed_data');
+    channel_data.write(uff_filename,'channel_data');
+    b_data.write(uff_filename,'beamformed_data');
 end
 return
 
