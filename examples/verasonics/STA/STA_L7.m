@@ -23,7 +23,7 @@
 %  2.- Close the VSX window
 
 clear all;
-close all;
+%close all;
 
 % Check that user is standing in a Verasonics Vantage folder
 s = strsplit(pwd,filesep);
@@ -43,7 +43,7 @@ f0=5.1e6;               % central frequency [Hz]
 ex_cycles = 2.5;        % number of cycles of the excitation signal
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element
 ex_polarity = 1;        % easy way of changing the polarity
-no_Frame = 1;           % number of frames to be acquired
+no_Frame = 2;           % number of frames to be acquired
 no_Waves = 128;         % number of apertures per image
 PRF=1000;               % Pulse repetition frequency [pulses/s]
 FN=1.2;                 % F-number
@@ -301,11 +301,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
 bmf.receive_apodization.f_number=FN;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
 bmf.transmit_apodization.f_number=FN;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
@@ -316,11 +316,8 @@ b_data.plot();
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     %% Save UFF dataset
-    uff_file=uff(uff_filename);
-    uff_file.write(channel_data,'channel_data');
-    uff_file.write(b_data,'b_data');
-    
-    save([uff_filename,'.mat'],'channel_data')
+    channel_data.write(uff_filename,'channel_data');
+    b_data.write(uff_filename,'b_data');
 end
 return
 

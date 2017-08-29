@@ -19,7 +19,8 @@ for n=1:N
     
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.apex=seq(n).source;
+    seq(n).apodization.origo=uff.point('xyz', [0 0 -Inf]);
+    
     seq(n).sound_speed=channel_data.sound_speed;
 end
 channel_data.sequence = seq;

@@ -1,27 +1,23 @@
-%% Adquire and record a STA dataset with L11-4 probe
+% Notice: 
+%   This file is provided by Verasonics to end users as a programming
+%   example for the Verasonics Vantage Research Ultrasound System.
+%   Verasonics makes no claims as to the functionality or intended
+%   application of this program and the user assumes all responsibility 
+%   for its use.
+%
+% File name: SetUpL11_4vIdeal.m - Example of imaging using ideal synthetic 
+%                                 aperture reconstruction
+%
+% Description: 
+%   Sequence programming file for L11-4v Linear array, using ideal synthetic 
+%   aperture reconstruction. For each acquisition, one channel is active  
+%   for transmit and 128 channels are active for receive. Reconstruction 
+%   and processing are synchronoused with respect to acquisition.
+%
+% Last update:
+% 11/10/2015 - modified for SW 3.0
 
-% date:     21.02.2017
-% authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
-%           Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%
-% History:  Modified to use the generalized beamformer USTB.
-%
-%% Read me
-% To run you should be in the Verasonics folder and activate it. For
-% instance by:
-%
-% >> cd C:\Users\verasonics\Documents\Vantage-3.0.7
-% >> activate
-%
-% The run and chose "Add to Path"
-%
-% To save the data:
-%
-%  1.- Freeze
-%  2.- Close the VSX window
-
-clear all;
-close all;
+clear all
 
 % Check that user is standing in a Verasonics Vantage folder
 s = strsplit(pwd,filesep);
@@ -32,233 +28,248 @@ folderdata=['data/' datestr(now,'yyyymmdd')];
 mkdir(folderdata);
 filedata=['L11_STA_' datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
-scan_area=[-19e-3 0e-3 19e-3 50e-3];
-pixels=[255 255];
 
-%% SI units
-c0=1540;                % reference speed of sound [m/s]
+P.startDepth = 5;   % Acquisition depth in wavelengths
+P.endDepth = 192;   % This should preferrably be a multiple of 128 samples.
+
+m = 128;  % number of synthetic aperture acquisitions per frame.
+
+num_frames = 4; %Number of frames
+
 f0=5.1e6;               % central frequency [Hz]
-ex_cycles = 2.5;        % number of cycles of the excitation signal
-ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element
-ex_polarity = 1;        % easy way of changing the polarity
-no_Frame = 1;           % number of frames to be acquired
-no_Waves = 128;         % number of apertures per image
-PRF=1000;               % Pulse repetition frequency [pulses/s]
-FN=1.2;                 % F-number
-Fs=4*f0;                % sampling frequency
-
-%% dependent values
-lambda=c0/f0;                               % wavelength [m]
 
 % Specify system parameters.
-Resource.Parameters.numTransmit = 128;      % number of transmit channels.
-Resource.Parameters.numRcvChannels = 128;   % number of receive channels.
-Resource.Parameters.speedOfSound = c0;      % set speed of sound in m/sec before calling computeTrans
-Resource.Parameters.simulateMode = 0;       % 1 forces simulate mode, even if hardware is present.
+Resource.Parameters.numTransmit = 128;  % number of transmit channels.
+Resource.Parameters.numRcvChannels = 128;  % number of receive channels.
+Resource.Parameters.speedOfSound = 1540;
+Resource.Parameters.verbose = 2;
+Resource.Parameters.initializeOnly = 0;
+Resource.Parameters.simulateMode = 1;
+%  Resource.Parameters.simulateMode = 1 forces simulate mode, even if hardware is present.
+%  Resource.Parameters.simulateMode = 2 stops sequence and processes RcvData continuously.
 
-%% Specify Trans structure array.
+% Specify Trans structure array.
 Trans.name = 'L11-4v';
-Trans.units = 'mm'; % Explicit declaration avoids warning message when selected by default
+Trans.units = 'mm'; % required in Gen3 to prevent default to mm units
 Trans.frequency = f0/1e6;   % The center frequency for the A/D 4xFc sampling.
-% note nominal center frequency in computeTrans is 7.813 MHz
-Trans = computeTrans(Trans);  % L12-3v transducer is 'known' transducer so we can use computeTrans.
+Trans = computeTrans(Trans);  % L11-4v transducer is 'known' transducer so we can use computeTrans.
+Trans.maxHighVoltage = 50;  % set maximum high voltage limit for pulser supply.
 
-%% Specify SFormat structure array.
-SFormat.transducer = 'L11-4';   
-SFormat.scanFormat = 'RLIN';     % rectangular linear array scan
-SFormat.radius = 0;              % ROC for curved lin. or dist. to virt. apex
-SFormat.theta = 0;
-SFormat.numRays = 1;      % no. of Rays (1 for Flat Focus)
-SFormat.FirstRayLoc = [0,0,0];   % x,y,z
-SFormat.rayDelta = 192*Trans.spacing;  % spacing in radians(sector) or dist. between rays (wvlnghts)
-SFormat.startDepth = 2;   % Acquisition depth in wavelengths
-SFormat.endDepth = 3*128;%192;   % This should preferrably be a multiple of 128 samples.
+% Specify PData structure array.
+PData(1).PDelta = [Trans.spacing, 0, 0.5];  % x, y, z pdeltas
+PData(1).Size(1) = ceil((P.endDepth-P.startDepth)/PData(1).PDelta(3));
+PData(1).Size(2) = ceil((Trans.numelements*Trans.spacing)/PData(1).PDelta(1));
+PData(1).Size(3) = 1;      % single image page
+PData(1).Origin = [-Trans.spacing*(Trans.numelements-1)/2,0,P.startDepth]; % x,y,z of upper lft crnr
+% No PData.Region specified, so a default Region for the entire PData array will be created by computeRegions.
+                
+% Specify Media object.
+pt1;
+Media.attenuation = -0.5;
+% Media.function = 'movePoints';
 
-%% Specify PData structure array.
-PData.sFormat = 1;      % use first SFormat structure.
-PData.Size(1) = pixels(2);  % Z
-PData.Size(2) = pixels(1);  % X
-PData.Size(3) = 1;      % single image page ???
-PData.pdeltaX = ((scan_area(3)-scan_area(1))/PData.Size(2))/lambda;
-PData.pdeltaZ = ((scan_area(4)-scan_area(2))/PData.Size(1))/lambda;
-PData.Origin = [scan_area(1)/lambda, 0, scan_area(2)/lambda]; % x,y,z of upper lft crnr.
-
-%% Specify Media object. 'pt1.m' script defines array of point targets.
-Media.MP=[0, 0, 20e-3/lambda, 1; Trans.ElementPos];
-
-%% Specify Resources.
+% Specify Resources.
 Resource.RcvBuffer(1).datatype = 'int16';
-Resource.RcvBuffer(1).rowsPerFrame = no_Waves*4096; % this size allows for 3 acqs ???, maximum range
-Resource.RcvBuffer(1).colsPerFrame = 256;
-Resource.RcvBuffer(1).numFrames = no_Frame;     % 40 frames used for RF cineloop.
-Resource.InterBuffer(1).datatype = 'complex';
-Resource.InterBuffer(1).rowsPerFrame = 2*1024;    % this is for greatest depth
-Resource.InterBuffer(1).colsPerFrame = PData.Size(2);
-Resource.InterBuffer(1).numFrames = 1;          % one intermediate buffer needed.
-Resource.ImageBuffer(1).datatype = 'double';
-Resource.ImageBuffer(1).rowsPerFrame = 1024;
-Resource.ImageBuffer(1).colsPerFrame = PData.Size(2);
-Resource.ImageBuffer(1).numFrames = 10;         % 10 image buffer only
-Resource.DisplayWindow(1).Title = 'L7-4 STAI';
+Resource.RcvBuffer(1).rowsPerFrame = 4096*m; 
+Resource.RcvBuffer(1).colsPerFrame = Resource.Parameters.numRcvChannels;
+Resource.RcvBuffer(1).numFrames = num_frames;     % 10 frames for RF data.
+Resource.InterBuffer(1).numFrames = 1;  % one intermediate buffer needed.
+Resource.ImageBuffer(1).numFrames = 10;
+Resource.DisplayWindow(1).Title = 'L11-4vIdeal';
+Resource.DisplayWindow(1).pdelta = 0.35;
+ScrnSize = get(0,'ScreenSize');
+DwWidth = ceil(PData(1).Size(2)*PData(1).PDelta(1)/Resource.DisplayWindow(1).pdelta);
+DwHeight = ceil(PData(1).Size(1)*PData(1).PDelta(3)/Resource.DisplayWindow(1).pdelta);
+Resource.DisplayWindow(1).Position = [250,(ScrnSize(4)-(DwHeight+150))/2, ...  % lower left corner position
+                                      DwWidth, DwHeight];
+Resource.DisplayWindow(1).ReferencePt = [PData(1).Origin(1),0,PData(1).Origin(3)];   % 2D imaging is in the X,Z plane
+Resource.DisplayWindow(1).numFrames = 20;
 Resource.DisplayWindow(1).AxesUnits = 'mm';
-Resource.DisplayWindow(1).pdelta = 0.45;
-Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner position
-    ceil(PData.Size(2)*PData.pdeltaX/Resource.DisplayWindow(1).pdelta), ... % width
-    ceil(PData.Size(1)*PData.pdeltaZ/Resource.DisplayWindow(1).pdelta)];    % height
-Resource.DisplayWindow(1).ReferencePt = [PData.Origin(1),PData.Origin(3)];   % 2D imaging is in the X,Z plane
-Resource.DisplayWindow(1).Colormap = gray(256);
+Resource.DisplayWindow.Colormap = gray(256);
 
-%% Specify Transmit waveform structure.
-TW.type = 'parametric';
-% pulse expecification in [MHz, duty-cycle, number-of-half-cycles, boolean]
-TW.Parameters = [f0/1e6, ex_power, ex_cycles*2, ex_polarity];
+% Specify Transmit waveform structure. 
+TW(1).type = 'parametric';
+TW(1).Parameters = [Trans.frequency,.67,2,1];   % A, B, C, D
 
-%% Specify TX structure array.
+% Specify m TX structure arrays. Transmit on element n in the array for event n.
 TX = repmat(struct('waveform', 1, ...
-    'Origin', [0.0,0.0,0.0], ...
-    'Apod', zeros(1,Resource.Parameters.numTransmit), ...
-    'focus', 0.0, ...
-    'Steer', [0.0,0.0], ...
-    'Delay', zeros(1,Resource.Parameters.numTransmit)), 1, no_Waves); % number of apertures + 2 extra dummy transmits
-% writing sequence angles
-for n = 1:no_Waves
-    TX(n).Apod(n) = 1.0;
-    TX(n).Delay = computeTXDelays(TX(n));
+                   'Origin', zeros(1,3), ...
+                   'focus', 0, ...
+                   'Steer', [0.0,0.0], ...
+                   'Apod', zeros(1,Trans.numelements), ...
+                   'Delay', zeros(1,Trans.numelements)), 1, m);
+               
+scaleToWvl = 1;
+if strcmp(Trans.units, 'mm')
+    scaleToWvl = Trans.frequency/(Resource.Parameters.speedOfSound/1000);
+end               
+% - Set event specific TX attributes.
+for n = 1:m   % m transmit events
+    % Set transmit Origins to positions of elements.
+    TX(n).Origin = scaleToWvl*Trans.ElementPos(n,1:3);
+    % Set transmit Apodization so that only one element is active.
+    TX(n).Apod(n) = 1.0;    % Only one active transmitter for each TX.
 end
 
-%% Specify TGC Waveform structure.
-TGC.CntrlPts = [139,535,650,710,770,932,992,1012];
-TGC.rangeMax = SFormat.endDepth;
+% Specify TGC Waveform structure.
+TGC.CntrlPts = [189,314,457,698,770,911,948,976];
+TGC.rangeMax = P.endDepth;
 TGC.Waveform = computeTGCWaveform(TGC);
 
-%% Specify Receive structure arrays -
-%   endDepth - add additional acquisition depth to account for some channels
-%              having longer path lengths.
-%   InputFilter - The same coefficients are used for all channels. The
-%              coefficients below give a broad bandwidth bandpass filter.
-maxAcqLength = sqrt(SFormat.endDepth^2 + (Trans.numelements*Trans.spacing)^2) - SFormat.startDepth;
-wlsPer128 = 128/(4*2); % wavelengths in 128 samples for 4 samplesPerWave
-Receive = repmat(struct('Apod', ones(1,128), ...
-    'startDepth', SFormat.startDepth, ...
-    'endDepth', SFormat.startDepth + wlsPer128*ceil(maxAcqLength/wlsPer128), ...
-    'TGC', 1, ...
-    'bufnum', 1, ...
-    'framenum', 1, ...
-    'acqNum', 1, ...
-    'samplesPerWave', 4, ...
-    'mode', 0, ...
-    'callMediaFunc', 0),1,no_Waves*no_Frame);
-%% - Set event specific Receive attributes.
-for i = 1:Resource.RcvBuffer(1).numFrames  % no_Apert*acquisitions per frame
-    k = no_Waves*(i-1);
-    for n = 1:no_Waves; % for each aperture acquire all angles
-        Receive(k+n).framenum = i;
-        Receive(k+n).acqNum = n;
+% Specify Receive structure arrays. 
+% - We need m Receive structures for each frame.
+maxAcqLength = ceil(sqrt(P.endDepth^2 + ((Trans.numelements-1)*Trans.spacing)^2));
+Receive = repmat(struct('Apod', ones(1,Trans.numelements), ...
+                        'startDepth', P.startDepth, ...
+                        'endDepth', maxAcqLength, ...
+                        'TGC', 1, ...
+                        'bufnum', 1, ...
+                        'framenum', 1, ...
+                        'acqNum', 1, ...
+                        'sampleMode', 'NS200BW', ...
+                        'samplesPerWave',4,...
+                        'mode', 0, ...
+                        'callMediaFunc', 0), 1, m*Resource.RcvBuffer(1).numFrames);
+% - Set event specific Receive attributes.
+for i = 1:Resource.RcvBuffer(1).numFrames
+    Receive(m*(i-1)+1).callMediaFunc = 1;
+    for j = 1:m
+        Receive(m*(i-1)+j).framenum = i;
+        Receive(m*(i-1)+j).acqNum = j;
     end
 end
 
-%% Specify Recon structure arrays.
+% Specify Recon structure arrays.
+% - We need one Recon structure.  Each frame will use
+%   m ReconInfo structures, since we are using m
+%   synthetic aperture acquisitions.
 Recon = struct('senscutoff', 0.6, ...
-    'pdatanum', 1, ...
-    'rcvBufFrame', -1, ...     % use most recently transferred frame
-    'IntBufDest', [1,1], ...
-    'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
-    'RINums', (1:no_Waves)');
+               'pdatanum', 1, ...
+               'rcvBufFrame', -1, ...     % use most recently transferred frame
+               'IntBufDest', [1,1], ...
+               'ImgBufDest', [1,-1], ...  % auto-increment ImageBuffer each recon
+               'RINums', 1:m);
+
 % Define ReconInfo structures.
-ReconInfo = repmat(struct('mode', 4, ...  % default is to accumulate IQ data.
-    'txnum', 1, ...
-    'rcvnum', 1, ...
-    'regionnum', 0), 1, no_Waves);
+ReconInfo = repmat(struct('mode', 'accumIQ', ...  % accumulate IQ data.
+                   'txnum', 1, ...
+                   'rcvnum', 1, ...
+                   'regionnum', 1), 1, m);
 % - Set specific ReconInfo attributes.
-ReconInfo(1).mode = 3;
-for n=1:no_Waves
-    ReconInfo(n).rcvnum = n;
-    ReconInfo(n).txnum = n;
+if m>1
+    ReconInfo(1).mode = 'replaceIQ';  % replace IQ data
+    for j = 1:m  % For each row in the column
+        ReconInfo(j).txnum = j;
+        ReconInfo(j).rcvnum = j;
+    end
+    ReconInfo(m).mode = 'accumIQ_replaceIntensity'; % accum & detect
+else
+    ReconInfo(1).mode = 'replaceIntensity';
 end
 
-ReconInfo(no_Waves).mode = 5;
-
-%% Specify Process structure array.
+% Specify Process structure array.
+pers = 20;
 Process(1).classname = 'Image';
 Process(1).method = 'imageDisplay';
 Process(1).Parameters = {'imgbufnum',1,...   % number of buffer to process.
-    'framenum',-1,...   % (-1 => lastFrame)
-    'pdatanum',1,...    % number of PData structure to use
-    'norm',1,...        % normalization method(1 means fixed)
-    'pgain',2.0,...            % pgain is image processing gain
-    'persistMethod','simple',...
-    'persistLevel',30,...
-    'interp',1,...      % method of interpolation (1=4pt interp)
-    'compression',0.5,...      % X^0.5 normalized to output word size
-    'reject',2,...
-    'mappingMode','full',...
-    'display',1,...      % display image after processing
-    'displayWindow',1};
+                         'framenum',-1,...   % (-1 => lastFrame)
+                         'pdatanum',1,...    % number of PData structure to use
+                         'pgain',1.0,...            % pgain is image processing gain
+                         'reject',2,...      % reject level 
+                         'persistMethod','simple',...
+                         'persistLevel',pers,...
+                         'interpMethod','4pt',...  %method of interp. (1=4pt)
+                         'grainRemoval','none',...
+                         'processMethod','none',...
+                         'averageMethod','none',...
+                         'compressMethod','power',...
+                         'compressFactor',40,...
+                         'mappingMethod','full',...
+                         'display',1,...      % display image after processing
+                         'displayWindow',1};
 
-%% Specify SeqControl structure arrays.
+% Specify SeqControl structure arrays.
 SeqControl(1).command = 'jump'; % jump back to start.
 SeqControl(1).argument = 1;
 SeqControl(2).command = 'timeToNextAcq';  % time between synthetic aperture acquisitions
-SeqControl(2).argument = 1/PRF*1e6;       % PRF
-SeqControl(3).command = 'timeToNextAcq';  % time between frames
-SeqControl(3).argument = 1/PRF*1e6; % framerate
-SeqControl(4).command = 'returnToMatlab';
-SeqControl(5).command = 'timeToNextAcq';  % time between ???
-SeqControl(5).argument = 10;              % ???
-nsc = 6; % nsc is count of SeqControl objects
+SeqControl(2).argument = 1000;  % 200 usec
+SeqControl(3).command = 'returnToMatlab';
+nsc = 4; % nsc is count of SeqControl objects
+lastTTHnsc = 0; % this variable keeps track of the last 'transferToHost' SeqControl index. 
+currentTTHnsc = 0; % this variable keeps track of the current 'transferToHost' SeqControl index. 
 
-%% Specify Event structure arrays.
-n = 1; % n is count of Events
+% Specify Event structure array.
+n = 1;
 for i = 1:Resource.RcvBuffer(1).numFrames
-    k = no_Waves*(i-1);
-    for j = 1:no_Waves
-        % first transmit - first receive
-        Event(n).tx = j;         % use 1st TX structure.
-        Event(n).rcv = k+j;      % use 1st Rcv structure.
+    for j = 1:m                 % Acquire frames
+        Event(n).info = 'Acquisition.';
+        Event(n).tx = j;   % use next TX structure.
+        Event(n).rcv = m*(i-1)+j;   
         Event(n).recon = 0;      % no reconstruction.
         Event(n).process = 0;    % no processing
-        Event(n).seqControl = 2; % time between syn. aper. acqs.
+        Event(n).seqControl = 2; % no seqCntrl
         n = n+1;
     end
-    % Replace last Event's seqControl value.
-    Event(n-1).seqControl = [3,nsc]; % time between frames, SeqControl struct defined below.
-    SeqControl(nsc).command = 'transferToHost';
-    nsc = nsc + 1;
-    
-    Event(n).info = 'Reconstruct & process';
+    Event(n-1).seqControl = nsc; % modify last acquisition Event's seqControl
+      SeqControl(nsc).command = 'transferToHost'; % transfer frame to host buffer
+      SeqControl(nsc).condition = 'waitForProcessing';
+      SeqControl(nsc).argument = lastTTHnsc;
+      currentTTHnsc = nsc;
+      nsc = nsc+1;
+      
+    Event(n).info = 'recon and process'; 
     Event(n).tx = 0;         % no transmit
     Event(n).rcv = 0;        % no rcv
     Event(n).recon = 1;      % reconstruction
-    Event(n).process = 1;    % processing
-    Event(n).seqControl = 0;
-    if floor(i/2) == i/2     % Exit to Matlab every 4th frame
-        Event(n).seqControl = 4;
-    end
+    Event(n).process = 1;    % process
+    Event(n).seqControl = [nsc,nsc+1,3]; %['waitForTransferComplete', 'markTransferProcessed', 'returnToMatlab']   
+       % The 'waitForTransferComplete' and 'markTransferProcessed' commands are
+       % automatically executed with a reconstruction event, and don't need to be provided
+       % by the user. They are duplicated here for helping user understanding the action       
+       SeqControl(nsc).command = 'waitForTransferComplete';  
+       SeqControl(nsc).argument = lastTTHnsc;
+       nsc = nsc + 1;
+       SeqControl(nsc).command = 'markTransferProcessed';
+       SeqControl(nsc).argument = lastTTHnsc;
+       nsc = nsc + 1;
+       lastTTHnsc = currentTTHnsc;
     n = n+1;
 end
+% fix the lastTTHnsc = 0 argument in SeqControl(4:6), change it to point to last TTH from acquisition loop 
+SeqControl(4).argument = lastTTHnsc;
+SeqControl(5).argument = lastTTHnsc;
+SeqControl(6).argument = lastTTHnsc;
 
-Event(n).info = 'Jump back to first event';
+Event(n).info = 'Jump back';
 Event(n).tx = 0;        % no TX
 Event(n).rcv = 0;       % no Rcv
 Event(n).recon = 0;     % no Recon
-Event(n).process = 0;
-Event(n).seqControl = 1; % jump command
+Event(n).process = 0; 
+Event(n).seqControl = 1;
 
 
-%% User specified UI Control Elements
+% User specified UI Control Elements
 % - Sensitivity Cutoff
 UI(1).Control =  {'UserB7','Style','VsSlider','Label','Sens. Cutoff',...
-    'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
-    'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
-UI(1).Callback = text2cell('%-UI#1Callback');
+                  'SliderMinMaxVal',[0,1.0,Recon(1).senscutoff],...
+                  'SliderStep',[0.025,0.1],'ValueFormat','%1.3f'};
+UI(1).Callback = text2cell('%SensCutoffCallback');
 
 % - Range Change
-UI(2).Control = {'UserA1','Style','VsSlider','Label','Range',...
-    'SliderMinMaxVal',[64,320,SFormat.endDepth],'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
-UI(2).Callback = text2cell('%-UI#2Callback');
+MinMaxVal = [64,300,P.endDepth]; % default unit is wavelength
+AxesUnit = 'wls';
+if isfield(Resource.DisplayWindow(1),'AxesUnits')&&~isempty(Resource.DisplayWindow(1).AxesUnits)
+    if strcmp(Resource.DisplayWindow(1).AxesUnits,'mm');
+        AxesUnit = 'mm';
+        MinMaxVal = MinMaxVal * (Resource.Parameters.speedOfSound/1000/Trans.frequency);
+    end
+end
+UI(2).Control = {'UserA1','Style','VsSlider','Label',['Range (',AxesUnit,')'],...
+                 'SliderMinMaxVal',MinMaxVal,'SliderStep',[0.1,0.2],'ValueFormat','%3.0f'};
+UI(2).Callback = text2cell('%RangeChangeCallback');
 
 % Specify factor for converting sequenceRate to frameRate.
-frameRateFactor = no_Waves;
+frameRateFactor = 1;
 
 % Save all the structures to a .mat file.
 save(['MatFiles/',filename]);
@@ -287,20 +298,20 @@ channel_data = ver.create_sta_channeldata();
 
 %% SCAN
 sca=uff.linear_scan();
-sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).'
-sca.z_axis = linspace(0,50e-3,256).'
+sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),100).'
+sca.z_axis = linspace(0,60e-3,100).'
 %% BEAMFORMER
 bmf=beamformer();
 bmf.channel_data=channel_data;
 bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=FN;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.f_number=1.7;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=FN;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.f_number=1.7;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex() process.coherent_compounding()});
@@ -311,17 +322,14 @@ b_data.plot();
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     %% Save UFF dataset
-    uff_file=uff(uff_filename);
-    uff_file.write(channel_data,'channel_data');
-    uff_file.write(b_data,'b_data');
-    
-    save([uff_filename,'.mat'],'channel_data')
+    channel_data.write(uff_filename,'channel_data');
+    b_data.write(uff_filename,'b_data');
 end
 return
 
 
 % **** Callback routines to be converted by text2cell function. ****
-%-UI#1Callback - Sensitivity cutoff change
+%SensCutoffCallback - Sensitivity cutoff change
 ReconL = evalin('base', 'Recon');
 for i = 1:size(ReconL,2)
     ReconL(i).senscutoff = UIValue;
@@ -332,37 +340,43 @@ Control.Command = 'update&Run';
 Control.Parameters = {'Recon'};
 assignin('base','Control', Control);
 return
-%-UI#1Callback
+%SensCutoffCallback
 
-%-UI#2Callback - Range change
+%RangeChangeCallback - Range change
 simMode = evalin('base','Resource.Parameters.simulateMode');
 % No range change if in simulate mode 2.
 if simMode == 2
-    set(hObject,'Value',evalin('base','SFormat.endDepth'));
+    set(hObject,'Value',evalin('base','P.endDepth'));
     return
 end
-range = UIValue;
-assignin('base','range',range);
-SFormat = evalin('base','SFormat');
-SFormat.endDepth = range;
-assignin('base','SFormat',SFormat);
-evalin('base','PData.Size(1) = ceil((SFormat.endDepth-SFormat.startDepth)/PData.pdeltaZ);');
-evalin('base','[PData.Region,PData.numRegions] = createRegions(PData);');
-evalin('base','Resource.DisplayWindow(1).Position(4) = ceil(PData.Size(1)*PData.pdeltaZ/Resource.DisplayWindow(1).pdelta);');
+Trans = evalin('base','Trans');
+Resource = evalin('base','Resource');
+scaleToWvl = Trans.frequency/(Resource.Parameters.speedOfSound/1000);
+
+P = evalin('base','P');
+P.endDepth = UIValue;
+if isfield(Resource.DisplayWindow(1),'AxesUnits')&&~isempty(Resource.DisplayWindow(1).AxesUnits)
+    if strcmp(Resource.DisplayWindow(1).AxesUnits,'mm');
+        P.endDepth = UIValue*scaleToWvl;    
+    end
+end
+assignin('base','P',P);
+evalin('base','PData(1).Size(1) = ceil((P.endDepth-P.startDepth)/PData(1).PDelta(3));');
+evalin('base','PData(1).Region = computeRegions(PData(1));');
+evalin('base','Resource.DisplayWindow(1).Position(4) = ceil(PData(1).Size(1)*PData(1).PDelta(3)/Resource.DisplayWindow(1).pdelta);');
 Receive = evalin('base', 'Receive');
-Trans = evalin('base', 'Trans');
-maxAcqLength = sqrt(range^2 + (Trans.numelements*Trans.spacing)^2)-SFormat.startDepth;
-wlsPer128 = 128/(4*2);
+maxAcqLength = ceil(sqrt(P.endDepth^2 + ((Trans.numelements-1)*Trans.spacing)^2));
 for i = 1:size(Receive,2)
-    Receive(i).endDepth = SFormat.startDepth + wlsPer128*ceil(maxAcqLength/wlsPer128);
+    Receive(i).endDepth = maxAcqLength;
 end
 assignin('base','Receive',Receive);
-evalin('base','TGC.rangeMax = SFormat.endDepth;');
+evalin('base','TGC.rangeMax = P.endDepth;');
 evalin('base','TGC.Waveform = computeTGCWaveform(TGC);');
+evalin('base','if VDAS==1, Result = loadTgcWaveform(1); end');
 Control = evalin('base','Control');
 Control.Command = 'update&Run';
-Control.Parameters = {'SFormat','PData','Receive','Recon','DisplayWindow','ImageBuffer'};
+Control.Parameters = {'PData','InterBuffer','ImageBuffer','DisplayWindow','Receive','Recon'};
 assignin('base','Control', Control);
 assignin('base', 'action', 'displayChange');
 return
-%-UI#2Callback
+%RangeChangeCallback
