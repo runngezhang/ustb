@@ -148,9 +148,9 @@ switch class(object)
                     case {'uff.channel_data' 'uff.beamformed_data' 'uff.phantom'}
                         if verbose
                             if isempty(location)
-                                fprintf('UFF: writting %s [%s] at %s\n',name,class(object),'/');
+                                fprintf('UFF: writing %s [%s] at %s\n',name,class(object),'/');
                             else
-                                fprintf('UFF: writting %s [%s] at %s\n',name,class(object),location);
+                                fprintf('UFF: writing %s [%s] at %s\n',name,class(object),location);
                             end
                         end
                 end
