@@ -1,22 +1,25 @@
-% Notice:
-%   This file is provided by Verasonics to end users as a programming
-%   example for the Verasonics Vantage Research Ultrasound System.
-%   Verasonics makes no claims as to the functionality or intended
-%   application of this program and the user assumes all responsibility
-%   for its use
+%% Aquire and record a linear array dataset with L7-4 probe
 %
-% File name: SetUpL7_4_128RyLns.m - Example of linear array imaging with
-%                                     focused transmits
-% Description:
-%   Sequence programming file for L7-4 linear array using 128 ray lines
-%   (focused transmits) and receive acquisitions. Of the 128 transmit channels,
-%   only numTx are used, with numTx/2 transmitters on each side of the center
-%   element (where possible). All 128 receive channels are active for each
-%   acquisition.
+% This example is a modification of an original example script from
+% Verasonics modified to use the USTB to create the image after you quit
+% the VSX of Verasonics. You will also be prompted with the option to save
+% the dataset in UFF format.
 %
+% date:     29.08.2017
+% authors:  Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%% Read me
+% To run you should be in the Verasonics folder and activate it. For
+% instance by:
 %
-% Last update:
-% 12/13/2015 - modified for SW 3.0
+% >> cd C:\Users\verasonics\Documents\Vantage-XXXX
+% >> activate
+%
+% Then run and choose "Add to Path"
+%
+% To save the data:
+%  
+%  1.- Freeze
+%  2.- Close the VSX window
 
 clear all; close all;
 

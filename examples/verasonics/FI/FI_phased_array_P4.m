@@ -1,14 +1,18 @@
-%% Aquire and record a PHA (Phased Array) dataset with P4-2v probe
-
-% date:     21.02.2017
+%% Aquire and record a phased array dataset with P4-2v probe
+%
+% This example is a modification of an original example script from
+% Verasonics modified to use the USTB to create the image after you quit
+% the VSX of Verasonics. You will also be prompted with the option to save
+% the dataset in UFF format.
+%
+% date:     29.08.2017
 % authors:  Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %           
-%       
 %% Read me
 % To run you should be in the Verasonics folder and activate it. For
 % instance by:
 %
-% >> cd C:\Users\verasonics\Documents\Vantage-3.0.7
+% >> cd C:\Users\verasonics\Documents\Vantage-XXXX
 % >> activate
 %
 % Then run and choose "Add to Path"
@@ -18,8 +22,7 @@
 %  1.- Freeze
 %  2.- Close the VSX window
 
-%close all
-clear all
+close all; clear all
 
 % Check that user is standing in a Verasonics Vantage folder
 s = strsplit(pwd,filesep);
