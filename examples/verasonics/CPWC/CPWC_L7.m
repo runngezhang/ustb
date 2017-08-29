@@ -12,7 +12,7 @@
 % To run you should be in the Verasonics folder and activate it. For
 % instance by:
 %
-% >> cd C:\Users\verasonics\Documents\Vantage-3.0.7
+% >> cd C:\Users\verasonics\Documents\Vantage-XXX
 % >> activate
 %
 % Then run and choose "Add to Path"
