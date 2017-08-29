@@ -31,7 +31,7 @@ P.startDepth = 0;
 P.endDepth = 192;
 P.txFocus = 100;     % Initial transmit focus.
 P.numTx = 32;        % number of transmit elements in TX aperture (where possible).
-number_of_frames = 3 % The number of frames
+number_of_frames = 2 % The number of frames
 
 % Define system parameters.
 Resource.Parameters.numTransmit = 128;      % number of transmit channels.
@@ -305,7 +305,7 @@ channel_data = ver.create_FI_linear_array_channeldata();
 z_axis=linspace(3e-3,50e-3,2048).';
 scan=uff.linear_scan();
 for n=1:numel(channel_data.sequence)
-    scan(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
+     scan(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 
 %% BEAMFORMER
@@ -315,7 +315,7 @@ bmf.scan=scan;
 
 bmf.receive_apodization.window=uff.window.boxcar;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance = Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
 b_data=bmf.go({process.das_mex process.stack})
@@ -325,10 +325,9 @@ b_data.plot(1,'DAS',60);
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     %% Save UFF dataset
-    uff_file=uff(uff_filename);
-    uff_file.write(channel_data,'channel_data');
-    uff_file.write(b_data,'b_data');
-    uff_file.write(scan,'scan');
+    channel_data.write(uff_filename,'channel_data');
+    b_data.write(uff_filename,'b_data');
+    scan.write(uff_filename,'scan');
 end
 return
 

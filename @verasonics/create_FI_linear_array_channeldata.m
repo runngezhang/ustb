@@ -1,7 +1,7 @@
 function channel_data = create_FI_linear_array_channeldata(h)
 %%%%
 %    Save to channeldata for Focused Imaging with phased array imaging
-
+    
 %% Create channel_data object and set some parameters
 channel_data = uff.channel_data();
 channel_data.sampling_frequency = h.Fs;
@@ -22,17 +22,16 @@ seq=uff.wave();
 for n=1:N
     seq(n)=uff.wave();
     seq(n).probe=channel_data.probe;
+    
     seq(n).source.xyz=[h.TX(n).Origin(1)*h.lambda 0 h.TX(n).focus*h.lambda];
     
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.apex.distance=Inf;
-    seq(n).apodization.scan.xyz=seq(n).source.xyz;
+    seq(n).apodization.origo=uff.point('xyz', [0 0 -Inf]);
+    %seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=channel_data.sound_speed;
-    
-    % show source
 end
 channel_data.sequence = seq;
 %% Convert channel data from Verasonics format to USTB format
