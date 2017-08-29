@@ -4,6 +4,10 @@
 % interaction with the USTB code. The USTB code only displayes the
 % estimated delay, and not the b-mode.
 %
+% NB! There seems to be a bug in the Verasonics part of the script so that
+% you have to toggle the "push cycle" slider to update the push cycle to
+% the value shown on the slider.
+%
 % _Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.07.2017_
 
 clear all;
@@ -669,7 +673,7 @@ bmf.transmit_apodization.f_number=1.7;
 bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
-b_data=bmf.go({process.das_mex process.coherent_compounding process.pulsed_doppler_speckle_tracking});
+b_data=bmf.go({process.das_mex process.coherent_compounding process.autocorrelation_displacement_estimation});
 
 %% show
 f100 = figure(100);
@@ -681,10 +685,8 @@ colormap(gca(f100),'hot');       % Changing the colormap
 answer = questdlg('Do you want to save this dataset?');
 if strcmp(answer,'Yes')
     %% write channel_data to file the filname that was created in the beginning of this script
-    uff_file=uff(uff_filename);
-    uff_file.write(channel_data,'channel_data');
+    channel_data.write(uff_filename,'channel_data');
 end
-
 return
 
 %% **** Callback routines to be converted by text2cell function. ****
