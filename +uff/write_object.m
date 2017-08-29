@@ -125,7 +125,7 @@ switch class(object)
         if (findstr('uff.',class(object)))
             if numel(object)>1
                 
-                if verbose fprintf('UFF: writting %s [%s] at %s ',name,class(object),location); end
+                if verbose fprintf('UFF: writing %s [%s] at %s ',name,class(object),location); end
                 % call write for all members in the array
                 dumped_objects=0;
                 previous_msg='';
