@@ -21,15 +21,12 @@ close all;
 local_path = [ustb_path(),'/data/'];                 % location of example data in this computer
 addpath(local_path);
 
-if exist([local_path,'FieldII_speckle_simulation.mat']) %If the file exists load the file
+if exist([local_path,'FieldII_speckle_simulation.uff']) > 0 %If the file exists load the file
     
     disp('We were lucky, and the data was already simulated, so we can simply load it!');
+    uff_file= [local_path,'FieldII_speckle_simulation.uff'];
+    channel_data = uff.read_object(uff_file,'/channel_data');
     
-    %There is a bug in UFF with STAI, so we'll wait for that
-    %uff_file=uff([local_path,'FieldII_speckle_simulation.uff']);
-    %channel_data = uff_file.read('/channel_data');
-    
-    load([local_path,'FieldII_speckle_simulation.mat']);
 else % Else, run the simulation
     %% Basic Constants
     %
@@ -122,7 +119,7 @@ else % Else, run the simulation
     % randomly drawn from a uniform distribution and scatterer amplitudes
     % randomly drawn from a normal distribution.
     
-    number_of_scatterers = 500000;
+    number_of_scatterers = 5;%00000;
     xxp_speckle=random('unif',-5e-3,5e-3,number_of_scatterers,1);
     zzp_speckle=random('unif',15e-3,20e-3,number_of_scatterers,1);
     sca = [xxp_speckle zeros(length(xxp_speckle),1) zzp_speckle];  % list with the scatterers coordinates [m]
@@ -208,8 +205,7 @@ else % Else, run the simulation
     % Finally, we save the data into a UFF file.
     % There is a 
     filename=[ustb_path(),'/data/FieldII_speckle_simulation.uff'];
-    channel_data.write(filename);
-    b_data.write(filename);
+    channel_data.write(filename,'channel_data');
     
 end
 %% Scan
