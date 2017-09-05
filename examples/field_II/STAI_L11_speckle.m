@@ -175,5 +175,5 @@ legend('show');
 
 %% Save UFF dataset
 filename=[ustb_path(),'/data/FieldII_speckle_simulation.uff'];
-channel_data.write(filename);
-b_data.write(filename);
+channel_data.write(filename,'channel_data');
+b_data.write(filename,'beamformed_data');
