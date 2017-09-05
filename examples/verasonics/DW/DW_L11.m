@@ -1,3 +1,6 @@
+%% NB! This is a preliminary example, we will add DW from Verasonics to USTB soon :)
+%
+%
 % Notice: 
 %   This file is provided by Verasonics to end users as a programming
 %   example for the Verasonics Vantage Research Ultrasound System.
