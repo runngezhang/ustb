@@ -42,11 +42,11 @@ bmf.scan=sca;
 
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 bmf.transmit_apodization.window=uff.window.tukey25;
 bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 %% Do beamforming
 b_data=bmf.go({process.das_mex process.coherent_compounding});
@@ -64,6 +64,5 @@ channel_data.author = {'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Muyin
 channel_data.reference = {'www.ultrasoundtoolbox.com'};
 channel_data.version = {'1.0.1'};
 
-uff_filename = ['Alpinion_L3-8_',tag,'.uff']
-uff_file=uff(uff_filename);
-uff_file.write(channel_data,'channel_data');
+uff_filename = ['./Alpinion_L3-8_',tag,'.uff']
+channel_data.write(uff_filename,'channel_data');

@@ -31,7 +31,7 @@ z_axis=linspace(1e-3,55e-3,512).';
 sca=uff.linear_scan();
 idx = 1;
 for n=1:numel(channel_data.sequence)
-    sca(n)=uff.linear_scan(channel_data.sequence(n).source.x,z_axis);
+    sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 %% Define BEAMFORMER
 bmf=beamformer();
@@ -39,7 +39,7 @@ bmf.channel_data=channel_data;
 bmf.scan=sca;
 bmf.receive_apodization.window=uff.window.tukey25;
 bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % Do beamforming
 b_data=bmf.go({process.das_mex process.stack});
@@ -56,6 +56,5 @@ channel_data.reference = {'www.ultrasoundtoolbox.com'};
 channel_data.version = {'1.0.2'};
 
 %%
-uff_filename = ['Alpinion_L3-8_',tag,'.uff']
-uff_file=uff(uff_filename);
-uff_file.write(channel_data,'channel_data');
+uff_filename = ['./Alpinion_L3-8_',tag,'.uff']
+channel_data.write(uff_filename,'channel_data');
