@@ -119,7 +119,7 @@ else % Else, run the simulation
     % randomly drawn from a uniform distribution and scatterer amplitudes
     % randomly drawn from a normal distribution.
     
-    number_of_scatterers = 5;%00000;
+    number_of_scatterers = 500000;
     xxp_speckle=random('unif',-5e-3,5e-3,number_of_scatterers,1);
     zzp_speckle=random('unif',15e-3,20e-3,number_of_scatterers,1);
     sca = [xxp_speckle zeros(length(xxp_speckle),1) zzp_speckle];  % list with the scatterers coordinates [m]
