@@ -127,10 +127,13 @@ classdef delay_multiply_and_sum < process
             % Design Bandpass-filter
             h.beamformed_data(1).calculate_sampling_frequency(h.channel_data.sound_speed);
             fs = h.beamformed_data(1).sampling_frequency;
-            f0 = h.channel_data.pulse.center_frequency;
+            %f0 = h.channel_data.pulse.center_frequency;
+          
+            [f0, bw] = tools.estimate_frequency(h.beamformed_data(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
             
+            %%
             f_start = 2*f0-f0;
-            f_stop = 2*f0+f0/2;
+            f_stop = 2*f0+f0;
             f_transition = f0/4;
             %f_transition = 1.5e6;
             F = [f_start f_start+f_transition f_stop f_stop+f_transition];
@@ -182,6 +185,7 @@ classdef delay_multiply_and_sum < process
             
             warning('If the result looks funky, you might need to tune the filter paramters of DMAS. Use the plot to check that everything is OK.')
             if 0 %Plot to check the filtering
+                %%
                 [freq_resp,f_ax]=freqz(b);
                 
                 freq_axis = linspace(-fs/2,fs/2,length(filtered_y_dmas_signed));
