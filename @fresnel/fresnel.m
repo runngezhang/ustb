@@ -1,4 +1,4 @@
-classdef fresnel
+classdef fresnel < handle
 %fresnel   fresnel definition
 %
 %   See also PULSE, BEAM, PHANTOM, PROBE
@@ -27,7 +27,7 @@ classdef fresnel
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.5';  % fresnel version
+        version='v1.0.6';  % fresnel version
     end
     
     %% constructor
@@ -75,6 +75,9 @@ classdef fresnel
             %% reference sound speed
             c0=h.phantom(1).sound_speed; % choose the first speed of sound as reference
             
+            %% minimum distance for including geometric dispersion
+            delta0=4*pi*0.1e-3;
+            
             %% time vector
             max_range=0;
             min_range=Inf;
@@ -90,7 +93,8 @@ classdef fresnel
 
                   
             % the frame loop
-            data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
+            h.data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
+            h.reverb=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
             tools.workbar();
             N=h.N_points*h.N_waves*h.N_frames;
             for n_f=1:h.N_frames
@@ -123,16 +127,28 @@ classdef fresnel
 
                         % directivity between probe and the point
                         directivity = sinc(k*h.probe.width/2/pi.*tan(theta)).*sinc(k*h.probe.height/2/pi.*tan(phi)./cos(theta));
+                        
                         % delay between probe and the point
                         propagation_delay = distance/current_phantom.sound_speed;
 
+                        % attenuation (absorption & geometrical dispersion)
+                        attenuation = 10.^(-current_phantom.alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)).*directivity.*delta0./(4*pi*distance);
+                        
                         % computing the transmit signal 
                         delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
-                        transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*directivity./(4*pi*distance)),1);  
+                        transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*attenuation),1);  
 
                         % computing the receive signal
                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
-                        data(:,:,n_w,n_f)=data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),10.^(-current_phantom.alpha*(distance/1e-2)*h.pulse.center_frequency).*directivity./(4*pi*distance)).';                      
+                        h.data(:,:,n_w,n_f)=h.data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),attenuation).';
+                        
+                        % computing first order reverberation
+%                         extra_distance = sqrt(sum((bsxfun(@minus,current_phantom.points([1:n_p-1 n_p+1:h.N_points],1:3),current_phantom.points(n_p,1:3))).^2,2));
+%                         extra_delay = extra_distance/current_phantom.sound_speed;
+%                         extra_attenuation= 10.^(-current_phantom.alpha*(extra_distance/1e-2)*(h.pulse.center_frequency/1e6)).*delta0./(4*pi*extra_distance);
+%                         for nnp=1:length(extra_distance)
+%                             h.reverb(:,:,n_w,n_f)=h.reverb(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time-extra_delay(nnp),'linear',0),attenuation.*extra_attenuation(nnp)).';
+%                         end
                     end                   
                 end
             end
@@ -147,7 +163,7 @@ classdef fresnel
             out_dataset.sampling_frequency=h.sampling_frequency();
             out_dataset.sound_speed=c0;
             out_dataset.initial_time=time_2w(1);
-            out_dataset.data=data;
+            out_dataset.data=h.data+h.reverb;
             out_dataset.PRF=h.PRF;
             
         end
