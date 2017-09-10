@@ -27,7 +27,7 @@ classdef fresnel < handle
     
     %% private properties
     properties  (Access = private)   
-        version='v1.0.6';  % fresnel version
+        version='v1.0.7';  % fresnel version
     end
     
     %% constructor
@@ -91,10 +91,19 @@ classdef fresnel < handle
             time_2w=(2*min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                                  % time vector [s]
             N_samples=numel(time_2w);                                                                              % number of time samples
 
+            % save the data into a CHANNEL_DATA structure
+            out_dataset=uff.channel_data();
+            out_dataset.probe=h.probe();
+            out_dataset.pulse=h.pulse();
+            out_dataset.phantom=h.phantom();
+            out_dataset.sequence=h.sequence();
+            out_dataset.sampling_frequency=h.sampling_frequency();
+            out_dataset.sound_speed=c0;
+            out_dataset.initial_time=time_2w(1);
+            out_dataset.data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
+            out_dataset.PRF=h.PRF;
                   
             % the frame loop
-            h.data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
-            h.reverb=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
             tools.workbar();
             N=h.N_points*h.N_waves*h.N_frames;
             for n_f=1:h.N_frames
@@ -140,7 +149,7 @@ classdef fresnel < handle
 
                         % computing the receive signal
                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
-                        h.data(:,:,n_w,n_f)=h.data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),attenuation).';
+                        out_dataset.data(:,:,n_w,n_f)=out_dataset.data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),attenuation).';
                         
                         % computing first order reverberation
 %                         extra_distance = sqrt(sum((bsxfun(@minus,current_phantom.points([1:n_p-1 n_p+1:h.N_points],1:3),current_phantom.points(n_p,1:3))).^2,2));
@@ -153,19 +162,6 @@ classdef fresnel < handle
                 end
             end
             tools.workbar(1);
-            
-            % save the data into a CHANNEL_DATA structure
-            out_dataset=uff.channel_data();
-            out_dataset.probe=h.probe();
-            out_dataset.pulse=h.pulse();
-            out_dataset.phantom=h.phantom();
-            out_dataset.sequence=h.sequence();
-            out_dataset.sampling_frequency=h.sampling_frequency();
-            out_dataset.sound_speed=c0;
-            out_dataset.initial_time=time_2w(1);
-            out_dataset.data=h.data+h.reverb;
-            out_dataset.PRF=h.PRF;
-            
         end
     end
     
