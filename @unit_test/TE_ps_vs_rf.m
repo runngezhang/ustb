@@ -20,7 +20,8 @@ function ok = TE_ps_vs_rf(h)
     load([local_path beamformed_data_filename]);    
         
     % PROBE
-    prb=probe(s.geom);
+    prb=probe();
+    prb.geometry = s.geom;
     
     % SEQUENCE
     seq=wave();
@@ -56,15 +57,15 @@ function ok = TE_ps_vs_rf(h)
     apo=apodization();
     apo.window=window.boxcar;
     apo.f_number=r.f_number;
-    apo.apex.distance=Inf;
+    apo.origo=uff.point('xyz',[0 0 -Inf]);
     
     % BEAMFORMER
     bmf=beamformer();
     bmf.channel_data=r_data;
     bmf.receive_apodization=apo;
     bmf.transmit_apodization=apo;
-    bmf.scan=linear_scan(r.x_axis,r.z_axis);
-        
+    bmf.scan=linear_scan('x_axis',r.x_axis,'z_axis',r.z_axis);
+         
     % beamforming
     b_data=bmf.go({process.das_matlab, process.coherent_compounding});
 

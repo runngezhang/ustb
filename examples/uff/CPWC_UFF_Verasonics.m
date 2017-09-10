@@ -31,18 +31,8 @@ tools.download(filename, url, local_path);
 % would be to check what is in there with the *uff.index* function 
 uff.index([local_path filename],'/',display);
 
-% 
-% We see there is a *beamformed_data* dataset with name _b_data_. Let us
-% load it and display it. 
-
-b_data=uff.beamformed_data();
-b_data.read([local_path filename],'/b_data');
-b_data.plot();
-
 %%
-%
-%
-% Let's read the channel data now,
+% Let's read the channel data,
     
 channel_data=uff.read_object([local_path filename],'/channel_data');
 

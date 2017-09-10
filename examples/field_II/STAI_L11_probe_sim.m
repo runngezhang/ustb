@@ -222,4 +222,4 @@ b_data.plot()
 %% Save UFF dataset
 % 
 % Finally, we save the data into a UFF file.
-channel_data.write('./FieldII_PSF_simulation.uff','channel_data');
+channel_data.write([ustb_path(),'/data/FieldII_PSF_simulation.uff'],'channel_data');

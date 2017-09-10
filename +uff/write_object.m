@@ -28,7 +28,7 @@ if nargin<5||isempty(verbose) verbose=true; end
 % check if path to file exists
 [pathstr,~] = fileparts(filename);
 if ~exist(pathstr,'file')
-    error(sprintf('UFF: The path %s does not exist.',pathstr));
+    error(sprintf('UFF: The path %s does not exist. If you want to save in current working directory use ./ in front of the filname.',pathstr));
 end
 
 % if file doesn't exist -> we write the current version

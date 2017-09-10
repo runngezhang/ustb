@@ -66,7 +66,7 @@ dmas.receive_apodization = bmf.receive_apodization;
 dmas.transmit_apodization = bmf.transmit_apodization;
 dmas.beamformed_data = b_data;
 dmas.channel_data = channel_data;
-dmas.scan = sca
+dmas.scan = sca;
 b_data_dmas = dmas.go();        % Launch beamformer
 b_data_dmas.plot(100,'DMAS');   % Display image
 
