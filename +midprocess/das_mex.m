@@ -1,34 +1,40 @@
-classdef delay_mex < process
-    %DELAY_MEX   Mex implementation of the Delay step of USTB general beamformer
-    %
-    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-    %
-    %   $Last updated: 2017/07/09$
+classdef das_mex < midprocess
+%DAS_MEX   Mex implementation of the Delay-and-Sum general beamformer
+%
+%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+%
+%   $Last updated: 2017/07/09$
     
     %% constructor
     methods (Access = public)
-        function h=delay_mex()
-            h.name='USTB Delay General Beamformer MEX';
+        function h=das_mex()
+            h.name='USTB General DAS Beamformer MEX';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.7';
+            h.version='v1.0.8';
         end
     end
     
     %% go method
     methods
-        function out_data=go(h)
+        function beamformed_data=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                beamformed_data = h.beamformed_data; 
+                return;
+            end
             
             % Check if mex is properly setup on this computer
             if numel(mex.getCompilerConfigurations()) == 0 %Then no c/c++ compiler is set up.
                 warning('No (c/c++)-compiler set up with MATLAB. Unable to use MEX, will default to MATLAB implementation.');
-                matlab_delay = process.das_matlab();
-                matlab_delay.channel_data = h.channel_data;
-                matlab_delay.scan = h.scan;
-                matlab_delay.transmit_apodization = h.transmit_apodization;
-                matlab_delay.receive_apodization = h.receive_apodization;
-                out_data = matlab_delay.go();
+                matlab_das = process.das_matlab();
+                matlab_das.channel_data = h.channel_data;
+                matlab_das.scan = h.scan;
+                matlab_das.transmit_apodization = h.transmit_apodization;
+                matlab_das.receive_apodization = h.receive_apodization;
+                h.beamformed_data = matlab_das.go();
             else % MEX is ok!
+                
                 % modulation frequency
                 w0=2*pi*h.channel_data.modulation_frequency;
                 
@@ -56,13 +62,11 @@ classdef delay_mex < process
                 end
                 
                 % create beamformed data class
-                out_data=uff.beamformed_data();
-                out_data.scan=h.scan;
+                h.beamformed_data=uff.beamformed_data();
+                h.beamformed_data.scan=h.scan;
                 N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
-                %out_data.sequence=h.channel_data.sequence;
-                
-                % auxiliary data
-                aux_data=zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames);
+                h.beamformed_data.data=zeros(N_pixels,1,numel(h.channel_data.sequence),h.channel_data.N_frames);
+                %out_data.sequence=h.channel_data.sequence; % not included by default
                 
                 % wave loop
                 tools.workbar();
@@ -121,17 +125,22 @@ classdef delay_mex < process
                     % factor
                     apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                     
-                    % delay
-                    aux_data(:,:,n_wave,:)=mex.delay_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);
+                    % das
+                    h.beamformed_data.data(:,1,n_wave,:)=mex.das_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);
                     
                     % assign phase according to 2 times the receive propagation distance
                     if(w0>eps)
-                        aux_data(:,:,n_wave,:)=bsxfun(@times,aux_data(:,:,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                        h.beamformed_data.data(:,1,n_wave,:)=bsxfun(@times,h.beamformed_data.data(:,1,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                     end
                 end
-                out_data.data = aux_data;
-                tools.workbar(1);
+                tools.workbar(1);                                
             end
+            
+            % pass a reference
+            beamformed_data=h.beamformed_data;
+                
+            % update hash
+            h.save_hash();
         end
     end
 end

@@ -1,4 +1,4 @@
-classdef short_lag_spatial_coherence < process
+classdef short_lag_spatial_coherence < postprocess
 % SHORT LAG SPATIAL COHERENCE (SLSC)
 % This process implements the SLSC algorithm as described in 
 % Lediju, M. A., Trahey, G. E., Byram, B. C., & Dahl, J. J. (2011). 
@@ -18,7 +18,7 @@ classdef short_lag_spatial_coherence < process
 % Please see the example under examples/advanced_beamforming/FI_UFF_short_lag_spatial_coherence
 % on how to use it.
 % 
-% $Last updated: 2017/08/17$
+% $Last updated: 2017/09/10$
     
     %% constructor
     methods (Access = public)
@@ -28,14 +28,20 @@ classdef short_lag_spatial_coherence < process
                           'Lediju Bell, M. A., Goswami, R., Kisslo, J. A., Dahl, J. J., & Trahey, G. E. (2013). Short-Lag Spatial Coherence (SLSC) Imaging of Cardiac Ultrasound Data: Initial Clinical Results. Ultrasound in Medicine & Biology, 39(10), 1861?1874. https://doi.org/10.1016/j.ultrasmedbio.2013.03.029'];
             h.implemented_by= 'Ole Marius Hoel Rindal <olemarius@olemarius.net>, Muyinatu A. Lediju Bell <mledijubell@jhu.edu>, Dongwoon Hyun <dhyun@stanford.edu>';
             h.version='v1.0.1';
+            
+            % initialization
+            h.receive_apodization=uff.apodization();  % APODIZATION class
+            h.transmit_apodization=uff.apodization(); % APODIZATION class
         end
     end
     
     %% Additional properties
     properties
+        receive_apodization                           % APODIZATION class
+        transmit_apodization                          % APODIZATION class
         active_element_criterium=0.16;                % value to decide whether an element is used or not
-        K_in_lambda
-        dimension
+        K_in_lambda;
+        dimension                                     % dimension class that specifies whether the process will run only on transmit, receive, or both.
         maxM
         slsc_values
     end
@@ -45,23 +51,46 @@ classdef short_lag_spatial_coherence < process
     end
     
     methods
-        function [out_data h]=go(h)
-            assert(~isempty(h.dimension),'Please select dimension to process, for MV transmit and receive is deinfed.');     
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output= h.output; 
+                return;
+            end
+            
+            % select default dimension
+            if isempty(h.dimension)
+                if h.input.N_channels>1 
+                    h.dimension=dimension.receive;
+                else
+                    h.dimension=dimension.transmit;
+                end
+            end
+            
+            % select default maxM
+            if isempty(h.maxM)
+                if h.dimension==dimension.receive
+                    h.maxM = round(0.3*h.input.N_channels);
+                else
+                    h.maxM = round(0.3*h.input.N_waves);
+                end
+            end
+            
+            % select default apodization
             assert(h.receive_apodization.window == uff.window.none, 'Please use uff.window.none on receive, thus no apodization, when using the SLSC beamformer.');
             if ~isempty(h.transmit_apodization)
                 assert(h.transmit_apodization.window == uff.window.none, 'Please use uff.window.none on transmit, thus no apodization, when using the SLSC beamformer.');
             end
             
-            
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
                
-            if isa(h.beamformed_data(1).scan,'uff.linear_scan')
-                N_axial_pixels = h.beamformed_data(1).scan.N_z_axis;
-                N_lateral_pixels =  h.beamformed_data(1).scan.N_x_axis;
-            elseif isa(h.beamformed_data(1).scan,'uff.sector_scan')
-                N_axial_pixels = h.beamformed_data(1).scan.N_depth_axis;
-                N_lateral_pixels = h.beamformed_data(1).scan.N_azimuth_axis;
+            if isa(h.input(1).scan,'uff.linear_scan')
+                N_axial_pixels = h.input(1).scan.N_z_axis;
+                N_lateral_pixels =  h.input(1).scan.N_x_axis;
+            elseif isa(h.input(1).scan,'uff.sector_scan')
+                N_axial_pixels = h.input(1).scan.N_depth_axis;
+                N_lateral_pixels = h.input(1).scan.N_azimuth_axis;
             else
                 error('Scan not defined');
             end
@@ -72,31 +101,37 @@ classdef short_lag_spatial_coherence < process
                     error('Both dimensions are not defined for SLSC. Consider using transmit or receive dimensions.');
                 case dimension.transmit
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,h.beamformed_data.N_channels,1,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        for n_channel = 1:h.beamformed_data.N_channels
-                            data_cube = reshape(h.beamformed_data.data(:,n_channel,:,n_frame),N_axial_pixels,N_lateral_pixels,h.beamformed_data.N_waves);
+                    aux_data=zeros(h.input.N_pixels,h.input.N_channels,1,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        for n_channel = 1:h.input.N_channels
+                            data_cube = reshape(h.input.data(:,n_channel,:,n_frame),N_axial_pixels,N_lateral_pixels,h.input.N_waves);
                             [image,slsc_values] = h.short_lag_spatial_coherence_implementation(data_cube);
                             aux_data(:,n_channel,:,n_frame) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                     h.slsc_values = permute(slsc_values,[1 3 2]);
                 case dimension.receive
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,1,h.beamformed_data.N_waves,h.beamformed_data.N_frames);
-                    for n_frames = 1:h.beamformed_data.N_frames
-                        for n_wave = 1:h.beamformed_data.N_waves
-                            data_cube = reshape(h.beamformed_data.data(:,:,n_wave,n_frames),N_axial_pixels,N_lateral_pixels,h.beamformed_data.N_channels);
+                    aux_data=zeros(h.input.N_pixels,1,h.input.N_waves,h.input.N_frames);
+                    for n_frames = 1:h.input.N_frames
+                        for n_wave = 1:h.input.N_waves
+                            data_cube = reshape(h.input.data(:,:,n_wave,n_frames),N_axial_pixels,N_lateral_pixels,h.input.N_channels);
                             [image,slsc_values] = h.short_lag_spatial_coherence_implementation(data_cube);
                             aux_data(:,1,n_wave,n_frames) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                     h.slsc_values = permute(slsc_values,[1 3 2]);
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
+            
+            % pass reference
+            output = h.output;
+            
+            % update hash
+            h.save_hash();
         end
         
         function [SLSC_img,slsc_values] = short_lag_spatial_coherence_implementation(h,data_cube)

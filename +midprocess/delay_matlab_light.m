@@ -1,25 +1,30 @@
-classdef das_matlab < process
-%DAS_MATLAB   Matlab implementation of the Delay-and-Sum general beamformed
+classdef delay_matlab_light < midprocess
+%DELAY_MATLAB   Light matlab implementation of the Delay step of general beamformed
 %
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/07/09$
+%   $Last updated: 2017/09/10$
 
     %% constructor
     methods (Access = public)
-        function h=das_matlab()
-            h.name='USTB General DAS Beamformer MATLAB';   
+        function h=delay_matlab_light()
+            h.name='Delay USTB General Beamformer MATLAB';   
             h.reference= 'www.ustb.no';                
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
-            h.version='v1.0.7';          
+            h.version='v1.0.4';
         end
     end
-    
-    %% go method
-    methods
-        function out_data=go(h)
 
+    methods
+        function beamformed_data=go(h)
+
+            % check if we can skip calculation
+            if h.check_hash()
+                beamformed_data= h.beamformed_data; 
+                return;
+            end
+            
             % modulation frequency
             w0=2*pi*h.channel_data.modulation_frequency;
 
@@ -34,7 +39,7 @@ classdef das_matlab < process
             ym=bsxfun(@minus,h.channel_data.probe.y.',h.scan(1).y);
             zm=bsxfun(@minus,h.channel_data.probe.z.',h.scan(1).z);
             RF=sqrt(xm.^2+ym.^2+zm.^2);
-
+            
             % precalculating hilbert (if needed)
             data=h.channel_data.data;
             if ~(w0>eps)
@@ -42,14 +47,14 @@ classdef das_matlab < process
             end
             
             % create beamformed data class
-            out_data=uff.beamformed_data();
-            out_data.scan=h.scan;
+            h.beamformed_data=uff.beamformed_data();
+            h.beamformed_data.scan=h.scan;
             N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
-            % out_data.sequence=h.channel_data.sequence; % not included by default
-                           
+            h.beamformed_data.sequence=h.channel_data.sequence;
+
             % auxiliary data
-            aux_data=zeros(N_pixels,1,numel(h.channel_data.sequence),h.channel_data.N_frames);
- 
+            aux_data= (zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames,'single'));
+            
             % wave loop
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
@@ -68,7 +73,7 @@ classdef das_matlab < process
                     rx_apo=h.receive_apodization.data;
                     rx_propagation_distance=h.receive_apodization.propagation_distance;
                 end 
-                
+
                 % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
                 % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
                 h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
@@ -80,17 +85,12 @@ classdef das_matlab < process
                     % point sources
                     TF=(-1).^(current_scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-current_scan.x).^2+(h.channel_data.sequence(n_wave).source.y-current_scan.y).^2+(h.channel_data.sequence(n_wave).source.z-current_scan.z).^2);
                     % add distance from source to origin
-                    %OLD VERSION with rounding problem: TF=TF+sign(cos(h.channel_data.sequence(n_wave).source.azimuth)).*h.channel_data.sequence(n_wave).source.distance;
-                    if (h.channel_data.sequence(n_wave).source.z<-1e-3)
-                        TF=TF-h.channel_data.sequence(n_wave).source.distance;
-                    else
-                        TF=TF+h.channel_data.sequence(n_wave).source.distance;                        
-                    end
+                    TF=TF+sign(cos(h.channel_data.sequence(n_wave).source.azimuth)).*h.channel_data.sequence(n_wave).source.distance;
                 else
                     % plane waves
                     TF=current_scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+current_scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                 end
-
+                
                 % calculate receive delay for multiple scan
                 if numel(h.scan)>1
                     xm=bsxfun(@minus,h.channel_data.probe.x.',current_scan.x);
@@ -106,7 +106,10 @@ classdef das_matlab < process
                     if mod(n,round(N/100))==1
                         tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
                     end
-                    
+                   
+                    % create beamformed data class
+                    %bb_data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
+
                     % total delay
                     delay=(RF(:,n_rx)+TF)/h.channel_data.sound_speed;
 
@@ -120,15 +123,24 @@ classdef das_matlab < process
                         end
 
                         % beamformed signal
-                        aux_data(:,1,n_wave,n_frame)=aux_data(:,1,n_wave,n_frame)+tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
+                        aux_data(:,n_rx,n_wave,n_frame)=tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
                     end
+                    
+                    % assign phase according to 2 times the receive propagation distance
+                    if(w0>eps)
+                        aux_data(:,n_rx,n_wave,:)=bsxfun(@times,aux_data(:,n_rx,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                    end
+                    
                 end
-
-                % assign phase according to 2 times the receive propagation distance
-                aux_data(:,1,n_wave,:)=bsxfun(@times,aux_data(:,1,n_wave,:),exp(-j*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
             end
-            out_data.data=aux_data;
+            h.beamformed_data.data = aux_data;
             tools.workbar(1);
+            
+            % pass reference
+            beamformed_data = h.beamformed_data;
+            
+            % update hash
+            h.save_hash();
         end
     end
 end
