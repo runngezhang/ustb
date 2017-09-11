@@ -206,6 +206,11 @@ elseif nArg ~= 1  % Bad number of arguments:
    Error_L('BadNInput', '1 or 2 inputs required.');
 end
 
+% hack: Crop too large values
+if numel(Data)>1e6
+    Data=Data(1:1e6);
+end
+
 % Create the engine: -----------------------------------------------------------
 try
    Engine = java.security.MessageDigest.getInstance(Method);
