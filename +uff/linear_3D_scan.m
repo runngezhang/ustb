@@ -19,7 +19,7 @@ classdef linear_3D_scan < uff.scan
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %   $Date: 2017/06/18$
 
-    properties  (SetAccess = public)
+    properties  (Access = public)
         radial_axis         % Vector containing the coordinates in the radial direction axis [m]
         axial_axis          % Vector containing the coordinates in the axial direction axis [m]
         roll                % Angle between the radial axis and the x-axis [rad]

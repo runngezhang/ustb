@@ -7,7 +7,7 @@ classdef wave < uff
 %   $Date: 2017/02/22 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         probe            % PROBE class
         apodization      % APODIZATION class
         source           % POINT class

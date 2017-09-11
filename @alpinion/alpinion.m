@@ -4,7 +4,7 @@ classdef alpinion < handle
     %   authors: Ole Marius Hoel Rindal (olemarius@olemarius.net)
     %   $Date: 2017/04/05$
     
-    properties (SetAccess = public)
+    properties (Access = public)
         data_folder                    %Name on the folder with Alpinion data
     end
     

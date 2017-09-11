@@ -17,7 +17,7 @@ classdef linear_scan < uff.scan
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %   $Date: 2017/06/18 $
 
-    properties  (SetAccess = public)
+    properties  (Access = public)
         x_axis           % Vector containing the x coordinates of the x - axis [m]
         z_axis           % Vector containing the z coordinates of the z - axis [m]
     end

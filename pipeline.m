@@ -9,7 +9,7 @@ classdef pipeline < process
 %   $Date: 2017/03/10$
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         channel_data         % CHANNEL_DATA class
         receive_apodization  % APODIZATION class
         transmit_apodization % APODIZATION class
@@ -17,7 +17,7 @@ classdef pipeline < process
     end
     
     %% optional properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         pulse                % PULSE class
     end
     

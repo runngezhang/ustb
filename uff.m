@@ -8,7 +8,7 @@ classdef uff < handle
     %   $Last updated: 2017/08/07$
     
     %% Logistics parameters
-    properties  (SetAccess = public)
+    properties  (Access = public)
         name={}                         % name of the dataset
         reference={}                    % reference to the publication where it was used/acquired
         author={}                       % contact of the authors
@@ -16,7 +16,7 @@ classdef uff < handle
         info={}                         % other information
     end
     
-        %% constructor
+    %% constructor
     methods (Access = public)
         function h=uff(varargin)
             %UFF   Constructor of UFF class
@@ -82,7 +82,7 @@ classdef uff < handle
         end
         
         function out = hash(h)
-            %% HASH Gives hash of the whole uff class
+            %% HASH Gives hash for all the non-dependent & public properties 
             
             % loop over all non-dependent & public properties
             str=[];
@@ -92,7 +92,15 @@ classdef uff < handle
                 mp = findprop(h,property_name);
                 if strcmp(mp.GetAccess,'public')&&~mp.Dependent
                     %fprintf(1,'%s -> %s\n',property_name,tools.hash(h.(property_name)));
-                    str=[str;tools.hash(h.(property_name))];
+                    if isa(h.(property_name),'uff')
+                        for ne=1:numel(h.(property_name))
+                            str = [ str; h.(property_name)(ne).hash()];
+                        end
+                    elseif isa(h.(property_name),'uff.window')
+                            str=[str;tools.hash(char(h.(property_name)))];
+                    else
+                        str=[str;tools.hash(h.(property_name))];
+                    end
                 end
             end
             

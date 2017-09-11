@@ -7,7 +7,7 @@ classdef phantom
 %   $Date: 2017/02/22 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         points           % matrix of point scaterers [x y z Gamma] - [m m m unitless]
         time             % time [s]
         sound_speed      % medium sound speed [m/s]

@@ -7,7 +7,7 @@ classdef fresnel < handle
 %   $Date: 2017/02/24 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         phantom             % phantom class
         pulse               % pulse class
         probe               % probe class

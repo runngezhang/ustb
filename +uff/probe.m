@@ -22,7 +22,7 @@ classdef probe < uff
     %   $Date: 2017/06/09 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         origo            % uff.point class location of the probe respect to origin of coordinates
         geometry         % matrix with attitude of rectangular elements [x y z theta phi width height] - [m m m rad rad m m]
     end

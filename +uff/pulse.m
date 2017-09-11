@@ -7,7 +7,7 @@ classdef pulse
 %   $Date: 2016/09/01 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         center_frequency           % center frequency [Hz]
         fractional_bandwidth       % fractional bandwidth [unitless]
         phase                      % initial phase [rad]

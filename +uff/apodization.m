@@ -23,16 +23,16 @@ classdef apodization < uff
     %   $Last updated: 2017/06/09$
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         probe                           % UFF.PROBE class (needed for transmit & receive apodization)
         focus                           % UFF.SCAN class (needed for transmit, receive & synthetic apodization)       
         sequence                        % collection of UFF.WAVE classes (needed for synthetic apodizaton)
-        
-        window    = uff.window.none     % UFF.WINDOW class, default uff.window.none
+
         f_number  = [1 1]               % F-number [Fx Fy] [unitless unitless] 
+        window    = uff.window.none     % UFF.WINDOW class, default uff.window.none
         
-        origo     = uff.point()         % POINT class
-        tilt      = [0 0]               % tilt angle [azimuth elevation] [rad rad] 
+        origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
+        tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
     end
     
     %% dependent properties
