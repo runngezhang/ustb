@@ -44,26 +44,20 @@ classdef coherence_factor < postprocess
             end
            
             % check if we have information about apodization
-            rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
-            tx_apodization=ones(h.input.N_pixels,h.input.N_waves);
-            if ~isempty(h.transmit_apodization)&~isempty(h.receive_apodization)&~isempty(h.channel_data.probe)
-                % receive
-                if h.input.N_channels>1
-                    h.receive_apodization.focus=h.input.scan;
-                    h.receive_apodization.probe=h.channel_data.probe;
-                    rx_apodization=h.receive_apodization.data();                
-                end
-                
-                % transmit
-                if h.input.N_waves>1
-                    h.transmit_apodization.sequence = h.channel_data.sequence;
-                    h.transmit_apodization.focus=h.input.scan;
-                    h.transmit_apodization.probe=h.channel_data.probe;
-                    tx_apodization=h.transmit_apodization.data();
-                end
+            if isempty(h.receive_apodization)||(h.receive_apodization.window==uff.window.none)
+                rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
             else
-                warning('Missing probe and apodization data; full aperture is assumed.');
+                h.receive_apodization.focus = h.input.scan;
+                rx_apodization=h.receive_apodization.data;
             end
+            if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)
+                tx_apodization=ones(h.input.N_pixels,h.input.N_waves);
+            else
+                h.transmit_apodization.focus = h.input.scan;
+                tx_apodization=h.transmit_apodization.data;
+            end
+            
+            % building a apodization matrix
             tx_apodization=reshape(tx_apodization,[h.input.N_pixels, 1, h.input.N_waves]);
             apodization_matrix=bsxfun(@times,tx_apodization,rx_apodization);
             active_elements=double(apodization_matrix>h.active_element_criterium);
@@ -100,6 +94,20 @@ classdef coherence_factor < postprocess
             h.save_hash();
         end   
     end
+    
+    %% set methods
+    methods
+        function h=set.receive_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.receive_apodization=in_apodization;
+        end
+        
+        function h=set.transmit_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.transmit_apodization=in_apodization;
+        end
+    end
+
 end
 
 

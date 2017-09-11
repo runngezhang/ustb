@@ -30,8 +30,8 @@ classdef phase_coherence_factor < postprocess
     properties
         gamma=1;                                      % mixing ratio
         sigma_0=pi/sqrt(3);                           % reference phase value
-        rx_apodization                                % apodization matrix used on receive
-        tx_apodization                                % apodization matrix used on transmit
+        receive_apodization                           % APODIZATION class
+        transmit_apodization                          % APODIZATION class
         FCA                                           % BEAMFORMED_DATA class with the computed absolute phase coherence factor
         FCC                                           % BEAMFORMED_DATA class with the computed complex phase coherence factor
     end
@@ -49,15 +49,22 @@ classdef phase_coherence_factor < postprocess
             end            
            
             % check if we have information about apodization
-            if isempty(h.rx_apodization)
-               h.rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
+            if isempty(h.receive_apodization)||(h.receive_apodization.window==uff.window.none)
+                rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
+            else
+                h.receive_apodization.focus = h.input.scan;
+                rx_apodization=h.receive_apodization.data;
             end
-            if isempty(h.tx_apodization)
-               h.tx_apodization=ones(h.input.N_pixels,h.input.N_waves);
+            if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)
+                tx_apodization=ones(h.input.N_pixels,h.input.N_waves);
+            else
+                h.transmit_apodization.focus = h.input.scan;
+                tx_apodization=h.transmit_apodization.data;
             end
             
-            h.tx_apodization=reshape(h.tx_apodization,[size(h.tx_apodization,1), 1, size(h.tx_apodization,2)]);
-            apodization_matrix=bsxfun(@times,h.tx_apodization,h.rx_apodization);
+            % building a apodization matrix
+            tx_apodization=reshape(tx_apodization,[h.input.N_pixels, 1, h.input.N_waves]);
+            apodization_matrix=bsxfun(@times,tx_apodization,rx_apodization);
 
             % compute signal phase 
             signal_phase = angle(h.input.data);
@@ -79,7 +86,7 @@ classdef phase_coherence_factor < postprocess
                     % collapsing 2nd and 3rd dimmension into 2nd dimension
                     signal_phase=reshape(signal_phase,[h.input.N_pixels, h.input.N_channels*h.input.N_waves 1 h.input.N_frames]);
                     auxiliary_phase=reshape(auxiliary_phase,[h.input.N_pixels, h.input.N_channels*h.input.N_waves 1 h.input.N_frames]);
-                    apodization_matrix=reshape(apodization_matrix,[h.input.N_pixels, h.input.N_channels*size(h.tx_apodization,3)]);
+                    apodization_matrix=reshape(apodization_matrix,[h.input.N_pixels, h.input.N_channels*h.input.N_waves]);
 
                     std_phase=tools.weigthed_std(signal_phase,apodization_matrix,2);
                     std_auxiliary=tools.weigthed_std(auxiliary_phase,apodization_matrix,2);
@@ -118,6 +125,20 @@ classdef phase_coherence_factor < postprocess
             h.save_hash();
         end   
     end
+    
+   %% set methods
+    methods
+        function h=set.receive_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.receive_apodization=in_apodization;
+        end
+        
+        function h=set.transmit_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.transmit_apodization=in_apodization;
+        end
+    end
+
 end
 
 

@@ -126,66 +126,62 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-sca=uff.linear_scan();
-sca.x_axis=linspace(-3e-3,3e-3,200).';
-sca.z_axis=linspace(39e-3,43e-3,200).';
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan();
+scan.x_axis=linspace(-3e-3,3e-3,200).';
+scan.z_axis=linspace(39e-3,43e-3,200).';
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Midprocess
 %
-% With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% We define a midprocess.delay_mex to delay the signal.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
-
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo.distance=Inf;
-
-%We set this to none since we want to examine the low quality PW images
-bmf.transmit_apodization.window=uff.window.none; 
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo.distance=Inf;
-
-%% delay beamforming
-b_data = bmf.go({process.delay_matlab()});
+mid=midprocess.delay_mex();
+mid.channel_data=channel_data;
+mid.scan=scan;
+mid.receive_apodization.window=uff.window.boxcar;
+mid.receive_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.none; %We set this to none since we want to examine the low quality PW images
+b_data = mid.go();
 
 %% CF on both transmit and receive
-proc_cf=process.coherence_factor();
-proc_cf.beamformed_data=b_data;
-proc_cf.channel_data=bmf.channel_data;
-proc_cf.transmit_apodization=bmf.transmit_apodization;
-proc_cf.receive_apodization=bmf.receive_apodization;
+proc_cf=postprocess.coherence_factor();
+proc_cf.input=b_data;
+proc_cf.transmit_apodization=mid.transmit_apodization;
+proc_cf.receive_apodization=mid.receive_apodization;
 bmf_data_cf = proc_cf.go();
-bmf_data_cf.plot([],'CF both dimensions')
+
+figure;
+ax1=subplot(1,2,1);
+ax2=subplot(1,2,2);
+bmf_data_cf.plot(ax1,'CF image')
+proc_cf.CF.plot(ax2,'CF factor',60,'none')
 
 %% PCF on both transmit and receive
-proc_pcf=process.phase_coherence_factor();
-proc_pcf.beamformed_data=b_data;
-proc_pcf.channel_data=bmf.channel_data;
-proc_pcf.transmit_apodization=bmf.transmit_apodization;
-proc_pcf.receive_apodization=bmf.receive_apodization;
+proc_pcf=postprocess.phase_coherence_factor();
+proc_pcf.input=b_data;
+proc_pcf.transmit_apodization=mid.transmit_apodization;
+proc_pcf.receive_apodization=mid.receive_apodization;
 bmf_data_pcf = proc_pcf.go();
-bmf_data_pcf.plot([],'PCF both dimensions')
+
+figure;
+ax1=subplot(1,2,1);
+ax2=subplot(1,2,2);
+bmf_data_pcf.plot(ax1,'PCF image')
+proc_pcf.FCA.plot(ax2,'PCF factor',60,'none')
 
 %% CF "receive" dimension resulting in individual CF PW images
-rx_cf=process.coherence_factor();
-rx_cf.beamformed_data=b_data;
-rx_cf.channel_data=bmf.channel_data;
-rx_cf.transmit_apodization=bmf.transmit_apodization;
-rx_cf.receive_apodization=bmf.receive_apodization;
+rx_cf=postprocess.coherence_factor();
+rx_cf.input=b_data;
+rx_cf.transmit_apodization=mid.transmit_apodization;
+rx_cf.receive_apodization=mid.receive_apodization;
 rx_cf.dimension=dimension.receive;
 bmf_data_rx_cf=rx_cf.go();
 
 %% PCF "receive" dimension resulting in individual CF PW images
-rx_pcf=process.phase_coherence_factor();
-rx_pcf.beamformed_data=b_data;
-rx_pcf.channel_data=bmf.channel_data;
-rx_pcf.transmit_apodization=bmf.transmit_apodization;
-rx_pcf.receive_apodization=bmf.receive_apodization;
+rx_pcf=postprocess.phase_coherence_factor();
+rx_pcf.input=b_data;
+rx_pcf.transmit_apodization=mid.transmit_apodization;
+rx_pcf.receive_apodization=mid.receive_apodization;
 rx_pcf.dimension=dimension.receive;
 bmf_data_rx_pcf=rx_pcf.go();
 
@@ -205,11 +201,10 @@ bmf_data_rx_pcf.plot(ax,['PCF on PW 5'],[],[],[1 4]);
 set(gcf,'Position',[ 50 50 1232 592]);
 
 %% "transmit" dimension CF
-proc_cf=process.coherence_factor();
-proc_cf.beamformed_data=b_data;
-proc_cf.channel_data=bmf.channel_data;
-proc_cf.transmit_apodization=bmf.transmit_apodization;
-proc_cf.receive_apodization=bmf.receive_apodization;
+proc_cf=postprocess.coherence_factor();
+proc_cf.input=b_data;
+proc_cf.transmit_apodization=mid.transmit_apodization;
+proc_cf.receive_apodization=mid.receive_apodization;
 proc_cf.dimension=dimension.transmit;
 cf_data_tx=proc_cf.go();
 
@@ -223,11 +218,10 @@ cf_data_tx.plot(ax,['CF on EL 85'],[],[],[85 1]);
 set(gcf,'Position',[ 50 150 1232 300]);
 
 %% "transmit" dimension PCF
-proc_pcf=process.phase_coherence_factor();
-proc_pcf.beamformed_data=b_data;
-proc_pcf.channel_data=bmf.channel_data;
-proc_pcf.transmit_apodization=bmf.transmit_apodization;
-proc_pcf.receive_apodization=bmf.receive_apodization;
+proc_pcf=postprocess.phase_coherence_factor();
+proc_pcf.input=b_data;
+proc_pcf.transmit_apodization=mid.transmit_apodization;
+proc_pcf.receive_apodization=mid.receive_apodization;
 proc_pcf.dimension=dimension.transmit;
 pcf_data_tx=proc_pcf.go();
 

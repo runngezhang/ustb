@@ -128,19 +128,17 @@ channel_data.data = STA*10^29;
 %% SCAN
 scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e-3,20e-3,256).');
 
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
-bmf.transmit_apodization.window=uff.window.boxcar;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
+pipe.receive_apodization.window=uff.window.boxcar;
+pipe.receive_apodization.f_number=1.7;
+pipe.transmit_apodization.window=uff.window.boxcar;
+pipe.transmit_apodization.f_number=1.7;
 
 % Delay and sum on receive, then coherent compounding
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 % Display image
 b_data.plot()
 

@@ -106,42 +106,31 @@ channel_data=sim.go();
 % which is defined with just two axes. *scan* too has a useful *plot*
 % method it can call.
 
-sca=uff.linear_scan();
-sca.x_axis=linspace(-3e-3,3e-3,200).';
-sca.z_axis=linspace(39e-3,43e-3,200).';
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan();
+scan.x_axis=linspace(-3e-3,3e-3,200).';
+scan.z_axis=linspace(39e-3,43e-3,200).';
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Midprocess
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+mid=midprocess.das_matlab();
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
-
-% Setting transmit apodization to "none" since we want to look at the
-% individual low quality PW's
-bmf.transmit_apodization.window=uff.window.none;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.none; % Setting transmit apodization to "none" since we want to look at the individual low quality PW's
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
+% The *midprocess* structure allows you to implement different beamformers. 
+% It returns yet another *UFF* structure: *beamformed_data*.
 
-% To achieve the goal of this example, we only use delay-and-sum (
-% implemented in the *das_matlab()* process) and not coherent compounding
-% as we want to output the low quality PW images each formed from only one
-% plane wave transmission.
-
-b_data=bmf.go({process.das_matlab()});
+b_data=mid.go();
 
 %%
 % Finally, display each individual low quality plane wave image. Fin!
