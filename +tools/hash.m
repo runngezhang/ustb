@@ -207,8 +207,10 @@ elseif nArg ~= 1  % Bad number of arguments:
 end
 
 % hack: Crop too large values
-if numel(Data)>1e6
-    Data=Data(1:1e6);
+NN=numel(Data);
+if NN>1e6
+    delta=floor(NN/1000);
+    Data=Data(1:delta:NN);
 end
 
 % Create the engine: -----------------------------------------------------------
