@@ -1,38 +1,43 @@
 classdef delay_matlab_light < midprocess
-%DELAY_MATLAB   Light matlab implementation of the Delay step of general beamformed
-%
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%            Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%
-%   $Last updated: 2017/09/10$
-
+    %DELAY_MATLAB   Light matlab implementation of the Delay step of general beamformed
+    %
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
+    %
+    %   $Last updated: 2017/09/12$
+    
     %% constructor
     methods (Access = public)
         function h=delay_matlab_light()
-            h.name='Delay USTB General Beamformer MATLAB';   
-            h.reference= 'www.ustb.no';                
-            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};    
-            h.version='v1.0.4';
+            h.name='Delay USTB General Beamformer MATLAB';
+            h.reference= 'www.ustb.no';
+            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
+            h.version='v1.0.5';
         end
     end
-
+    
     methods
         function beamformed_data=go(h)
-
+            
             % check if we can skip calculation
             if h.check_hash()
-                beamformed_data= h.beamformed_data; 
+                beamformed_data= h.beamformed_data;
                 return;
             end
             
             % modulation frequency
             w0=2*pi*h.channel_data.modulation_frequency;
-
+            
             % precalculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
             h.receive_apodization.focus=h.scan(1);
             rx_apo=h.receive_apodization.data;
             rx_propagation_distance=h.receive_apodization.propagation_distance;
+            
+            % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
+            h.transmit_apodization.sequence=h.channel_data.sequence;
+            h.transmit_apodization.focus=h.scan(1);
+            tx_apodization=h.transmit_apodization.data;
             
             % precalculate receive delay
             xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan(1).x);
@@ -51,7 +56,7 @@ classdef delay_matlab_light < midprocess
             h.beamformed_data.scan=h.scan;
             N_pixels = 0; for n=1:length(h.scan) N_pixels = max([N_pixels h.scan(n).N_pixels]); end
             h.beamformed_data.sequence=h.channel_data.sequence;
-
+            
             % auxiliary data
             aux_data= (zeros(N_pixels,h.channel_data.N_channels,numel(h.channel_data.sequence),h.channel_data.N_frames,'single'));
             
@@ -59,27 +64,30 @@ classdef delay_matlab_light < midprocess
             tools.workbar();
             N=numel(h.channel_data.sequence)*h.channel_data.N_elements;
             for n_wave=1:numel(h.channel_data.sequence)
-
+                
                 % support multiple or single scans with the same code
                 if numel(h.scan)==1
                     current_scan=h.scan;
                 else
                     current_scan=h.scan(n_wave);
                 end
-
+                
                 % calculate receive apodization for multiple scan
                 if numel(h.scan)>1
                     h.receive_apodization.focus=current_scan;
                     rx_apo=h.receive_apodization.data;
                     rx_propagation_distance=h.receive_apodization.propagation_distance;
-                end 
-
-                % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
-                % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
-                h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
-                h.transmit_apodization.focus=current_scan;
-                tx_apo=h.transmit_apodization.data;
-
+                end
+                
+                % calculate transmit apodization for multiple scan
+                if numel(h.scan)>1
+                    h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
+                    h.transmit_apodization.focus=current_scan;
+                    tx_apo=h.transmit_apodization.data;
+                else
+                    tx_apo=tx_apodization(:,n_wave);
+                end
+                
                 % transmit delay
                 if ~isinf(h.channel_data.sequence(n_wave).source.distance)
                     % point sources
@@ -106,22 +114,22 @@ classdef delay_matlab_light < midprocess
                     if mod(n,round(N/100))==1
                         tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
                     end
-                   
+                    
                     % create beamformed data class
                     %bb_data=zeros(current_scan.N_pixels,h.channel_data.N_frames);
-
+                    
                     % total delay
                     delay=(RF(:,n_rx)+TF)/h.channel_data.sound_speed;
-
+                    
                     for n_frame=1:h.channel_data.N_frames
-
+                        
                         % phase correction factor
                         if(w0>eps)
                             phase_shift=exp(1i.*w0*delay);
                         else
                             phase_shift=1;
                         end
-
+                        
                         % beamformed signal
                         aux_data(:,n_rx,n_wave,n_frame)=tx_apo.*rx_apo(:,n_rx).*phase_shift.*interp1(h.channel_data.time,data(:,n_rx,n_wave,n_frame),delay,'linear',0);
                     end

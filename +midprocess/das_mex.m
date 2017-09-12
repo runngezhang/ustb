@@ -1,9 +1,9 @@
 classdef das_mex < midprocess
-%DAS_MEX   Mex implementation of the Delay-and-Sum general beamformer
-%
-%   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%
-%   $Last updated: 2017/07/09$
+    %DAS_MEX   Mex implementation of the Delay-and-Sum general beamformer
+    %
+    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %
+    %   $Last updated: 2017/09/12$
     
     %% constructor
     methods (Access = public)
@@ -11,7 +11,7 @@ classdef das_mex < midprocess
             h.name='USTB General DAS Beamformer MEX';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.8';
+            h.version='v1.0.9';
         end
     end
     
@@ -20,7 +20,7 @@ classdef das_mex < midprocess
         function beamformed_data=go(h)
             % check if we can skip calculation
             if h.check_hash()
-                beamformed_data = h.beamformed_data; 
+                beamformed_data = h.beamformed_data;
                 return;
             end
             
@@ -48,6 +48,11 @@ classdef das_mex < midprocess
                 h.receive_apodization.focus=h.scan(1);
                 rx_apo=h.receive_apodization.data;
                 rx_propagation_distance=h.receive_apodization.propagation_distance;
+                
+                % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
+                h.transmit_apodization.sequence=h.channel_data.sequence;
+                h.transmit_apodization.focus=h.scan(1);
+                tx_apodization=h.transmit_apodization.data;
                 
                 % precalculate receive delay
                 xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan(1).x);
@@ -89,11 +94,14 @@ classdef das_mex < midprocess
                         rx_propagation_distance=h.receive_apodization.propagation_distance;
                     end
                     
-                    % precalculate transmit apodization according to 10.1109/TUFFC.2015.007183
-                    % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
-                    h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
-                    h.transmit_apodization.focus=current_scan;
-                    tx_apo=h.transmit_apodization.data;
+                    % calculate transmit apodization for multiple scan
+                    if numel(h.scan)>1
+                        h.transmit_apodization.sequence=h.channel_data.sequence(n_wave);
+                        h.transmit_apodization.focus=current_scan;
+                        tx_apo=h.transmit_apodization.data;
+                    else
+                        tx_apo=tx_apodization(:,n_wave);
+                    end
                     
                     % transmit delay
                     if ~isinf(h.channel_data.sequence(n_wave).source.distance)
@@ -104,7 +112,7 @@ classdef das_mex < midprocess
                         if (h.channel_data.sequence(n_wave).source.z<-1e-3)
                             TF=TF-h.channel_data.sequence(n_wave).source.distance;
                         else
-                            TF=TF+h.channel_data.sequence(n_wave).source.distance;                        
+                            TF=TF+h.channel_data.sequence(n_wave).source.distance;
                         end
                     else
                         % plane waves
@@ -133,12 +141,15 @@ classdef das_mex < midprocess
                         h.beamformed_data.data(:,1,n_wave,:)=bsxfun(@times,h.beamformed_data.data(:,1,n_wave,:),exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                     end
                 end
-                tools.workbar(1);                                
+                tools.workbar(1);
             end
+            
+            % adding additional information
+            h.beamformed_data.sequence = h.channel_data.sequence;
             
             % pass a reference
             beamformed_data=h.beamformed_data;
-                
+            
             % update hash
             h.save_hash();
         end
