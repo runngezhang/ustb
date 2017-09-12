@@ -44,6 +44,11 @@ classdef apodization < uff
         N_elements                  % number of elements (real or synthetic)
     end
     
+    %% private properties
+    properties (Access = private)
+        data_backup
+    end
+    
     %% constructor
     methods (Access = public)
         function h=apodization(varargin)
@@ -103,6 +108,11 @@ classdef apodization < uff
     %% get method
     methods
         function value=get.data(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                value = h.data_backup; 
+                return;
+            end
            
             % checking we have all we need
             if isempty(h.focus)
@@ -114,67 +124,69 @@ classdef apodization < uff
             
             % NONE APODIZATION
             if(h.window==uff.window.none)
-                value=ones(h.focus.N_pixels,h.N_elements);
-                return;
-            end
-            
+                h.data_backup=ones(h.focus.N_pixels,h.N_elements);
+            elseif (h.window==uff.window.sta)
             % STA APODIZATION (just the element closest to origo)
-            if (h.window==uff.window.sta)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
                 dist=sqrt((h.probe.x-h.origo.x).^2+(h.probe.y-h.origo.y).^2+(h.probe.z-h.origo.z).^2);
-                value=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
-                return;
-            end
-            
-            % compute lateral distance 
-            x_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,1),h.origin(:,1)));
-            y_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,2),h.origin(:,2)));
-            
-            % computing aperture
-            Aperture_x=(abs(h.focus.z)./h.f_number(1))*ones(1,h.N_elements);
-            Aperture_y=(abs(h.focus.z)./h.f_number(2))*ones(1,h.N_elements);
+                h.data_backup=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
+            else
+                % compute lateral distance 
+                x_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,1),h.origin(:,1)));
+                y_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,2),h.origin(:,2)));
 
-            % SWITCH
-            switch(h.window)
-                % BOXCAR/FLAT/RECTANGULAR
-                case uff.window.boxcar
-                    value=h.rectangular(x_dist,Aperture_x).*h.rectangular(y_dist,Aperture_y);
-                % HANNING
-                case uff.window.hanning
-                    value=h.hanning(x_dist,Aperture_x).*h.hanning(y_dist,Aperture_y);
-                % HAMMING
-                case uff.window.hamming
-                    value=h.hamming(x_dist,Aperture_x).*h.hamming(y_dist,Aperture_y);
-                % TUKEY25        
-                case uff.window.tukey25
-                    roll=0.25;
-                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
-                % TUKEY50        
-                case uff.window.tukey50
-                    roll=0.50;
-                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
-                % TUKEY75        
-                case uff.window.tukey75
-                    roll=0.75;
-                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
-                % TUKEY80        
-                case uff.window.tukey80
-                    roll=0.80;
-                    value=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
-                otherwise
-                    error('Unknown apodization type!');
+                % computing aperture
+                Aperture_x=(abs(h.focus.z)./h.f_number(1))*ones(1,h.N_elements);
+                Aperture_y=(abs(h.focus.z)./h.f_number(2))*ones(1,h.N_elements);
+
+                % SWITCH
+                switch(h.window)
+                    % BOXCAR/FLAT/RECTANGULAR
+                    case uff.window.boxcar
+                        h.data_backup=h.rectangular(x_dist,Aperture_x).*h.rectangular(y_dist,Aperture_y);
+                    % HANNING
+                    case uff.window.hanning
+                        h.data_backup=h.hanning(x_dist,Aperture_x).*h.hanning(y_dist,Aperture_y);
+                    % HAMMING
+                    case uff.window.hamming
+                        h.data_backup=h.hamming(x_dist,Aperture_x).*h.hamming(y_dist,Aperture_y);
+                    % TUKEY25        
+                    case uff.window.tukey25
+                        roll=0.25;
+                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                    % TUKEY50        
+                    case uff.window.tukey50
+                        roll=0.50;
+                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                    % TUKEY75        
+                    case uff.window.tukey75
+                        roll=0.75;
+                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                    % TUKEY80        
+                    case uff.window.tukey80
+                        roll=0.80;
+                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                    otherwise
+                        error('Unknown apodization type!');
+                end
+
+    %             % edge smoothing
+    %             if(size(apo,2)>(2*(beam.smoothing+1)))
+    %                 % compute edge smoothing mask
+    %                 mask=0.5-0.5*cos((0:beam.smoothing)/beam.smoothing*pi);  % vector mask
+    %                 mask=(ones(h.focus.pixels,1)*mask(2:(beam.smoothing+1))); % matrix mask
+    %                 
+    %                 % modifying apodization edges
+    %                 apo(:,1:beam.smoothing)=apo(:,1:beam.smoothing).*mask;
+    %                 apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events)=apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events).*fliplr(mask);
+    %             end
             end
             
-%             % edge smoothing
-%             if(size(apo,2)>(2*(beam.smoothing+1)))
-%                 % compute edge smoothing mask
-%                 mask=0.5-0.5*cos((0:beam.smoothing)/beam.smoothing*pi);  % vector mask
-%                 mask=(ones(h.focus.pixels,1)*mask(2:(beam.smoothing+1))); % matrix mask
-%                 
-%                 % modifying apodization edges
-%                 apo(:,1:beam.smoothing)=apo(:,1:beam.smoothing).*mask;
-%                 apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events)=apo(:,(number_transmitting_events-beam.smoothing+1):number_transmitting_events).*fliplr(mask);
-%             end
+            % pass a reference
+            value=h.data_backup;
+                
+            % update hash
+            h.save_hash();
         end
         
         function value=get.origin(h)
