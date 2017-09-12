@@ -14,7 +14,7 @@ classdef phase_coherence_factor < postprocess
 %   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %                 Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-%   $Last updated: 2017/05/22$
+%   $Last updated: 2017/09/12$
 
         %% constructor
     methods (Access = public)
@@ -22,7 +22,7 @@ classdef phase_coherence_factor < postprocess
             h.name='Phase Coherence Factor MATLAB';   
             h.reference='J. Camacho and C. Fritsch, Phase coherence imaging of grained materials, in IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, vol. 58, no. 5, pp. 1006-1015, May 2011.';                
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
-            h.version='v1.0.2';
+            h.version='v1.0.3';
         end
     end
 
@@ -48,24 +48,47 @@ classdef phase_coherence_factor < postprocess
                 return;
             end            
            
-            % check if we have information about apodization
-            if isempty(h.receive_apodization)||(h.receive_apodization.window==uff.window.none)
-                rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
-            else
-                h.receive_apodization.focus = h.input.scan;
-                rx_apodization=h.receive_apodization.data;
+            % check dimensions
+            if (h.dimension==dimension.receive) && (h.input.N_channels<2)
+                error('Not enough channels to compute factor');
             end
-            if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)
-                tx_apodization=ones(h.input.N_pixels,h.input.N_waves);
-            else
-                h.transmit_apodization.focus = h.input.scan;
-                tx_apodization=h.transmit_apodization.data;
+            if (h.dimension==dimension.transmit) && (h.input.N_waves<2)
+                error('Not enough waves to compute factor');
+            end
+            if (h.dimension==dimension.both) 
+                if (h.input.N_channels<2)&&(h.input.N_waves>1)
+                    warning('Not enough channels to compute factor. Changing dimension to dimension.transmit');
+                    h.dimension = dimension.transmit;
+                elseif (h.input.N_waves<2)&&(h.input.N_channels>1)
+                    warning('Not enough waves to compute factor. Changing dimension to dimension.receive');
+                    h.dimension = dimension.receive;
+                elseif (h.input.N_waves<2)&&(h.input.N_channels<2)
+                    error('Not enough waves and channels to compute factor');
+                end
             end
             
-            % building a apodization matrix
-            tx_apodization=reshape(tx_apodization,[h.input.N_pixels, 1, h.input.N_waves]);
-            apodization_matrix=bsxfun(@times,tx_apodization,rx_apodization);
-
+             % check if we have information about the receive apodization
+            if (h.dimension~=dimension.transmit)
+                if isempty(h.receive_apodization)||(h.receive_apodization.window==uff.window.none)
+                    rx_apodization=ones(h.input.N_pixels,h.input.N_channels);
+                else
+                    h.receive_apodization.focus = h.input.scan;
+                    rx_apodization=h.receive_apodization.data;
+                end
+            end
+            
+            % check if we have information about the transmit apodization
+            if (h.dimension~=dimension.receive)
+                if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)||isempty(h.input.sequence)
+                    tx_apodization=ones(h.input.N_pixels, 1, h.input.N_waves);
+                else
+                    h.transmit_apodization.focus = h.input.scan;
+                    % calculate transmit apodization according to 10.1109/TUFFC.2015.007183
+                    h.transmit_apodization.sequence=h.input.sequence;
+                    tx_apodization=reshape(h.transmit_apodization.data,[h.input.N_pixels, 1, h.input.N_waves]);
+                end
+            end
+            
             % compute signal phase 
             signal_phase = angle(h.input.data);
             
@@ -85,22 +108,22 @@ classdef phase_coherence_factor < postprocess
                     
                     % collapsing 2nd and 3rd dimmension into 2nd dimension
                     signal_phase=reshape(signal_phase,[h.input.N_pixels, h.input.N_channels*h.input.N_waves 1 h.input.N_frames]);
-                    auxiliary_phase=reshape(auxiliary_phase,[h.input.N_pixels, h.input.N_channels*h.input.N_waves 1 h.input.N_frames]);
-                    apodization_matrix=reshape(apodization_matrix,[h.input.N_pixels, h.input.N_channels*h.input.N_waves]);
+                    auxiliary_phase=reshape(auxiliary_phase,[h.input.N_pixels, h.input.N_channels*h.input.N_waves 1 h.input.N_frames]);                    
+                    apodization_matrix=reshape(bsxfun(@times,tx_apodization,rx_apodization),[h.input.N_pixels, h.input.N_channels*h.input.N_waves]);
 
                     std_phase=tools.weigthed_std(signal_phase,apodization_matrix,2);
                     std_auxiliary=tools.weigthed_std(auxiliary_phase,apodization_matrix,2);
                     std_complex=sqrt(tools.weigthed_var(cos(signal_phase),apodization_matrix,2)+tools.weigthed_var(sin(signal_phase),apodization_matrix,2));
                 case dimension.transmit
                     coherent_sum=sum(h.input.data,3);
-                    std_phase=tools.weigthed_std(signal_phase,apodization_matrix,3);
-                    std_auxiliary=tools.weigthed_std(auxiliary_phase,apodization_matrix,3);
-                    std_complex=sqrt(tools.weigthed_var(cos(signal_phase),apodization_matrix,3)+tools.weigthed_var(sin(signal_phase),apodization_matrix,3));
+                    std_phase=tools.weigthed_std(signal_phase,tx_apodization,3);
+                    std_auxiliary=tools.weigthed_std(auxiliary_phase,tx_apodization,3);
+                    std_complex=sqrt(tools.weigthed_var(cos(signal_phase),tx_apodization,3)+tools.weigthed_var(sin(signal_phase),tx_apodization,3));
                 case dimension.receive
                     coherent_sum=sum(h.input.data,2);
-                    std_phase=tools.weigthed_std(signal_phase,apodization_matrix,2);
-                    std_auxiliary=tools.weigthed_std(auxiliary_phase,apodization_matrix,2);
-                    std_complex=sqrt(tools.weigthed_var(cos(signal_phase),apodization_matrix,2)+tools.weigthed_var(sin(signal_phase),apodization_matrix,2));
+                    std_phase=tools.weigthed_std(signal_phase,rx_apodization,2);
+                    std_auxiliary=tools.weigthed_std(auxiliary_phase,rx_apodization,2);
+                    std_complex=sqrt(tools.weigthed_var(cos(signal_phase),rx_apodization,2)+tools.weigthed_var(sin(signal_phase),rx_apodization,2));
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
