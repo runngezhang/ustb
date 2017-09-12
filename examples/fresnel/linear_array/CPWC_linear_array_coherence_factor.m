@@ -177,7 +177,7 @@ rx_cf.receive_apodization=mid.receive_apodization;
 rx_cf.dimension=dimension.receive;
 bmf_data_rx_cf=rx_cf.go();
 
-%% PCF "receive" dimension resulting in individual CF PW images
+% PCF "receive" dimension resulting in individual CF PW images
 rx_pcf=postprocess.phase_coherence_factor();
 rx_pcf.input=b_data;
 rx_pcf.transmit_apodization=mid.transmit_apodization;

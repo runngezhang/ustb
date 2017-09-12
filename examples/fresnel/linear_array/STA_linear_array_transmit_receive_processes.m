@@ -57,59 +57,55 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% SCAN
-sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
-bmf.receive_apodization.window=uff.window.tukey25;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+%% MIDPROCESS
+mid=midprocess.delay_mex();
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-bmf.transmit_apodization.window=uff.window.tukey25;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+mid.receive_apodization.window=uff.window.tukey25;
+mid.receive_apodization.f_number=1.7;
+
+mid.transmit_apodization.window=uff.window.tukey25;
+mid.transmit_apodization.f_number=1.7;
 
 % beamforming
-b_data=bmf.go({process.delay_mex()});
+b_data=mid.go();
 
-%% PROCESSES
-% coherently compounded
-cc=process.coherent_compounding();
-cc.beamformed_data=b_data;
+%% coherently compounded
+cc=postprocess.coherent_compounding();
+cc.input=b_data;
 cc_data=cc.go();
 cc_data.plot([],cc.name);
 
-% incoherently compounded
-ic=process.incoherent_compounding();
-ic.beamformed_data=b_data;
+%% incoherently compounded
+ic=postprocess.incoherent_compounding();
+ic.input=b_data;
 ic_data=ic.go();
 ic_data.plot([],ic.name);
 
-% max
-mv=process.max();
-mv.beamformed_data=b_data;
+%% max
+mv=postprocess.max();
+mv.input=b_data;
 mv_data=mv.go();
 mv_data.plot([],mv.name);
 
-% Mallart-Fink coherence factor
-cf=process.coherence_factor();
-cf.channel_data=bmf.channel_data;
-cf.transmit_apodization=bmf.transmit_apodization;
-cf.receive_apodization=bmf.receive_apodization;
-cf.beamformed_data=b_data;
+%% Mallart-Fink coherence factor
+cf=postprocess.coherence_factor();
+cf.transmit_apodization=mid.transmit_apodization;
+cf.receive_apodization=mid.receive_apodization;
+cf.input=b_data;
 cf_data=cf.go();
 cf.CF.plot([],'Mallart-Fink Coherence factor',60,'none'); % show the coherence factor
 cf_data.plot([],cf.name);
 
 %% Camacho-Fritsch phase coherence factor
-pcf=process.phase_coherence_factor();
-pcf.channel_data=bmf.channel_data;
-pcf.transmit_apodization=bmf.transmit_apodization;
-pcf.receive_apodization=bmf.receive_apodization;
-pcf.beamformed_data=b_data;
+pcf=postprocess.phase_coherence_factor();
+pcf.transmit_apodization=mid.transmit_apodization;
+pcf.receive_apodization=mid.receive_apodization;
+pcf.input=b_data;
 pcf_data=pcf.go();
 pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);
