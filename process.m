@@ -16,12 +16,12 @@ classdef process < handle
         version=''           % verion
     end
     
-    %% Private
+    %% Protected
     properties (Access = protected)
         last_hash
     end
     
-    %% tools
+    %% HASH tools
     methods
         function out = hash(h)
             %% HASH Gives hash for all the non-dependent & public properties 
@@ -48,15 +48,23 @@ classdef process < handle
             
             out=tools.hash(str);
         end
+        
+        
         function h=save_hash(h)
             h.last_hash=h.hash();
         end
+        
+        
         function equal=check_hash(h)
-            equal=strcmp(h.hash(),h.last_hash); 
-            if equal 
-                warning('The process inputs and outputs remain unchanged. Skipping process.'); 
+            if isempty(h.last_hash) equal=false;
+            else
+                equal=strcmp(h.hash(),h.last_hash); 
+                if equal 
+                    warning('Inputs and outputs are unchanged. Skipping process...'); 
+                end
             end
         end
+        
     end
     
     %% Display methods

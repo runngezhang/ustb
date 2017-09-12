@@ -16,6 +16,11 @@ classdef uff < handle
         info={}                         % other information
     end
     
+    %% Protected
+    properties (Access = protected)
+        last_hash
+    end
+    
     %% constructor
     methods (Access = public)
         function h=uff(varargin)
@@ -73,16 +78,19 @@ classdef uff < handle
             end
         end
     end
-    
+
+    %% TOOLS
     methods
-        
         function  out  = objname(h)
-            %% OBJNAME Gives object name
+            % OBJNAME Gives object name
             out = evalin('caller','inputname(1)');
         end
-        
+    end
+    
+    %% HASH tools
+    methods
         function out = hash(h)
-            %% HASH Gives hash for all the non-dependent & public properties 
+            % HASH Gives hash for all the non-dependent & public properties 
             
             % loop over all non-dependent & public properties
             str=[];
@@ -96,7 +104,7 @@ classdef uff < handle
                         for ne=1:numel(h.(property_name))
                             str = [ str; h.(property_name)(ne).hash()];
                         end
-                    elseif isa(h.(property_name),'uff.window')
+                    elseif isa(h.(property_name),'uff.window')||isa(h.(property_name),'dimension')
                             str=[str;tools.hash(char(h.(property_name)))];
                     else
                         str=[str;tools.hash(h.(property_name))];
@@ -106,6 +114,21 @@ classdef uff < handle
             
             out=tools.hash(str);
         end
+        
+        function h=save_hash(h)
+            h.last_hash=h.hash();
+        end
+        
+        function equal=check_hash(h)
+            if isempty(h.last_hash) equal=false;
+            else
+                equal=strcmp(h.hash(),h.last_hash); 
+                if equal 
+                    warning('Inputs and outputs are unchanged. Skipping process...'); 
+                end
+            end
+        end
+        
     end
     
     %% Public UFF file write/read
