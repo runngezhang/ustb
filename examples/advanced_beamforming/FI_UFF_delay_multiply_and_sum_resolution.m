@@ -46,37 +46,35 @@ for n=1:numel(channel_data.sequence)
     sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 
-%% Set up delay part of beamforming
-% setting up and running the delay part of the beamforming
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% Set up the processing pipeline
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.none;
-b_data=bmf.go({process.delay_matlab_light process.stack});
-
-%% Create the DMAS image using the delay_multiply_and_sum process
-dmas = process.delay_multiply_and_sum();
+%% Create the DMAS image using the delay_multiply_and_sum postprocess
+% The DMAS could have been included in the original pipeline, but we can
+dmas = postprocess.delay_multiply_and_sum();
 dmas.dimension = dimension.receive();
-dmas.receive_apodization = bmf.receive_apodization;
-dmas.transmit_apodization = bmf.transmit_apodization;
-dmas.beamformed_data = b_data;
 dmas.channel_data = channel_data;
-dmas.scan = sca;
-b_data_dmas = dmas.go();        % Launch beamformer
-b_data_dmas.plot(100,'DMAS');   % Display image
+dmas.receive_apodization = pipe.receive_apodization;
+
+b_data_dmas=pipe.go({midprocess.delay_matlab_light() postprocess.stack() dmas});
+
+% beamforming
+b_data_dmas.plot(100,'DMAS');
 
 %% Beamform DAS image
-% Notice that we just need to sum the data since it is allready delayed
-das = process.coherent_compounding();
-das.beamformed_data = b_data;
+% Notice that I redefine the beamformer to use Hamming apodization.
 
-b_data_das=das.go();
+pipe.receive_apodization.window=uff.window.hamming;
+pipe.receive_apodization.f_number=1.7;
+
+b_data_das=pipe.go({midprocess.das_mex postprocess.stack});
 b_data_das.plot(2,'DAS');
+
 
 %% Plot both images in same plot
 % Plot both in same plot with connected axes, try to zoom!
