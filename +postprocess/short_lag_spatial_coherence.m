@@ -44,6 +44,7 @@ classdef short_lag_spatial_coherence < postprocess
         dimension                                     % dimension class that specifies whether the process will run only on transmit, receive, or both.
         maxM
         slsc_values
+        channel_data
     end
     
     properties (Access = private)
@@ -205,14 +206,14 @@ classdef short_lag_spatial_coherence < postprocess
         end
         
         function h=set.K_in_lambda(h,K_in_lambda)
-            assert(~isempty(h.scan),'You need to set the scan.')
+            assert(~isempty(h.input(1)),'You need to set the beamformed_data input first.')
             assert(~isempty(h.channel_data),'You need to set the channel_data.')
             
             h.K_in_lambda = K_in_lambda;
-            if isa(h.scan,'uff.linear_scan')
-                z_in_lambda = h.scan(1).z_axis./h.channel_data.lambda;
-            elseif isa(h.scan,'uff.sector_scan')
-                z_in_lambda = h.scan(1).depth_axis./h.channel_data.lambda;
+            if isa(h.input(1).scan,'uff.linear_scan')
+                z_in_lambda = h.input(1).scan.z_axis./h.channel_data.lambda;
+            elseif isa(h.input(1).scan,'uff.sector_scan')
+                z_in_lambda = h.input(1).scan.depth_axis./h.channel_data.lambda;
             else
                 error('Unkown scan when setting K in lambda.');
             end
