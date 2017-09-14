@@ -320,24 +320,23 @@ sca=uff.linear_scan();
 sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
 sca.z_axis = linspace(0,50e-3,256).';
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% Define processing pipeline and beamform
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
 
-% beamforming
-b_data=bmf.go({process.das_mex process.coherent_compounding});
+% Start the processing pipeline
+b_data=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
 
-%% show
+% show
 b_data.plot();
+
 
 %% write channel_data to file the filname that was created in the beginning of this script
 answer = questdlg('Do you want to save this dataset?');
