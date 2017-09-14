@@ -324,7 +324,7 @@ pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=sca;
 
-pipe.receive_apodization.window=uff.window.tukey25;
+pipe.receive_apodization.window=uff.window.none;
 pipe.receive_apodization.f_number=1.7;
 
 % beamforming
