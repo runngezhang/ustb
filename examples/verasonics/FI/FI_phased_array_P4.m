@@ -331,7 +331,7 @@ pipe.receive_apodization.f_number=1.7;
 b_data=pipe.go({midprocess.das_mex postprocess.stack})
 
 %% show
-b_data.plot(5,['With TUKEY25 1.7'],60);
+b_data.plot(5,['USTB'],60);
 
 %%
 answer = questdlg('Do you want to save this dataset?');

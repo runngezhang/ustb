@@ -40,7 +40,7 @@ channel_data.pulse = uff.pulse(h.Trans.frequency*10^6);
 
 %% Convert channel data from Verasonics format to USTB format
 no_samples = h.Receive(1).endSample;
-data = (zeros(no_samples, channel_data.probe.N, length(seq), h.number_of_frames));
+data = single(zeros(no_samples, channel_data.probe.N, length(seq), h.number_of_frames));
 offset_time = calculate_delay_offset(h); % Get offset time
 plot_delayed_signal=0;
 interpolation_factor = 10;

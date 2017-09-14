@@ -23,7 +23,7 @@ channel_data.pulse = uff.pulse(double(h.Trans.frequency*10^6));
 
 %% Convert channel data from Verasonics format to USTB format
 no_samples = h.Receive(1).endSample;
-data = zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames);
+data = single(zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames));
 
 offset_time = calculate_delay_offset(h); % Get offset time
 n=1;
@@ -59,7 +59,7 @@ for n_frame = h.frame_order
             validChannels = [1:128];
         end
         %% read data
-        data(:,:,n_tx,n_frame)=interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame)),time,'linear',0);
+        data(:,:,n_tx,n_frame)=single(interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame)),time,'linear',0));
         n=n+1;
         %%
         % to check delay calculation
@@ -85,6 +85,6 @@ for n_frame = h.frame_order
     end
 end
 
-channel_data.data = data;
+channel_data.data = single(data);
 
 end
