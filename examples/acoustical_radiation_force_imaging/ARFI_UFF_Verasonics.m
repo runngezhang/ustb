@@ -35,7 +35,7 @@ sca=uff.linear_scan();
 sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
 sca.z_axis = linspace(0,30e-3,256).';
  
-% BEAMFORMER
+% Define processing pipeline
 pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=sca;
