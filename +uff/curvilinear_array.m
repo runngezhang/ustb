@@ -26,14 +26,14 @@ classdef curvilinear_array < uff.probe
     %   $Last updated: 2017/06/09$
 
     %% compulsory properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         N              % number of elements
         pitch          % distance between the elements in the radial direction [m]
         radius         % radius of the curvilinear array [m]
     end
     
     %% optional properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         element_width  % width of the elements in the azimuth direction [m]
         element_height % height of the elements in the elevation direction [m]
     end

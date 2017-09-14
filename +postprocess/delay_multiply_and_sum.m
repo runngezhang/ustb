@@ -1,4 +1,4 @@
-classdef delay_multiply_and_sum < process
+classdef delay_multiply_and_sum < postprocess
     %DELAY MULTIPLY AND SUM  Matlab implementation of Delay Multiply And Sum
     %
     %    Matlab implementation of Delay Multiply And Sum as described in 
@@ -14,7 +14,7 @@ classdef delay_multiply_and_sum < process
     %
     %   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %
-    %   $Last updated: 2017/05/29$
+    %   $Last updated: 2017/09/10$
     
     %% constructor
     methods (Access = public)
@@ -22,35 +22,44 @@ classdef delay_multiply_and_sum < process
             h.name='Delay Multiply and Sum';
             h.reference= 'Matrone, G., Savoia, A. S., & Magenes, G. (2015). The Delay Multiply and Sum Beamforming Algorithm in Ultrasound B-Mode Medical Imaging, 34(4), 940?949.';
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
-            h.version='v1.0.2';
+            h.version='v1.0.3';
         end
     end
     
     %% Additional properties
     properties
         dimension
+        receive_apodization                           % UFF.APODIZATION class
+        transmit_apodization                          % UFF.APODIZATION class
+        channel_data                                  % UFF.CHANNEL_DATA class
     end
     
     methods
-        function [out_data h]=go(h)
-            assert(~isempty(h.beamformed_data),'We need some data. Please add some beamformed_data.');
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output = h.output; 
+                return;
+            end            
+
+            assert(~isempty(h.input),'We need some data. Please add some beamformed_data.');
             assert(~isempty(h.channel_data),'We need the channel_data object for some paramters. Please add it.');
             
             % check if we have information about apodization
-            rx_apodization=ones([h.beamformed_data(1).N_pixels,h.beamformed_data.N_channels]);
-            tx_apodization=ones([h.beamformed_data(1).N_pixels,h.beamformed_data.N_waves]);
+            rx_apodization=ones([h.input(1).N_pixels,h.input.N_channels]);
+            tx_apodization=ones([h.input(1).N_pixels,h.input.N_waves]);
             if ~isempty(h.transmit_apodization)&~isempty(h.receive_apodization)&~isempty(h.channel_data.probe)
                 % receive
-                if h.beamformed_data.N_channels > 1
-                    h.receive_apodization.focus=h.beamformed_data(1).scan;
+                if h.input.N_channels > 1
+                    h.receive_apodization.focus=h.input(1).scan;
                     h.receive_apodization.probe=h.channel_data.probe;
                     rx_apodization=h.receive_apodization.data();
                 end
                 
                 % transmit
-                if h.beamformed_data.N_waves > 1
+                if h.input.N_waves > 1
                     h.transmit_apodization.sequence = h.channel_data.sequence;
-                    h.transmit_apodization.focus=h.beamformed_data(1).scan;
+                    h.transmit_apodization.focus=h.input(1).scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();
                 end
@@ -59,7 +68,7 @@ classdef delay_multiply_and_sum < process
             end
             
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             switch h.dimension
                 case dimension.both
@@ -69,55 +78,62 @@ classdef delay_multiply_and_sum < process
                     warning(str);
                     
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,1,1,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        apod_matrix = zeros(size(tx_apodization,1),h.beamformed_data.N_waves*h.beamformed_data.N_channels);
-                        for i = 1:h.beamformed_data.N_waves
-                            apod_matrix(:,1+(i-1)*h.beamformed_data.N_channels:h.beamformed_data.N_channels*i) = tx_apodization(:,i).*rx_apodization;
+                    aux_data=zeros(h.input.N_pixels,1,1,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        apod_matrix = zeros(size(tx_apodization,1),h.input.N_waves*h.input.N_channels);
+                        for i = 1:h.input.N_waves
+                            apod_matrix(:,1+(i-1)*h.input.N_channels:h.input.N_channels*i) = tx_apodization(:,i).*rx_apodization;
                         end
-                        apod_matrix = reshape(apod_matrix,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves*h.beamformed_data.N_channels);
+                        apod_matrix = reshape(apod_matrix,h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves*h.input.N_channels);
                         %
                         % Apodization matrix indicating active elements
-                        data_cube = reshape(h.beamformed_data.data(:,:,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels*h.beamformed_data.N_waves);
+                        data_cube = reshape(h.input.data(:,:,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels*h.input.N_waves);
                         image = delay_multiply_and_sum_implementation(h,real(data_cube),apod_matrix,['1/1']);
                         aux_data(:,1,1,n_frame) = image(:);
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                 case dimension.transmit
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,h.beamformed_data.N_channels,1,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        for n_channel = 1:h.beamformed_data.N_channels
+                    aux_data=zeros(h.input.N_pixels,h.input.N_channels,1,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        for n_channel = 1:h.input.N_channels
                             % Apodization matrix indicating active elements
-                            apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
-                            data_cube = reshape(h.beamformed_data.data(:,n_channel,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
-                            image = delay_multiply_and_sum_implementation(h,real(data_cube),apod_matrix,[num2str(n_channel),'/',num2str(h.beamformed_data.N_channels)]);
+                            apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
+                            data_cube = reshape(h.input.data(:,n_channel,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
+                            image = delay_multiply_and_sum_implementation(h,real(data_cube),apod_matrix,[num2str(n_channel),'/',num2str(h.input.N_channels)]);
                             aux_data(:,n_channel,:,n_frame) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                 case dimension.receive
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,1,h.beamformed_data.N_waves,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        for n_wave = 1:h.beamformed_data.N_waves
+                    aux_data=zeros(h.input.N_pixels,1,h.input.N_waves,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        for n_wave = 1:h.input.N_waves
                             % Apodization matrix indicating active elements
-                            apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
-                            data_cube = reshape(h.beamformed_data.data(:,:,n_wave,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
+                            apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
+                            data_cube = reshape(h.input.data(:,:,n_wave,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
                             %A hack to set non active elements to zero for the
                             %alpinion scanner FI who only use 64 active
                             %elements
                             if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
                                 apod_matrix(abs(data_cube)<eps) = 0;
                             end
-                            image = delay_multiply_and_sum_implementation(h,real(data_cube),apod_matrix,[num2str(n_wave),'/',num2str(h.beamformed_data.N_waves)]);
+                            image = delay_multiply_and_sum_implementation(h,real(data_cube),apod_matrix,[num2str(n_wave),'/',num2str(h.input.N_waves)]);
                             aux_data(:,1,n_wave,n_frame) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
+            
+            % pass reference
+            output = h.output;
+            
+            % update hash
+            h.save_hash();
+
         end
         
         function y_dmas_signed_img = delay_multiply_and_sum_implementation(h,data_cube,apod_matrix,progress)
@@ -125,11 +141,11 @@ classdef delay_multiply_and_sum < process
             
             
             % Design Bandpass-filter
-            h.beamformed_data(1).calculate_sampling_frequency(h.channel_data.sound_speed);
-            fs = h.beamformed_data(1).sampling_frequency;
+            h.input(1).calculate_sampling_frequency(h.channel_data.sound_speed);
+            fs = h.input(1).sampling_frequency;
             %f0 = h.channel_data.pulse.center_frequency;
           
-            [f0, bw] = tools.estimate_frequency(h.beamformed_data(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
+            [f0, bw] = tools.estimate_frequency(h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
             
             %%
             f_start = 2*f0-f0;
@@ -208,6 +224,25 @@ classdef delay_multiply_and_sum < process
         end
         
     end
+    
+    %% set methods
+    methods
+        function h=set.channel_data(h,in_channel_data)
+            assert(isa(in_channel_data,'uff.channel_data'), 'The input is not a UFF.CHANNEL_DATA class. Check HELP UFF.CHANNEL_DATA.');
+            h.channel_data=in_channel_data;
+        end
+        
+        function h=set.receive_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.receive_apodization=in_apodization;
+        end
+        
+        function h=set.transmit_apodization(h,in_apodization)
+            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
+            h.transmit_apodization=in_apodization;
+        end
+    end
+
 end
 
 

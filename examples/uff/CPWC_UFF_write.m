@@ -78,21 +78,19 @@ channel_data.reference = {'www.ustb.no'};
 % scan
 scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(0e-3,40e-3,256).');
  
-% beamformer
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
+% pipeline
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.0;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.0;
 
 % beamforming
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 b_data.plot();
 
 %% Saving beamformed data

@@ -29,13 +29,13 @@ classdef beamformed_data < uff
     %   $Last updated: 2017/06/07$
     
     %% compulsory properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         scan                       % SCAN object or array of SCAN objects
         data                       % data [pixel x channel x wave x frame]
     end
     
     %% optional properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         phantom                    % PHANTOM object
         sequence                   % array of WAVE objects
         probe                      % PROBE object

@@ -35,7 +35,7 @@ end
 channel_data.sequence = seq;
 %% Convert channel data from Verasonics format to USTB format
 no_samples = h.Receive(1).endSample;
-data = zeros(no_samples, channel_data.probe.N, length(seq), h.Resource.RcvBuffer(1).numFrames);
+data = single(zeros(no_samples, channel_data.probe.N, length(seq), h.Resource.RcvBuffer(1).numFrames));
 
 offset_time = calculate_delay_offset(h); % Get offset time
 plot_delayed_signal=0;

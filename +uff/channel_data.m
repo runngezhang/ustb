@@ -29,7 +29,7 @@ classdef channel_data < uff
     %   $last updated: 2017/02/24 $
     
     %% compulsory properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         sampling_frequency              % sampling frequency [Hz]
         initial_time                    % time of the initial sample [s]
         sound_speed             = 1540  % reference sound speed [m/s]
@@ -40,7 +40,7 @@ classdef channel_data < uff
     end
     
     %% optional properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         PRF                             % pulse repetition frequency [Hz]
         pulse                           % UFF.PULSE object
         phantom                         % UFF.PHANTOM object

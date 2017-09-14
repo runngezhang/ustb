@@ -52,25 +52,23 @@ scan=uff.read_object([local_path filename],'/scan');
 
 %% Beamforming
 %
-% We define a beamformer, and the corresponding transmit and apodization
+% We define a pipeline, and the corresponding transmit and apodization
 % windows, and launch it.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
     
 % receive apodization
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 % transmit apodization
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
 
 % launch beamforming
-b_data_new=bmf.go({process.das_mex process.coherent_compounding});
+b_data_new=pipe.go({process.das_mex process.coherent_compounding});
 
 %% Comparing results
 %

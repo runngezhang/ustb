@@ -187,26 +187,24 @@ channel_data.data = STA./max(STA(:));
 %% SCAN
 sca=uff.linear_scan('x_axis',linspace(-4e-3,4e-3,256).', 'z_axis', linspace(16e-3,24e-3,256).');
 
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
-bmf.transmit_apodization.window=uff.window.boxcar;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.boxcar;
+pipe.receive_apodization.f_number=1.7;
+pipe.transmit_apodization.window=uff.window.boxcar;
+pipe.transmit_apodization.f_number=1.7;
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
+% The *pipeline* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. By changing the *process*
 % chain other beamforming sequences can be implemented. It returns yet 
 % another *UFF* structure: *beamformed_data*.
@@ -214,7 +212,7 @@ bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 
 % Display images
 b_data.plot()

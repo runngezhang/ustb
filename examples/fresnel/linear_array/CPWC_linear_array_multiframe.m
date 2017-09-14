@@ -127,38 +127,36 @@ channel_data=sim.go();
 % which is defined with just two axes. *scan* too has a useful *plot*
 % method it can call.
 
-sca=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).','z_axis', linspace(15e-3,25e-3,256).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).','z_axis', linspace(15e-3,25e-3,256).');
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.0;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.0;
 
 %% 
-% Go beamformer! % The *beamformer* structure allows you to implement 
+% Go pipeline! % The *pipeline* structure allows you to implement 
 % different beamformers by combination of multiple built-in *processes*.
 % Here, we shall use delay-and-sum (implemented in MATLAB); there is a MEX
 % implementation too that we could call with *process.das_mex()*. In
 % addition, we shall chain it with the *process.coherent_compounding()* to
 % coherently compound the individual plane wave images.
 
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 %%
-% Finally, show our results
+% Finally, show the result
 
 b_data.plot([],['Beamformed data'],40);

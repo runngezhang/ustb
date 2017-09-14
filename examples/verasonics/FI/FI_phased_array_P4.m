@@ -319,20 +319,19 @@ for n=1:length(TX)
     sca(n)=uff.sector_scan('azimuth_axis',Angles(n),'depth_axis',depth_axis);
 end
 
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% Set up the processing pipeline and beamform
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.none;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.none;
+pipe.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=bmf.go({process.das_mex() process.stack()});
+b_data=pipe.go({midprocess.das_mex postprocess.stack})
 
 %% show
-b_data.plot(4,['USTB'],60);
+b_data.plot(5,['USTB'],60);
 
 %%
 answer = questdlg('Do you want to save this dataset?');

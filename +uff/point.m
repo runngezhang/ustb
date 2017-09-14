@@ -21,7 +21,7 @@ classdef point < uff
     %   $Date: 2017/06/09 $
 
     %% public properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         distance  = 0   % distance from the point location to the origin of coordinates [m]
         azimuth   = 0   % angle from the point location to the plane YZ [rad]
         elevation = 0   % angle from the point location to the plane XZ [rad]

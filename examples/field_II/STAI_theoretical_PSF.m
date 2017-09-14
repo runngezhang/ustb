@@ -193,22 +193,20 @@ channel_data_field_ii.data = STA;
 
 sca=uff.linear_scan('x_axis',linspace(-4e-3,4e-3,256).','z_axis', linspace(16e-3,24e-3,256).');
 
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data_field_ii;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data_field_ii;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
-bmf.transmit_apodization.window=uff.window.boxcar;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.boxcar;
+pipe.receive_apodization.f_number=1.7;
+pipe.transmit_apodization.window=uff.window.boxcar;
+pipe.transmit_apodization.f_number=1.7;
 
 %% 
 %
@@ -220,7 +218,7 @@ bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data_field_ii =bmf.go({process.das_mex() process.coherent_compounding()});
+b_data_field_ii =pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 
 %% Compute STA signals using USTB's Fresnel simulator
 % 
@@ -241,9 +239,9 @@ channel_data_fresnel=sim.go();
 
 
 %% BEAMFORM data from Fresnel simulation
-bmf.channel_data=channel_data_fresnel;
+pipe.channel_data=channel_data_fresnel;
 % Delay and sum on receive, then coherent compounding
-b_data_fresnel =bmf.go({process.das_mex() process.coherent_compounding()});
+b_data_fresnel =pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 
 
 %% Display images
@@ -264,7 +262,7 @@ img_fresnel = b_data_fresnel.get_image;
 lateral_profile_fresnel=img_fresnel(128,:);
 lateral_profile_fresnel=lateral_profile_fresnel-max(lateral_profile_fresnel);
 
-theoretical_profile=20*log10(sinc(1/bmf.receive_apodization.f_number(1)/lambda*b_data_field_ii.scan.x_axis).^2);
+theoretical_profile=20*log10(sinc(1/pipe.receive_apodization.f_number(1)/lambda*b_data_field_ii.scan.x_axis).^2);
 
 figure;
 plot(b_data_field_ii.scan.x_axis*1e3,lateral_profile_field_ii); hold all; grid on; 
