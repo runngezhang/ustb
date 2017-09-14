@@ -13,7 +13,7 @@ clear all; close all;
 
 % data location
 url='http://ustb.no/datasets/';            % if not found data will be downloaded from here
-local_path = [ustb_data_path(), filesep];  % location of example data on this computer
+local_path = [data_path(), filesep];  % location of example data on this computer
 
 filename='ARFI_dataset.uff';
 
