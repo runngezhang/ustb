@@ -108,23 +108,21 @@ channel_data=sim.go();
 sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).','z_axis',linspace(39e-3,41e-3,100).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
 
 %% 
 %
@@ -136,7 +134,7 @@ bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_matlab()* process) as well as coherent compounding.
 
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 %%
 % Finally, show our results

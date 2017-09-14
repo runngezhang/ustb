@@ -124,30 +124,29 @@ end
 %% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
+% The *pipeline* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
+% chain other beamforming sequences can be implemented. It returns a
+% *uff.beamformed_data* structure.
 % 
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_matlab()* process) and then stack each line into a single image.
 
-b_data=bmf.go({process.das_matlab() process.stack()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
 
 %%
-% Finally, show our results
+% Finally, show the image
 
 b_data.plot();

@@ -67,21 +67,19 @@ sim.sampling_frequency=Fs;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
   
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uwindow;
-bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.origo.distance=Inf;
+pipe.receive_apodization.window=uwindow;
+pipe.receive_apodization.f_number=F_number;
 
-bmf.transmit_apodization.window=uwindow;
-bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.origo.distance=Inf;
+pipe.transmit_apodization.window=uwindow;
+pipe.transmit_apodization.f_number=F_number;
 
 % beamforming
-stai_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+stai_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % show
 stai_data.plot([],'STAI');
@@ -128,16 +126,15 @@ for n=1:sca.N_x_axis
     fi_sca(n).plot(fig_handle,'Scenario');    
 end
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=fi_sca;
-bmf.receive_apodization.window=uwindow;
-bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.origo.distance=Inf;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=fi_sca;
+pipe.receive_apodization.window=uwindow;
+pipe.receive_apodization.f_number=F_number;
 
 % beamforming
-fi_data=bmf.go({process.das_matlab() process.stack()});
+fi_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
 
 % show
 fi_data.plot([],'FI');
@@ -175,21 +172,19 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uwindow;
-bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.origo.distance=Inf;
+pipe.receive_apodization.window=uwindow;
+pipe.receive_apodization.f_number=F_number;
 
-bmf.transmit_apodization.window=uwindow;
-bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.origo.distance=Inf;
+pipe.transmit_apodization.window=uwindow;
+pipe.transmit_apodization.f_number=F_number;
 
 % beamforming
-cpwc_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+cpwc_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % show
 cpwc_data.plot([],'CPWC');
@@ -225,21 +220,19 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uwindow;
-bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.origo.distance=Inf;
+pipe.receive_apodization.window=uwindow;
+pipe.receive_apodization.f_number=F_number;
 
-bmf.transmit_apodization.window=uwindow;
-bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.origo.distance=Inf;
+pipe.transmit_apodization.window=uwindow;
+pipe.transmit_apodization.f_number=F_number;
 
 % beamforming
-dwi_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+dwi_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % show
 dwi_data.plot([],'DWI');
@@ -278,21 +271,19 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uwindow;
-bmf.receive_apodization.f_number=F_number;
-bmf.receive_apodization.origo.distance=Inf;
+pipe.receive_apodization.window=uwindow;
+pipe.receive_apodization.f_number=F_number;
 
-bmf.transmit_apodization.window=uwindow;
-bmf.transmit_apodization.f_number=F_number;
-bmf.transmit_apodization.origo.distance=Inf;
+pipe.transmit_apodization.window=uwindow;
+pipe.transmit_apodization.f_number=F_number;
 
 % beamforming
-rtb_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+rtb_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % show
 rtb_data.plot([],'RTB');

@@ -206,6 +206,13 @@ elseif nArg ~= 1  % Bad number of arguments:
    Error_L('BadNInput', '1 or 2 inputs required.');
 end
 
+% hack: Crop too large values
+NN=numel(Data);
+if NN>1e6
+    delta=floor(NN/1000);
+    Data=Data(1:delta:NN);
+end
+
 % Create the engine: -----------------------------------------------------------
 try
    Engine = java.security.MessageDigest.getInstance(Method);

@@ -6,7 +6,7 @@ classdef verasonics < handle
     %
     %   $Date: 2017/03/16$
     
-    properties (SetAccess = public)
+    properties (Access = public)
         % Verasonics objects and structs
         Trans                  % Verasonics Transducer object
         TW                     % Verasonics Transmit Waveform object

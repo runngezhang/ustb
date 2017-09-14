@@ -8,7 +8,7 @@ classdef uff < handle
     %   $Last updated: 2017/08/07$
     
     %% Logistics parameters
-    properties  (SetAccess = public)
+    properties  (Access = public)
         name={}                         % name of the dataset
         reference={}                    % reference to the publication where it was used/acquired
         author={}                       % contact of the authors
@@ -16,7 +16,12 @@ classdef uff < handle
         info={}                         % other information
     end
     
-        %% constructor
+    %% Protected
+    properties (Access = protected)
+        last_hash
+    end
+    
+    %% constructor
     methods (Access = public)
         function h=uff(varargin)
             %UFF   Constructor of UFF class
@@ -73,16 +78,19 @@ classdef uff < handle
             end
         end
     end
-    
+
+    %% TOOLS
     methods
-        
         function  out  = objname(h)
-            %% OBJNAME Gives object name
+            % OBJNAME Gives object name
             out = evalin('caller','inputname(1)');
         end
-        
+    end
+    
+    %% HASH tools
+    methods
         function out = hash(h)
-            %% HASH Gives hash of the whole uff class
+            % HASH Gives hash for all the non-dependent & public properties 
             
             % loop over all non-dependent & public properties
             str=[];
@@ -92,12 +100,35 @@ classdef uff < handle
                 mp = findprop(h,property_name);
                 if strcmp(mp.GetAccess,'public')&&~mp.Dependent
                     %fprintf(1,'%s -> %s\n',property_name,tools.hash(h.(property_name)));
-                    str=[str;tools.hash(h.(property_name))];
+                    if isa(h.(property_name),'uff')
+                        for ne=1:numel(h.(property_name))
+                            str = [ str; h.(property_name)(ne).hash()];
+                        end
+                    elseif isa(h.(property_name),'uff.window')||isa(h.(property_name),'dimension')
+                            str=[str;tools.hash(char(h.(property_name)))];
+                    else
+                        str=[str;tools.hash(h.(property_name))];
+                    end
                 end
             end
             
             out=tools.hash(str);
         end
+        
+        function h=save_hash(h)
+            h.last_hash=h.hash();
+        end
+        
+        function equal=check_hash(h)
+            if isempty(h.last_hash) equal=false;
+            else
+                equal=strcmp(h.hash(),h.last_hash); 
+                if equal 
+                    warning('Inputs and outputs are unchanged. Skipping process...'); 
+                end
+            end
+        end
+        
     end
     
     %% Public UFF file write/read

@@ -108,15 +108,6 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
 
-%% Demodulate the channel data
-% 
-% USTB has a demodulator class that enables the demodulation of the channel
-% data as done below.
-
-dem=demodulator();
-dem.channel_data=channel_data;
-channel_data=dem.go();
- 
 %% Scan
 %
 % The scan area is defines as a collection of pixels spanning our region of 
@@ -124,37 +115,37 @@ channel_data=dem.go();
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
 z_axis=linspace(39e-3,41e-3,100).';
-sca=uff.linear_scan();
+scan=uff.linear_scan();
 for n=1:length(x_axis)
-    sca(n)=uff.linear_scan('x_axis',x_axis(n),'z_axis',z_axis);
-    sca(n).plot(fig_handle,'Scenario');    
+    scan(n)=uff.linear_scan('x_axis',x_axis(n),'z_axis',z_axis);
+    scan(n).plot(fig_handle,'Scenario');    
 end
- 
-%% Beamformer
+
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 %% 
 %
 % The *beamformer* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
+% chain other beamforming sequences can be implemented. It returns a
+% *uff.beamformed_data* structure.
 % 
-% To achieve the goal of this example, we use delay (implemented in 
-% the *delay_matlab()* process) and then stack each line into a single image.
+% To achieve the goal of this example, we use first a demodulation preprocess, 
+% a delay mex implementation, and then we stack each line into a single image.
 
-b_data=bmf.go({process.delay_matlab() process.stack()});
+b_data=pipe.go({preprocess.demodulation midprocess.delay_mex postprocess.stack});
+b_data.plot();
 
 %% Test out some of the many receive beamforming processes USTB has to offer
 
@@ -162,8 +153,8 @@ b_data=bmf.go({process.delay_matlab() process.stack()});
 %
 % First, we can use the *coherent_compounding* process to coherently
 % compound the data and then display it.
-cc=process.coherent_compounding();
-cc.beamformed_data=b_data;
+cc=postprocess.coherent_compounding();
+cc.input=b_data;
 cc_data=cc.go();
 cc_data.plot([],cc.name);
 
@@ -171,8 +162,8 @@ cc_data.plot([],cc.name);
 %
 % Or, we could use the *incoherent_compounding* process to incoherently
 % compound the data and then display it.
-ic=process.incoherent_compounding();
-ic.beamformed_data=b_data;
+ic=postprocess.incoherent_compounding();
+ic.input=b_data;
 ic_data=ic.go();
 ic_data.plot([],ic.name);
 
@@ -180,8 +171,8 @@ ic_data.plot([],ic.name);
 %
 % Or, we could take the *max* process to take the max across the received
 % data and then display it.
-mv=process.max();
-mv.beamformed_data=b_data;
+mv=postprocess.max();
+mv.input=b_data;
 mv_data=mv.go();
 mv_data.plot([],mv.name);
 
@@ -189,25 +180,31 @@ mv_data.plot([],mv.name);
 %
 % We could also use the *coherence_factor* process which implements the 
 % Mallart-Fink coherence factor beamforming to beamform the data.
-cf=process.coherence_factor();
-cf.channel_data=bmf.channel_data;
-cf.transmit_apodization=bmf.transmit_apodization;
-cf.receive_apodization=bmf.receive_apodization;
-cf.beamformed_data=b_data;
+cf=postprocess.coherence_factor();
+cf.transmit_apodization=pipe.transmit_apodization;
+cf.receive_apodization=pipe.receive_apodization;
+cf.input=b_data;
 cf_data=cf.go();
-cf.CF.plot([],'Mallart-Fink Coherence factor',60,'none'); % show the coherence factor
-cf_data.plot([],cf.name);
+
+figure;
+ax1=subplot(1,2,1);
+ax2=subplot(1,2,2);
+cf_data.plot(ax1,'CF image')
+cf.CF.plot(ax2,'CF factor',60,'none')
 
 %% 
 %
 % Alternatively, we could use the *phase_coherence_factor* process which 
 % implements the Camacho-Fritsch phase coherence factor beamforming method.
 % We are truly spoilt for choice!
-pcf=process.phase_coherence_factor();
-pcf.channel_data=bmf.channel_data;
-pcf.transmit_apodization=bmf.transmit_apodization;
-pcf.receive_apodization=bmf.receive_apodization;
-pcf.beamformed_data=b_data;
+pcf=postprocess.phase_coherence_factor();
+pcf.transmit_apodization=pipe.transmit_apodization;
+pcf.receive_apodization=pipe.receive_apodization;
+pcf.input=b_data;
 pcf_data=pcf.go();
-pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
-pcf_data.plot([],pcf.name);
+
+figure;
+ax1=subplot(1,2,1);
+ax2=subplot(1,2,2);
+pcf_data.plot(ax1,'FCC image')
+pcf.FCC.plot(ax2,'FCC factor',60,'none')

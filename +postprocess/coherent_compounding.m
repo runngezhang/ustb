@@ -1,10 +1,10 @@
-classdef coherent_compounding < process
+classdef coherent_compounding < postprocess
 %COHERENT_COMPOUNDING   Matlab implementation of Coherent compounding
 %
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Last updated: 2017/05/11$
+%   $Last updated: 2017/09/10$
 
     %% constructor
     methods (Access = public)
@@ -12,7 +12,7 @@ classdef coherent_compounding < process
             h.name='Coherent compounding MATLAB';   
             h.reference='www.ntnu.no';                
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};   
-            h.version='v1.0.3';
+            h.version='v1.0.4';
         end
     end
     
@@ -21,25 +21,38 @@ classdef coherent_compounding < process
     end
     
     methods
-        function out_data=go(h)
-            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output= h.output; 
+                return;
+            end
+            
+            [N_pixels Nrx Ntx N_frames]=size(h.input.data);
 
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             switch h.dimension
                 case dimension.both
                     %out_data.data=zeros(N_pixels, 1, 1, N_frames);
-                    out_data.data=sum(sum(h.beamformed_data.data,2),3);
+                    h.output.data=sum(sum(h.input.data,2),3);
                 case dimension.transmit
                     %out_data.data=zeros(N_pixels, Nrx, 1, N_frames);
-                    out_data.data=sum(h.beamformed_data.data,3);
+                    h.output.data=sum(h.input.data,3);
                 case dimension.receive
                     %out_data.data=zeros(N_pixels, 1, Ntx, N_frames);
-                    out_data.data=sum(h.beamformed_data.data,2);
+                    h.output.data=sum(h.input.data,2);
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
+            
+            % pass reference
+            output = h.output;
+            
+            % update hash
+            h.save_hash();
+
         end
     end
 end

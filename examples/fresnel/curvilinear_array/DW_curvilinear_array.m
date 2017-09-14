@@ -111,19 +111,19 @@ sca.depth_axis=linspace(prb.radius,prb.radius+180e-3,256).';
 sca.apex=uff.point('xyz',[0 0 -prb.radius]);
 sca.plot(fig_handle,'Scenario');    % show mesh
 
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=sca.apex;
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
+pipe.receive_apodization.origo=sca.apex;
 
 %% 
 %
@@ -136,7 +136,7 @@ bmf.receive_apodization.origo=sca.apex;
 % process in order to produce coherently compounded output images.
 
 % beamforming
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 %%
 % Finally, show our results

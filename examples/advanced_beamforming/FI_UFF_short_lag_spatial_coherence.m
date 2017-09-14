@@ -50,19 +50,23 @@ for n=1:numel(channel_data.sequence)
     scan(n).z_axis = z_axis;
 end
 
-%% Delay the channel data
+%% Set up processing pipeline / Delay the channel data
 % We are using no apodization because the SLSC algorithm requires equally
 % weighted channel data from all receive elements
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;    
-bmf.receive_apodization.window=uff.window.none;
-b_data=bmf.go({process.delay_mex process.stack});
+pipe.receive_apodization.window=uff.window.none;
+
+% This will result in a beamformed_data object with the delayed and not
+% summed channel data.
+b_data = pipe.go({midprocess.delay_mex postprocess.stack});
 
 %% Create the Delay-And-Sum image
-das = process.coherent_compounding();
-das.beamformed_data = b_data;
+% If we want the DAS image, we can simply sum them.
+das = postprocess.coherent_compounding();
+das.input = b_data;
 das_image = das.go();
 figure(1);
 das_image.plot(subplot(121),['DAS'],60,'log');
@@ -70,14 +74,13 @@ das_image.plot(subplot(121),['DAS'],60,'log');
 %% Create the Short Lag Spatial Coherence (SLSC) image
 % We are using a kernel size equal to one wavelength, and use M = 10. See
 % the article referenced for more details.
-slsc = process.short_lag_spatial_coherence();
-slsc.receive_apodization = bmf.receive_apodization; 
+slsc = postprocess.short_lag_spatial_coherence();
+slsc.receive_apodization = pipe.receive_apodization; 
 slsc.dimension = dimension.receive;
-slsc.channel_data = bmf.channel_data;
-slsc.scan = bmf.scan;
+slsc.channel_data = pipe.channel_data;
 slsc.maxM = 10;
+slsc.input = b_data;
 slsc.K_in_lambda = 1;
-slsc.beamformed_data = b_data;
 slsc_data = slsc.go();
 
 %% The reference of the SLSC process
@@ -104,7 +107,7 @@ caxis([0 1])
 % Fig 1. from Lediju, M. A., Trahey, G. E., Byram, B. C., & Dahl, J. J. (2011). 
 % Short-lag spatial coherence of backscattered echoes: Imaging characteristics.
 % IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 58(7),
-% 1377?1388. https://doi.org/10.1109/TUFFC.2011.1957
+% 1377-1388. https://doi.org/10.1109/TUFFC.2011.1957
 
 slsc.maxM = 63;
 slsc_data = slsc.go();
@@ -162,30 +165,30 @@ channel_data.print_authorship
 % comment the next line out.
 channel_data.N_frames = 5;
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
-bmf.receive_apodization.window=uff.window.none;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
+
+pipe.receive_apodization.window=uff.window.none;
+
 % You might notice that I'm using the delay_matlab_light, this is to save
 % some precious memory when using all 50 frames :)
-b_data=bmf.go({process.delay_matlab_light process.stack});
+b_data = pipe.go({midprocess.delay_matlab_light postprocess.stack});
 
 % DAS image
-das = process.coherent_compounding();
-das.beamformed_data = b_data;
+das = postprocess.coherent_compounding();
+das.input = b_data;
 das_data = das.go();
 %%
 
 % SLSC image
-slsc = process.short_lag_spatial_coherence();
-slsc.receive_apodization = bmf.receive_apodization;
-slsc.transmit_apodization = bmf.transmit_apodization;
+slsc = postprocess.short_lag_spatial_coherence();
+slsc.receive_apodization = pipe.receive_apodization;
 slsc.dimension = dimension.receive;
-slsc.channel_data = bmf.channel_data;
-slsc.scan = bmf.scan;
+slsc.channel_data = pipe.channel_data;
 slsc.maxM = 10;
+slsc.input = b_data;
 slsc.K_in_lambda = 1;
-slsc.beamformed_data = b_data;
 slsc_data = slsc.go();
 
 %% Plot the two images

@@ -1,10 +1,12 @@
-classdef modified_autocorrelation_displacement_estimation < process
-    % MODIFIED AUTOCORRELATION DISPLACEMENT ESTIMATION   
+classdef autocorrelation_displacement_estimation < postprocess
+    % AUTOCORRELATION DISPLACEMENT ESTIMATION   
     % 
     % Process to estimate displacement. This was originally introduced
     % estimate blood velocity, we have however modified it to estimate
-    % displacement in stead. This implementation also estimates the center
-    % frequency as suggested by 
+    % displacement in stead. 
+    %
+    % NB! There is also an implementation estimating the center frequency,
+    % see process.modified_autocorrelation_displacement_estimation
     %
     % Excerpt from my master thesis http://www.olemarius.net/Thesis/ :
     %
@@ -16,10 +18,6 @@ classdef modified_autocorrelation_displacement_estimation < process
     % demonstrated by Kasai et al. (1985). The thoroughly mathematical analysis of 
     % the technique was done by Angelsen and Kristoffersen (1983).
     %
-    % The center frequency is attenuated proportional to the depth in ultrasound imaging.
-    % In 1995 Loupas et al. suggested to include an estimate of the center frequency, 
-    % and called this the 2D autocorrelator. We will call it the modified autocorrelation method. 
-    %
     % Credits to Thomas B?rstad for providing the original implementation
     % in his masters thesis:
     % B?rstad, T. K. (2010). Comparison of three ultrasound velocity estimators
@@ -30,10 +28,9 @@ classdef modified_autocorrelation_displacement_estimation < process
     
     %% constructor
     methods (Access = public)
-        function h=modified_autocorrelation_displacement_estimation()
+        function h=autocorrelation_displacement_estimation()
             h.name='Autocorrelation Displacement Estimation';
-            h.reference=['Loupas, T., Powers, J. T., & Gill, R. W. (1995). An Axial Velocity Estimator for Ultrasound Blood Flow Imaging, Based on a Full Evaluation of the Doppler Equation by Means of a Two-Dimensional Autocorrelation Approach. IEEE Transactions on Ultrasonics, Ferroelectrics and Frequency Control, 42(4).'...
-                         'Barber, W. D., Eberhard, J. W., & Karr, S. G. (1985). A new time domain technique for velocity measurements using Doppler ultrasound. IEEE Transaction on Biomedical Engineering, 32(3)'...
+            h.reference=['Barber, W. D., Eberhard, J. W., & Karr, S. G. (1985). A new time domain technique for velocity measurements using Doppler ultrasound. IEEE Transaction on Biomedical Engineering, 32(3)'...
                          'Kasai, C., Namekawa, K., Koyano, A., & Omoto, R. (1985). Real-Time Two-Dimensional Blood Flow Imaging Using an Autocorrelation Technique. IEEE Transactions on Sonics and Ultrasonics, 32(3).'...
                          'Angelsen, B.A.J., & Kristoffersen, K. (1983). Discrete time estimation of the mean Doppler frequency in ultrasonic blood velocity measurements. IEEE Transaction on Biomedical Engineering, (4).']; 
             h.implemented_by='Ole Marius Hoel Rindal <olemarius@olemarius.net>, Thomas B?rstad <thomas.borstad@gmail.com>';
@@ -46,12 +43,17 @@ classdef modified_autocorrelation_displacement_estimation < process
         z_gate = 4
         x_gate = 2
         packet_size = 6
-        estimated_center_frequency
+        channel_data
     end
     
     methods
-        function out_data=go(h)
-            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output = h.output; 
+                return;
+            end      
+            [N_pixels Nrx Ntx N_frames]=size(h.input.data);
             
             assert(N_frames>h.packet_size,'The number of frames needs to be higher than the packet size');
             assert(Nrx==1,'The pulsed doppler speckle traking can only be used between frames');
@@ -60,41 +62,36 @@ classdef modified_autocorrelation_displacement_estimation < process
             assert(mod(h.x_gate,2)==0,'Please use an even number for the x_gate');
             
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             % save scan
-            h.scan = out_data.scan;
-            
-            % calculate sampling frequency in image
-            h.beamformed_data.calculate_sampling_frequency(h.channel_data.sound_speed);
+            output.scan = h.input.scan;
             
             % get images in matrix format
-            images = h.beamformed_data.get_image('none-complex');
+            images = h.input.get_image('none-complex');
             
             % create a buffer for the output
-            displacement_data = zeros(size(h.beamformed_data.data,1),size(h.beamformed_data.data,2),...
-                        size(h.beamformed_data.data,3),size(h.beamformed_data.data,4)-h.packet_size+1);
-            temp_fc_hat = zeros(size(images));
+            displacement_data = zeros(size(h.input.data,1),size(h.input.data,2),...
+                        size(h.input.data,3),size(h.input.data,4)-h.packet_size+1);
                     
-            for i = h.packet_size:h.beamformed_data.N_frames
+            for i = h.packet_size:h.input.N_frames
                 % buffer
                 temp_disp = zeros(size(images(:,:,1,1,1)));
                 
                 %Calculate displacement
-                %[temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2),f_c,temp_fc_hat(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2,1,i-h.packet_size+1)] = modified_pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
-                [temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2),dummy,temp_fc_hat(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2,i-h.packet_size+1)] = modified_pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
+                [temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2)] = pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
                 displacement_data(:,1,1,i-h.packet_size+1) = temp_disp(:);
             end
-            h.estimated_center_frequency = temp_fc_hat;
-            out_data.data = displacement_data;
+            
+            output.data = displacement_data;
         end
     end
     
     methods (Access = private)
-        function [d_2,f_hat,fc_hat,C] = modified_pulsed_doppler_displacement_estimation(h,X)
+        function [d_1,f_hat,C] = pulsed_doppler_displacement_estimation(h,X)
             
             c   = h.channel_data.sound_speed;           %Speed of sound
-            fs  = h.beamformed_data.sampling_frequency; %Sampling frequency
+            fc = h.channel_data.pulse.center_frequency; %Central frequency
             U = h.z_gate;
             V = h.x_gate;
             O = h.packet_size;
@@ -106,16 +103,8 @@ classdef modified_autocorrelation_displacement_estimation < process
             R_0_1 = conv2(R_0_1, ones(U,1), 'valid');
             R_0_1 = conv2(R_0_1, ones(1,V), 'valid');
             
-            %Autocorrelation lag
-            R_1_0 = sum(X(1:end-1,:,:).*X_conj(2:end,:,:),3);
-            R_1_0 = conv2(R_1_0, ones(U,1), 'valid');
-            R_1_0 = conv2(R_1_0, ones(1,V), 'valid');
-            
             %Estimated doppler frequency
             f_hat = (angle((R_0_1))/(2*pi));
-            
-            %Estimated centeral frequency
-            fc_hat = abs((angle(R_1_0))/(2*pi*1/fs));
             
             %Correlation coefficient estimation qualityindicator.
             C = sum(X(1:end-1,:,:).*X_conj(1:end-1,:,:),3);
@@ -123,8 +112,8 @@ classdef modified_autocorrelation_displacement_estimation < process
             C = conv2(C, ones(1,V), 'valid');
             C = (O/(O-1))*abs(R_0_1)./C;
             
-            %Modified autocorrelation method
-            d_2 = c*f_hat./(2*fc_hat);
+            %Autocorrelation method
+            d_1 = c*f_hat/(2*fc);
         end
         
         

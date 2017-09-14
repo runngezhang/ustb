@@ -27,7 +27,7 @@ classdef matrix_array < uff.probe
     %   $Last updated: 2017/06/11$
 
     %% compulsory properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         pitch_x        % distance between the elements in the azimuth direction [m]
         pitch_y        % distance between the elements in the elevation direction [m]
         N_x            % number of elements in the azimuth direction
@@ -35,7 +35,7 @@ classdef matrix_array < uff.probe
     end
 
     %% optional properties
-    properties  (SetAccess = public)
+    properties  (Access = public)
         element_width  % width of the elements in the azimuth direction [m]
         element_height % height of the elements in the elevation direction [m]
     end

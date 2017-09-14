@@ -311,17 +311,16 @@ for n=1:numel(channel_data.sequence)
      scan(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 
-%% BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
+%% Set up the processing pipeline and beamform
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf.receive_apodization.window=uff.window.boxcar;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=bmf.go({process.das_mex process.stack})
+b_data=pipe.go({midprocess.das_mex postprocess.stack})
 %% show
 b_data.plot(1,'DAS',60);
 

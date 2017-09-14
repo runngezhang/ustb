@@ -47,17 +47,15 @@ sca.z_axis = linspace(0,50e-3,256).';
 %%
 %
 % and beamform
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
     
-bmf.receive_apodization.window=uff.window.none;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.none;
+pipe.receive_apodization.f_number=1.7;
     
-bmf.transmit_apodization.window=uff.window.none;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.none;
+pipe.transmit_apodization.f_number=1.7;
     
-b_data2=bmf.go({process.delay_mex process.coherent_compounding});
+b_data2=pipe.go({midprocess.delay_mex postprocess.coherent_compounding});
 b_data2.plot();

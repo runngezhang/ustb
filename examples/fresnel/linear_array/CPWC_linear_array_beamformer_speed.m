@@ -113,27 +113,27 @@ channel_data=sim.go();
 sca=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(0e-3,40e-3,256).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.0;
+pipe.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.0;
+pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
+% The *pipeline* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. By changing the *process*
 % chain other beamforming sequences can be implemented. It returns yet 
 % another *UFF* structure: *beamformed_data*.
@@ -147,29 +147,29 @@ bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % respect to the others for increasing amounts of data.
 
 % beamforming
-n_frame=1:2:10
+n_frame=1:2:10;
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
     
     % Time USTB's MATLAB delay-and-sum implementation
     tic
-    b_data=bmf.go({process.das_matlab() process.coherent_compounding()}); 
+    b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()}); 
     das_matlab_time(n)=toc;
     
     % Time USTB's MATLAB delay implementation
     tic
-    b_data=bmf.go({process.delay_matlab() process.coherent_compounding()});
+    b_data=pipe.go({midprocess.delay_matlab() postprocess.coherent_compounding()});
     delay_matlab_time(n)=toc;
     
     % Time USTB's MEX delay-and-sum implementation
     tic
-    b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+    b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
     das_mex_time(n)=toc;
 
     % Time USTB's MEX delay implementation
     tic
-    b_data=bmf.go({process.delay_mex() process.coherent_compounding()});
+    b_data=pipe.go({midprocess.delay_mex() postprocess.coherent_compounding()});
     delay_mex_time(n)=toc;
 
     % Plot the runtimes

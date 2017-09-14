@@ -18,7 +18,7 @@ classdef sector_scan < uff.scan
     %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %   $Date: 2017/06/18 $
 
-    properties  (SetAccess = public)
+    properties  (Access = public)
         azimuth_axis                % Vector containing the azimuth coordinates of the azimuth axis [rad]
         depth_axis                  % Vector containing the distance coordinates of the distance axis [m]
         apex         = uff.point()  % POINT class

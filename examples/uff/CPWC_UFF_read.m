@@ -55,7 +55,7 @@ figure;
 h1=subplot(1,2,1)
 b_data.plot(h1,'object.read');
 h2=subplot(1,2,2)
-b_data2.plot(h2,'uff.read_object');
+b_data2.plot(h2,'uff.read object');
 
 %% Reading channel data
 %
@@ -69,20 +69,20 @@ channel_data=uff.read_object(filename,'/channel_data');
 %
 % And let us beamform that data with USTB
  
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.0;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.0;
+pipe.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.0;
-bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.0;
+pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 
 % beamforming
-b_data=bmf.go({process.das_mex() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
 b_data.plot();
 
 %%

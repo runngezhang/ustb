@@ -223,23 +223,16 @@ scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e
 % ultrasound image. We now use a USTB structure *beamformer*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=scan;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
 % We'll use a uniform apodization using the full aperture
-bmf.receive_apodization.window=uff.window.none;
-bmf.transmit_apodization.window=uff.window.none;
-
-% bmf.receive_apodization.window=uff.window.none;
-% bmf.receive_apodization.f_number=1.7;
-% bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
-% bmf.transmit_apodization.window=uff.window.none;
-% bmf.transmit_apodization.f_number=1.7;
-% bmf.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.window=uff.window.none;
+pipe.transmit_apodization.window=uff.window.none;
 
 % Delay and sum on receive, then coherent compounding
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % Display image
 figure(1);clf
