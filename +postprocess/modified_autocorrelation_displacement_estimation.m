@@ -1,4 +1,4 @@
-classdef modified_autocorrelation_displacement_estimation < process
+classdef modified_autocorrelation_displacement_estimation < postprocess
     % MODIFIED AUTOCORRELATION DISPLACEMENT ESTIMATION   
     % 
     % Process to estimate displacement. This was originally introduced
@@ -47,11 +47,18 @@ classdef modified_autocorrelation_displacement_estimation < process
         x_gate = 2
         packet_size = 6
         estimated_center_frequency
+        channel_data
     end
     
     methods
-        function out_data=go(h)
-            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output = h.output; 
+                return;
+            end 
+            
+            [N_pixels Nrx Ntx N_frames]=size(h.input.data);
             
             assert(N_frames>h.packet_size,'The number of frames needs to be higher than the packet size');
             assert(Nrx==1,'The pulsed doppler speckle traking can only be used between frames');
@@ -60,33 +67,32 @@ classdef modified_autocorrelation_displacement_estimation < process
             assert(mod(h.x_gate,2)==0,'Please use an even number for the x_gate');
             
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             % save scan
-            h.scan = out_data.scan;
+            output.scan = h.input.scan;
             
             % calculate sampling frequency in image
-            h.beamformed_data.calculate_sampling_frequency(h.channel_data.sound_speed);
+            h.input.calculate_sampling_frequency(h.channel_data.sound_speed);
             
             % get images in matrix format
-            images = h.beamformed_data.get_image('none-complex');
+            images = h.input.get_image('none-complex');
             
             % create a buffer for the output
-            displacement_data = zeros(size(h.beamformed_data.data,1),size(h.beamformed_data.data,2),...
-                        size(h.beamformed_data.data,3),size(h.beamformed_data.data,4)-h.packet_size+1);
+            displacement_data = zeros(size(h.input.data,1),size(h.input.data,2),...
+                        size(h.input.data,3),size(h.input.data,4)-h.packet_size+1);
             temp_fc_hat = zeros(size(images));
                     
-            for i = h.packet_size:h.beamformed_data.N_frames
+            for i = h.packet_size:h.input.N_frames
                 % buffer
                 temp_disp = zeros(size(images(:,:,1,1,1)));
                 
                 %Calculate displacement
-                %[temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2),f_c,temp_fc_hat(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2,1,i-h.packet_size+1)] = modified_pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
                 [temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2),dummy,temp_fc_hat(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2,i-h.packet_size+1)] = modified_pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
                 displacement_data(:,1,1,i-h.packet_size+1) = temp_disp(:);
             end
             h.estimated_center_frequency = temp_fc_hat;
-            out_data.data = displacement_data;
+            output.data = displacement_data;
         end
     end
     
@@ -94,7 +100,7 @@ classdef modified_autocorrelation_displacement_estimation < process
         function [d_2,f_hat,fc_hat,C] = modified_pulsed_doppler_displacement_estimation(h,X)
             
             c   = h.channel_data.sound_speed;           %Speed of sound
-            fs  = h.beamformed_data.sampling_frequency; %Sampling frequency
+            fs  = h.input.sampling_frequency; %Sampling frequency
             U = h.z_gate;
             V = h.x_gate;
             O = h.packet_size;

@@ -1,4 +1,4 @@
-classdef autocorrelation_displacement_estimation < process
+classdef autocorrelation_displacement_estimation < postprocess
     % AUTOCORRELATION DISPLACEMENT ESTIMATION   
     % 
     % Process to estimate displacement. This was originally introduced
@@ -43,11 +43,17 @@ classdef autocorrelation_displacement_estimation < process
         z_gate = 4
         x_gate = 2
         packet_size = 6
+        channel_data
     end
     
     methods
-        function out_data=go(h)
-            [N_pixels Nrx Ntx N_frames]=size(h.beamformed_data.data);
+        function output=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output = h.output; 
+                return;
+            end      
+            [N_pixels Nrx Ntx N_frames]=size(h.input.data);
             
             assert(N_frames>h.packet_size,'The number of frames needs to be higher than the packet size');
             assert(Nrx==1,'The pulsed doppler speckle traking can only be used between frames');
@@ -56,22 +62,19 @@ classdef autocorrelation_displacement_estimation < process
             assert(mod(h.x_gate,2)==0,'Please use an even number for the x_gate');
             
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             % save scan
-            h.scan = out_data.scan;
-            
-            % calculate sampling frequency in image
-            h.beamformed_data.calculate_sampling_frequency(h.channel_data.sound_speed);
+            output.scan = h.input.scan;
             
             % get images in matrix format
-            images = h.beamformed_data.get_image('none-complex');
+            images = h.input.get_image('none-complex');
             
             % create a buffer for the output
-            displacement_data = zeros(size(h.beamformed_data.data,1),size(h.beamformed_data.data,2),...
-                        size(h.beamformed_data.data,3),size(h.beamformed_data.data,4)-h.packet_size+1);
+            displacement_data = zeros(size(h.input.data,1),size(h.input.data,2),...
+                        size(h.input.data,3),size(h.input.data,4)-h.packet_size+1);
                     
-            for i = h.packet_size:h.beamformed_data.N_frames
+            for i = h.packet_size:h.input.N_frames
                 % buffer
                 temp_disp = zeros(size(images(:,:,1,1,1)));
                 
@@ -80,7 +83,7 @@ classdef autocorrelation_displacement_estimation < process
                 displacement_data(:,1,1,i-h.packet_size+1) = temp_disp(:);
             end
             
-            out_data.data = displacement_data;
+            output.data = displacement_data;
         end
     end
     

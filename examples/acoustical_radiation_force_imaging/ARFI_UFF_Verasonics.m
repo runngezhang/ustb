@@ -36,20 +36,18 @@ sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
 sca.z_axis = linspace(0,30e-3,256).';
  
 % BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.origo=uff.point('xyz',[0, 0, -Inf]);
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
 
-% Do beamforming
-b_data=bmf.go({process.das_mex process.coherent_compounding});
+% Start the processing pipeline
+b_data=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
 
 %% Show beamformed images
 % The b-mode images is really not that interesting. The displacement
@@ -64,11 +62,10 @@ b_data.plot(1,['B-mode'],[30]);
 % displacement. This is done using a USTB *process* called
 % *autocorrelation_displacement_estimation*. Have a look at its references to see
 % the details.
-%
 
-disp = process.autocorrelation_displacement_estimation();
+disp = postprocess.autocorrelation_displacement_estimation();
 disp.channel_data = channel_data;
-disp.beamformed_data = b_data;
+disp.input = b_data;
 disp.z_gate = 4;        % Nbr of samples to average estimate in depth / z
 disp.x_gate = 2;        % Nbr of samples to average estimate in lateral / x
 disp.packet_size = 6;   % How many frames to use in the estimate
@@ -82,9 +79,9 @@ disp.print_implemented_by    % Credits to the people who implemented it ;)
 % *modified_autocorrelation_displacement_estimation*. Please see the
 % individiual implementations and references for more details.
 
-disp_mod = process.modified_autocorrelation_displacement_estimation();
+disp_mod = postprocess.modified_autocorrelation_displacement_estimation();
 disp_mod.channel_data = channel_data;
-disp_mod.beamformed_data = b_data;
+disp_mod.input = b_data;
 disp_mod.z_gate = 4;        % Nbr of samples to average estimate in depth / z
 disp_mod.x_gate = 2;        % Nbr of samples to average estimate in lateral / x
 disp_mod.packet_size = 6;   % How many frames to use in the estimate
@@ -107,12 +104,12 @@ disp_mod.print_implemented_by    % Credits to the people who implemented it ;)
 % because we don't want to do any compression of the displacement data
 
 f2 = figure(2);clf;
-handle = displacement_estimation.plot(f2,['Displacement'],[],'none');
+displacement_estimation.plot(f2,['Displacement'],[],'none');
 caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
 colormap(gca(f2),'hot');       % Changing the colormap
 
 f3 = figure(3);clf;
-handle = displacement_estimation_modified.plot(f3,['Displacement modified estimation'],[],'none');
+displacement_estimation_modified.plot(f3,['Displacement modified estimation'],[],'none');
 caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
 colormap(gca(f3),'hot');       % Changing the colormap
 
@@ -120,7 +117,7 @@ colormap(gca(f3),'hot');       % Changing the colormap
 % Let's check the estimated center frequency and make sure that it is 
 % around 5 MHz as it should be. It is, but is the estimate any better?
 figure(4);
-imagesc(disp_mod.scan.x_axis*1000,disp_mod.scan.z_axis*1000,disp_mod.estimated_center_frequency(:,:,10));
+imagesc(displacement_estimation_modified.scan.x_axis*1000,displacement_estimation_modified.scan.z_axis*1000,disp_mod.estimated_center_frequency(:,:,10));
 xlabel('X [mm]');ylabel('Z [mm]');title('Estimated Center Frequency');
 colorbar;
 
@@ -129,14 +126,20 @@ colorbar;
 % the default paramters (which are the same as the ones used above) and do
 % the beamforming and the displacement estimation all in one call!
 %
+% And the pipe will check if some of the calculations allready have been
+% done and skip them.
+%
 % Isn't the USTB great?!
 
-disp = bmf.go({process.das_mex process.coherent_compounding ...
-                                process.autocorrelation_displacement_estimation});
+disp = postprocess.autocorrelation_displacement_estimation();
+disp.channel_data = channel_data;
+
+disp_img = pipe.go({midprocess.das_mex postprocess.coherent_compounding ...
+                                disp});
 %%
 % Display the displacement 
 % Which gives us the same result as above.
 f5 = figure(5);clf;
-disp.plot(f5,['Displacement'],[],'none');
+disp_img.plot(f5,['Displacement'],[],'none');
 caxis([-0.1*10^-6 0.2*10^-6]); % Updating the colorbar
 colormap(gca(f5),'hot');       % Changing the colormap
