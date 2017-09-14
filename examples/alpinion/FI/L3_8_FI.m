@@ -33,28 +33,30 @@ idx = 1;
 for n=1:numel(channel_data.sequence)
     sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
-%% Define BEAMFORMER
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
-bmf.receive_apodization.window=uff.window.tukey25;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+%% Define BEAMFORMER pipeline
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
+pipe.receive_apodization.window=uff.window.tukey25;
+pipe.receive_apodization.f_number=1.7;
 
 % Do beamforming
-b_data=bmf.go({process.das_mex process.stack});
+b_data=bmf.go({midprocess.das_mex postprocess.stack});
 %% Show image
 b_data.plot(11,['Alpinion FI dataset'],60);
 %%
-if strfind(tag, 'scatterers')
-    channel_data.name = {'FI dataset of hyperechoic cyst and points scatterers recorded on an Alpinion scanner with a L3-8 Probe from a CIRS General Purpose Ultrasound Phantom'};
-else
-    channel_data.name = {'FI dataset of hypoechic cyst recorded on an Alpinion scanner with a L3-8 Probe from a CIRC General Purpose Ultrasound Phantom'};
+answer = questdlg('Do you want to save this dataset?');
+if strcmp(answer,'Yes')
+    if strfind(tag, 'scatterers')
+        channel_data.name = {'FI dataset of hyperechoic cyst and points scatterers recorded on an Alpinion scanner with a L3-8 Probe from a CIRS General Purpose Ultrasound Phantom'};
+    else
+        channel_data.name = {'FI dataset of hypoechic cyst recorded on an Alpinion scanner with a L3-8 Probe from a CIRC General Purpose Ultrasound Phantom'};
+    end
+    channel_data.author = {'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Muyinatu Lediju Bell <mledijubell@jhu.edu>'};
+    channel_data.reference = {'www.ultrasoundtoolbox.com'};
+    channel_data.version = {'1.0.2'};
+    
+    %%
+    uff_filename = ['./Alpinion_L3-8_',tag,'.uff']
+    channel_data.write(uff_filename,'channel_data');
 end
-channel_data.author = {'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Muyinatu Lediju Bell <mledijubell@jhu.edu>'}; 
-channel_data.reference = {'www.ultrasoundtoolbox.com'};
-channel_data.version = {'1.0.2'};
-
-%%
-uff_filename = ['./Alpinion_L3-8_',tag,'.uff']
-channel_data.write(uff_filename,'channel_data');
