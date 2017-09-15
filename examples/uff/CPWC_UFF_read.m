@@ -15,19 +15,18 @@
 
 % data location
 url='http://hirse.medisin.ntnu.no/ustb/data/uff/';   % if not found data will be downloaded from here
-local_path = [ustb_path(),'/data/'];                 % location of example data in this computer                      
-addpath(local_path);
-short_filename='test01.uff';
-filename=[local_path short_filename];
+filename='test01.uff';
 
-% check if the file is available in the local path & downloads otherwise
-tools.download(short_filename, url, local_path);
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% Reading beamformed data
 %
 % Now that the file is in the machine we can start loading data. The first 
 % would be to check what is in there with the *uff.index* function 
-uff.index(filename,'/',display);
+uff.index([data_path filesep filename],'/',display);
 
 
 %%
@@ -38,14 +37,14 @@ uff.index(filename,'/',display);
 % * we can define an object of the correct class and use the method *read*:
 
 b_data=uff.beamformed_data();
-b_data.read(filename,'/b_data');
+b_data.read([data_path filesep filename],'/b_data');
 
 %%
 % 
 % * or we can use the function *uff.read_object* and let the function
 % create the correct object class for us
 
-b_data2=uff.read_object(filename,'/b_data');
+b_data2=uff.read_object([data_path filesep filename],'/b_data');
 
 %%
 % 
@@ -63,7 +62,7 @@ b_data2.plot(h2,'uff.read object');
 % uff.channel_data objects. Let us read them both
 
 %scan=uff.read_object(filename,'/scan');
-channel_data=uff.read_object(filename,'/channel_data');
+channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 
 %%
 %
@@ -95,7 +94,7 @@ b_data.plot();
 % without having to access each dataset individually. It suffices to call
 % the *read* method without parameters and...
 
-vars=uff.read_object(filename);
+vars=uff.read_object([data_path filesep filename]);
 
 %%
 %

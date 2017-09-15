@@ -7,7 +7,7 @@
 % _by Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %  and Muyinatu Lediju Bell <mledijubell@jhu.edu>_
 %
-% Last updated 11.09.2017
+%   $Last updated: 2017/09/15$
 
 %% Checking the file is in the path
 %
@@ -16,23 +16,22 @@
 % websever.
 
 clear all; close all;
+
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
-local_path = [ustb_path(),'/data/']; % location of example data
+filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
 
-% FI datasets
-short_filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
-filename=[local_path short_filename];
-
-% check if the file is available in the local path or downloads otherwise
-tools.download(short_filename, url, local_path);
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% Reading data
 %
 % Let's first check if we are lucky and the file allready contains
 % beamformed_data that we can display.
 display=true;
-content = uff.index(filename,'/',display);
+content = uff.index([data_path filesep filename],'/',display);
 
 has_b_data = false;
 for i = 1:length(content)
@@ -47,7 +46,7 @@ end
 % beamformed
 
 if has_b_data
-    b_data=uff.read_object(filename,'/b_data');
+    b_data=uff.read_object([data_path filesep filename],'/b_data');
     b_data.plot([],'Stored image');
 end
 
@@ -55,7 +54,7 @@ end
 % If it doesn't have any beamformed data at least it should have some
 % channel_data. So let's read that.
 
-channel_data=uff.read_object(filename,'/channel_data');
+channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 
 %%
 %

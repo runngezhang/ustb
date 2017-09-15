@@ -9,7 +9,7 @@
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
 %  and Ole Marius Hoel Rindal <olemarius@olemarius.net>_ 
 %
-% Last update: 07.08.2017
+%   $Last updated: 2017/09/15$
 
 %% Checking the file is in the path
 %
@@ -19,22 +19,23 @@
 
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
-local_path = [ustb_path(),'/data/']; % location of example data in this computer
 filename='L7_CPWC_193328.uff';
 
-% check if the file is available in the local path & downloads otherwise
-tools.download(filename, url, local_path);
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% Checking what's inside
 %
 % Now that the file is in the machine we can start loading data. The first 
 % would be to check what is in there with the *uff.index* function 
-uff.index([local_path filename],'/',display);
+uff.index([data_path filesep filename],'/',display);
 
 %%
 % Let's read the channel data,
     
-channel_data=uff.read_object([local_path filename],'/channel_data');
+channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 
 %%
 %

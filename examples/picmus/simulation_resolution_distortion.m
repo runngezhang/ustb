@@ -10,7 +10,7 @@
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
 %  and Olivier Bernard <olivier.bernard@insa-lyon.fr>
 %
-% Last updated 07.08.2017
+%   $Last updated: 2017/09/15$
 
 %% Checking if the file is in the local path, and downloading otherwise
 %
@@ -18,12 +18,12 @@
 
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
-local_path = [ustb_path(),'/data/']; % location of example data in this computer
-addpath(local_path);
 filename='PICMUS_simulation_resolution_distortion.uff';
 
-% check if the file is available in the local path & downloads otherwise
-tools.download(filename, url, local_path);
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% What's inside?
 %

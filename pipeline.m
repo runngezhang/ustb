@@ -6,7 +6,7 @@ classdef pipeline < process
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-%   $Date: 2017/03/10$
+%   $Last updated: 2017/09/15$
 
     %% public properties
     properties  (Access = public)

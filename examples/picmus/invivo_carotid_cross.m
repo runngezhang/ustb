@@ -8,7 +8,10 @@
 % the carotid artery of a volunteer. 
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 
-%  and Olivier Bernard <olivier.bernard@insa-lyon.fr> 26.05.2017_
+%  and Olivier Bernard <olivier.bernard@insa-lyon.fr>_ 
+%
+%   $Last updated: 2017/09/15$
+
 
 %% Getting the data
 %
@@ -16,11 +19,12 @@
 
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
-local_path = [ustb_path(),'/data/']; % location of example data in this computer
 filename='PICMUS_carotid_cross.uff';
 
-% check if the file is available in the local path & downloads otherwise
-tools.download(filename, url, local_path);
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% What's inside?
 %
