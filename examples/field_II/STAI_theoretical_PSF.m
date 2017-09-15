@@ -67,7 +67,7 @@ pulse.fractional_bandwidth = 0.1;             % probe bandwidth [1]
 t0=(-1.0/pulse.fractional_bandwidth /f0): dt : (1.0/pulse.fractional_bandwidth /f0);
 excitation=1;
 impulse_response=gauspuls(t0, f0, pulse.fractional_bandwidth );
-two_ways_ir= conv(conv(impulse_response,impulse_response),excitation);
+two_ways_ir= conv(conv(impulse_response,impulse_response),excitation)./norm(impulse_response).^2;
 if mod(length(impulse_response),2)
     lag=(length(two_ways_ir)-1)/2;          
 else
@@ -77,15 +77,13 @@ end
 % We display the pulse to check that the lag estimation is on place 
 % (and that the pulse is symmetric)
 
-figure;
-plot((0:(length(two_ways_ir)-1))*dt -lag*dt,two_ways_ir); hold on; grid on; axis tight
-plot((0:(length(two_ways_ir)-1))*dt -lag*dt,abs(hilbert(two_ways_ir)),'r')
+fig_handle=figure;
+plot(((0:(length(two_ways_ir)-1))*dt -lag*dt)*1e6,two_ways_ir); hold on; grid on; axis tight
+plot(((0:(length(two_ways_ir)-1))*dt -lag*dt)*1e6,abs(hilbert(two_ways_ir)),'r')
 plot([0 0],[min(two_ways_ir) max(two_ways_ir)],'g');
 legend('2-ways pulse','Envelope','Estimated lag');
 title('2-ways impulse response Field II');
-
-% Plot the pulse from USTB simulation
-pulse.plot([],'2-way pulse for Fresnel simulator');
+pulse.plot(fig_handle,'','--');
 
 %% Aperture Objects
 % Next, we define the the mesh geometry with the help of Field II's
