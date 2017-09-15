@@ -68,7 +68,7 @@ pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=1.7;
 
 % launch beamforming
-b_data_new=pipe.go({process.das_mex process.coherent_compounding});
+b_data_new=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
 
 %% Comparing results
 %
