@@ -18,22 +18,22 @@ function object = read_object(filename, location, verbose)
 
 flag_v10X=false;
 
-if nargin<2||isempty(location) location='/'; end
-if nargin<3 verbose=true; end
+if nargin<2||isempty(location); location='/'; end
+if nargin<3; verbose=true; end
 
 % check if path to file exists
 [pathstr,~] = fileparts(filename);
 if ~exist(pathstr,'file')
-    error(sprintf('UFF: The path %s does not exist.',pathstr));
+    error('UFF: The path %s does not exist.', pathstr);
 end
 
 % check if file exists
 if ~(exist(filename,'file')==2)
-    error(sprintf('UFF: The file %s does not exist.',filename));
+    error('UFF: The file %s does not exist.', filename);
 end
 
 % check if version matches
-file_version=h5readatt(filename, '/','version');    % read file version
+file_version=h5readatt(filename, '/', 'version');    % read file version
 file_version=file_version{1};                       % from cell to string
 file_version=file_version(int32(file_version)>0);   % removing 0's from 0-terminated strings
 if ~strcmp(file_version, uff.version)
@@ -41,7 +41,7 @@ if ~strcmp(file_version, uff.version)
     if strcmp(file_version, 'v1.0.0')||strcmp(file_version, 'v1.0.1')
         flag_v10X=true;
     else
-        error(sprintf('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version));
+        error('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version);
     end
 end
 
@@ -54,7 +54,7 @@ end
 if nargin<2 || strcmp(location,'/')
     % we read everything in the main location
     item=uff.index(filename,'/');
-    if length(item) object={}; end
+    if length(item); object={}; end
     for n=1:length(item)
         object{n}=uff.read_object(filename,item{n}.location,verbose);
     end
@@ -135,7 +135,7 @@ else
                     end
                 end
             else
-                warning(sprintf('Class %s not supported by UFF; skipping write.',class(value)));
+                warning('UFF:UnsupportedClass', 'Class %s not supported by UFF; skipping write.', class(value));
                 object=[];
             end
     end
