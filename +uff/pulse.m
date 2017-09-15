@@ -64,6 +64,10 @@ classdef pulse
                 title('Pulse'); hold on;
             end
             
+            if ~exist('style')||~isempty(style)
+                style ='-';
+            end
+            
             plot(axis_handle,t0*1e6,h.signal(t0),style); grid on; axis tight;
             xlabel('time [mus]');
             set(gca,'ZDir','Reverse');
