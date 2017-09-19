@@ -3,18 +3,18 @@
 % In this example we show how to read channel and beamformed data from a
 % UFF (Ultrasound File Format) file. You will need an internet connection
 % to download data. Otherwise, you can run the *CPWC_UFF_write.m* first so
-% the file 'test02.uff' is in the current path.
+% the file 'test01.uff' is in the current path.
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 07.08.2017_
 
 %% Checking the file is in the path
 %
 % To read data from a UFF file the first we need is, you guessed it, a UFF
-% file. We check if it is on the current path and download it from the NTNU 
+% file. We check if it is on the current path and download it from the USTB 
 % server otherwise.
 
 % data location
-url='http://hirse.medisin.ntnu.no/ustb/data/uff/';   % if not found data will be downloaded from here
+url='http://www.ustb.no/datasets/';   % if not found data will be downloaded from here
 filename='test01.uff';
 
 % checks if the data is in your data path, and downloads it otherwise.
@@ -27,7 +27,6 @@ tools.download(filename, url, data_path);
 % Now that the file is in the machine we can start loading data. The first 
 % would be to check what is in there with the *uff.index* function 
 uff.index([data_path filesep filename],'/',display);
-
 
 %%
 % 
