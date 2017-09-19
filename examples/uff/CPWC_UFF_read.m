@@ -10,7 +10,7 @@
 %% Checking the file is in the path
 %
 % To read data from a UFF file the first we need is, you guessed it, a UFF
-% file. We check if it is on the current path and download it from the NTNU 
+% file. We check if it is on the current path and download it from the USTB 
 % server otherwise.
 
 % data location
