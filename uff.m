@@ -78,14 +78,6 @@ classdef uff < handle
             end
         end
     end
-
-    %% TOOLS
-    methods
-        function  out  = objname(h)
-            % OBJNAME Gives object name
-            out = evalin('caller','inputname(1)');
-        end
-    end
     
     %% HASH tools
     methods
@@ -153,7 +145,7 @@ classdef uff < handle
             %
             %   See also UFF.READ, UFF.INDEX
             
-            if nargin<3||isempty(name) name=h.objname; end
+            if nargin<3||isempty(name) name=evalin('caller','inputname(1)'); end
             if nargin<4 location=[]; end
             if nargin<5||isempty(verbose) verbose=true; end
             
