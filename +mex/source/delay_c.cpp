@@ -48,17 +48,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// VERBOSE
 	///////////////////////////////////////
 	bool verbose = false;
-	if (nrhs == 7)  verbose = (*((float*)mxGetData(M_VERBOSE))) > EPS;
+	if (nrhs == 7)  verbose = (*((int*)mxGetData(M_VERBOSE))) > EPS;
 
 	if (verbose) {
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" USTB mex delay for multiple waves\n");
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" Single precision\n");
-		mexPrintf(" Vers:  1.0.5\n");
+		mexPrintf(" Vers:  1.0.6\n");
 		mexPrintf(" Auth:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>\n");
-		mexPrintf(" Date:  2017/05/02\n");
+		mexPrintf(" Date:  2017/09/18\n");
 		mexPrintf("---------------------------------------------------------------\n");
+        mexEvalString("drawnow;");
 	}
 
 	// Channel data

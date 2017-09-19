@@ -134,7 +134,9 @@ classdef das_mex < midprocess
                     apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                     
                     % das
-                    h.beamformed_data.data(:,1,n_wave,:)=mex.das_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);
+                    if any(any(data(:,:,n_wave,:)>0))
+                        h.beamformed_data.data(:,1,n_wave,:)=mex.das_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);
+                    end
                     
                     % assign phase according to 2 times the receive propagation distance
                     if(w0>eps)

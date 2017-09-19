@@ -48,36 +48,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// VERBOSE
 	///////////////////////////////////////
 	bool verbose = false;
-	if (nrhs == 7)  verbose = (*((float*)mxGetData(M_VERBOSE))) > EPS;
+	if (nrhs == 7)  verbose = (*((int*)mxGetData(M_VERBOSE))) > 0;
 
 	if (verbose) {
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" USTB mex delay-and-sum for multiple waves\n");
 		mexPrintf("---------------------------------------------------------------\n");
 		mexPrintf(" Single precision\n");
-		mexPrintf(" Vers:  1.0.5\n");
+		mexPrintf(" Vers:  1.0.6\n");
 		mexPrintf(" Auth:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>\n");
-		mexPrintf(" Date:  2017/05/22\n");
+		mexPrintf(" Date:  2017/09/18\n");
 		mexPrintf("---------------------------------------------------------------\n");
+        mexEvalString("drawnow;");
 	}
-
+    
 	// Channel data
 	int ndim = (int)mxGetNumberOfDimensions(M_P);
 	if (ndim<2 || ndim>4) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown channel data format. Expected from 2 to 4 dimensions: [time, channel, wave, frame]");
 	const mwSize* p_dim = mxGetDimensions(M_P);
+    bool complex_data;
 	int L = (int)p_dim[0];	// number of time samples
 	int N = (int)p_dim[1];	// number of channels 
 	int W = (int)1; if (ndim > 2) W = (int)p_dim[2];	// number of waves
     int F = (int)1;	if (ndim > 3) F = (int)p_dim[3];	// number of frames
 	if (mxIsDouble(M_P)) mexErrMsgTxt("The channel data should be single precision");    
-	
+    if (mxIsComplex(M_P)) {
+        if (verbose) mexPrintf("Data Type                    Complex\n");
+        complex_data = true;
+    } else {
+        if (verbose) mexPrintf("Data Type                    Real\n");
+        complex_data = false;
+    }
+    
     if (verbose) {
 		mexPrintf("Time Samples                    %i\n", L);
 		mexPrintf("Channels						%i\n", N);
-		mexPrintf("Waves                            %i\n", W);        
+		mexPrintf("Waves                           %i\n", W);        
 		mexPrintf("Frames							%i\n", F);
+        mexEvalString("drawnow;");
 	}
-
+    
     // Delays
 	ndim = (int)mxGetNumberOfDimensions(M_DELAY);
 	if (ndim<2 || ndim>3) mexErrMsgIdAndTxt("Toolbox:SRP_SRC:Dimensions", "Unknown delay format. Expected 2 or 3 dimensions: [pixel, channel, waves]");
@@ -91,6 +101,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	
 	if (verbose) {
 		mexPrintf("Pixels							%i\n", P);
+        mexEvalString("drawnow;");        
 	}
 
     // Apodization
@@ -121,8 +132,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	if (verbose) {
         mexPrintf("Initial time					%0.2f us\n", t0*1e6);
         mexPrintf("---------------------------------------------------------------\n");
+        mexEvalString("drawnow;");      
 	}
-    
+
     // modulation frequency
 	float wd = 0;
 	bool IQ_version = false;
@@ -131,11 +143,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	if (mxIsDouble(M_FD)) mexErrMsgTxt("The modulation frequency should be single precision");
     const float fd = *((float*)mxGetData(M_FD));
 	if (fd > EPS) {
-		if (verbose) mexPrintf("Modulation frequency:			%0.2f MHz\n", fd / 1e6);
-		wd = 2 * PI * fd;
+		if (verbose) {
+            mexPrintf("Modulation frequency:			%0.2f MHz\n", fd / 1e6);
+            mexEvalString("drawnow;");   
+            if (!complex_data) mexErrMsgTxt("A modulation frequency > 0 but the input data is real. Check inputs.");
+        }
+		wd =  2 * (float)PI * (float)fd;
 		IQ_version = true;
-	}
-    
+	} 
+
     ///////////////////////////////////
 	// OUTPUTS VAR
 	mwSize out_size2[4];
@@ -147,7 +163,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	float* Dr = (float*)mxGetData(M_D);
 	float* Di = (float*)mxGetImagData(M_D);
 
-
     // size variables
     const unsigned int LN=L*N;
     const unsigned int LNW=LN*W;
@@ -156,29 +171,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     const unsigned int PNW=PN*W;
     const unsigned int PF=P*F;
     const unsigned int PFN=PF*N;
-    
-	// build the 4D matrix as a vector of vector of vectors of pointers
+
+    // build the 4D matrix as a vector of vector of vectors of pointers
 	float* Pr = (float*)mxGetData(M_P);         // real part of channel data
-	float* Pi = (float*)mxGetImagData(M_P);		// imaginary part of channel data
-    std::vector<std::vector<vec_p_float>> pr;
-    std::vector<std::vector<vec_p_float>> pi;
-    for (int f = 0; f < F; f++) {
-		std::vector<vec_p_float> temp_temp_r;
-        std::vector<vec_p_float> temp_temp_i;
-		for (int w = 0; w < W; w++) {
-			vec_p_float temp_r; // create an array, don't work directly on buff yet.
-            vec_p_float temp_i; // create an array, don't work directly on buff yet.
-			for (int n = 0; n < N; n++) {
-                temp_r.push_back(Pr + L*n + LN*w + LNW*f);
-                temp_i.push_back(Pi + L*n + LN*w + LNW*f);
-            }
-			temp_temp_r.push_back(temp_r); // Store the array in the buffer
-            temp_temp_i.push_back(temp_i); // Store the array in the buffer
-		}
-		pr.push_back(temp_temp_r); // Store the array in the buffer
-        pi.push_back(temp_temp_i); // Store the array in the buffer
-	}
-	
+	float* Pi = NULL;
+    if (complex_data) Pi = (float*)mxGetImagData(M_P);		// imaginary part of channel data
+    
     // build the delay & apodization 3D matrix as a vector of vector of pointers
     float* p_delay  = (float*)mxGetData(M_DELAY);
     float* p_apo  = (float*)mxGetData(M_APO);	
@@ -194,7 +192,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		delay.push_back(temp_delay); // Store the array in the buffer
         apo.push_back(temp_apo); // Store the array in the buffer
     }
-        
+    
 	//////////////////////////////////////////////////////
 	// Beamforming loop
 	if (verbose) { mexPrintf("Beamforming started\n"); mexEvalString("drawnow;"); }
@@ -229,30 +227,63 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 float a = 1 - b;                        // linear interpolation coefficient 1
 
                 if (n0>0 && n0<(L - 1)) {
-                    if (IQ_version) {
+                    if (IQ_version) { // data must be complex
                         float phase = wd*c_delay;
                         float coswt = cos(phase);
                         float sinwt = sin(phase);
                         for (int f = 0; f<F; f++) { // frame loop
+                            // reference to data
+                            float& prn0=*(Pr + L*rx + LN*w + LNW*f + n0);
+                            float& prn1=*(Pr + L*rx + LN*w + LNW*f + n0 + 1);
+                            float& pin0=*(Pi + L*rx + LN*w + LNW*f + n0);
+                            float& pin1=*(Pi + L*rx + LN*w + LNW*f + n0 + 1);
+
                             // fractional part of the delay -> linear interpolation
-                            float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
-                            float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
+                            //float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
+                            //float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
+                            float re = a*prn0 + b*prn1;
+                            float im = a*pin0 + b*pin1;
+                            
                             // apply phase change and delay
                             //Dr[pp + P*rx + PN*w + PNW*f] = c_apo*(re*coswt - im*sinwt);
                             //Di[pp + P*rx + PN*w + PNW*f] = c_apo*(im*coswt + re*sinwt);
                             Dr[pp + P*w + PW*f] += c_apo*(re*coswt - im*sinwt);
                             Di[pp + P*w + PW*f] += c_apo*(im*coswt + re*sinwt);
                         }
-                    } else {
+                    } else if (complex_data){ // no modulation but complex data!
                         for (int f = 0; f<F; f++) { // frame loop
+                            // reference to data
+                            float& prn0=*(Pr + L*rx + LN*w + LNW*f + n0);
+                            float& prn1=*(Pr + L*rx + LN*w + LNW*f + n0 + 1);
+                            float& pin0=*(Pi + L*rx + LN*w + LNW*f + n0);
+                            float& pin1=*(Pi + L*rx + LN*w + LNW*f + n0 + 1);
+
                             // fractional part of the delay -> linear interpolation
-                            float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
-                            float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
+                            //float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
+                            //float im = a*pi[f][w][rx][n0] + b*pi[f][w][rx][n0 + 1];
+                            float re = a*prn0 + b*prn1;
+                            float im = a*pin0 + b*pin1;
+
                             // apply phase change and delay
                             //Dr[pp + P*rx + PN*w + PNW*f] = c_apo*re;
                             //Di[pp + P*rx + PN*w + PNW*f] = c_apo*im;
                             Dr[pp + P*w + PW*f] += c_apo*re;
                             Di[pp + P*w + PW*f] += c_apo*im;
+                        }
+                    } else { // pure real
+                         for (int f = 0; f<F; f++) { // frame loop
+                            // reference to data
+                            float& prn0=*(Pr + L*rx + LN*w + LNW*f + n0);
+                            float& prn1=*(Pr + L*rx + LN*w + LNW*f + n0 + 1);
+
+                            // fractional part of the delay -> linear interpolation
+                            //float re = a*pr[f][w][rx][n0] + b*pr[f][w][rx][n0 + 1];
+                            float re = a*prn0 + b*prn1;
+
+                            // apply phase change and delay
+                            //Dr[pp + P*rx + PN*w + PNW*f] = c_apo*re;
+                            //Di[pp + P*rx + PN*w + PNW*f] = c_apo*im;
+                            Dr[pp + P*w + PW*f] += c_apo*(a*prn0 + b*prn1);
                         }
                     }
                 }
@@ -267,8 +298,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 
 	// freeing RAM 
-	pr.clear();
-	pi.clear();
+	//pr.clear();
+	//pi.clear();
     delay.clear();
     apo.clear();
 
