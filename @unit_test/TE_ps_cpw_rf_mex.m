@@ -48,14 +48,14 @@ function ok = TE_ps_cpw_rf_mex(h)
     apo.origo=uff.point('xyz',[0 0 -Inf]);
     
     % BEAMFORMER
-    bmf=beamformer();
-    bmf.channel_data=r_data;
-    bmf.receive_apodization=apo;
-    bmf.transmit_apodization=apo;
-    bmf.scan=linear_scan('x_axis',r.x_axis,'z_axis',r.z_axis);
-              
+    pipe=pipeline();
+    pipe.channel_data=r_data;
+    pipe.receive_apodization=apo;
+    pipe.transmit_apodization=apo;
+    pipe.scan=linear_scan('x_axis',r.x_axis,'z_axis',r.z_axis);
+        
     % beamforming
-    b_data=bmf.go({process.das_mex,process.coherent_compounding});
+    b_data=pipe.go({midprocess.das_matlab, postprocess.coherent_compounding});
 
     % test result
     ok=(norm(real(b_data.data)-r.data(:))/norm(r.data(:)))<h.external_tolerance;
