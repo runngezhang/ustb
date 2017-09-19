@@ -11,7 +11,7 @@ classdef das_mex < midprocess
             h.name='USTB General DAS Beamformer MEX';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.9';
+            h.version='v1.0.10';
         end
     end
     
@@ -134,7 +134,7 @@ classdef das_mex < midprocess
                     apodization_matrix=single(bsxfun(@times,tx_apo,rx_apo));
                     
                     % das
-                    if any(any(data(:,:,n_wave,:)>0))
+                    if any(any(data(:,:,n_wave,:)>0)) % only beamform data if data > 0
                         h.beamformed_data.data(:,1,n_wave,:)=mex.das_c(data(:,:,n_wave,:),sampling_frequency,initial_time,delay,apodization_matrix,modulation_frequency);
                     end
                     
