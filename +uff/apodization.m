@@ -30,6 +30,8 @@ classdef apodization < uff
 
         f_number  = [1 1]               % F-number [Fx Fy] [unitless unitless] 
         window    = uff.window.none     % UFF.WINDOW class, default uff.window.none
+        MLA       = 1                   % number of multi-line acquisitions, only valid for uff.window.scanline
+        MLA_overlap = 0                 % number of multi-line acquisitions, only valid for uff.window.scanline
         
         origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
@@ -127,9 +129,35 @@ classdef apodization < uff
                 h.data_backup=ones(h.focus.N_pixels,h.N_elements);
             elseif (h.window==uff.window.sta)
             % STA APODIZATION (just the element closest to origo)
-                assert(numel(h.probe)>0,'The PROBE parameter is not set.');
+                assert(numel(h.probe)>0,'The PROBE parameter must be set to use STA apodization.');
                 dist=sqrt((h.probe.x-h.origo.x).^2+(h.probe.y-h.origo.y).^2+(h.probe.z-h.origo.z).^2);
                 h.data_backup=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
+            elseif (h.window==uff.window.scanline)
+            % SCALINE APODIZATION (MLA scanlines per wave)
+                assert(numel(h.sequence)>0,'uff.apodization:Scanline','The SEQUENCE parameter must be set to use uff.window.scanline apodization.');
+                if isa(h.focus,'uff.linear_scan')
+                    N_waves=numel(h.sequence);
+                    assert(N_waves==h.focus.N_x_axis/h.MLA,'The number of waves in the sequence does not much with the number of scanlines and set MLA.');
+                    ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_x_axis/h.MLA]);
+                    if (h.MLA_overlap>0)
+                        ABlock=filtfilt(ones(1,h.MLA_overlap+1)/(h.MLA_overlap+1),1,blkdiag(ACell{:}));
+                    else
+                        ABlock=blkdiag(ACell{:});
+                    end
+                    h.data_backup=kron(ABlock,ones(h.focus.N_z_axis,1));
+                elseif isa(h.focus,'uff.sector_scan')  
+                    N_waves=numel(h.sequence);
+                    assert(N_waves==h.focus.N_azimuth_axis/h.MLA,'The number of waves in the sequence does not much with the number of scanlines and set MLA.');
+                    ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_azimuth/h.MLA]);
+                    if (h.MLA_overlap>0)
+                        ABlock=filtfilt(ones(1,h.MLA_overlap+1)/(h.MLA_overlap+1),1,blkdiag(ACell{:}));
+                    else
+                        ABlock=blkdiag(ACell{:});
+                    end
+                    h.data_backup=kron(ABlock,ones(h.focus.N_depth_axis,1));
+                else
+                    error('uff.apodization:Scanline','The scan class does not support scanline based beamforming. This must be done manually, defining several scan and setting the apodization to uff.window.none.');
+                end
             else
                 % compute lateral distance 
                 x_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,1),h.origin(:,1)));

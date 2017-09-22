@@ -151,36 +151,105 @@ n_frame=1:2:10;
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
-    
-    % Time USTB's MATLAB delay-and-sum implementation
-    tic
-    b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()}); 
-    das_matlab_time(n)=toc;
+
+    %%% - MATLAB
     
     % Time USTB's MATLAB delay implementation
+    proc=midprocess.das();
+    proc.code = code.matlab;
+    proc.dimension = dimension.none;
     tic
-    b_data=pipe.go({midprocess.delay_matlab() postprocess.coherent_compounding()});
+    b_data=pipe.go({proc postprocess.coherent_compounding()});
     delay_matlab_time(n)=toc;
     
-    % Time USTB's MEX delay-and-sum implementation
+    % Time USTB's MATLAB delay-and-sum implementation
+    proc=midprocess.das();
+    proc.code = code.matlab;
+    proc.dimension = dimension.receive;
     tic
-    b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
-    das_mex_time(n)=toc;
-
-    % Time USTB's MEX delay implementation
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_rx_matlab_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das();
+    proc.code = code.matlab;
+    proc.dimension = dimension.transmit;
     tic
-    b_data=pipe.go({midprocess.delay_mex() postprocess.coherent_compounding()});
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_tx_matlab_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das();
+    proc.code = code.matlab;
+    proc.dimension = dimension.both;
+    tic
+    b_data=pipe.go({proc}); 
+    das_both_matlab_time(n)=toc;
+    
+    %%% - MEX
+    
+    % Time USTB's MATLAB delay implementation
+    proc=midprocess.das();
+    proc.code = code.mex;
+    proc.dimension = dimension.none;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()});
     delay_mex_time(n)=toc;
-
+    
+    % Time USTB's MATLAB delay-and-sum implementation
+    proc=midprocess.das();
+    proc.code = code.mex;
+    proc.dimension = dimension.receive;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_rx_mex_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das();
+    proc.code = code.mex;
+    proc.dimension = dimension.transmit;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_tx_mex_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das();
+    proc.code = code.mex;
+    proc.dimension = dimension.both;
+    tic
+    b_data=pipe.go({proc}); 
+    das_both_mex_time(n)=toc;
+    
     % Plot the runtimes
     figure(101);
-    plot(n_frame(1:n),das_matlab_time(1:n),'ro-','linewidth',2); hold on; grid on;
-    plot(n_frame(1:n),delay_matlab_time(1:n),'gx-','linewidth',2); 
-    plot(n_frame(1:n),das_mex_time(1:n),'bs-','linewidth',2); 
-    plot(n_frame(1:n),delay_mex_time(1:n),'k^-','linewidth',2); 
-    legend('das matlab','delay matlab','das mex','delay mex');
+    plot(n_frame(1:n),delay_matlab_time(1:n),'bs--','linewidth',2);  hold on; grid on;
+    plot(n_frame(1:n),das_rx_matlab_time(1:n),'ro--','linewidth',2);
+    plot(n_frame(1:n),das_tx_matlab_time(1:n),'gx--','linewidth',2); 
+    plot(n_frame(1:n),das_both_matlab_time(1:n),'k^--','linewidth',2); 
+    
+    plot(n_frame(1:n),delay_mex_time(1:n),'bs-','linewidth',2); 
+    plot(n_frame(1:n),das_rx_mex_time(1:n),'ro-','linewidth',2); 
+    plot(n_frame(1:n),das_tx_mex_time(1:n),'gx-','linewidth',2); 
+    plot(n_frame(1:n),das_both_mex_time(1:n),'k^-','linewidth',2); 
+
+    text(n_frame(n)+0.2,delay_matlab_time(n),sprintf('%0.2f s',delay_matlab_time(n))); 
+    text(n_frame(n)+0.2,delay_mex_time(n),sprintf('%0.2f s',delay_mex_time(n))); 
+
+    text(n_frame(n)+0.2,das_rx_matlab_time(n),sprintf('%0.2f s',das_rx_matlab_time(n))); 
+    text(n_frame(n)+0.2,das_rx_mex_time(n),sprintf('%0.2f s',das_rx_mex_time(n))); 
+    
+    text(n_frame(n)+0.2,das_tx_matlab_time(n),sprintf('%0.2f s',das_tx_matlab_time(n))); 
+    text(n_frame(n)+0.2,das_tx_mex_time(n),sprintf('%0.2f s',das_tx_mex_time(n))); 
+    
+    text(n_frame(n)+0.2,das_both_matlab_time(n),sprintf('%0.2f s',das_both_matlab_time(n))); 
+    text(n_frame(n)+0.2,das_both_mex_time(n),sprintf('%0.2f s',das_both_mex_time(n))); 
+
+    
+    legend('delay MATLAB','das RX MATLAB','das TX MATLAB','das RX&TX MATLAB','delay mex','das RX mex','das TX mex','das RX&TX mex','Location','NorthWest');
     xlabel('Frames');
     ylabel('Elapsed time [s]');
     set(gca,'fontsize',14)
+    ylim([0 80]);
+    xlim([0 10]);
 end
 

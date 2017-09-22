@@ -67,7 +67,7 @@ pul.plot([],'2-way pulse');
 % a lateral range of $[-2, 2]$ mm. The focal depth is set as 40 mm. 
 % The *wave* structure too has a *plot* method.
 
-N=200;                      % number of focused beams
+N=50;                               % number of focused beams
 x_axis=linspace(-2e-3,2e-3,N).';
 z0=40e-3;
 seq=uff.wave();
@@ -108,33 +108,44 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% Scan
-%
-% The scan area is defines as a collection of pixels spanning our region of 
-% interest. For our example here, we use the *linear_scan* structure to 
-% generate a sector scan. *scan* too has a useful *plot* method it can call.
-
-scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,100).');
- 
 %% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
 midproc=midprocess.das();
 midproc.dimension = dimension.both;
 midproc.channel_data=channel_data;
-midproc.scan=scan;
+midproc.scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,100).');
 
 midproc.transmit_apodization.window=uff.window.scanline;
-
 midproc.receive_apodization.window=uff.window.tukey50;
 midproc.receive_apodization.f_number=1.7;
 
 b_data=midproc.go();
+b_data.plot([],'No MLA');
+
+%% 
+%
+% The image is ok, but we can use multiline acquisition (MLA) to
+% improve resolution. We choose to use MLA = 4 and we define a new scan 
+% where we increase the number of scan lines by a factor of 4. We also need
+% to tell the apodization function that we will use MLA = 4 scheme.
+
+MLA = 4;
+midproc.scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,MLA*N).','z_axis',linspace(39e-3,41e-3,100).');
+midproc.transmit_apodization.MLA = MLA;
+midproc.transmit_apodization.MLA_overlap = 0;
+b_data=midproc.go();
+b_data.plot([],'MLA=4, no overlap');
 
 %%
-% Finally, show the image
+%
+% Mmmm... Somewhat better. But we see a strange artifact between each MLA
+% group. We can mitigate this effect introducing some MLA overlap
 
-b_data.plot();
+midproc.transmit_apodization.MLA_overlap = 2;
+b_data=midproc.go();
+b_data.plot([],'MLA=4, overlap=2');
+
