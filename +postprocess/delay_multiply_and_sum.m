@@ -145,7 +145,7 @@ classdef delay_multiply_and_sum < postprocess
             fs = h.input(1).sampling_frequency;
             %f0 = h.channel_data.pulse.center_frequency;
           
-            [f0, bw] = tools.estimate_frequency(h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
+            [f0, bw] = tools.estimate_frequency(2*h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
             
             %%
             f_start = 2*f0-f0;

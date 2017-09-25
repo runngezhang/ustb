@@ -260,7 +260,7 @@ classdef beamformed_data < uff
             elseif isa(h.scan,'uff.sector_scan')
                 dz = h.scan.depth_step;
             end
-            h.sampling_frequency = (c/dz); % effective sampling frequency (Hz)
+            h.sampling_frequency = (c/dz/2); % effective sampling frequency (Hz)
         end
     end
     
