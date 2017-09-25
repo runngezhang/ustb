@@ -34,7 +34,7 @@ channel_data.print_authorship
 % SCAN
 sca=uff.linear_scan();
 sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
-sca.z_axis = linspace(0,30e-3,256).';
+sca.z_axis = linspace(0,30e-3,768).';
  
 % Define processing pipeline
 pipe=pipeline();
