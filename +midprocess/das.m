@@ -173,6 +173,7 @@ classdef das < midprocess
                     otherwise
                         error('Unknown code implementation requested');
                 end
+                tools.workbar(1);
                 
                 % assign phase according to 2 times the receive propagation distance
                 if(w0>eps)
