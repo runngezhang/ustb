@@ -116,7 +116,7 @@ classdef uff < handle
             else
                 equal=strcmp(h.hash(),h.last_hash); 
                 if equal 
-                    fprintf('%s: Inputs and outputs are unchanged. Skipping process.\n',h.name); 
+                    fprintf('%s: Inputs and outputs are unchanged. Skipping process.\n',class(h)); 
                 end
             end
         end
