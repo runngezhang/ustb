@@ -32,7 +32,7 @@ classdef delay_multiply_and_sum < postprocess
         receive_apodization                           % UFF.APODIZATION class
         transmit_apodization                          % UFF.APODIZATION class
         channel_data                                  % UFF.CHANNEL_DATA class
-        filter_freqs
+        filter_freqs % optional: four increasing numbers specifying the passband and stopband edges of the bandpass filter
     end
     
     methods
