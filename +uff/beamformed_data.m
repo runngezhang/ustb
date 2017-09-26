@@ -220,8 +220,10 @@ classdef beamformed_data < uff
                     caxis(axis_handle,[min_value max_value]);
                     title(axis_handle,in_title);
                     drawnow;
+                case 'uff.scan'
+                    error('The uff.scan cannot be plotted automatically as it can contain arbitrarily placed voxel. The data must be reshaped and plotted manually. To avoid this, you may use the structures uff.linear_scan and uff.sector_scan instead.');
                 otherwise
-                    error(sprintf('Dont know how to plot on a %s yet. Sorry!',class(b_data.scan)));
+                    error(sprintf('Dont know how to plot a %s yet. Sorry!',class(h.scan)));
             end
         end
         
