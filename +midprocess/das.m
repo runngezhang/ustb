@@ -51,12 +51,13 @@ classdef das < midprocess
                 
                 % calculate transmit apodization
                 tx_apodization=zeros(h.scan(1).N_pixels*N_waves,N_waves);
-                h.scan = uff.scan();
+                stacked_scan = uff.scan();
                 for ntx=1:numel(h.scan)
                     assert(h.scan(1).N_pixels==h.scan(ntx).N_pixels,'If multiple scans are provided then all must have the same number of pixels.');
-                    h.scan.xyz = [stacked_scan.xyz; h.scan(ntx).xyz];
+                    stacked_scan.xyz = [stacked_scan.xyz; h.scan(ntx).xyz];
                     tx_apodization((1:N_pixels)+(ntx-1)*N_pixels,ntx)=ones(N_pixels,1);
                 end
+                h.scan = stacked_scan;
                 
                 % update number of pixels
                 N_pixels =  h.scan.N_pixels;
