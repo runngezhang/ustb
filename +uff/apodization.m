@@ -148,7 +148,7 @@ classdef apodization < uff
                 elseif isa(h.focus,'uff.sector_scan')  
                     N_waves=numel(h.sequence);
                     assert(N_waves==h.focus.N_azimuth_axis/h.MLA,'The number of waves in the sequence does not much with the number of scanlines and set MLA.');
-                    ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_azimuth/h.MLA]);
+                    ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_azimuth_axis/h.MLA]);
                     if (h.MLA_overlap>0)
                         ABlock=filtfilt(ones(1,h.MLA_overlap+1)/(h.MLA_overlap+1),1,blkdiag(ACell{:}));
                     else
