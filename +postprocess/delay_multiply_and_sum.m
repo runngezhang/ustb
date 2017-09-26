@@ -32,6 +32,7 @@ classdef delay_multiply_and_sum < postprocess
         receive_apodization                           % UFF.APODIZATION class
         transmit_apodization                          % UFF.APODIZATION class
         channel_data                                  % UFF.CHANNEL_DATA class
+        filter_freqs
     end
     
     methods
@@ -143,16 +144,19 @@ classdef delay_multiply_and_sum < postprocess
             % Design Bandpass-filter
             h.input(1).calculate_sampling_frequency(h.channel_data.sound_speed);
             fs = h.input(1).sampling_frequency;
-            %f0 = h.channel_data.pulse.center_frequency;
-          
-            [f0, bw] = tools.estimate_frequency(2*h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
+            %f0 = h.channel_data.pulse.center_frequency;        
             
             %%
-            f_start = 2*f0-f0;
-            f_stop = 2*f0+f0;
-            f_transition = f0/4;
+            if isempty(h.filter_freqs)
+                [f0, bw] = tools.estimate_frequency(2*h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
+                f_start = 2*f0-f0;
+                f_stop = 2*f0+f0;
+                f_transition = f0/4;
             %f_transition = 1.5e6;
-            F = [f_start f_start+f_transition f_stop f_stop+f_transition];
+                F = [f_start f_start+f_transition f_stop f_stop+f_transition];
+            else
+                F=h.filter_freqs;
+            end
             
             
             %fCheck that the pixel sampling frequency is high enogh to
@@ -199,7 +203,7 @@ classdef delay_multiply_and_sum < postprocess
             filtered_y_dmas_signed = filtered_p;
             
             
-            warning('If the result looks funky, you might need to tune the filter paramters of DMAS. Use the plot to check that everything is OK.')
+            warning('If the result looks funky, you might need to tune the filter paramters of DMAS using the filter_freqs property. Use the plot to check that everything is OK.')
             if 0 %Plot to check the filtering
                 %%
                 [freq_resp,f_ax]=freqz(b);
