@@ -117,7 +117,8 @@ scan.plot(fig_handle,'Scenario');    % show mesh
 % ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-mid=midprocess.das_matlab();
+mid=midprocess.das();
+mid.code = code.matlab;
 mid.channel_data=channel_data;
 mid.scan=scan;
 

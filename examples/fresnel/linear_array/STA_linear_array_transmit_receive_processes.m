@@ -61,7 +61,8 @@ scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-
 scan.plot(fig_handle,'Scenario');    % show mesh
  
 %% MIDPROCESS
-mid=midprocess.delay_mex();
+mid=midprocess.das();
+mid.dimension = dimension.none;
 mid.channel_data=channel_data;
 mid.scan=scan;
 

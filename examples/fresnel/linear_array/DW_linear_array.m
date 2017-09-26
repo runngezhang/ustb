@@ -106,36 +106,22 @@ channel_data=sim.go();
 scan=uff.linear_scan('x_axis', linspace(-2e-3,2e-3,200).', 'z_axis', linspace(39e-3,41e-3,100).');
 scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Pipeline
+%% Midprocessor
 %
 % With *channel_data* and a *scan* we have all we need to produce an
 % ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.tukey50;
+mid.transmit_apodization.f_number=1.7;
 
-%% 
-%
-% The *pipeline* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns a
-% *uff.beamformed_data*.
-%
-% We use the *das_matlab* process followed by the *coherent_compounding*
-% process in order to produce coherently compounded output images.
-
-% beamforming
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
-
-%%
-% Finally, show our results
-
+b_data=mid.go();
 b_data.plot();

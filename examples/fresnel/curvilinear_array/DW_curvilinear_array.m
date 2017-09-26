@@ -105,40 +105,28 @@ channel_data=sim.go();
 % along with the position of the apex. *scan* too has a useful *plot*
 % method it can call.
 
-sca=uff.sector_scan();
-sca.azimuth_axis=linspace(-prb.maximum_angle,prb.maximum_angle,256).';
-sca.depth_axis=linspace(prb.radius,prb.radius+180e-3,256).';
-sca.apex=uff.point('xyz',[0 0 -prb.radius]);
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.sector_scan();
+scan.azimuth_axis=linspace(-prb.maximum_angle,prb.maximum_angle,256).';
+scan.depth_axis=linspace(prb.radius,prb.radius+180e-3,256).';
+scan.apex=uff.point('xyz',[0 0 -prb.radius]);
+scan.plot(fig_handle,'Scenario');    % show mesh
 
-%% Pipeline
+%% Midprocessor
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan*, and 
+% returns a *beamformed_data*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
-pipe.receive_apodization.origo=sca.apex;
-
-%% 
-%
-% The *beamformer* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
-
-% We use the *das_matlab* process followed by the *coherent_compounding*
-% process in order to produce coherently compounded output images.
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
+mid.receive_apodization.origo=scan.apex;
 
 % beamforming
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
-
-%%
-% Finally, show our results
-
+b_data=mid.go();
 h_fig=b_data.plot();hold on;

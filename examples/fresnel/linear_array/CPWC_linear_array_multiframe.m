@@ -130,33 +130,23 @@ channel_data=sim.go();
 scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).','z_axis', linspace(15e-3,25e-3,256).');
 scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Pipeline
+%% Midprocess
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan* and
+% produces a *beamformed_data* structure.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.0;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.0;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.0;
+mid.transmit_apodization.window=uff.window.tukey50;
+mid.transmit_apodization.f_number=1.0;
 
-%% 
-% Go pipeline! % The *pipeline* structure allows you to implement 
-% different beamformers by combination of multiple built-in *processes*.
-% Here, we shall use delay-and-sum (implemented in MATLAB); there is a MEX
-% implementation too that we could call with *process.das_mex()*. In
-% addition, we shall chain it with the *process.coherent_compounding()* to
-% coherently compound the individual plane wave images.
-
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
-
-%%
-% Finally, show the result
-
+b_data=mid.go();
 b_data.plot([],['Beamformed data'],40);
