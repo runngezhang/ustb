@@ -152,7 +152,7 @@ classdef delay_multiply_and_sum < postprocess
                 f_start = 2*f0-f0;
                 f_stop = 2*f0+f0;
                 f_transition = f0/4;
-            %f_transition = 1.5e6;
+
                 F = [f_start f_start+f_transition f_stop f_stop+f_transition];
             else
                 F=h.filter_freqs;
