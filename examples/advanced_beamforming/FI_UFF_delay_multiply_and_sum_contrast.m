@@ -33,6 +33,10 @@ end
 %Print info about the dataset
 channel_data.print_authorship
 
+%% decimating the sequence -> too heavy for this example 
+channel_data.data=channel_data.data(:,:,1:2:256);
+channel_data.sequence=channel_data.sequence(1:2:256);
+
 %% Define Scan
 % Define the image coordinates we want to beamform in the scan object.
 % Notice that we need to use quite a lot of samples in the z-direction. 
@@ -40,17 +44,21 @@ channel_data.print_authorship
 % so we need high enough sampling frequency in the image to get a second
 % harmonic signal.
 
-z_axis=linspace(34e-3,48e-3,768).';
-sca=uff.linear_scan();
+z_axis=linspace(34e-3,48e-3,750).';
+scan=uff.linear_scan();
 idx = 1;
-for n=1:numel(channel_data.sequence)
-    sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
+x_source=zeros(channel_data.N_waves,1);
+z_source=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    x_source(n) = channel_data.sequence(n).source.x;
+    z_source(n) = channel_data.sequence(n).source.z;
+    scan(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
 end
 
 %% Set up the processing pipeline
 pipe=pipeline();
 pipe.channel_data=channel_data;
-pipe.scan=sca;
+pipe.scan=scan;
 
 pipe.receive_apodization.window=uff.window.tukey50;
 pipe.receive_apodization.f_number=1.7;
@@ -71,11 +79,20 @@ b_data_dmas.plot(100,'DMAS');
 %% Beamform DAS image
 % Notice that I redefine the beamformer to use Hamming apodization.
 
-pipe.receive_apodization.window=uff.window.hamming;
-pipe.receive_apodization.f_number=1.7;
+das=midprocess.das();
+das.code = code.mex;
+das.dimension = dimension.both;
 
-b_data_das=pipe.go({midprocess.das_mex postprocess.stack});
-b_data_das.plot(2,'DAS');
+das.channel_data= channel_data;
+das.scan = uff.linear_scan('x_axis',x_source,'z_axis',z_axis);
+
+das.transmit_apodization.window=uff.window.scanline;
+
+das.receive_apodization.window=uff.window.hamming;
+das.receive_apodization.f_number=1.7;
+
+b_data_das=das.go();
+b_data_das.plot([],'DAS');
 
 %% Plot both images in same plot
 % Plot both in same plot with connected axes, try to zoom!
