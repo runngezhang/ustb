@@ -137,7 +137,7 @@ classdef apodization < uff
                 assert(numel(h.sequence)>0,'uff.apodization:Scanline','The SEQUENCE parameter must be set to use uff.window.scanline apodization.');
                 if isa(h.focus,'uff.linear_scan')
                     N_waves=numel(h.sequence);
-                    assert(N_waves==h.focus.N_x_axis/h.MLA,'The number of waves in the sequence does not much with the number of scanlines and set MLA.');
+                    assert(N_waves==h.focus.N_x_axis/h.MLA,'The number of waves in the sequence does not match with the number of scanlines and set MLA.');
                     ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_x_axis/h.MLA]);
                     if (h.MLA_overlap>0)
                         ABlock=filtfilt(ones(1,h.MLA_overlap+1)/(h.MLA_overlap+1),1,blkdiag(ACell{:}));
@@ -147,7 +147,7 @@ classdef apodization < uff
                     h.data_backup=kron(ABlock,ones(h.focus.N_z_axis,1));
                 elseif isa(h.focus,'uff.sector_scan')  
                     N_waves=numel(h.sequence);
-                    assert(N_waves==h.focus.N_azimuth_axis/h.MLA,'The number of waves in the sequence does not much with the number of scanlines and set MLA.');
+                    assert(N_waves==h.focus.N_azimuth_axis/h.MLA,'The number of waves in the sequence does not match with the number of scanlines and set MLA.');
                     ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_azimuth_axis/h.MLA]);
                     if (h.MLA_overlap>0)
                         ABlock=filtfilt(ones(1,h.MLA_overlap+1)/(h.MLA_overlap+1),1,blkdiag(ACell{:}));
