@@ -82,6 +82,7 @@ classdef das < midprocess
             rx_propagation_distance=h.receive_apodization.propagation_distance;
             
             % precalculate apodization
+            tools.check_memory(prod([size(rx_apodization) size(tx_apodization,2) 8]));
             apodization = single(bsxfun(@times,rx_apodization,permute(tx_apodization,[1 3 2])));
             
             % precalculate receive delay
@@ -109,9 +110,11 @@ classdef das < midprocess
             end
             
             % precalculate delay
+            tools.check_memory(prod([size(RF) size(TF,2) 8]));
             delay=single(bsxfun(@plus,RF,TF)./h.channel_data.sound_speed);
             
             % precalculating hilbert (if needed)
+            tools.check_memory(prod([size(h.channel_data.data) 8]));
             data=single(h.channel_data.data);
             if ~(w0>eps)
                 data=single(reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data)));
@@ -124,12 +127,16 @@ classdef das < midprocess
             % auxiliary data
             switch h.dimension
                 case dimension.none
+                    tools.check_memory(prod([N_pixels N_channels N_waves N_frames 8]));
                     aux_data=zeros(N_pixels,N_channels,N_waves,N_frames);
                 case dimension.receive
+                    tools.check_memory(prod([N_pixels N_waves N_frames 8]));
                     aux_data=zeros(N_pixels,1,N_waves,N_frames);
                 case dimension.transmit
+                    tools.check_memory(prod([N_pixels N_channels N_frames 8]));
                     aux_data=zeros(N_pixels,N_channels,1,N_frames);
                 case dimension.both
+                    tools.check_memory(prod([N_pixels N_frames 8]));
                     aux_data=zeros(N_pixels,1,1,N_frames);
             end
             
@@ -154,19 +161,21 @@ classdef das < midprocess
                                 if mod(n,round(N/100))==1
                                     tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
                                 end
-                                % beamformed signal
-                                temp = bsxfun(@times,apodization(:,n_rx,n_wave),interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay(:,n_rx,n_wave),'linear',0));
-                                
-                                % set into auxiliary data
-                                switch h.dimension
-                                    case dimension.none
-                                        aux_data(:,n_rx,n_wave,:)=temp;
-                                    case dimension.receive
-                                        aux_data(:,1,n_wave,:)=aux_data(:,1,n_wave,:)+temp;
-                                    case dimension.transmit
-                                        aux_data(:,n_rx,1,:)=aux_data(:,n_rx,1,:)+temp;
-                                    case dimension.both
-                                        aux_data(:,1,1,:)=aux_data(:,1,1,:)+temp;
+                                if any(apodization(:,n_rx,n_wave)>0)
+                                    % beamformed signal
+                                    temp = bsxfun(@times,apodization(:,n_rx,n_wave),interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay(:,n_rx,n_wave),'linear',0));
+
+                                    % set into auxiliary data
+                                    switch h.dimension
+                                        case dimension.none
+                                            aux_data(:,n_rx,n_wave,:)=temp;
+                                        case dimension.receive
+                                            aux_data(:,1,n_wave,:)=aux_data(:,1,n_wave,:)+temp;
+                                        case dimension.transmit
+                                            aux_data(:,n_rx,1,:)=aux_data(:,n_rx,1,:)+temp;
+                                        case dimension.both
+                                            aux_data(:,1,1,:)=aux_data(:,1,1,:)+temp;
+                                    end
                                 end
                             end
                         end
