@@ -114,7 +114,7 @@ channel_data=sim.go();
 % interest. For our example here, we use the *linear_scan* structure to 
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,100).');
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,256).');
  
 %% Beamformer
 %
