@@ -101,12 +101,11 @@ xdc_center_focus(Rh,[0 0 0]);
  
 %% Define plane wave sequence
 % Define the start_angle and number of angles
-start_angle = -15;
-Na=15;                                       % number of plane waves 
+F_number = 1.7;
+alpha_max = atan(1/2/F_number);
+Na=15;                                      % number of plane waves 
 F=1;                                        % number of frames
-alpha_max=start_angle*pi/180;               % maximum angle [rad]
 alpha=linspace(-alpha_max,alpha_max,Na);    % vector of angles [rad]
-
  
 %% Define phantom
 % Define some points in a phantom for the simulation
@@ -197,9 +196,7 @@ pipe.channel_data=channel_data;
 pipe.scan=sca;
 
 pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=1.7;
-pipe.transmit_apodization.window=uff.window.tukey25;
-pipe.transmit_apodization.f_number=1.7;
+pipe.receive_apodization.f_number=F_number;
 
 %% 
 %
