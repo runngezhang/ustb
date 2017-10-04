@@ -128,12 +128,12 @@ end
 % ultrasound image. We now use a USTB structure *beamformer*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 %% 
 %
@@ -145,7 +145,7 @@ bmf.receive_apodization.f_number=1.7;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_matlab()* process) and then stack each line into a single image.
 
-b_data=bmf.go({process.das_matlab() process.stack()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
 
 % show
 b_data.plot();
