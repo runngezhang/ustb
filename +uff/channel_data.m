@@ -67,31 +67,44 @@ classdef channel_data < uff
     
     %% display methods 
     methods
-        function plot(h,n_wave)
+        function figure_handle=plot(h,figure_handle_in,n_wave)
             % PLOT Plots channel data
 
-            if nargin<2
-                n_wave=1;
+            if nargin>1 && not(isempty(figure_handle_in))
+                figure_handle=figure(figure_handle_in);
+            else
+                figure_handle=figure();
             end
             
-            figure;
+            if nargin <3
+                n_wave=round(mean(size(h.data,3)));
+            end
+            
+            colorMap = tools.inferno;
+            
             if abs(h.modulation_frequency)>eps
                 subplot(1,2,1);
-                imagesc(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_wave))); grid on; axis tight;
+                pcolor(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
+                caxis(max(max(abs(real(h.data(:,:,n_wave))))) .* [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
+                set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 title(sprintf('Real Part - Beam %d',n_wave));
                 subplot(1,2,2);                
-                imagesc(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_wave))); grid on; axis tight;
+                pcolor(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
+                caxis(max(max(abs(imag(h.data(:,:,n_wave))))) * [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
+                set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 title(sprintf('Imaginary Part - Beam %d',n_wave));
             else
-                imagesc(1:h.N_elements,h.time*1e6,h.data(:,:,n_wave)); grid on; axis tight;
+                pcolor(1:h.N_elements,h.time*1e6,h.data(:,:,n_wave)); grid on; axis tight; colormap(colorMap); shading interp;
+                caxis(max(max(abs(h.data(:,:,n_wave)))) .* [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
+                set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 title(sprintf('Beam %d',n_wave));
             end
