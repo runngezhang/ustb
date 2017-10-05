@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding="utf-8"?>
+
+<toc version="2.0">
+<tocitem target="ustb.html" image="$toolbox/matlab/icons/book_mat.gif">UltraSound ToolBox (USTB)
+
+    <tocitem target="getting_started.html" image="HelpIcon.GETTING_STARTED">Getting Started</tocitem>
+		
+    <tocitem target="examples.html" image="HelpIcon.EXAMPLES">Examples</tocitem>
+
+    <tocitem target="fresnel.html" image="HelpIcon.USER_GUIDE">Data from built-in Fresnel simulator
+        <tocitem target="../examples/fresnel/linear_array/html/CPWC_linear_array.html">Example: CPWC linear array</tocitem>
+    </tocitem>
+        
+    <tocitem target="http://www.ustb.no" image="$toolbox/matlab/icons/webicon.gif">USTB Web Site</tocitem>
+    <tocitem target="http://www.ustb.no/forum" image="$toolbox/matlab/icons/webicon.gif">USTB Forum</tocitem>
+	
+</tocitem>
+</toc>
