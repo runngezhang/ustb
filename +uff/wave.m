@@ -38,8 +38,13 @@ classdef wave < uff
     
     %% plot methods
     methods
-        function fig_handle=plot(h)
-          fig_handle=figure(); 
+        function fig_handle=plot(h,figure_handle_in)
+          
+           if nargin>1 && not(isempty(figure_handle_in))
+                fig_handle=figure(figure_handle_in); 
+            else
+                fig_handle=figure();
+            end
 
           % probe geometry
           x = [(h.probe.x-h.probe.width/2.*cos(h.probe.theta)).'; (h.probe.x+h.probe.width/2.*cos(h.probe.theta)).'; (h.probe.x+h.probe.width/2.*cos(h.probe.theta)).'; (h.probe.x-h.probe.width/2.*cos(h.probe.theta)).'];
@@ -49,22 +54,25 @@ classdef wave < uff
           
           subplot(1,2,1);
           % draw flatten elements
-          fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
+          %fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
           % draw delays
-          plot3(h.probe.x*1e3,h.probe.y*1e3,h.delay*1e6,'r.'); grid on; axis tight;
+          %plot3(h.probe.x*1e3,h.probe.y*1e3,h.delay*1e6,'r.'); grid on; axis tight;
+          plot(h.probe.x*1e3,h.delay*1e6,'r.'); grid on; axis tight; 
           xlabel('x [mm]');
-          ylabel('y [mm]');
-          zlabel('delay [\mus]');
+          %ylabel('y [mm]');
+          ylabel('delay [\mus]');
+          ylim([min([min(h.delay*1e6) -1e-3]) max([max(h.delay*1e6) 1e-3])]);
           set(gca,'fontsize',14);
           title('Delays');
           
           subplot(1,2,2);
           % draw flatten elements
-          fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
+          %fill3(x*1e3,y*1e3,z*1e3,c); grid on; axis equal tight; hold on;
           % draw apodization
-          plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization_values,'r.'); grid on; axis tight;
+          %plot3(h.probe.x*1e3,h.probe.y*1e3,h.apodization_values,'r.'); grid on; axis tight;
+          plot(h.probe.x*1e3,h.apodization_values,'r.'); grid on; axis tight;
           xlabel('x [mm]');
-          xlabel('y [mm]');
+          %ylabel('y [mm]');
           ylabel('Apodization');
           set(gca,'fontsize',14);
           title('Apodization');
