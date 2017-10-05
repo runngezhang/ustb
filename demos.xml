@@ -91,6 +91,12 @@
          <file>examples/fresnel/phased_array/html/FI_phased_array.html</file>
       </demoitem>
       <demoitem>
+         <label>FI_phased_array_multiframe</label>
+         <type>other</type>
+         <source>FI_phased_array_multiframe</source>
+         <file>examples/fresnel/phased_array/html/FI_phased_array_multiframe.html</file>
+      </demoitem>
+      <demoitem>
          <label>STA_phased_array</label>
          <type>other</type>
          <source>STA_phased_array</source>
