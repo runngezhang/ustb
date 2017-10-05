@@ -35,6 +35,11 @@ classdef apodization < uff
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
     end
     
+    %% optional properties
+    properties  (Access = public)
+        apodization_vector              % apodization vector to override the dynamic calculation of apodization 
+    end
+    
     %% dependent properties
     properties  (Dependent)   
         data                        % apodization data 
@@ -111,6 +116,12 @@ classdef apodization < uff
             % check if we can skip calculation
             if h.check_hash()
                 value = h.data_backup; 
+                return;
+            end
+            
+            % check if overridden
+            if ~isempty(h.apodization_vector)
+                value = h.apodization_vector;
                 return;
             end
            
