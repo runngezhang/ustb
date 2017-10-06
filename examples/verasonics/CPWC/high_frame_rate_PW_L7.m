@@ -289,7 +289,7 @@ ver = verasonics();
 % The Verasonics class needs these structs to create a USTB dataset
 % NB! The Trans struct should be given first.
 ver.Trans = Trans;
-ver.RcvData = RcvData; % We are just saving the "superframe"          
+ver.RcvData = RcvData{1}; % We are just saving the "superframe"          
 ver.Receive = Receive;
 ver.Resource = Resource;
 ver.TW = TW;

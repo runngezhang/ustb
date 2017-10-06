@@ -19,7 +19,8 @@ channel_data.sequence = seq;
 
 
 %% Save Pulse
-channel_data.pulse = uff.pulse(double(h.Trans.frequency*10^6));
+channel_data.pulse = uff.pulse();
+channel_data.pulse.center_frequency = double(h.Trans.frequency*10^6);
 
 %% Convert channel data from Verasonics format to USTB format
 no_samples = h.Receive(1).endSample;
@@ -41,54 +42,48 @@ for n_frame = 1:h.number_of_superframes
         
         % Find t_0, when the plane wave "crosses" the center of
         % the probe
-        if 1  %Calculate geometrically
+        for s=1:length(seq) % loop on sequence of angles
             D = abs(h.Trans.ElementPos(1,1)-h.Trans.ElementPos(end,1))*1e-3;
-            q = abs((D/2)*sin(channel_data.sequence(1).source.azimuth));
+            q = abs((D/2)*sin(channel_data.sequence(s).source.azimuth));
             t0_1 = q/(channel_data.sound_speed);
-        else  %Calculate using Verasonics transmit delay, this will not work for the multiplexer probe NBNB!
-            t0_1 = mean(h.TX(n_tx).Delay)*h.lambda/h.Resource.Parameters.speedOfSound;
-            figure(100);hold all;
-            plot(h.TX(n_tx).Delay)
-            plot((h.TX(n_tx).Delay(end/2))*ones(1,128),'r')
-            plot(mean(h.TX(n_tx).Delay)*ones(1,128),'b')
-        end
         
-        t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
-        
-        if isfield(h.Trans,'HVMux') % If Transducer has MUX, for example the L12-4v, we need to re arrange channels
-            validChannels = h.Trans.HVMux.Aperture(:,h.Receive(n_tx).aperture)';
-            validChannels = validChannels(validChannels>0);
-        else
-            validChannels = [1:128];
-        end
-        %% read data
-        if length(h.Resource.RcvBuffer) == 1 % If this is one we only have "superframes"
-            data(:,:,1,frame_number)=single(interp1(t_in,double(h.RcvData{1}(h.Receive(n_tx).startSample:h.Receive(n_tx).endSample,validChannels,n_frame)),time,'linear',0));
-        else
-            data(:,:,1,frame_number)=single(interp1(t_in,double(h.RcvData(h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).startSample:h.Receive(h.Resource.RcvBuffer(1).numFrames+n_tx).endSample,validChannels,n_frame)),time,'linear',0));
+            t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
+            if length(h.Resource.RcvBuffer) == 1
+                RcvIdx=(n_tx-1)*length(seq)+s;
+            else % Received data of interest start after First buffer data
+                RcvIdx=h.Resource.RcvBuffer(1).numFrames+(n_tx-1)*length(seq)+s;
+            end
+            if isfield(h.Trans,'HVMux') % If Transducer has MUX, for example the L12-4v, we need to re arrange channels
+                validChannels = h.Trans.HVMux.Aperture(:,h.Receive(RcvIdx).aperture)';
+                validChannels = validChannels(validChannels>0);
+            else
+                validChannels = [1:128];
+            end
+            %% read data
+            data(:,:,s,frame_number)=single(interp1(t_in,double(h.RcvData(h.Receive(RcvIdx).startSample:h.Receive(RcvIdx).endSample,validChannels,n_frame)),time,'linear',0));
+            %%
+            % to check delay calculation
+            if plot_delayed_signal
+                %delay= 20e-3*cos(angles(n_tx))/h.c0+delay_x0;
+                %%
+                z = 20e-3;
+                x = 0;
+                y = 0;
+                TF = z*cos(channel_data.sequence(s).source.azimuth)*cos(channel_data.sequence(s).source.elevation)+x*sin(channel_data.sequence(s).source.azimuth)*cos(channel_data.sequence(s).source.elevation)
+                % receive delay
+                RF=sqrt((channel_data.probe.x-x).^2+(channel_data.probe.y-y).^2+(channel_data.probe.z-z).^2);
+                % total delay
+                delay=(RF+TF)/channel_data.sound_speed;
+
+                figure(101); hold off;
+                pcolor(1:length(channel_data.probe.x),time,abs(data(:,:,s,n_frame))); shading flat; colormap gray; colorbar; hold on;
+                plot(1:length(channel_data.probe.x),delay,'r');
+                title(s);
+                ylim([0.95*min(delay) 1.05*max(delay)]);
+                pause();
+            end
         end
         frame_number = frame_number + 1;
-        %%
-        % to check delay calculation
-        if plot_delayed_signal
-            %delay= 20e-3*cos(angles(n_tx))/h.c0+delay_x0;
-            %%
-            z = 20e-3;
-            x = 0;
-            y = 0;
-            TF = z*cos(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)+x*sin(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)
-            % receive delay
-            RF=sqrt((channel_data.probe.x-x).^2+(channel_data.probe.y-y).^2+(channel_data.probe.z-z).^2);
-            % total delay
-            delay=(RF+TF)/channel_data.sound_speed;
-            
-            figure(101); hold off;
-            pcolor(1:length(channel_data.probe.x),time,abs(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
-            plot(1:length(channel_data.probe.x),delay,'r');
-            title(n_tx);
-            ylim([0.95*min(delay) 1.05*max(delay)]);
-            pause();
-        end
     end
 end
 
