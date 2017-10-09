@@ -169,17 +169,28 @@ channel_data.print_authorship
 % For the online example we used all the 50 frames in the dataset, but, to
 % save time you can scale it down to the number of frames below, if not
 % comment the next line out.
-channel_data.N_frames = 5;
+%channel_data.N_frames = 5;
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+depth_axis=linspace(0e-3,110e-3,512).';
+azimuth_axis=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    azimuth_axis(n) = channel_data.sequence(n).source.azimuth;
+end
 
-pipe.receive_apodization.window=uff.window.none;
+scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
 
-% You might notice that I'm using the delay_matlab_light, this is to save
-% some precious memory when using all 50 frames :)
-b_data = pipe.go({midprocess.delay_matlab_light postprocess.stack});
+mid=midprocess.das();
+mid.dimension = dimension.transmit;
+
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window=uff.window.scanline;
+mid.receive_apodization.window=uff.window.none;
+
+% This will result in a beamformed_data object with the delayed and not
+% summed channel data.
+b_data = mid.go();
 
 % DAS image
 das = postprocess.coherent_compounding();
@@ -191,7 +202,7 @@ das_data = das.go();
 slsc = postprocess.short_lag_spatial_coherence();
 slsc.receive_apodization = mid.receive_apodization;
 slsc.dimension = dimension.receive;
-slsc.channel_data = mid.channel_data;
+slsc.channel_data = channel_data;
 slsc.maxM = 10;
 slsc.input = b_data;
 slsc.K_in_lambda = 1;
