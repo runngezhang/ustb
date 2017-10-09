@@ -5,7 +5,7 @@ classdef uff < handle
     
     %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
     %
-    %   $Last updated: 2017/08/07$ 
+    %   $Last updated: 2017/08/07$
     
     %% Logistics parameters
     properties  (Access = public)
