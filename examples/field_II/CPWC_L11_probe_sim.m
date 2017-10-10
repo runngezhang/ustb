@@ -59,8 +59,9 @@ pulse_duration          = 2.5;             % pulse duration [cycles]
 % *fresnel* simulator's *pulse* structure. We could also use 
 % <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
-pulse = uff.pulse(f0);
+pulse = uff.pulse();
 pulse.fractional_bandwidth = 0.65;        % probe bandwidth [1]
+pulse.center_frequency = f0;
 t0 = (-1/pulse.fractional_bandwidth/f0): dt : (1/pulse.fractional_bandwidth/f0);
 impulse_response = gauspuls(t0, f0, pulse.fractional_bandwidth);
 impulse_response = impulse_response-mean(impulse_response); % To get rid of DC
@@ -208,7 +209,7 @@ pipe.receive_apodization.f_number=F_number;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Display images
 b_data.plot()
