@@ -28,20 +28,23 @@ start_frame = 2;
 channel_data = alp.read_FI_linear(number_of_frames,start_frame);
 %% Define image scan
 z_axis=linspace(1e-3,55e-3,512).';
-sca=uff.linear_scan();
-idx = 1;
-for n=1:numel(channel_data.sequence)
-    sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
+x_axis=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    x_axis(n) = channel_data.sequence(n).source.x;
 end
+
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 %% Define BEAMFORMER pipeline
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=1.7;
+midproc=midprocess.das();
+midproc.channel_data=channel_data;
+midproc.scan=scan;
+midproc.dimension = dimension.both(); 
+midproc.transmit_apodization.window=uff.window.scanline;
+midproc.receive_apodization.window=uff.window.tukey25;
+midproc.receive_apodization.f_number=1.7;
 
 % Do beamforming
-b_data=bmf.go({midprocess.das_mex postprocess.stack});
+b_data=midproc.go();
 %% Show image
 b_data.plot(11,['Alpinion FI dataset'],60);
 %%
