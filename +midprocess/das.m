@@ -145,14 +145,14 @@ classdef das < midprocess
                                         apodization= rx_apodization(:,n_rx).*tx_apodization(:,n_wave);
                                         delay= receive_delay(:,n_rx) + transmit_delay(:,n_wave);
                                         
-                                        if(w0>eps)
-                                            phase_factor=exp(1i.*w0*delay);
-                                        else
-                                            phase_factor=1;
-                                        end
-
                                         % beamformed signal
-                                        temp = bsxfun(@times,apodization.*phase_factor,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
+                                        temp = bsxfun(@times,apodization,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
+                                        
+                                        if(w0>eps) % If IQ-sampled data
+                                            phase_factor=exp(1i.*w0*delay);
+                                            % multiply with phase
+                                            temp = bsxfun(@times,phase_factor,temp);
+                                        end
                                         
                                         % set into auxiliary data
                                         switch h.dimension
