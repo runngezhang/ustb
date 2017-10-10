@@ -1,4 +1,4 @@
-classdef pulse 
+classdef pulse < uff
     %pulse   Pulse definition
     %
     %   See also PULSE, PHANTOM
@@ -16,31 +16,8 @@ classdef pulse
     
     %% constructor
     methods (Access = public)
-        function h=pulse(center_frequency_in,fractional_bandwidth_in,phase_in)
-            %PULSE   Constructor of PULSE class
-            %
-            %   Syntax:
-            %   h = pulse(center_frequency,fractional_bandwidth,phase)
-            %         center_frequency           % center frequency [Hz]
-            %         fractional_bandwidth       % fractional bandwidth [unitless]
-            %         phase                      % initial phase [rad]
-            %
-            %   See also BEAM, PHANTOM, PROBE
-            
-            % initialization
-            h.center_frequency = 0;
-            h.fractional_bandwidth = 0;
-            h.phase = 0;
-            
-            if nargin>0
-                h.center_frequency=center_frequency_in;
-            end
-            if nargin>1
-                h.fractional_bandwidth=fractional_bandwidth_in;
-            end
-            if nargin>2
-                h.phase=phase_in;
-            end
+        function h=pulse(varargin)
+            h = h@uff(varargin{:});
         end
     end
     

@@ -135,5 +135,7 @@ mid.transmit_apodization.window = uff.window.scanline;
 mid.receive_apodization.window=uff.window.tukey50;
 mid.receive_apodization.f_number=1.7;
 
-b_data=mid.go();
+b_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
+
+% show
 b_data.plot();

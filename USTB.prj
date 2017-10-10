@@ -1,31 +1,49 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="2425466507" file="E:\PROJECTS\ustb\USTB.prj" location="E:\PROJECTS\ustb" name="USTB" target="target.toolbox" target-name="Package Toolbox">
+  <configuration build-checksum="3193319444" file="E:\PROJECTS\ustb\USTB.prj" location="E:\PROJECTS\ustb" name="USTB" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>USTB</param.appname>
-    <param.authnamewatermark>The UltrasSound ToolBox team</param.authnamewatermark>
+    <param.authnamewatermark>The USTB team</param.authnamewatermark>
     <param.email>contact@ustb.no</param.email>
-    <param.company>NTNU, UiO, Creatis</param.company>
+    <param.company>The USTB team</param.company>
     <param.summary>A free, open source MATLAB toolbox for beamforming, processing, and visualization of ultrasonic signals.</param.summary>
     <param.description>The aim of USTB is to facilitate the comparison between beamforming techniques and encourage the publication of datasets and algorithms. It is free, open source, and open to all contributors. USTB is a joint effort of the Norwegian University of Science and Technology, the University of Oslo, and the University of Lyon.</param.description>
-    <param.screenshot>C:\Users\alfonsom\Desktop\cropped-cropped-logo6.png</param.screenshot>
-    <param.version>2.0.1</param.version>
+    <param.screenshot>\\home.ansatt.ntnu.no\alfonsom\My Documents\My Pictures\cubeUSTB_medium.png</param.screenshot>
+    <param.version>2.0.8</param.version>
     <param.output>${PROJECT_ROOT}\USTB.mltbx</param.output>
     <param.products.name>
       <item>MATLAB</item>
       <item>Signal Processing Toolbox</item>
+      <item>Image Processing Toolbox</item>
+      <item>Mapping Toolbox</item>
+      <item>MATLAB Compiler</item>
       <item>Simulink Verification and Validation</item>
       <item>Statistics Toolbox</item>
+      <item>Communications System Toolbox</item>
+      <item>Control System Toolbox</item>
+      <item>Partial Differential Equation Toolbox</item>
     </param.products.name>
     <param.products.id>
       <item>1</item>
       <item>8</item>
+      <item>17</item>
+      <item>11</item>
+      <item>28</item>
       <item>93</item>
       <item>19</item>
+      <item>36</item>
+      <item>3</item>
+      <item>31</item>
     </param.products.id>
     <param.products.version>
       <item>8.4</item>
       <item>6.22</item>
+      <item>9.1</item>
+      <item>4.0.2</item>
+      <item>5.2</item>
       <item>3.8</item>
       <item>9.1</item>
+      <item>5.7</item>
+      <item>9.8</item>
+      <item>1.5</item>
     </param.products.version>
     <param.platforms />
     <param.guid>2056aa1a-d9d4-4b2e-89c1-e6d27ff78edf</param.guid>
@@ -49,62 +67,463 @@
 % **/*.bak
 %
 
+% git
 .git
 .gitignore
-data
+README.md
+
+% data &amp; mex &amp; unit test
+data/*
++mex/.mex
 @unit_test
+
+% data files
 *.mat
 *.h5
 *.uff
-README.md</param.exclude.filters>
+
+% video
+*.avi
+*.wmv
+
+% images but we allow png for examples
+*.fig
+*.jpg
+*.bmp
+*.gif
+
+% the project file
+*.prj</param.exclude.filters>
     <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;examples&gt;
+   &lt;exampleCategory name="uff"&gt;
+      &lt;example name="CPWC_UFF_Alpinion" type="html"&gt;
+         &lt;file type="source"&gt;/examples/uff/html/CPWC_UFF_Alpinion.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/uff/CPWC_UFF_Alpinion.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_UFF_Verasonics" type="html"&gt;
+         &lt;file type="source"&gt;/examples/uff/html/CPWC_UFF_Verasonics.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/uff/CPWC_UFF_Verasonics.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_UFF_read" type="html"&gt;
+         &lt;file type="source"&gt;/examples/uff/html/CPWC_UFF_read.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/uff/CPWC_UFF_read.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_UFF_write" type="html"&gt;
+         &lt;file type="source"&gt;/examples/uff/html/CPWC_UFF_write.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/uff/CPWC_UFF_write.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_UFF_Alpinion" type="html"&gt;
+         &lt;file type="source"&gt;/examples/uff/html/FI_UFF_Alpinion.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/uff/FI_UFF_Alpinion.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="field_II"&gt;
+      &lt;example name="STAI_L11_probe_sim" type="html"&gt;
+         &lt;file type="source"&gt;/examples/field_II/html/STAI_L11_probe_sim.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/field_II/STAI_L11_probe_sim.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="STAI_L11_speckle" type="html"&gt;
+         &lt;file type="source"&gt;/examples/field_II/html/STAI_L11_speckle.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/field_II/STAI_L11_speckle.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="STAI_theoretical_PSF" type="html"&gt;
+         &lt;file type="source"&gt;/examples/field_II/html/STAI_theoretical_PSF.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/field_II/STAI_theoretical_PSF.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="matrix_array"&gt;
+      &lt;example name="CPWC_matrix_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/matrix_array/html/CPWC_matrix_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/matrix_array/CPWC_matrix_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_matrix_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/matrix_array/html/STA_matrix_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/matrix_array/STA_matrix_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="curvilinear_array"&gt;
+      &lt;example name="DW_curvilinear_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/curvilinear_array/DW_curvilinear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array_06.png&lt;/file&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="phased_array"&gt;
+      &lt;example name="FI_phased_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/phased_array/html/FI_phased_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/phased_array/FI_phased_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/phased_array/html/FI_phased_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_04.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_phased_array_multiframe" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/phased_array/FI_phased_array_multiframe.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/phased_array/html/FI_phased_array_multiframe_04.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_phased_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/phased_array/html/STA_phased_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/phased_array/STA_phased_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="advanced_beamforming"&gt;
+      &lt;example name="FI_UFF_delay_multiply_and_sum_contrast" type="html"&gt;
+         &lt;file type="source"&gt;/examples/advanced_beamforming/html/FI_UFF_delay_multiply_and_sum_contrast.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/advanced_beamforming/FI_UFF_delay_multiply_and_sum_contrast.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_UFF_delay_multiply_and_sum_resolution" type="html"&gt;
+         &lt;file type="source"&gt;/examples/advanced_beamforming/html/FI_UFF_delay_multiply_and_sum_resolution.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/advanced_beamforming/FI_UFF_delay_multiply_and_sum_resolution.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="picmus"&gt;
+      &lt;example name="experiment_contrast_speckle" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/experiment_contrast_speckle.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/experiment_contrast_speckle.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="experiment_resolution_distortion" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/experiment_resolution_distortion.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/experiment_resolution_distortion.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="invivo_carotid_cross" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/invivo_carotid_cross.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/invivo_carotid_cross.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="invivo_carotid_long" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/invivo_carotid_long.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/invivo_carotid_long.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="simulation_contrast_speckle" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/simulation_contrast_speckle.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/simulation_contrast_speckle.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="simulation_resolution_distortion" type="html"&gt;
+         &lt;file type="source"&gt;/examples/picmus/html/simulation_resolution_distortion.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/picmus/simulation_resolution_distortion.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
    &lt;exampleCategory name="linear_array"&gt;
       &lt;example name="CPWC_linear_array" type="html"&gt;
-         &lt;file type="source"&gt;/examples/simulator/linear_array/html/CPWC_linear_array.html&lt;/file&gt;
-         &lt;file type="main"&gt;/examples/simulator/linear_array/CPWC_linear_array.m&lt;/file&gt;
-         &lt;file type="thumbnail"&gt;/examples/simulator/linear_array/html/CPWC_linear_array.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_01.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_02.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_03.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_04.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_05.png&lt;/file&gt;
-         &lt;file type="image"&gt;/examples/simulator/linear_array/html/CPWC_linear_array_06.png&lt;/file&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/CPWC_linear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_linear_array_beamformer_speed" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_beamformer_speed.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/CPWC_linear_array_beamformer_speed.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_linear_array_coherence_factor" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/CPWC_linear_array_coherence_factor.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_coherence_factor_10.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_linear_array_low_quality_PW_images" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/CPWC_linear_array_low_quality_PW_images.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_low_quality_PW_images_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="CPWC_linear_array_multiframe" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/CPWC_linear_array_multiframe.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/CPWC_linear_array_multiframe_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="DW_linear_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/DW_linear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/DW_linear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/DW_linear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/DW_linear_array_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_linear_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/FI_linear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/FI_linear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/FI_linear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_11.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_linear_array_receive_processes" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/FI_linear_array_receive_processes.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/FI_linear_array_receive_processes_11.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="IUS2017_abstract" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/IUS2017_abstract.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_11.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_12.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/IUS2017_abstract_13.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="RTB_linear_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/RTB_linear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/RTB_linear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/RTB_linear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/RTB_linear_array_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_linear_array" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/STA_linear_array.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/STA_linear_array.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/STA_linear_array.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_11.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_12.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_11.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_12.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_linear_array_beamformers" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/STA_linear_array_beamformers.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_beamformers_06.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_linear_array_transmit_processes" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/STA_linear_array_transmit_processes.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_11.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_processes_12.png&lt;/file&gt;
+      &lt;/example&gt;
+      &lt;example name="STA_linear_array_transmit_receive_processes" type="html"&gt;
+         &lt;file type="source"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes.html&lt;/file&gt;
+         &lt;file type="main"&gt;/examples/fresnel/linear_array/STA_linear_array_transmit_receive_processes.m&lt;/file&gt;
+         &lt;file type="thumbnail"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_01.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_02.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_03.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_04.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_05.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_06.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_07.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_08.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_09.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_10.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_11.png&lt;/file&gt;
+         &lt;file type="image"&gt;/examples/fresnel/linear_array/html/STA_linear_array_transmit_receive_processes_12.png&lt;/file&gt;
       &lt;/example&gt;
    &lt;/exampleCategory&gt;
 &lt;/examples&gt;</param.examples>
     <param.demosxml />
     <param.apps />
-    <param.docs />
+    <param.docs>${PROJECT_ROOT}\info.xml</param.docs>
     <unset>
       <param.output />
       <param.platforms />
       <param.demosxml />
       <param.apps />
-      <param.docs />
     </unset>
     <fileset.rootdir>
       <file>E:\PROJECTS\ustb</file>
     </fileset.rootdir>
     <fileset.rootfiles>
-      <file>${PROJECT_ROOT}\+gui</file>
+      <file>${PROJECT_ROOT}\+mex</file>
+      <file>${PROJECT_ROOT}\+midprocess</file>
       <file>${PROJECT_ROOT}\+postprocess</file>
+      <file>${PROJECT_ROOT}\+preprocess</file>
       <file>${PROJECT_ROOT}\+tools</file>
       <file>${PROJECT_ROOT}\+uff</file>
-      <file>${PROJECT_ROOT}\@beamformer</file>
-      <file>${PROJECT_ROOT}\@demodulator</file>
+      <file>${PROJECT_ROOT}\@alpinion</file>
       <file>${PROJECT_ROOT}\@fresnel</file>
       <file>${PROJECT_ROOT}\@verasonics</file>
+      <file>${PROJECT_ROOT}\data</file>
+      <file>${PROJECT_ROOT}\data_path.m</file>
       <file>${PROJECT_ROOT}\demos.xml</file>
+      <file>${PROJECT_ROOT}\dimension.m</file>
       <file>${PROJECT_ROOT}\docs</file>
       <file>${PROJECT_ROOT}\examples</file>
-      <file>${PROJECT_ROOT}\USTB.prj</file>
+      <file>${PROJECT_ROOT}\helpfiles</file>
+      <file>${PROJECT_ROOT}\info.xml</file>
+      <file>${PROJECT_ROOT}\logs</file>
+      <file>${PROJECT_ROOT}\midprocess.m</file>
+      <file>${PROJECT_ROOT}\pipeline.m</file>
+      <file>${PROJECT_ROOT}\postprocess.m</file>
+      <file>${PROJECT_ROOT}\preprocess.m</file>
+      <file>${PROJECT_ROOT}\process.m</file>
+      <file>${PROJECT_ROOT}\publications</file>
+      <file>${PROJECT_ROOT}\uff.m</file>
+      <file>${PROJECT_ROOT}\ustb_path.m</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
-    <fileset.depfun.excluded>
-      <file>E:\PROJECTS\kwave\k-wave-toolbox-version-1.1\k-Wave\fwhm.m</file>
-      <file>E:\PROJECTS\kwave\k-wave-toolbox-version-1.1\k-Wave\numDim.m</file>
-    </fileset.depfun.excluded>
+    <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
       <file location="E:\PROJECTS\ustb" name="USTB.mltbx" optional="false">E:\PROJECTS\ustb\USTB.mltbx</file>

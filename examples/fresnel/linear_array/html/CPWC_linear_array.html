@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>CPWC simulation with the USTB built-in Fresnel simulator</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_linear_array.m"><style type="text/css">
+      --><title>CPWC simulation with the USTB built-in Fresnel simulator</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-10-04"><meta name="DC.source" content="CPWC_linear_array.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>CPWC simulation with the USTB built-in Fresnel simulator</h1><!--introduction--><p>In this example we show how to use the built-in fresnel simulator in USTB to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can be beamformed with USTB.</p><p>Related materials:</p><div><ul><li><a href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058">Montaldo et al. 2009</a></li></ul></div><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> 31.03.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Phantom</a></li><li><a href="#2">Probe</a></li><li><a href="#3">Pulse</a></li><li><a href="#4">Sequence generation</a></li><li><a href="#5">The Fresnel simulator</a></li><li><a href="#6">Scan</a></li><li><a href="#7">Beamformer</a></li></ul></div><h2>Phantom<a name="1"></a></h2><p>The <b>fresnel</b> simulator takes a <b>phantom</b> structure as input. <b>phantom</b> is an Ultrasound File Format (UFF) structure that contains the position of a collection of point scatterers. USTB's implementation of phantom includes a <b>plot</b> method</p><pre class="codeinput">pha=uff.phantom();
+  </style></head><body><div class="content"><h1>CPWC simulation with the USTB built-in Fresnel simulator</h1><!--introduction--><p>In this example we show how to use the built-in fresnel simulator in USTB to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can be beamformed with USTB.</p><p>Related materials:</p><div><ul><li><a href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058">Montaldo et al. 2009</a></li></ul></div><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> 31.03.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Phantom</a></li><li><a href="#2">Probe</a></li><li><a href="#3">Pulse</a></li><li><a href="#4">Sequence generation</a></li><li><a href="#5">The Fresnel simulator</a></li><li><a href="#6">Scan</a></li><li><a href="#7">Pipeline</a></li></ul></div><h2>Phantom<a name="1"></a></h2><p>The <b>fresnel</b> simulator takes a <b>phantom</b> structure as input. <b>phantom</b> is an Ultrasound File Format (UFF) structure that contains the position of a collection of point scatterers. USTB's implementation of phantom includes a <b>plot</b> method</p><pre class="codeinput">pha=uff.phantom();
 pha.sound_speed=1540;            <span class="comment">% speed of sound [m/s]</span>
 pha.points=[0,  0, 40e-3, 1];    <span class="comment">% point scatterer position [m]</span>
 fig_handle=pha.plot();
@@ -107,27 +107,25 @@ sim.sampling_frequency=41.6e6;  <span class="comment">% sampling frequency [Hz]<
 
 <span class="comment">% we launch the simulation</span>
 channel_data=sim.go();
-</pre><pre class="codeoutput">USTB's Fresnel impulse response simulator (v1.0.5)
+</pre><pre class="codeoutput">USTB's Fresnel impulse response simulator (v1.0.7)
 ---------------------------------------------------------------
-</pre><h2>Scan<a name="6"></a></h2><p>The scan area is defined as a collection of pixels via another UFF structure. The <b>scan</b> is a general structure where the pixels have no spatial organization. That makes it very flexible, but a bit cumbersome to work with. But <b>scan</b> class has a number of children to help with that. In particular we here use the <b>linear_scan</b> structure, which is defined with just two axes. The <b>plot</b> method shows the position of the pixels in a 3D scenario.</p><pre class="codeinput">sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
+</pre><h2>Scan<a name="6"></a></h2><p>The scan area is defined as a collection of pixels via another UFF structure. The <b>scan</b> is a general structure where the pixels have no spatial organization. That makes it very flexible, but a bit cumbersome to work with. But <b>scan</b> class has a number of children to help with that. In particular we here use the <b>linear_scan</b> structure, which is defined with just two axes. The <b>plot</b> method shows the position of the pixels in a 3D scenario.</p><pre class="codeinput">sca=uff.linear_scan(<span class="string">'x_axis'</span>, linspace(-3e-3,3e-3,200).', <span class="string">'z_axis'</span>, linspace(39e-3,43e-3,200).');
 sca.plot(fig_handle,<span class="string">'Scenario'</span>);    <span class="comment">% show mesh</span>
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_05.png" alt=""> <h2>Beamformer<a name="7"></a></h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>beamformer</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_05.png" alt=""> <h2>Pipeline<a name="7"></a></h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>pipeline</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
-</pre><p>The <b>beamformer</b> structure allows you to implement different beamformers by combination of multiple built-in <b>processes</b>. The aim is to avoid code repetition and minimize implementation differences that could hinder inter-comparison. Here we combine two <b>processes</b> (<b>das_matlab</b> and <b>coherent_compounding</b>) to produce coherently compounded images with a MATLAB implementation of the DAS general beamformer.</p><p>By changing the <b>process</b> chain other beamforming sequences can be implemented. For instance, in conventional focus imaging each transmit wave leads to a single scan line. In the end all the scanlines are stacked to produce a 2D image. In CPWC, however, a full image is produced for each transmit wave, the so called "low resolution image". Then all the images are coherently combined, i.e. added together, to produce a "high resolution image". Notice that the exact same <b>process</b> is used in other sequences such as DWI or RTB.</p><p>This division of the beamforming processing in <b>processes</b> is slower than combining the stages together in a single code, but it opens endless posibilities for implementing different techniques based on the same code blocks.</p><p>The beamformer returns yet another <b>UFF</b> structure: <b>beamformed_data</b> which we can just display by using the method <b>plot</b></p><pre class="codeinput"><span class="comment">% beamforming</span>
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
+</pre><p>The <b>pipeline</b> structure allows you to implement different beamformers by combination of multiple built-in <b>processes</b>. The aim is to avoid code repetition and minimize implementation differences that could hinder inter-comparison. Here we combine two <b>processes</b> (<b>das_matlab</b> and <b>coherent_compounding</b>) to produce coherently compounded images with a MATLAB implementation of the DAS general beamformer.</p><p>By changing the <b>process</b> chain other beamforming sequences can be implemented. For instance, in conventional focus imaging each transmit wave leads to a single scan line. In the end all the scanlines are stacked to produce a 2D image. In CPWC, however, a full image is produced for each transmit wave, the so called "low resolution image". Then all the images are coherently combined, i.e. added together, to produce a "high resolution image". Notice that the exact same <b>process</b> is used in other sequences such as DWI or RTB.</p><p>This division of the beamforming processing in <b>processes</b> is slower than combining the stages together in a single code, but it opens endless posibilities for implementing different techniques based on the same code blocks.</p><p>The pipeline returns yet another <b>UFF</b> structure: <b>beamformed_data</b> which we can just display by using the method <b>plot</b></p><pre class="codeinput"><span class="comment">% beamforming</span>
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 <span class="comment">% show</span>
 b_data.plot();
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% CPWC simulation with the USTB built-in Fresnel simulator
 %
@@ -251,30 +249,28 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
+sca=uff.linear_scan('x_axis', linspace(-3e-3,3e-3,200).', 'z_axis', linspace(39e-3,43e-3,200).');
 sca.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Pipeline
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=sca;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
-bmf.transmit_apodization.window=uff.window.tukey50;
-bmf.transmit_apodization.f_number=1.7;
-bmf.transmit_apodization.apex.distance=Inf;
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
+% The *pipeline* structure allows you to implement different beamformers 
 % by combination of multiple built-in *processes*. The aim is to avoid code
 % repetition and minimize implementation differences that could hinder
 % inter-comparison. Here we combine two *processes* (*das_matlab* and 
@@ -293,11 +289,11 @@ bmf.transmit_apodization.apex.distance=Inf;
 % than combining the stages together in a single code, but it opens endless posibilities
 % for implementing different techniques based on the same code blocks.
 %
-% The beamformer returns yet another *UFF* structure: *beamformed_data*
+% The pipeline returns yet another *UFF* structure: *beamformed_data*
 % which we can just display by using the method *plot*
 
 % beamforming
-b_data=bmf.go({process.das_matlab() process.coherent_compounding()});
+b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
 
 % show
 b_data.plot();

@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-05-20"><meta name="DC.source" content="CPWC_linear_array_low_quality_PW_images.m"><style type="text/css">
+      --><title>CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-10-04"><meta name="DC.source" content="CPWC_linear_array_low_quality_PW_images.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator</h1><!--introduction--><p>In this example we show how to use the built-in fresnel simulator in USTB to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can be beamformed with USTB.</p><p>Related materials:</p><div><ul><li><a href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058">Montaldo et al. 2009</a></li></ul></div><p>This tutorial assumes familiarity with the contents of the <a href="./CPWC_linear_array.html">'CPWC simulation with the USTB built-in Fresnel simulator'</a> tutorial. Please feel free to refer back to that for more details.</p><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> and Arun Asokan Nair <a href="anair8@jhu.edu">anair8@jhu.edu</a> 16.05.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Phantom</a></li><li><a href="#2">Probe</a></li><li><a href="#3">Pulse</a></li><li><a href="#4">Sequence generation</a></li><li><a href="#5">The Fresnel simulator</a></li><li><a href="#6">Scan</a></li><li><a href="#7">Beamformer</a></li></ul></div><h2>Phantom<a name="1"></a></h2><p>Our first step is to define an appropriate <b>phantom</b> structure as input. Our phantom here is simply a single point scatterer. USTB's implementation of <b>phantom</b> comes with a <b>plot</b> method for free!</p><pre class="codeinput">pha=uff.phantom();
+  </style></head><body><div class="content"><h1>CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator</h1><!--introduction--><p>In this example we show how to use the built-in fresnel simulator in USTB to generate a Coherent Plane-Wave Compounding (CPWC) dataset and how it can be beamformed with USTB.</p><p>Related materials:</p><div><ul><li><a href="http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4816058">Montaldo et al. 2009</a></li></ul></div><p>This tutorial assumes familiarity with the contents of the <a href="./CPWC_linear_array.html">'CPWC simulation with the USTB built-in Fresnel simulator'</a> tutorial. Please feel free to refer back to that for more details.</p><p><i>by Alfonso Rodriguez-Molares <a href="alfonso.r.molares@ntnu.no">alfonso.r.molares@ntnu.no</a> , Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> and Arun Asokan Nair <a href="anair8@jhu.edu">anair8@jhu.edu</a> 16.05.2017</i></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Phantom</a></li><li><a href="#2">Probe</a></li><li><a href="#3">Pulse</a></li><li><a href="#4">Sequence generation</a></li><li><a href="#5">The Fresnel simulator</a></li><li><a href="#6">Scan</a></li><li><a href="#7">Midprocess</a></li></ul></div><h2>Phantom<a name="1"></a></h2><p>Our first step is to define an appropriate <b>phantom</b> structure as input. Our phantom here is simply a single point scatterer. USTB's implementation of <b>phantom</b> comes with a <b>plot</b> method for free!</p><pre class="codeinput">pha=uff.phantom();
 pha.sound_speed=1540;            <span class="comment">% speed of sound [m/s]</span>
 pha.points=[0,  0, 40e-3, 1];    <span class="comment">% point scatterer position [m]</span>
 fig_handle=pha.plot();
@@ -107,40 +107,33 @@ sim.sampling_frequency=41.6e6;  <span class="comment">% sampling frequency [Hz]<
 
 <span class="comment">% we launch the simulation. Go!</span>
 channel_data=sim.go();
-</pre><pre class="codeoutput">USTB's Fresnel impulse response simulator (v1.0.5)
+</pre><pre class="codeoutput">USTB's Fresnel impulse response simulator (v1.0.7)
 ---------------------------------------------------------------
-</pre><h2>Scan<a name="6"></a></h2><p>The scan area is defines as a collection of pixels spanning our region of interest. For our example here, we use the <b>linear_scan</b> structure, which is defined with just two axes. <b>scan</b> too has a useful <b>plot</b> method it can call.</p><pre class="codeinput">sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
-sca.plot(fig_handle,<span class="string">'Scenario'</span>);    <span class="comment">% show mesh</span>
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_low_quality_PW_images_05.png" alt=""> <h2>Beamformer<a name="7"></a></h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>beamformer</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+</pre><h2>Scan<a name="6"></a></h2><p>The scan area is defines as a collection of pixels spanning our region of interest. For our example here, we use the <b>linear_scan</b> structure, which is defined with just two axes. <b>scan</b> too has a useful <b>plot</b> method it can call.</p><pre class="codeinput">scan=uff.linear_scan();
+scan.x_axis=linspace(-3e-3,3e-3,200).';
+scan.z_axis=linspace(39e-3,43e-3,200).';
+scan.plot(fig_handle,<span class="string">'Scenario'</span>);    <span class="comment">% show mesh</span>
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_low_quality_PW_images_05.png" alt=""> <h2>Midprocess<a name="7"></a></h2><p>With <b>channel_data</b> and a <b>scan</b> we have all we need to produce an ultrasound image. We now use a USTB structure <b>midprocess</b>, that takes an <b>apodization</b> structure in addition to the <b>channel_data</b> and <b>scan</b>.</p><pre class="codeinput">mid=midprocess.das_matlab();
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
-
-<span class="comment">% Setting transmit apodization to "none" since we want to look at the</span>
-<span class="comment">% individual low quality PW's</span>
-bmf.transmit_apodization.window=uff.window.none;
-</pre><p>The <b>beamformer</b> structure allows you to implement different beamformers by combination of multiple built-in <b>processes</b>. By changing the <b>process</b> chain other beamforming sequences can be implemented. It returns yet another <b>UFF</b> structure: <b>beamformed_data</b>.</p><pre class="codeinput"><span class="comment">% To achieve the goal of this example, we only use delay-and-sum (</span>
-<span class="comment">% implemented in the *das_matlab()* process) and not coherent compounding</span>
-<span class="comment">% as we want to output the low quality PW images each formed from only one</span>
-<span class="comment">% plane wave transmission.</span>
-
-b_data=bmf.go({process.das_matlab()});
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.none; <span class="comment">% Setting transmit apodization to "none" since we want to look at the individual low quality PW's</span>
+</pre><p>The <b>midprocess</b> structure allows you to implement different beamformers. It returns yet another <b>UFF</b> structure: <b>beamformed_data</b>.</p><pre class="codeinput">b_data=mid.go();
 </pre><p>Finally, display each individual low quality plane wave image. Fin!</p><pre class="codeinput">figure(<span class="string">'Position'</span>,[100 100 1000 300])
 h1 = subplot(1,3,1);
 angle_1 = rad2deg(channel_data.sequence(1,1).source.azimuth);
-b_data(1,1).plot(h1,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_1));
+b_data.plot(h1,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_1),[],[],[1 1]);
 
 h2 = subplot(1,3,2);
 angle_2 = rad2deg(channel_data.sequence(1,2).source.azimuth);
-b_data(1,2).plot(h2,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_2));
+b_data.plot(h2,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_2),[],[],[1 2]);
 
 h3 = subplot(1,3,3);
 angle_3 = rad2deg(channel_data.sequence(1,3).source.azimuth);
-b_data(1,3).plot(h3,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_3));
-</pre><img vspace="5" hspace="5" src="CPWC_linear_array_low_quality_PW_images_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+b_data.plot(h3,sprintf(<span class="string">'PW at angle = %0.1f'</span>,angle_3),[],[],[1 3]);
+</pre><img vspace="5" hspace="5" src="CPWC_linear_array_low_quality_PW_images_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% CPWC (low-resolution) simulation with the USTB built-in Fresnel simulator
 %
@@ -157,7 +150,8 @@ b_data(1,3).plot(h3,sprintf(<span class="string">'PW at angle = %0.1f'</span>,an
 % simulator'> tutorial. Please feel free to refer back to that for more 
 % details.
 % 
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun Asokan 
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> ,
+% Ole Marius Hoel Rindal <olemarius@olemarius.net> and Arun Asokan 
 % Nair <anair8@jhu.edu> 16.05.2017_
 
 %% Phantom
@@ -249,40 +243,31 @@ channel_data=sim.go();
 % which is defined with just two axes. *scan* too has a useful *plot*
 % method it can call.
 
-sca=uff.linear_scan(linspace(-3e-3,3e-3,200).', linspace(39e-3,43e-3,200).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan();
+scan.x_axis=linspace(-3e-3,3e-3,200).';
+scan.z_axis=linspace(39e-3,43e-3,200).';
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Beamformer
+%% Midprocess
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-bmf=beamformer();
-bmf.channel_data=channel_data;
-bmf.scan=sca;
+mid=midprocess.das_matlab();
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-bmf.receive_apodization.window=uff.window.tukey50;
-bmf.receive_apodization.f_number=1.7;
-bmf.receive_apodization.apex.distance=Inf;
-
-% Setting transmit apodization to "none" since we want to look at the
-% individual low quality PW's
-bmf.transmit_apodization.window=uff.window.none;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.none; % Setting transmit apodization to "none" since we want to look at the individual low quality PW's
 
 %% 
 %
-% The *beamformer* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
+% The *midprocess* structure allows you to implement different beamformers. 
+% It returns yet another *UFF* structure: *beamformed_data*.
 
-% To achieve the goal of this example, we only use delay-and-sum (
-% implemented in the *das_matlab()* process) and not coherent compounding
-% as we want to output the low quality PW images each formed from only one
-% plane wave transmission.
-
-b_data=bmf.go({process.das_matlab()});
+b_data=mid.go();
 
 %%
 % Finally, display each individual low quality plane wave image. Fin!
@@ -290,14 +275,14 @@ b_data=bmf.go({process.das_matlab()});
 figure('Position',[100 100 1000 300])
 h1 = subplot(1,3,1);
 angle_1 = rad2deg(channel_data.sequence(1,1).source.azimuth);
-b_data(1,1).plot(h1,sprintf('PW at angle = %0.1f',angle_1));
+b_data.plot(h1,sprintf('PW at angle = %0.1f',angle_1),[],[],[1 1]);
 
 h2 = subplot(1,3,2);
 angle_2 = rad2deg(channel_data.sequence(1,2).source.azimuth);
-b_data(1,2).plot(h2,sprintf('PW at angle = %0.1f',angle_2));
+b_data.plot(h2,sprintf('PW at angle = %0.1f',angle_2),[],[],[1 2]);
 
 h3 = subplot(1,3,3);
 angle_3 = rad2deg(channel_data.sequence(1,3).source.azimuth);
-b_data(1,3).plot(h3,sprintf('PW at angle = %0.1f',angle_3));
+b_data.plot(h3,sprintf('PW at angle = %0.1f',angle_3),[],[],[1 3]);
 ##### SOURCE END #####
 --></body></html>
