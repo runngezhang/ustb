@@ -10,9 +10,11 @@ channel_data.initial_time = 0;
 channel_data.probe=create_probe_object(h);
 
 if strcmp(h.TW.type,'parametric') % read pulse fr. from TW
-    channel_data.pulse=uff.pulse(h.TW.Parameters(1)*1e6,0,0);
+    channel_data.pulse = uff.pulse();
+    channel_data.pulse.center_frequency = double(h.TW.Parameters(1)*1e6);
 else % read pulse fr. from transducer
-    channel_data.pulse=uff.pulse(h.f0,0,0);
+    channel_data.pulse=uff.pulse();
+    channel_data.pulse.center_frequency = double(h.f0);
 end
 
 

@@ -47,7 +47,7 @@ Resource.Parameters.numRcvChannels = 128;  % number of receive channels.
 Resource.Parameters.speedOfSound = 1540;
 Resource.Parameters.verbose = 2;
 Resource.Parameters.initializeOnly = 0;
-Resource.Parameters.simulateMode = 1;
+Resource.Parameters.simulateMode = 0;
 %  Resource.Parameters.simulateMode = 1 forces simulate mode, even if hardware is present.
 %  Resource.Parameters.simulateMode = 2 stops sequence and processes RcvData continuously.
 
@@ -313,7 +313,7 @@ ver.angles = Angles;
 channel_data = ver.create_FI_phased_array_channeldata();
 
 %%
-depth_axis=linspace(0e-3,99e-3,2048).';
+depth_axis=linspace(0e-3,90e-3,2048).';
 scan=uff.sector_scan('azimuth_axis',Angles.','depth_axis',depth_axis);
 
 %% Set up the processing pipeline and beamform
@@ -329,10 +329,10 @@ mid.receive_apodization.window=uff.window.none;
 mid.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=mid.go({midprocess.das_mex postprocess.stack})
+b_data=mid.go();
 
 %% show
-b_data.plot(5,['USTB'],60);
+b_data.plot(5,['USTB'],60); 
 
 %%
 answer = questdlg('Do you want to save this dataset?');
