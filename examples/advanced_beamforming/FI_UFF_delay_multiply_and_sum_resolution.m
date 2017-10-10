@@ -32,10 +32,6 @@ end
 %Print info about the dataset
 channel_data.print_authorship
 
-%% decimating the sequence -> too heavy for this example 
-channel_data.data=channel_data.data(:,:,1:2:256);
-channel_data.sequence=channel_data.sequence(1:2:256);
-
 %% Define Scan
 % Define the image coordinates we want to beamform in the scan object.
 % Notice that we need to use quite a lot of samples in the z-direction. 
@@ -44,52 +40,46 @@ channel_data.sequence=channel_data.sequence(1:2:256);
 % harmonic signal.
 
 z_axis=linspace(25e-3,45e-3,1024).';
-sca=uff.linear_scan();
-idx = 1;
-x_source=zeros(channel_data.N_waves,1);
+x_axis=zeros(channel_data.N_waves,1);
 for n=1:channel_data.N_waves
-    x_source(n) = channel_data.sequence(n).source.x;
-    sca(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
+    x_axis(n) = channel_data.sequence(n).source.x;
 end
+
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 
 %% Set up the processing pipeline
 pipe=pipeline();
 pipe.channel_data=channel_data;
-pipe.scan=sca;
+pipe.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.window=uff.window.scanline;
+
+pipe.receive_apodization.window=uff.window.none;
 pipe.receive_apodization.f_number=1.7;
 
+%% Define the DAS beamformer
+das = midprocess.das();
+%Sum only on transmit, so that we can do DMAS on receice
+das.dimension = dimension.transmit(); 
+
 %% Create the DMAS image using the delay_multiply_and_sum postprocess
-% The DMAS could have been included in the original pipeline, but we can
 dmas = postprocess.delay_multiply_and_sum();
-dmas.dimension = dimension.receive();
+dmas.dimension = dimension.receive;
 dmas.channel_data = channel_data;
 dmas.receive_apodization = pipe.receive_apodization;
 
-b_data_dmas=pipe.go({midprocess.delay_matlab_light() postprocess.stack() dmas});
+b_data_dmas=pipe.go({das dmas});
 
 % beamforming
 b_data_dmas.plot(100,'DMAS');
 
+
 %% Beamform DAS image
-% Notice that I redefine the beamformer to use Hamming apodization.
+% Notice that I redefine the beamformer to summing on both transmit and receive.
+das.dimension = dimension.both();
 
-das=midprocess.das();
-das.code = code.mex;
-das.dimension = dimension.both;
-
-das.channel_data= channel_data;
-das.scan = uff.linear_scan('x_axis',x_source,'z_axis',z_axis);
-
-das.transmit_apodization.window=uff.window.scanline;
-
-das.receive_apodization.window=uff.window.hamming;
-das.receive_apodization.f_number=1.7;
-
-b_data_das=das.go();
+b_data_das=pipe.go({das});
 b_data_das.plot([],'DAS');
-
 
 %% Plot both images in same plot
 % Plot both in same plot with connected axes, try to zoom!
