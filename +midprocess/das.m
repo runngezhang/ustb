@@ -129,7 +129,7 @@ classdef das < midprocess
                         N=N_waves*N_channels;
                         
                         % transmit loop
-                        for n_wave=1:N_waves;
+                        for n_wave=1:N_waves
                             if any(tx_apodization(:,n_wave))
                             
                                 % receive loop
@@ -152,8 +152,8 @@ classdef das < midprocess
                                         end
 
                                         % beamformed signal
-                                        temp = bsxfun(@times,apodization,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
-
+                                        temp = bsxfun(@times,apodization.*phase_factor,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
+                                        
                                         % set into auxiliary data
                                         switch h.dimension
                                             case dimension.none
