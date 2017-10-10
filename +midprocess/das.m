@@ -17,7 +17,7 @@ classdef das < midprocess
             h.name='USTB DAS General Beamformer';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.11';
+            h.version='v1.0.12';
         end
     end
     
@@ -148,10 +148,9 @@ classdef das < midprocess
                                         % beamformed signal
                                         temp = bsxfun(@times,apodization,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
                                         
-                                        if(w0>eps) % If IQ-sampled data
-                                            phase_factor=exp(1i.*w0*delay);
-                                            % multiply with phase
-                                            temp = bsxfun(@times,phase_factor,temp);
+                                        % apply phase correction factor to IQ data
+                                        if(w0>eps) 
+                                            temp = bsxfun(@times,exp(1i.*w0*delay),temp);
                                         end
                                         
                                         % set into auxiliary data
