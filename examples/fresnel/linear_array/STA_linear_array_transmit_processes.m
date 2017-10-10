@@ -65,14 +65,20 @@ scan.plot(fig_handle,'Scenario');    % show mesh
 pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=scan;
-pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=1.7;
 
-pipe.transmit_apodization.window=uff.window.tukey25;
+pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=1.7;
 
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
+
 % beamforming
-b_data=pipe.go({preprocess.complex_demodulation_Denarie  midprocess.das_mex()});
+pre = preprocess.demodulation();
+
+mid = midprocess.das();
+mid.dimension = dimension.receive();
+
+b_data=pipe.go({pre mid});
 
 %% coherently compounded
 cc=postprocess.coherent_compounding();

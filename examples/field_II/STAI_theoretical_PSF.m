@@ -216,7 +216,7 @@ pipe.transmit_apodization.f_number=1.7;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data_field_ii =pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data_field_ii =pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 %% Compute STA signals using USTB's Fresnel simulator
 % 
@@ -239,7 +239,7 @@ channel_data_fresnel=sim.go();
 %% BEAMFORM data from Fresnel simulation
 pipe.channel_data=channel_data_fresnel;
 % Delay and sum on receive, then coherent compounding
-b_data_fresnel =pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data_fresnel =pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 
 %% Display images

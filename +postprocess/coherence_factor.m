@@ -74,12 +74,12 @@ classdef coherence_factor < postprocess
             
             % check if we have information about the transmit apodization
             if (h.dimension~=dimension.receive)
-                if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)||isempty(h.input.sequence)
+                if isempty(h.transmit_apodization)||(h.transmit_apodization.window==uff.window.none)||(isempty(h.transmit_apodization.sequence)&&isempty(h.input.sequence))
                     tx_apodization=ones(h.input.N_pixels, 1, h.input.N_waves);
                 else
                     h.transmit_apodization.focus = h.input.scan;
                     % calculate transmit apodization according to 10.1109/TUFFC.2015.007183
-                    h.transmit_apodization.sequence=h.input.sequence;
+                    if isempty(h.transmit_apodization.sequence) h.transmit_apodization.sequence=h.input.sequence; end
                     tx_apodization=reshape(h.transmit_apodization.data,[h.input.N_pixels, 1, h.input.N_waves]);
                 end
             end

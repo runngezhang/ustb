@@ -1,4 +1,4 @@
-% Using TX-RX processes with a STA dataset and the USTB built-in Fresnel simulator
+% Using transmmit processes with a STA dataset and the USTB built-in Fresnel simulator
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
 %   $Date: 2017/05/01$
@@ -34,7 +34,8 @@ for n=1:N
     seq(n).probe=prb;
     seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
     
-    seq(n).apodization=uff.apodization('window',uff.window.sta);
+    seq(n).apodization=uff.apodization();
+    seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.origo=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
@@ -55,25 +56,29 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 
 % we launch the simulation
 channel_data=sim.go();
- 
+
 %% SCAN
 scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
 scan.plot(fig_handle,'Scenario');    % show mesh
- 
-%% MIDPROCESS
-mid=midprocess.das();
-mid.dimension = dimension.none;
-mid.channel_data=channel_data;
-mid.scan=scan;
 
-mid.receive_apodization.window=uff.window.tukey25;
-mid.receive_apodization.f_number=1.7;
+%% PIPELINE
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-mid.transmit_apodization.window=uff.window.tukey25;
-mid.transmit_apodization.f_number=1.7;
+pipe.transmit_apodization.window=uff.window.tukey50;
+pipe.transmit_apodization.f_number=1.7;
+
+pipe.receive_apodization.window=uff.window.tukey50;
+pipe.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=mid.go();
+pre = preprocess.demodulation();
+
+mid = midprocess.das();
+mid.dimension = dimension.transmit();
+
+b_data=pipe.go({pre mid});
 
 %% coherently compounded
 cc=postprocess.coherent_compounding();
@@ -95,8 +100,8 @@ mv_data.plot([],mv.name);
 
 %% Mallart-Fink coherence factor
 cf=postprocess.coherence_factor();
-cf.transmit_apodization=mid.transmit_apodization;
-cf.receive_apodization=mid.receive_apodization;
+cf.transmit_apodization=pipe.transmit_apodization;
+cf.receive_apodization=pipe.receive_apodization;
 cf.input=b_data;
 cf_data=cf.go();
 cf.CF.plot([],'Mallart-Fink Coherence factor',60,'none'); % show the coherence factor
@@ -104,11 +109,9 @@ cf_data.plot([],cf.name);
 
 %% Camacho-Fritsch phase coherence factor
 pcf=postprocess.phase_coherence_factor();
-pcf.transmit_apodization=mid.transmit_apodization;
-pcf.receive_apodization=mid.receive_apodization;
+pcf.transmit_apodization=pipe.transmit_apodization;
+pcf.receive_apodization=pipe.receive_apodization;
 pcf.input=b_data;
 pcf_data=pcf.go();
 pcf.FCC.plot([],'Camacho-Fritsch Phase coherence factor',60,'none'); % show the phase coherence factor
 pcf_data.plot([],pcf.name);
-
-

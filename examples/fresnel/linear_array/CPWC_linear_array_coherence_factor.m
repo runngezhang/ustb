@@ -133,9 +133,10 @@ scan.plot(fig_handle,'Scenario');    % show mesh
  
 %% Midprocess
 %
-% We define a midprocess.delay_mex to delay the signal.
+% We define a midprocess.das to delay the signal.
 
-mid=midprocess.delay_mex();
+mid=midprocess.das();
+mid.dimension = dimension.none;
 mid.channel_data=channel_data;
 mid.scan=scan;
 mid.receive_apodization.window=uff.window.boxcar;

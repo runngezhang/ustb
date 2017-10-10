@@ -1,14 +1,15 @@
 classdef dimension < int32
-%window   Enumeration for dimension types. To see the options available write "dimension." and press <TAB>.
+%DIMENSION   Enumeration for dimension types. To see the options available write "dimension." and press <TAB>.
 %
 %   See also PROCESS
 
 %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
-%   $Date: 2017/05/05 $
+%   $Date: 2017/09/22 $
     
    enumeration
-      both(0)
-      transmit(1)
-      receive(2)
+      none(0)
+      receive(1)
+      transmit(2)
+      both(3)
    end
 end

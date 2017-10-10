@@ -386,7 +386,7 @@ bmf.transmit_apodization.f_number=2*tan(Recon.senscutoff);
 bmf.transmit_apodization.apex.distance=Inf;
 
 % beamforming
-b_data=bmf.go({process.delay_mex process.coherent_compounding});
+b_data=bmf.go({process.das process.coherent_compounding});
 
 %% show
 b_data.plot();

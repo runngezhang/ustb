@@ -1,17 +1,17 @@
-%% STA simulation on a linear array with the USTB built-in Fresnel simulator
-% 
+%% FI simulation on a linear array with the USTB built-in Fresnel simulator
+%
 % In this example we show how to use the built-in fresnel simulator in USTB
-% to generate a Synthetic Transmit Aperture (STA) dataset for a linear 
-% array and a linear scan and how it can be beamformed both with using a
-% beamformer as a process, or through using standalone code.
+% to generate a Conventional Focused Imaging (single focal depth) dataset 
+% for a linear array and a linear scan and show how it can be beamformed 
+% with USTB.
 %
 % This tutorial assumes familiarity with the contents of the 
-% <./CPWC_linear_array.html 'CPWC simulation with the 
+% <../../linear_array/html/CPWC_linear_array.html 'CPWC simulation with the 
 % USTB built-in Fresnel simulator'> tutorial. Please feel free to refer 
 % back to that for more details.
 % 
-% % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun 
-% Asokan Nair <anair8@jhu.edu> 11.03.2017_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun
+% Asokan Nair <anair8@jhu.edu> 14.03.2017_
 
 %%
 % 
@@ -63,21 +63,25 @@ pul.plot([],'2-way pulse');
 % takes the same sequence definition as the USTB beamformer. In UFF and
 % USTB a sequence is defined as a collection of *wave* structures. 
 % 
-% For our example here, we define a sequence of 128
-% waves each emanating from a single element on the probe aperture.
-% An appropriate apodization window is enforced through setting 
-% *apodization.window = uff.window.sta*. The *wave* structure too has a
-% *plot* method.
+% For our example here, we define a sequence of 200 focused beams spanning 
+% a lateral range of $[-2, 2]$ mm. The focal depth is set as 40 mm. 
+% The *wave* structure too has a *plot* method.
 
-N=128;                      % number of waves
+N=50;                               % number of focused beams
+x_axis=linspace(-2e-3,2e-3,N).';
+z0=40e-3;
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
     seq(n).probe=prb;
-    seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
+
+    seq(n).source.xyz=[x_axis(n) 0 z0];
     
-    seq(n).apodization=uff.apodization('window',uff.window.sta);
-    seq(n).apodization.origo=seq(n).source;
+    seq(n).apodization=uff.apodization();
+    seq(n).apodization.window=uff.window.tukey50;
+    seq(n).apodization.f_number=1.7;
+    seq(n).apodization.origo=uff.point('xyz',[0 0 -Inf]);
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -104,36 +108,44 @@ sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 % we launch the simulation
 channel_data=sim.go();
  
-%% Scan
-%
-% The scan area is defines as a collection of pixels spanning our region of 
-% interest. For our example here, we use the *linear_scan* structure, 
-% which is defined with two components: the lateral range and the 
-% depth range. *scan* too has a useful *plot* method it can call.
-
-sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(39e-3,41e-3,100).');
-sca.plot(fig_handle,'Scenario');    % show mesh
- 
-%% Pipeline
+%% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+midproc=midprocess.das();
+midproc.dimension = dimension.both;
+midproc.channel_data=channel_data;
+midproc.scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,100).');
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
-pipe.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+midproc.transmit_apodization.window=uff.window.scanline;
+midproc.receive_apodization.window=uff.window.tukey50;
+midproc.receive_apodization.f_number=1.7;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.7;
-pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+b_data=midproc.go();
+b_data.plot([],'No MLA');
 
-% then do the beamforming
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+%% 
+%
+% The image is ok, but we can use multiline acquisition (MLA) to
+% improve resolution. We choose to use MLA = 4 and we define a new scan 
+% where we increase the number of scan lines by a factor of 4. We also need
+% to tell the apodization function that we will use MLA = 4 scheme.
 
-% and show the data.
-b_data.plot();
+MLA = 4;
+midproc.scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,MLA*N).','z_axis',linspace(39e-3,41e-3,100).');
+midproc.transmit_apodization.MLA = MLA;
+midproc.transmit_apodization.MLA_overlap = 0;
+b_data=midproc.go();
+b_data.plot([],'MLA=4, no overlap');
+
+%%
+%
+% Mmmm... Somewhat better. But we see a strange artifact between each MLA
+% group. We can mitigate this effect introducing some MLA overlap
+
+midproc.transmit_apodization.MLA_overlap = 2;
+b_data=midproc.go();
+b_data.plot([],'MLA=4, overlap=2');
+

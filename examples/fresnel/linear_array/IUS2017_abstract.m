@@ -32,8 +32,59 @@ pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% SCAN
-sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(z0-1e-3,z0+1e-3,100).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).', 'z_axis',linspace(z0-1e-3,z0+1e-3,100).');
+scan.plot(fig_handle,'Scenario');    % show mesh
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% SEQUENCE GENERATION
+seq=uff.wave();
+for n=1:scan.N_x_axis 
+    seq(n)=uff.wave();
+    seq(n).probe=prb;
+    seq(n).source.xyz=[scan.x_axis(n) 0 z0];
+    
+    seq(n).apodization=uff.apodization();
+    seq(n).apodization.window=uwindow;
+    seq(n).apodization.f_number=F_number;
+    seq(n).apodization.origo.distance=Inf;
+    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
+    
+    seq(n).sound_speed=pha.sound_speed;
+end
+
+%% fresnel
+sim=fresnel();
+
+% setting input data 
+sim.phantom=pha;                % phantom
+sim.pulse=pul;                  % transmitted pulse
+sim.probe=prb;                  % probe
+sim.sequence=seq;               % beam sequence
+sim.sampling_frequency=Fs;      % sampling frequency [Hz]
+
+% we launch the simulation
+channel_data=sim.go();
+ 
+%% PIPELINE
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window = uff.window.scanline;
+
+mid.receive_apodization.window=uwindow;
+mid.receive_apodization.f_number=F_number;
+
+% beamforming
+fi_data=mid.go();
+
+% show
+fi_data.plot([],'FI');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,76 +119,16 @@ sim.sampling_frequency=Fs;  % sampling frequency [Hz]
 channel_data=sim.go();
   
 %% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+mid.channel_data=channel_data;
 
-pipe.receive_apodization.window=uwindow;
-pipe.receive_apodization.f_number=F_number;
-
-pipe.transmit_apodization.window=uwindow;
-pipe.transmit_apodization.f_number=F_number;
+mid.transmit_apodization.window=uwindow;
+mid.transmit_apodization.f_number=F_number;
 
 % beamforming
-stai_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+stai_data=mid.go();
 
 % show
 stai_data.plot([],'STAI');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% FI
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% SEQUENCE GENERATION
-seq=uff.wave();
-for n=1:sca.N_x_axis 
-    seq(n)=uff.wave();
-    seq(n).probe=prb;
-    seq(n).source.xyz=[sca.x_axis(n) 0 z0];
-    
-    seq(n).apodization=uff.apodization();
-    seq(n).apodization.window=uwindow;
-    seq(n).apodization.f_number=F_number;
-    seq(n).apodization.origo.distance=Inf;
-    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
-    
-    seq(n).sound_speed=pha.sound_speed;
-end
-
-%% fresnel
-sim=fresnel();
-
-% setting input data 
-sim.phantom=pha;                % phantom
-sim.pulse=pul;                  % transmitted pulse
-sim.probe=prb;                  % probe
-sim.sequence=seq;               % beam sequence
-sim.sampling_frequency=Fs;      % sampling frequency [Hz]
-
-% we launch the simulation
-channel_data=sim.go();
- 
-%% SCAN
-fi_sca=uff.linear_scan();
-for n=1:sca.N_x_axis
-    fi_sca(n)=uff.linear_scan('x_axis',sca.x_axis(n),'z_axis',sca.z_axis);
-    fi_sca(n).plot(fig_handle,'Scenario');    
-end
- 
-%% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=fi_sca;
-pipe.receive_apodization.window=uwindow;
-pipe.receive_apodization.f_number=F_number;
-
-% beamforming
-fi_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
-
-% show
-fi_data.plot([],'FI');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,18 +164,10 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-
-pipe.receive_apodization.window=uwindow;
-pipe.receive_apodization.f_number=F_number;
-
-pipe.transmit_apodization.window=uwindow;
-pipe.transmit_apodization.f_number=F_number;
+mid.channel_data=channel_data;
 
 % beamforming
-cpwc_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+cpwc_data=mid.go();
 
 % show
 cpwc_data.plot([],'CPWC');
@@ -221,18 +204,10 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-
-pipe.receive_apodization.window=uwindow;
-pipe.receive_apodization.f_number=F_number;
-
-pipe.transmit_apodization.window=uwindow;
-pipe.transmit_apodization.f_number=F_number;
+mid.channel_data=channel_data;
 
 % beamforming
-dwi_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+dwi_data=mid.go();
 
 % show
 dwi_data.plot([],'DWI');
@@ -272,18 +247,10 @@ sim.sampling_frequency=Fs;      % sampling frequency [Hz]
 channel_data=sim.go();
  
 %% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-
-pipe.receive_apodization.window=uwindow;
-pipe.receive_apodization.f_number=F_number;
-
-pipe.transmit_apodization.window=uwindow;
-pipe.transmit_apodization.f_number=F_number;
+mid.channel_data=channel_data;
 
 % beamforming
-rtb_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+rtb_data=mid.go();
 
 % show
 rtb_data.plot([],'RTB');
@@ -291,26 +258,26 @@ rtb_data.plot([],'RTB');
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% Analyze results
 %%%%%%%%%%%%%%%%%%%%%%%%%
-mask=sca.x>-0.5e-3&sca.x<0.5e-3&sca.z>19.6e-3&sca.z<20.4e-3;
+mask=scan.x>-0.5e-3&scan.x<0.5e-3&scan.z>19.6e-3&scan.z<20.4e-3;
 for n=1:5
     switch n
         case 1
-            data=reshape(stai_data.data,[sca.N_z_axis sca.N_x_axis]);
+            data=reshape(stai_data.data,[scan.N_z_axis scan.N_x_axis]);
         case 2
-            data=reshape(fi_data.data,[sca.N_z_axis sca.N_x_axis]);
+            data=reshape(fi_data.data,[scan.N_z_axis scan.N_x_axis]);
         case 3
-            data=reshape(cpwc_data.data,[sca.N_z_axis sca.N_x_axis]);
+            data=reshape(cpwc_data.data,[scan.N_z_axis scan.N_x_axis]);
         case 4
-            data=reshape(dwi_data.data,[sca.N_z_axis sca.N_x_axis]);
+            data=reshape(dwi_data.data,[scan.N_z_axis scan.N_x_axis]);
         case 5
-            data=reshape(rtb_data.data,[sca.N_z_axis sca.N_x_axis]);
+            data=reshape(rtb_data.data,[scan.N_z_axis scan.N_x_axis]);
     end
     
     %
     temp=sum(abs(data(:,100:200)),1); 
     temp=temp./max(temp);
     temp=20*log10(temp);
-    xlat=interp1(temp,sca.x_axis(100:200),-6);
+    xlat=interp1(temp,scan.x_axis(100:200),-6);
     lateral_profile(n,:)=temp;
     fwhm(n)=2*xlat;
     
@@ -325,7 +292,7 @@ disp(sprintf('SLL %0.2f±%0.2f',mean(sll),std(sll)));
 
 
 figure;
-plot(sca.x_axis(100:200)*1e3,lateral_profile,'linewidth',2); grid on; hold on;
+plot(scan.x_axis(100:200)*1e3,lateral_profile,'linewidth',2); grid on; hold on;
 legend('STAI','FI','CPWC','DWI','RTB');
 xlabel('x [mm]'); axis tight
 ylabel('Intensity [dB]');

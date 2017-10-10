@@ -1,8 +1,8 @@
-%% FI simulation on a linear array with the USTB built-in Fresnel simulator
+%% FI simulation on a phased array with the USTB built-in Fresnel simulator
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
 % to generate a Conventional Focused Imaging (single focal depth) dataset 
-% for a linear array and a linear scan and show how it can be beamformed 
+% for a phased array and a sector scan and show how it can be beamformed 
 % with USTB.
 %
 % This tutorial assumes familiarity with the contents of the 
@@ -11,7 +11,7 @@
 % back to that for more details.
 % 
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun
-% Asokan Nair <anair8@jhu.edu> 14.03.2017_
+% Asokan Nair <anair8@jhu.edu> 11.03.2017_
 
 %%
 % 
@@ -40,10 +40,10 @@ fig_handle=pha.plot();
 % position of the probe respect to the phantom.
 
 prb=uff.linear_array();
-prb.N=128;                  % number of elements 
+prb.N=64;                   % number of elements 
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
 prb.element_width=270e-6;   % element width [m]
-prb.element_height=5000e-6; % element height [m]
+prb.element_height=7000e-6; % element height [m]
 prb.plot(fig_handle);
 
 %% Pulse
@@ -53,8 +53,8 @@ prb.plot(fig_handle);
 % <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
 pul=uff.pulse();
-pul.center_frequency=5.2e6;       % transducer frequency [MHz]
-pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
+pul.center_frequency=3e6;       % transducer frequency [MHz]
+pul.fractional_bandwidth=0.6;   % fractional bandwidth [unitless]
 pul.plot([],'2-way pulse');
 
 %% Sequence generation
@@ -63,24 +63,25 @@ pul.plot([],'2-way pulse');
 % takes the same sequence definition as the USTB beamformer. In UFF and
 % USTB a sequence is defined as a collection of *wave* structures. 
 % 
-% For our example here, we define a sequence of 200 focused beams spanning 
-% a lateral range of $[-2, 2]$ mm. The focal depth is set as 40 mm. 
-% The *wave* structure too has a *plot* method.
+% For our example here, we define a sequence of 15 focused beams spanning 
+% an angular range of $[-\frac{\pi}{18}, \frac{\pi}{18}]$  radians. The 
+% focal depth is set as 40 mm. The *wave* structure too has a *plot* method.
 
-N=200;                      % number of focused beams
-x_axis=linspace(-2e-3,2e-3,N).';
-z0=40e-3;
+N=50;                                            % number of focused beams
+azimuth_axis=linspace(-10*pi/180,10*pi/180,N).'; % beam angle vector [rad]
+depth=40e-3;                                     % fixed focal depth [m]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
     seq(n).probe=prb;
-
-    seq(n).source.xyz=[x_axis(n) 0 z0];
+    
+    seq(n).source=uff.point();
+    seq(n).source.azimuth=azimuth_axis(n);
+    seq(n).source.distance=depth;
     
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.tukey50;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.origo=uff.point('xyz',[0 0 -Inf]);
     seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
@@ -111,30 +112,57 @@ channel_data=sim.go();
 %% Scan
 %
 % The scan area is defines as a collection of pixels spanning our region of 
-% interest. For our example here, we use the *linear_scan* structure to 
+% interest. For our example here, we use the *sector_scan* structure to 
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',x_axis,'z_axis',linspace(39e-3,41e-3,256).');
+depth_axis=linspace(35e-3,45e-3,100).';
+scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
  
-%% Beamformer
+%% Midprocess
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan*, and 
+% returns a *beamformed_data*.
 
-midproc=midprocess.das();
-midproc.dimension = dimension.both;
-midproc.channel_data=channel_data;
-midproc.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-midproc.transmit_apodization.window=uff.window.scanline;
+mid.transmit_apodization.window = uff.window.scanline;
 
-midproc.receive_apodization.window=uff.window.tukey50;
-midproc.receive_apodization.f_number=1.7;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
 
-b_data=midproc.go();
+b_data=mid.go();
+b_data.plot([],['No MLA']);
 
-%%
-% Finally, show the image
+%% MLA
+%
+% Not very nice. Let's increase the resolution by using a 4 MLA (Multi Line 
+% Acquisition) scheme. In order to do that we have to create a denser scan
+% and let the midprocess know the number of MLA that we will use.
 
-b_data.plot();
+MLA = 4;
+scan=uff.sector_scan('azimuth_axis',linspace(-10*pi/180,10*pi/180,MLA*N).','depth_axis',depth_axis);
+
+mid.scan = scan;
+mid.transmit_apodization.MLA = MLA;
+
+b_data=mid.go();
+b_data.plot([],['MLA = 4, no overlap']);
+
+%% 
+%
+% A bit better. But we can still see some stripping artifact. We can use
+% MLA overlap to fix it.
+
+mid.transmit_apodization.MLA_overlap = 2;
+
+b_data=mid.go();
+b_data.plot([],['MLA = 4, with overlap = 2']);
+
+
+
+

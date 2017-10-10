@@ -35,13 +35,13 @@ tools.download(filename, url, data_path);
 %
 % We can check it out with the *index* function
 display=true;
-content = uff.index([local_path filename],'/',display);
+content = uff.index([data_path filesep filename],'/',display);
 
 %% Plotting beamformed_data
 %
 % We can read the *beamformed_data* object and plot it 
 
-b_data=uff.read_object([local_path filename],'/beamformed_data');
+b_data=uff.read_object([data_path filesep filename],'/beamformed_data');
 b_data.plot();
 
 %% Loading channel data & scan
@@ -49,8 +49,8 @@ b_data.plot();
 % The file also contain channel_data and scan. We read it so we can
 % replicate the beamformed image in the UFF file.
 
-channel_data=uff.read_object([local_path filename],'/channel_data');
-scan=uff.read_object([local_path filename],'/scan');
+channel_data=uff.read_object([data_path filesep filename],'/channel_data');
+scan=uff.read_object([data_path filesep filename],'/scan');
 
 %% Beamforming
 %
@@ -70,7 +70,7 @@ pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=1.7;
 
 % launch beamforming
-b_data_new=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
+b_data_new=pipe.go({midprocess.das  postprocess.coherent_compounding});
 
 %% Comparing results
 %

@@ -60,20 +60,23 @@ channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 %
 % And then do the normal routine of defining the scan,
 
-sca=uff.linear_scan();
-sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),512).';
-sca.z_axis = linspace(1e-3,50e-3,512).';
+scan=uff.linear_scan();
+scan.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),512).';
+scan.z_axis = linspace(1e-3,50e-3,512).';
 
 %%
 %
-% setting up pipeline
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=1.7;
+% setting up midprocessor
+mid=midprocess.das();
+mid.dimension = dimension.both;
 
-b_data2=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.receive_apodization.window=uff.window.tukey25;
+mid.receive_apodization.f_number=1.7;
+
+b_data2=mid.go();
 
 %% Display image
 %

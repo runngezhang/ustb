@@ -151,7 +151,7 @@ pipe.transmit_apodization.origo.distance=Inf;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_matlab()* process) as well as coherent compounding.
 
-b_data=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
+b_data=pipe.go({midprocess.das postprocess.coherent_compounding});
 
 % show
 fig_plot=pha.plot();

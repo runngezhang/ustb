@@ -20,10 +20,6 @@ current_path=pwd;
 [pathstr,name,ext] = fileparts(mfilename('fullpath'));
 cd(pathstr);
 
-%% delay c
-disp('------------------------ delay_c');
-mex.build_mex('delay_c');
-
 %% das c
 disp('------------------------ das_c');
 mex.build_mex('das_c');

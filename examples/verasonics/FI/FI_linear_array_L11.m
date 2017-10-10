@@ -306,21 +306,26 @@ channel_data = ver.create_FI_linear_array_channeldata();
 
 %% SCAN
 z_axis=linspace(3e-3,50e-3,2048).';
-scan=uff.linear_scan();
-for n=1:numel(channel_data.sequence)
-     scan(n)=uff.linear_scan('x_axis',channel_data.sequence(n).source.x,'z_axis',z_axis);
+x_axis=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    x_axis(n)=channel_data.sequence(n).source.x;
 end
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 
 %% Set up the processing pipeline and beamform
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window = uff.window.scanline;
+
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
 
 % beamforming
-b_data=pipe.go({midprocess.das_mex postprocess.stack})
+b_data=mid.go()
 %% show
 b_data.plot(1,'DAS',60);
 

@@ -116,36 +116,26 @@ channel_data=sim.go();
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
 depth_axis=linspace(35e-3,45e-3,100).';
-sca=uff.sector_scan();
-for n=1:N
-    sca(n)=uff.sector_scan('azimuth_axis',azimuth_axis(n),'depth_axis',depth_axis);
-    sca(n).plot(fig_handle,'Scenario');    
-end
+scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
  
 %% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
+% *apodization* structure in addition to the *channel_data* and *scan*, and 
+% returns a *beamformed_data*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
+mid.transmit_apodization.window = uff.window.scanline;
 
-%% 
-%
-% The *beamformer* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
-% 
-% To achieve the goal of this example, we use delay-and-sum (implemented in 
-% the *das_matlab()* process) and then stack each line into a single image.
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
 
-b_data=pipe.go({midprocess.das_matlab() postprocess.stack()});
+b_data=mid.go();
 
 % show
 b_data.plot();

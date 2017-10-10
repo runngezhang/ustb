@@ -37,31 +37,37 @@ tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
 channel_data.print_authorship
 
+%% decimating the sequence -> too heavy for this example 
+channel_data.data=channel_data.data(:,:,1:2:256);
+channel_data.sequence=channel_data.sequence(1:2:256);
+
 %% Defining scan for the FI (Focused Imaging) CIRS dataset
 % Define the scan from z = 0 to 55 mm, the x is defined from the transmit
 % sequence origin position for each scan line.
 
 z_axis=linspace(0e-3,55e-3,512).';
-scan=uff.linear_scan();
-idx = 1;
-for n=1:numel(channel_data.sequence)
-    scan(n)=uff.linear_scan();
-    scan(n).x_axis = channel_data.sequence(n).source.x;
-    scan(n).z_axis = z_axis;
+x_axis=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    x_axis(n) = channel_data.sequence(n).source.x;
 end
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 
 %% Set up processing pipeline / Delay the channel data
 % We are using no apodization because the SLSC algorithm requires equally
 % weighted channel data from all receive elements
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.transmit;
 
-pipe.receive_apodization.window=uff.window.none;
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window=uff.window.scanline;
+mid.receive_apodization.window=uff.window.none;
 
 % This will result in a beamformed_data object with the delayed and not
 % summed channel data.
-b_data = pipe.go({midprocess.delay_mex postprocess.stack});
+b_data = mid.go();
+b_data.plot()
 
 %% Create the Delay-And-Sum image
 % If we want the DAS image, we can simply sum them.
@@ -75,9 +81,9 @@ das_image.plot(subplot(121),['DAS'],60,'log');
 % We are using a kernel size equal to one wavelength, and use M = 10. See
 % the article referenced for more details.
 slsc = postprocess.short_lag_spatial_coherence();
-slsc.receive_apodization = pipe.receive_apodization; 
+slsc.receive_apodization = mid.receive_apodization; 
 slsc.dimension = dimension.receive;
-slsc.channel_data = pipe.channel_data;
+slsc.channel_data = mid.channel_data;
 slsc.maxM = 10;
 slsc.input = b_data;
 slsc.K_in_lambda = 1;
@@ -163,17 +169,28 @@ channel_data.print_authorship
 % For the online example we used all the 50 frames in the dataset, but, to
 % save time you can scale it down to the number of frames below, if not
 % comment the next line out.
-channel_data.N_frames = 5;
+%channel_data.N_frames = 5;
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+depth_axis=linspace(0e-3,110e-3,512).';
+azimuth_axis=zeros(channel_data.N_waves,1);
+for n=1:channel_data.N_waves
+    azimuth_axis(n) = channel_data.sequence(n).source.azimuth;
+end
 
-pipe.receive_apodization.window=uff.window.none;
+scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
 
-% You might notice that I'm using the delay_matlab_light, this is to save
-% some precious memory when using all 50 frames :)
-b_data = pipe.go({midprocess.delay_matlab_light postprocess.stack});
+mid=midprocess.das();
+mid.dimension = dimension.transmit;
+
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window=uff.window.scanline;
+mid.receive_apodization.window=uff.window.none;
+
+% This will result in a beamformed_data object with the delayed and not
+% summed channel data.
+b_data = mid.go();
 
 % DAS image
 das = postprocess.coherent_compounding();
@@ -183,9 +200,9 @@ das_data = das.go();
 
 % SLSC image
 slsc = postprocess.short_lag_spatial_coherence();
-slsc.receive_apodization = pipe.receive_apodization;
+slsc.receive_apodization = mid.receive_apodization;
 slsc.dimension = dimension.receive;
-slsc.channel_data = pipe.channel_data;
+slsc.channel_data = channel_data;
 slsc.maxM = 10;
 slsc.input = b_data;
 slsc.K_in_lambda = 1;

@@ -41,22 +41,24 @@ channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 %
 % define a scan
    
-sca=uff.linear_scan();
-sca.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
-sca.z_axis = linspace(0,50e-3,256).';
+scan=uff.linear_scan();
+scan.x_axis = linspace(channel_data.probe.x(1),channel_data.probe.x(end),256).';
+scan.z_axis = linspace(0,50e-3,256).';
     
 %%
 %
 % and beamform
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+
+mid.channel_data=channel_data;
+mid.scan=scan;
+
+mid.transmit_apodization.window=uff.window.none;
+mid.transmit_apodization.f_number=1.7;
+
+mid.receive_apodization.window=uff.window.none;
+mid.receive_apodization.f_number=1.7;
     
-pipe.receive_apodization.window=uff.window.none;
-pipe.receive_apodization.f_number=1.7;
-    
-pipe.transmit_apodization.window=uff.window.none;
-pipe.transmit_apodization.f_number=1.7;
-    
-b_data2=pipe.go({midprocess.delay_mex postprocess.coherent_compounding});
+b_data2=mid.go();
 b_data2.plot();

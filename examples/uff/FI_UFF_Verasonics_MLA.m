@@ -1,13 +1,13 @@
-%% Reading FI data from an UFF file recorded from an Alpinion scanner
+%% Reading FI data from an UFF file recorded from a Verasonics Scanner
 %
 % In this example we show how to read channel data from a
-% UFF (Ultrasound File Format) file recorded with an Alpinion scanner.
+% UFF (Ultrasound File Format) file recorded with a Verasonics scanner.
 % You will need an internet connection to download data.
 %
 % _by Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%  and Muyinatu Lediju Bell <mledijubell@jhu.edu>_
+%   and Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-%   $Last updated: 2017/09/15$
+%   $Last updated: 2017/10/06$
 
 %% Checking the file is in the path
 %
@@ -19,7 +19,7 @@ clear all; close all;
 
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
-filename='Alpinion_L3-8_FI_hyperechoic_scatterers.uff';
+filename='L7_FI_Verasonics.uff';
 
 % checks if the data is in your data path, and downloads it otherwise.
 % The defaults data path is under USTB's folder, but you can change this
@@ -33,24 +33,8 @@ tools.download(filename, url, data_path);
 display=true;
 content = uff.index([data_path filesep filename],'/',display);
 
-has_b_data = false;
-for i = 1:length(content)
-    if strcmp(content{i}.class,'uff.beamformed_data')
-        has_b_data = true; % We found a beamformed data object!
-    end
-end
 
-%%
-% If the file had beamformed data, let's read that and the channeldata,
-% before we can jump straight to displaying the data since it's allready
-% beamformed
-
-if has_b_data
-    b_data=uff.read_object([data_path filesep filename],'/b_data');
-    b_data.plot([],'Stored image');
-end
-
-%% Beamforming data
+%% Channel data
 % If it doesn't have any beamformed data at least it should have some
 % channel_data. So let's read that.
 
@@ -80,14 +64,35 @@ mid.transmit_apodization.window=uff.window.scanline;
 mid.receive_apodization.window=uff.window.tukey25;
 mid.receive_apodization.f_number=1.7;
 
-b_data2=mid.go();
+b_data=mid.go();
 
 %% Display image
 %
 % And finally display the image.
-b_data2.plot([],'Beamformed image');
+b_data.plot([],'Beamformed image');
 
-%% Write info about channel data
-%
-% Let's look at the info given about this dataset
-channel_data.print_authorship()
+%% Beamforming with MLA's
+MLA = 4;
+
+scan_MLA=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),length(x_axis)*MLA)','z_axis',z_axis);
+
+mid_MLA=midprocess.das();
+mid_MLA.dimension = dimension.both();
+
+mid_MLA.channel_data=channel_data;
+mid_MLA.scan=scan_MLA;
+
+mid_MLA.transmit_apodization.window=uff.window.scanline;
+mid_MLA.transmit_apodization.MLA = MLA;
+mid_MLA.transmit_apodization.MLA_overlap = 2;
+
+mid_MLA.receive_apodization.window=uff.window.tukey25;
+mid_MLA.receive_apodization.f_number=1.7;
+
+b_data_MLA=mid_MLA.go();
+b_data_MLA.plot([],'Beamformed image MLA');
+
+b_data_MLA.plot([],'Beamformed image MLA');
+ylim(gca,[25 35])
+
+

@@ -18,13 +18,12 @@
 clear all;
 close all;
 
-local_path = [ustb_path(),'/data/'];                 % location of example data in this computer
-addpath(local_path);
+filename = 'FieldII_speckle_simulation.uff';
 
-if exist([local_path,'FieldII_speckle_simulation.uff']) > 0 %If the file exists load the file
+if exist([data_path filesep filename]) > 0 %If the file exists load the file
     
     disp('We were lucky, and the data was already simulated, so we can simply load it!');
-    uff_file= [local_path,'FieldII_speckle_simulation.uff'];
+    uff_file= [data_path filesep filename];
     channel_data = uff.read_object(uff_file,'/channel_data');
     
 else % Else, run the simulation
@@ -204,8 +203,7 @@ else % Else, run the simulation
     %
     % Finally, we save the data into a UFF file.
     % There is a 
-    filename=[ustb_path(),'/data/FieldII_speckle_simulation.uff'];
-    channel_data.write(filename,'channel_data');
+    channel_data.write([data_path filesep filename],'channel_data');
     
 end
 %% Scan
@@ -227,12 +225,8 @@ pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=scan;
 
-% We'll use a uniform apodization using the full aperture
-pipe.receive_apodization.window=uff.window.none;
-pipe.transmit_apodization.window=uff.window.none;
-
 % Delay and sum on receive, then coherent compounding
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Display image
 figure(1);clf

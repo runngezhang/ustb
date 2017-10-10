@@ -47,7 +47,7 @@ te = (-pulse_duration/2/f0): dt : (pulse_duration/2/f0);
 excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
-lag = length(two_way_ir)/2;   
+lag = length(two_way_ir)/2+1;   
 
 % show the pulse to check that the lag estimation is on place (and that the pulse is symmetric)
 figure;
@@ -132,13 +132,9 @@ scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e
 pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=scan;
-pipe.receive_apodization.window=uff.window.boxcar;
-pipe.receive_apodization.f_number=1.7;
-pipe.transmit_apodization.window=uff.window.boxcar;
-pipe.transmit_apodization.f_number=1.7;
 
 % Delay and sum on receive, then coherent compounding
-b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 % Display image
 b_data.plot()
 

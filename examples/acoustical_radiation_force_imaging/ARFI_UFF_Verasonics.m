@@ -48,7 +48,7 @@ pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=1.7;
 
 % Start the processing pipeline
-b_data=pipe.go({midprocess.das_mex postprocess.coherent_compounding});
+b_data=pipe.go({midprocess.das postprocess.coherent_compounding});
 
 %% Show beamformed images
 % The b-mode images is really not that interesting. The displacement
@@ -135,7 +135,7 @@ colorbar;
 disp = postprocess.autocorrelation_displacement_estimation();
 disp.channel_data = channel_data;
 
-disp_img = pipe.go({midprocess.das_mex postprocess.coherent_compounding ...
+disp_img = pipe.go({midprocess.das postprocess.coherent_compounding ...
                                 disp});
 %%
 % Display the displacement 

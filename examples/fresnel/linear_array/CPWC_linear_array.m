@@ -120,8 +120,8 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-sca=uff.linear_scan('x_axis', linspace(-3e-3,3e-3,200).', 'z_axis', linspace(39e-3,43e-3,200).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan('x_axis', linspace(-3e-3,3e-3,200).', 'z_axis', linspace(39e-3,43e-3,200).');
+scan.plot(fig_handle,'Scenario');    % show mesh
  
 %% Pipeline
 %
@@ -129,15 +129,15 @@ sca.plot(fig_handle,'Scenario');    % show mesh
 % ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+pipeline=pipeline();
+pipeline.channel_data=channel_data;
+pipeline.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
+pipeline.receive_apodization.window=uff.window.tukey50;
+pipeline.receive_apodization.f_number=1.7;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.7;
+pipeline.transmit_apodization.window=uff.window.tukey50;
+pipeline.transmit_apodization.f_number=1.7;
 
 %% 
 %
@@ -164,7 +164,7 @@ pipe.transmit_apodization.f_number=1.7;
 % which we can just display by using the method *plot*
 
 % beamforming
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
+b_data=pipeline.go({midprocess.das() postprocess.coherent_compounding()});
 
 % show
 b_data.plot();

@@ -110,36 +110,26 @@ channel_data=sim.go();
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).','z_axis', linspace(39e-3,41e-3,100).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).','z_axis', linspace(39e-3,41e-3,100).');
+scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Pipeline
+%% Midprocess
 %
 % With *channel_data* and a *scan* we have all we need to produce an
 % ultrasound image. We now use a USTB structure *beamformer*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
+% *apodization* structure in addition to the *channel_data* and *scan*, and 
+% returns a *beamformed_data* structure.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
+mid=midprocess.das();
+mid.dimension = dimension.both();
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.7;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.7;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.tukey50;
+mid.transmit_apodization.f_number=1.7;
 
-%% 
-%
-% The *beamformer* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
-% 
-% To achieve the goal of this example, we use delay-and-sum (implemented in 
-% the *das_matlab()* process) as well as coherent compounding.
-
-b_data=pipe.go({midprocess.das_matlab() postprocess.coherent_compounding()});
-
-% show
+b_data=mid.go();
 b_data.plot();

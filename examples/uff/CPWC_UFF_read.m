@@ -67,20 +67,20 @@ channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 %
 % And let us beamform that data with USTB
  
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=1.0;
-pipe.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=1.0;
-pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+mid.transmit_apodization.window=uff.window.tukey50;
+mid.transmit_apodization.f_number=1.0;
+
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=1.0;
 
 % beamforming
-b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data=mid.go();
 b_data.plot();
 
 %%

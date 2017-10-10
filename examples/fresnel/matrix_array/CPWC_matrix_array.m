@@ -123,15 +123,19 @@ scan.plot(fig_handle,'Scenario');    % show mesh
 % ultrasound image. We now use a USTB structure *beamformer*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
+mid=midprocess.das();
+mid.dimension = dimension.both;
+mid.channel_data=channel_data;
+mid.scan=scan;
 
-pipe.receive_apodization.window=uff.window.tukey50;
-pipe.receive_apodization.f_number=F_number;
+mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.f_number=F_number;
 
-pipe.transmit_apodization.window=uff.window.tukey50;
-pipe.transmit_apodization.f_number=F_number;
+mid.transmit_apodization.window=uff.window.tukey50;
+mid.transmit_apodization.f_number=F_number;
+
+b_data=mid.go();
+b_data.plot();
 
 %% 
 %
@@ -143,7 +147,3 @@ pipe.transmit_apodization.f_number=F_number;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_matlab()* process) as well as coherent compounding.
 
-b_data=pipe.go({ midprocess.das_matlab, postprocess.coherent_compounding});
-
-% show
-b_data.plot();

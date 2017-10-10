@@ -46,8 +46,7 @@ pipe.receive_apodization.f_number=1.7;
 pipe.transmit_apodization.window=uff.window.boxcar;
 pipe.transmit_apodization.f_number=1.7;
 
-
-b_data = pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data = pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 %% Display image
 b_data.plot(1,['CPWC : ',num2str(size(channel_data.data,3)), ' angles'],50);

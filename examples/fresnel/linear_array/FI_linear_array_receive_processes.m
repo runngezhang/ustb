@@ -115,11 +115,7 @@ channel_data=sim.go();
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
 z_axis=linspace(39e-3,41e-3,100).';
-scan=uff.linear_scan();
-for n=1:length(x_axis)
-    scan(n)=uff.linear_scan('x_axis',x_axis(n),'z_axis',z_axis);
-    scan(n).plot(fig_handle,'Scenario');    
-end
+scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 
 %% Pipeline
 %
@@ -130,6 +126,8 @@ end
 pipe=pipeline();
 pipe.channel_data=channel_data;
 pipe.scan=scan;
+
+pipe.transmit_apodization.window=uff.window.scanline;
 
 pipe.receive_apodization.window=uff.window.tukey50;
 pipe.receive_apodization.f_number=1.7;
@@ -142,9 +140,13 @@ pipe.receive_apodization.f_number=1.7;
 % *uff.beamformed_data* structure.
 % 
 % To achieve the goal of this example, we use first a demodulation preprocess, 
-% a delay mex implementation, and then we stack each line into a single image.
+% a delay mex implementation.
+pre = preprocess.demodulation();
 
-b_data=pipe.go({preprocess.demodulation midprocess.delay_mex postprocess.stack});
+mid = midprocess.das();
+mid.dimension = dimension.transmit();
+
+b_data=pipe.go({pre mid});
 b_data.plot();
 
 %% Test out some of the many receive beamforming processes USTB has to offer

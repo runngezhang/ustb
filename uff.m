@@ -96,7 +96,7 @@ classdef uff < handle
                         for ne=1:numel(h.(property_name))
                             str = [ str; h.(property_name)(ne).hash()];
                         end
-                    elseif isa(h.(property_name),'uff.window')||isa(h.(property_name),'dimension')
+                    elseif isa(h.(property_name),'uff.window')||isa(h.(property_name),'dimension')||isa(h.(property_name),'code')
                             str=[str;tools.hash(char(h.(property_name)))];
                     else
                         str=[str;tools.hash(h.(property_name))];
@@ -116,7 +116,7 @@ classdef uff < handle
             else
                 equal=strcmp(h.hash(),h.last_hash); 
                 if equal 
-                    warning('Inputs and outputs are unchanged. Skipping process...'); 
+                    fprintf('%s: Inputs and outputs are unchanged. Skipping process.\n',class(h)); 
                 end
             end
         end

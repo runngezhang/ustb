@@ -74,7 +74,7 @@ te = (-pulse_duration/2/f0): dt : (pulse_duration/2/f0);
 excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
-lag = length(two_way_ir)/2;   
+lag = length(two_way_ir)/2+1;   
 
 % We display the pulse to check that the lag estimation is on place 
 % (and that the pulse is symmetric)
@@ -212,7 +212,7 @@ pipe.transmit_apodization.f_number=1.7;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data=pipe.go({midprocess.das_mex() postprocess.coherent_compounding()});
+b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Display images
 b_data.plot()
