@@ -49,21 +49,17 @@ function ok = TE_ps_sta_iq_mex(h)
     r_data.modulation_frequency=s.modulation_frequency;
     r_data.data=data;
     
-    % APODIZATION
-    apo=apodization();
-    apo.window=window.boxcar;
-    apo.f_number=r.f_number;
-    apo.origo=uff.point('xyz',[0 0 -Inf]);
-    
     % BEAMFORMER
     pipe=pipeline();
     pipe.channel_data=r_data;
-    pipe.receive_apodization=apo;
-    pipe.transmit_apodization=apo;
+    pipe.receive_apodization.window = window.boxcar;
+    pipe.receive_apodization.f_number = r.f_number;
+    pipe.transmit_apodization.window = window.boxcar;
+    pipe.transmit_apodization.f_number = r.f_number;
     pipe.scan=linear_scan('x_axis',r.x_axis,'z_axis',r.z_axis);
-        
+    
     % beamforming
-    b_data=pipe.go({midprocess.das_matlab, postprocess.coherent_compounding});
+    b_data=pipe.go({midprocess.das postprocess.coherent_compounding});
     
     % test result
     ok=(norm(b_data.data-r.data(:))/norm(r.data(:)))<h.external_tolerance;
