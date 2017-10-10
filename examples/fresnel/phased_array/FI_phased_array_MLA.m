@@ -136,7 +136,7 @@ mid.receive_apodization.window=uff.window.tukey50;
 mid.receive_apodization.f_number=1.7;
 
 b_data=mid.go();
-b_data.plot();
+b_data.plot([],['No MLA']);
 
 %% MLA
 %
@@ -151,7 +151,7 @@ mid.scan = scan;
 mid.transmit_apodization.MLA = MLA;
 
 b_data=mid.go();
-b_data.plot();
+b_data.plot([],['MLA = 4, no overlap']);
 
 %% 
 %
@@ -161,7 +161,7 @@ b_data.plot();
 mid.transmit_apodization.MLA_overlap = 2;
 
 b_data=mid.go();
-b_data.plot();
+b_data.plot([],['MLA = 4, with overlap = 2']);
 
 
 
