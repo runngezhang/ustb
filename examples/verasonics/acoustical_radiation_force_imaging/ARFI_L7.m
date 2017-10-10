@@ -674,7 +674,7 @@ disp = postprocess.autocorrelation_displacement_estimation();
 disp.channel_data = channel_data;
 
 % Start the processing pipeline
-b_data=pipe.go({midprocess.das_mex postprocess.coherent_compounding disp});
+b_data=pipe.go({midprocess.das postprocess.coherent_compounding disp});
 
 %% show
 f100 = figure(100);
