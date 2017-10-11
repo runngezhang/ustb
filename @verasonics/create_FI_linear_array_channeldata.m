@@ -31,7 +31,7 @@ data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data
 offset_distance = calculate_offset_in_m(h); % Get offset distance for t0 compensation
 %Assuming the initial time is the same for all waves
 channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.sound_speed;
-plot_delayed_signal=1;
+plot_delayed_signal=0;
 tools.workbar()
 n=1; % idx for Receive
 for n_frame = h.frame_order
