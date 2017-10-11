@@ -88,7 +88,7 @@ classdef das < midprocess
             tools.check_memory(prod([size(h.channel_data.data) 8]));
             data=single(h.channel_data.data);
             if ~(w0>eps)
-                data=single(reshape(hilbert(h.channel_data.data(:,:)),size(h.channel_data.data)));
+                data=single(reshape(hilbert(single(h.channel_data.data(:,:))),size(h.channel_data.data)));
             end
             
             % create beamformed data class
