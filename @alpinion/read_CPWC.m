@@ -39,7 +39,8 @@ channel_data.probe.N = double(System.Transducer.elementCnt);
 channel_data.probe.pitch = double(System.Transducer.elementPitchCm)/100;
 
 % Save Pulse
-channel_data.pulse = uff.pulse(double(Tw{1}.freqMHz*10^6));
+channel_data.pulse = uff.pulse();
+channel_data.pulse.center_frequency = double(Tw{1}.freqMHz*10^6);
 
 % Read data
 load([h.data_folder,'/',frame_filename_sorted{1}]);

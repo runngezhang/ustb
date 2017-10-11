@@ -36,7 +36,8 @@
             channel_data.probe.element_width = double(System.Transducer.elementWidthCm)*10^-2;
             
             % Save Pulse
-            channel_data.pulse = uff.pulse(double(Tw{1}.freqMHz*10^6))
+            channel_data.pulse = uff.pulse();
+            channel_data.pulse.center_frequency = double(Tw{1}.freqMHz*10^6);
             
             %Need this to figure out how many scan lines
             load([h.data_folder,'/',frame_filename_sorted{1}]);
