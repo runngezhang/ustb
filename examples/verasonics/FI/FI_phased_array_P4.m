@@ -96,11 +96,11 @@ Angles = P.theta:P.rayDelta:(P.theta + (P.numRays-1)*P.rayDelta);
 % Media.MP(:,3) = P.endDepth*Media.MP(:,3);
 
 % Points to check delay calculation
-%[z,x] = pol2cart(Angles,ones(1,length(Angles))*77.2987);
+%[z,x] = pol2cart(Angles(64),77.2987);
 %Media.MP = [x', zeros(length(x),1), z', ones(length(x),1)];
 
 pt1
-
+% 
 Media.numPoints = length(Media.MP);
 Media.attenuation = -0.5;
 Media.function = 'movePoints';
