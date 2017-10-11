@@ -17,10 +17,7 @@ classdef verasonics < handle
 
         
         % Some helpful parameters
-        Fs                     % The sampling frequency in Hz
-        f0                     % The center frequency in Hz
-        c0                     % The speed of sound in m/s
-        lambda                 % The wavelength in m
+       
         number_of_frames       % The desired number of frames wanted
         frame_order            % The order of the frame in RcvData
         
@@ -33,6 +30,12 @@ classdef verasonics < handle
         %
     end
     
+    properties (Dependent) 
+        Fs                     % The sampling frequency in Hz
+        f0                     % The center frequency in Hz    
+        c0                     % The speed of sound in m/s
+        lambda                 % The wavelength in m
+    end
     %% Constructor
     methods (Access = public)
         function h = verasonics()
@@ -46,27 +49,40 @@ classdef verasonics < handle
         function set.Trans(h,Trans)
             assert(strcmp(Trans.units,'mm'),'Please use mm as units in Verasonics.');
             h.Trans = Trans;
-            h.f0 = Trans.frequency*10^6;
         end
         
         function set.Receive(h,Receive)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Receive = Receive;
-            h.Fs = h.f0*Receive(1).samplesPerWave;
             if isfield(Receive,'aperture') == 0 % Then this is a no-mux probe and we set this to one
                 h.Receive(1).aperture = 1;
             end
         end
         
         function set.Resource(h,Resource)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Resource = Resource;
-            h.c0 = Resource.Parameters.speedOfSound;
-            h.lambda = h.c0/h.f0;
         end
+        
         function set.TW(h,TW)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.TW=TW;
+        end
+        
+        function Fs = get.Fs(h)
+            assert(isempty(h.Receive)==0,'To get Fs Receive needs to be set.');
+            Fs = h.f0*h.Receive(1).samplesPerWave;
+        end
+        
+        function f0 = get.f0(h)
+            assert(isempty(h.TW)==0,'To get f0 TW need to be set.');
+            f0 = double(h.TW.Parameters(1)*1e6);
+        end
+        
+        function lambda = get.lambda(h)
+            lambda = h.c0/h.f0;
+        end
+        
+        function c0 = get.c0(h)
+            assert(isempty(h.TW)==0,'To get c0 Resource need to be set.');
+            c0 = h.Resource.Parameters.speedOfSound;
         end
         
         function frame_order = get.frame_order(h)
