@@ -52,7 +52,7 @@ classdef verasonics < handle
         end
         
         function set.Receive(h,Receive)
-            h.Receive = Receive;
+            h.Receive = Receive; 
             if isfield(Receive,'aperture') == 0 % Then this is a no-mux probe and we set this to one
                 h.Receive(1).aperture = 1;
             end
@@ -63,7 +63,7 @@ classdef verasonics < handle
         end
         
         function set.TW(h,TW)
-            h.TW=TW;
+            h.TW=TW;    
         end
         
         function Fs = get.Fs(h)
@@ -103,9 +103,9 @@ classdef verasonics < handle
     % Private methods
     methods (Access = private)
         
-        % Calculate the offset time from start of transmitted pulse to
+        % Calculate the offset distance from start of transmitted pulse to
         % center of pulse and compensate for the lens correction
-        function offset_time = calculate_delay_offset(h)
+        function offset_distance = calculate_offset_in_m(h)
             % offset calculation
             offset_distance=(h.TW.peak)*h.lambda;   % in [m]
             if strcmp(h.Trans.units,'mm')
@@ -113,7 +113,6 @@ classdef verasonics < handle
             elseif strcmp(h.Trans.units,'wavelengths')
                 offset_distance=offset_distance+2*h.Trans.lensCorrection*h.lambda;
             end
-            offset_time=offset_distance/h.c0;   % in [s]
         end
         
         % Generate a USTB probe object from the Verasonics parameters
@@ -128,7 +127,7 @@ classdef verasonics < handle
             end
         end
         
-        function trans_delays = calculate_trans_delays(h,channel_data,n_tx)
+        function trans_delays = calculate_trans_delays_in_m(h,channel_data,n_tx)
             %% Stolen from the computeTXDelays ;)
             % Hacked to work for the Verasonics definition of linear_array transmit focus with azimuth = 0
             % Delays are returned in seconds
@@ -147,26 +146,7 @@ classdef verasonics < handle
             %plot(D); hold on;
             %plot(h.TX(n_tx).Delay*h.lambda)
             
-            trans_delays = D/channel_data.sound_speed;
-        end
-        
-
-        
-        function data_out = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data)
-            % First do a interpolation to avoid bug described in Issue #16
-            t_in_interp = linspace(t_in(1),t_in(end)+((interpolation_factor-1)/interpolation_factor)*(1/channel_data.sampling_frequency),length(t_in)*interpolation_factor); 
-            data_tx_interpolated = single(interpft(double(data_in),length(t_in)*interpolation_factor));
-            %%
-            %                     channel = 64;
-            %                     figure(99);clf;hold all;
-            %                     subplot(211);hold all
-            %                     plot(t_in_interp,data_tx_interpolated(:,channel),'Displayname','interpolated');
-            %                     plot(t_in,data_tx(:,channel),'Displayname','original');
-            %                     subplot(212);hold all
-            
-            %%
-            % then do the 
-            data_out=single(interp1(t_in_interp,data_tx_interpolated,t_out,'linear',0));
+            trans_delays = D;
         end
     end
 end
