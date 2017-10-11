@@ -36,7 +36,7 @@ tools.workbar()
 n=1; % idx for Receive
 for n_frame = h.frame_order
     for n_tx = 1:length(channel_data.sequence)
-        tools.workbar((n_tx+(n_frame-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of FI data from Verasonics.',length(h.frame_order)),'Reading FI data from Alpinion.')          
+        tools.workbar((n_tx+(n_frame-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of FI data from Verasonics.',length(h.frame_order)),'Reading FI data from Verasonics.')          
         
         % compute the offset in time from center of probe to
         % center of transmit wave. We do this by finding the
