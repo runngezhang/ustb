@@ -25,7 +25,7 @@ channel_data.sequence = seq;
 
 %% Save Pulse
 channel_data.pulse = uff.pulse();
-channel_data.pulse.center_frequency = double(h.Trans.frequency*10^6);
+channel_data.pulse.center_frequency = h.f0;
 
 %% Convert channel data from Verasonics format to USTB format
 data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data.N_waves, h.Resource.RcvBuffer(1).numFrames));
