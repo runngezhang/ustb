@@ -73,10 +73,10 @@ for n_frame = h.frame_order
             x = 0;
             y = 0;
             TF = z*cos(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)+x*sin(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)
-            % receive delay
-            RF=sqrt((channel_data.probe.x-x).^2+(channel_data.probe.y-y).^2+(channel_data.probe.z-z).^2);
             %compensate for t0
             TF = TF + channel_data.sequence(n_tx).t0_compensation;
+            % receive delay
+            RF=sqrt((channel_data.probe.x-x).^2+(channel_data.probe.y-y).^2+(channel_data.probe.z-z).^2);
             % total delay
             delay=(RF+TF)/channel_data.sound_speed;
             
