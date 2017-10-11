@@ -79,6 +79,8 @@ classdef das < midprocess
                     % plane waves
                     transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                 end
+                %compensate for t0
+                transmit_delay(:,n_wave) = transmit_delay(:,n_wave) + h.channel_data.sequence(n_wave).t0_compensation;
             end
             transmit_delay = single(transmit_delay./h.channel_data.sound_speed);
             

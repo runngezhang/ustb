@@ -13,6 +13,10 @@ classdef wave < uff
         source           % POINT class
         event            % index of the transmit/receive events this wave refers to
         sound_speed      % reference speed of sound
+        t0_compensation=0% dinstance to compensate for t0 in m
+                         % The USTB assumes that time zero corresponds to 
+                         % the moment the transmitted wave passes through 
+                         % the origin of coordinates (0; 0; 0).
     end
     
     %% dependent properties
