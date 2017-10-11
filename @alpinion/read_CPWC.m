@@ -73,13 +73,12 @@ for frame = 1:N_frames
         
         %Compensate for steering regarding t0
         D = abs(channel_data.probe.geometry(1,1)-channel_data.probe.geometry(end,1));
-        q = abs((D/2)*sin(seq(transmission).source.azimuth));
+        q = abs((D/2)*sin(channel_data.sequence(transmission).source.azimuth));
         
-        t_in=time-q/(channel_data.sound_speed)-System.Transducer.delayOffsetUsec*10^-6;
-        v_aux=interp1(t_in,rfData,time,'linear',0);
+        channel_data.sequence(transmission).t0_compensation = q-System.Transducer.delayOffsetUsec*10^-6*channel_data.sound_speed;
         
         % build the dataset
-        all_data(:,:,transmission,frame)=v_aux;
+        all_data(:,:,transmission,frame)=rfData;
     end
 end
 
