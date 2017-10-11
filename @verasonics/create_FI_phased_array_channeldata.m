@@ -57,7 +57,7 @@ for n_frame = h.frame_order
         t0_1 = mean(h.TX(n_tx).Delay(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)))*h.lambda;
 
         channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_1);
-        data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,h.frame_order(frame_idx));
+        data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
 
         %%
         % to check delay calculation

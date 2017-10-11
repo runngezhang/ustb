@@ -34,7 +34,9 @@ channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.soun
 plot_delayed_signal=0;
 tools.workbar()
 n=1; % idx for Receive
+frame_idx = 0;
 for n_frame = h.frame_order
+    frame_idx = frame_idx + 1;
     for n_tx = 1:length(channel_data.sequence)
         tools.workbar((n_tx+(n_frame-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of FI data from Verasonics.',length(h.frame_order)),'Reading FI data from Verasonics.')          
         
@@ -49,7 +51,7 @@ for n_frame = h.frame_order
         t0_1 = mean(trans_delays_in_m(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)));
         
         channel_data.sequence(n_tx).t0_compensation = offset_distance+t0_1;
-        data(:,:,n_tx,n_frame) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
+        data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
         
         if plot_delayed_signal
             if n_tx == length(channel_data.sequence)/2 %if this is the center scan line
