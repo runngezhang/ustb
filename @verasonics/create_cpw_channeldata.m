@@ -63,7 +63,7 @@ for n_frame = h.frame_order
         
         channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_1);
         % read data
-        data(:,:,n_tx,n_frame)=single(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame));
+        data(:,:,n_tx,n_frame)=h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame);
 
         %%
         % to check delay calculation
@@ -92,6 +92,6 @@ for n_frame = h.frame_order
         n=n+1;
     end
 end
-channel_data.data = single(data);
+channel_data.data = data;
 tools.workbar(1);
 end
