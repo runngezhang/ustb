@@ -45,10 +45,14 @@ classdef apodization < uff
     %% dependent properties
     properties  (Dependent)   
         data                        % apodization data 
-        origin                      % beam origin
         propagation_distance        % distance from the origin to the pixel
         element_position_matrix     % location of the elements as seen by the pixels [x y z] [m m m]
         N_elements                  % number of elements (real or synthetic)
+    end
+    
+    %% private & Hidden
+    properties  (Dependent, Hidden, Access = private)   
+            origin                      % beam origin
     end
     
     %% private properties
