@@ -156,11 +156,17 @@ for n=1:length(n_frame)
     
     % Time USTB's MATLAB delay implementation
     proc=midprocess.das();
-    proc.code = code.matlab;
+    proc.code = code.matlab_interpn;
     proc.dimension = dimension.none;
     tic
     b_data=pipe.go({proc postprocess.coherent_compounding()});
     delay_matlab_time(n)=toc;
+    
+    b_data.plot()
+    
+    
+    
+    
     
     % Time USTB's MATLAB delay-and-sum implementation
     proc=midprocess.das();
@@ -185,6 +191,36 @@ for n=1:length(n_frame)
     tic
     b_data=pipe.go({proc}); 
     das_both_matlab_time(n)=toc;
+    
+    %%% - MATLAB GPU
+    
+    % Time USTB's MATLAB delay implementation
+    proc=midprocess.das_matlab_gpu_nvidia();
+    proc.dimension = dimension.none;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()});
+    delay_matlab_gpu_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum implementation
+    proc=midprocess.das_matlab_gpu_nvidia();
+    proc.dimension = dimension.receive;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_rx_matlab_gpu_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das_matlab_gpu_nvidia();
+    proc.dimension = dimension.transmit;
+    tic
+    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
+    das_tx_matlab_gpu_time(n)=toc;
+    
+    % Time USTB's MATLAB delay-and-sum transmit implementation
+    proc=midprocess.das_matlab_gpu_nvidia();
+    proc.dimension = dimension.both;
+    tic
+    b_data=pipe.go({proc}); 
+    das_both_matlab_gpu_time(n)=toc;
     
     %%% - MEX
     

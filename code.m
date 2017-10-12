@@ -9,5 +9,6 @@ classdef code < int32
    enumeration
       matlab(0)
       mex(1)
+      matlab_interpn(2)
    end
 end

@@ -1,29 +1,32 @@
-classdef das < midprocess
+classdef das_matlab_gpu_nvidia < midprocess
     %DAS   Implementation of USTB DAS general beamformer
     %
-    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   authors: Stefano Fiorentini     <stefano.fiorentini@ntnu.no>
+    %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
+    %            Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
     %
-    %   $Last updated: 2017/09/22$
+    %   $Last updated: 2017/10/5$
     
     %% Additional properties
     properties
         dimension = dimension.receive;      % dimension enumeration class that specifies whether the process will run only on transmit, receive, both, or none.
-        code = code.mex;                    % code enumeration class that specifies the code to be run (code.matlab, code.mex)
     end
     
     %% constructor
     methods (Access = public)
         function h=das()
-            h.name='USTB DAS General Beamformer';
+            h.name='USTB DAS MATLAB GPU Nvidia enabled';
             h.reference= 'www.ustb.no';
-            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.12';
+            h.implemented_by={'Stefano Fiorentini <stefano.fiorentini@ntnu.no>', 'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
+            h.version='v1.0.1';
         end
     end
     
     %% go method
     methods
         function beamformed_data=go(h)
+            % clear GPU memory
+            gpuDevice(1);
             
             % check if we can skip calculation
             if h.check_hash()
@@ -37,8 +40,12 @@ classdef das < midprocess
             N_waves = h.channel_data.N_waves;
             N_frames = h.channel_data.N_frames;
             
-            % modulation frequency
-            w0=2*pi*h.channel_data.modulation_frequency;
+            % defining some variables gpuArrays
+            %w0=2*pi*h.channel_data.modulation_frequency;
+            w0 = 2*pi*gpuArray(h.channel_data.modulation_frequency);
+            c0 = gpuArray(h.channel_data.sound_speed);
+            [channel_data_time, channel_idx_in] = ndgrid(gpuArray(h.channel_data.time), gpuArray(1:h.channel_data.N_channels));
+            channel_idx_out = repmat(gpuArray(1:h.channel_data.N_channels), [h.scan.N_pixels, 1]);
             
             % constants
             sampling_frequency=single(h.channel_data.sampling_frequency);
@@ -48,19 +55,19 @@ classdef das < midprocess
             % calculate transmit apodization according to 10.1109/TUFFC.2015.007183
             h.transmit_apodization.sequence=h.channel_data.sequence;
             h.transmit_apodization.focus=h.scan;
-            tx_apodization=single(h.transmit_apodization.data);
+            tx_apodization=gpuArray(h.transmit_apodization.data);
             
             % calculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
             h.receive_apodization.focus=h.scan;
-            rx_apodization=single(h.receive_apodization.data);
-            rx_propagation_distance=(h.receive_apodization.propagation_distance);
+            rx_apodization=gpuArray(h.receive_apodization.data);
+            rx_propagation_distance=gpuArray(h.receive_apodization.propagation_distance);
             
             % calculate receive delay
             xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan.x);
             ym=bsxfun(@minus,h.channel_data.probe.y.',h.scan.y);
             zm=bsxfun(@minus,h.channel_data.probe.z.',h.scan.z);
-            receive_delay=single(sqrt(xm.^2+ym.^2+zm.^2)/h.channel_data.sound_speed);
+            receive_delay=gpuArray(sqrt(xm.^2+ym.^2+zm.^2)/h.channel_data.sound_speed);
             
             % calculate transmit delay
             transmit_delay=zeros(N_pixels,N_waves);
@@ -80,7 +87,7 @@ classdef das < midprocess
                     transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                 end
             end
-            transmit_delay = single(transmit_delay./h.channel_data.sound_speed);
+            transmit_delay = gpuArray(transmit_delay./h.channel_data.sound_speed);
             
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
@@ -113,16 +120,16 @@ classdef das < midprocess
             if any(data(:)>0) % only process if any data > 0
                 
                 switch h.code
-                    case code.mex
-                        aux_data=mex.das_c(data,...
-                                           sampling_frequency,...
-                                           initial_time,...
-                                           tx_apodization,...
-                                           rx_apodization,...
-                                           transmit_delay,...
-                                           receive_delay,...
-                                           modulation_frequency,...
-                                           int32(h.dimension));
+%                     case code.mex
+%                         aux_data=mex.das_c(data,...
+%                                            sampling_frequency,...
+%                                            initial_time,...
+%                                            tx_apodization,...
+%                                            rx_apodization,...
+%                                            transmit_delay,...
+%                                            receive_delay,...
+%                                            modulation_frequency,...
+%                                            int32(h.dimension));
                     case code.matlab
                         % apply phase shift to apodization
                         tools.workbar();
@@ -131,15 +138,16 @@ classdef das < midprocess
                         % transmit loop
                         for n_wave=1:N_waves
                             if any(tx_apodization(:,n_wave))
+                            
                                 % receive loop
                                 for n_rx=1:N_channels
                                     if any(rx_apodization(:,n_rx))
                                         
                                         % progress bar
                                         n=(n_wave-1)*N_channels+n_rx;
-                                        if mod(n,round(N/100))==0
+                                        %if mod(n,round(N/100))==0
                                             tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
-                                        end
+                                        %end
                                         
                                         apodization= rx_apodization(:,n_rx).*tx_apodization(:,n_wave);
                                         delay= receive_delay(:,n_rx) + transmit_delay(:,n_wave);
@@ -167,49 +175,6 @@ classdef das < midprocess
                                 end
                             end
                         end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                    case code.matlab_interpn
-                        tools.workbar();
-                        N=N_waves*N_channels;
-                        
-                        channel_idx_in = single(1:N_channels);
-                        channel_idx_out = single(repmat(channel_idx_in , [N_pixels, 1]));
-                        time = single(h.channel_data.time);
-                        
-                        % transmit loop
-                        for n_wave=1:N_waves
-                            if any(tx_apodization(:,n_wave))
-                                % progress bar
-                                tools.workbar(n_wave/N_waves,sprintf('%s (%s)',h.name,h.version),'USTB');
-
-                                if any(rx_apodization)
-                                    apodization= bsxfun(@times,rx_apodization,tx_apodization(:,n_wave));
-                                    delay= bsxfun(@plus,receive_delay, transmit_delay(:,n_wave));
-
-                                    % beamformed signal
-                                    temp = apodization.*interpn(time,channel_idx_in,data(:,:,n_wave,:),delay,channel_idx_out,'linear',0);
-                                
-                                    % apply phase correction factor to IQ data
-                                    if(w0>eps) 
-                                        temp = bsxfun(@times,exp(1i.*w0*delay),temp);
-                                    end
-                                    
-                                    % set into auxiliary data
-                                    switch h.dimension
-                                        case dimension.none
-                                            aux_data(:,:,n_wave,:)=temp;
-                                        case dimension.receive
-                                            aux_data(:,1,n_wave,:)=aux_data(:,1,n_wave,:)+sum(temp,2);
-                                        case dimension.transmit
-                                            aux_data(:,:,1,:)=aux_data(:,:,1,:)+temp;
-                                        case dimension.both
-                                            aux_data(:,1,1,:)=aux_data(:,1,1,:)+sum(temp,2);
-                                    end
-                                end
-                            end
-                        end  
-%%%%%%%%%%%%%%%%%%%%%%%%%%%                        
                     otherwise
                         error('Unknown code implementation requested');
                 end
