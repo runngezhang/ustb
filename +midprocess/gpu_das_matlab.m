@@ -6,7 +6,7 @@ classdef gpu_das_matlab < midprocess
     %            Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %            Stefano Fiorentini     <stefano.fiorentini@ntnu.no>
     %
-    %   $Last updated: 2017/10/5$
+    %   $Last updated: 2017/10/12$
     
     %% constructor
     methods (Access = public)
@@ -14,7 +14,7 @@ classdef gpu_das_matlab < midprocess
             h.name='USTB GPU enabled, general DAS Beamformer MATLAB';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Stefano Fiorentini <stefano.fiorentini@ntnu.no>', 'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
-            h.version='v1.0.0';
+            h.version='v1.0.1';
         end
     end
     
@@ -34,9 +34,7 @@ classdef gpu_das_matlab < midprocess
             % modulation frequency
             w0 = 2*pi*gpuArray(h.channel_data.modulation_frequency);
             c0 = gpuArray(h.channel_data.sound_speed);
-            
-            [channel_data_time, channel_idx_in] = ndgrid(gpuArray(h.channel_data.time), gpuArray(1:h.channel_data.N_channels));
-            channel_idx_out = repmat(gpuArray(1:h.channel_data.N_channels), [h.scan.N_pixels, 1]);
+            channel_data_time = gpuArray(single(h.channel_data.time));
             
             % precalculate receive apodization
             h.receive_apodization.probe=h.channel_data.probe;
@@ -139,25 +137,28 @@ classdef gpu_das_matlab < midprocess
 
                 
                 % total delay
-                delay=bsxfun(@plus, RF, TF)/c0;
+                delay=single(bsxfun(@plus, RF, TF)/c0);
                 
+                % phase correction factor
+                if(w0>eps)
+                    phase_shift=exp(1i.*w0*delay);
+                else
+                    phase_shift=1;
+                end
+                        
                 for n_frame=1:h.channel_data.N_frames
                     % progress bar
                     tools.workbar((n_frame + (n_wave-1)*h.channel_data.N_frames)/N, sprintf('%s (%s)',h.name, h.version),'USTB');
                     
-                    % phase correction factor
-                    if(w0>eps)
-                        phase_shift=exp(1i.*w0*delay);
-                    else
-                        phase_shift=1;
+                    pre_bf_data = zeros([h.scan.N_pixels, h.channel_data.N_channels], 'single', 'gpuArray');
+                    ch_data = gpuArray(single(data(:,:,n_wave,n_frame)));
+                    for n_rx = 1:h.channel_data.N_channels
+                        
+                        % beamformed signal         
+                        pre_bf_data(:, n_rx) =  interp1(  channel_data_time, ...
+                                                          ch_data(:, n_rx), ...
+                                                          delay(:, n_rx), 'linear');
                     end
-                    
-                    % beamformed signal
-                    ch_data = gpuArray(data(:,:,n_wave,n_frame));
-                    pre_bf_data = interpn(  channel_data_time, channel_idx_in, ...
-                                            ch_data, ...
-                                            delay, channel_idx_out, 'linear');
-                                        
                     bf_data(:,1,n_wave,n_frame) = gather(sum(tx_apo.*rx_apo.*phase_shift.*pre_bf_data, 2, 'omitnan').*exp(-1j*w0*2*rx_propagation_distance/c0));
                 end
             end
