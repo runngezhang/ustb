@@ -1,9 +1,12 @@
-%% Computation of a STAI dataset with Field II and beamforming with USTB
+%% Computation of a FI dataset with Field II and beamforming with USTB
 %
 % This example shows how to load the data from a Field II simulation into 
 % USTB objects, and then beamformt it with the USTB routines. 
 % This example uses the L11-4v 128 element Verasonics Transducer
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
+%
+% This example is imaging with focused transmit waves (Focused Imaging-FI),
+% and is compared to the Fresnel simulation.
 %
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Ole Marius Hoel Rindal <olemarius@olemarius.net>
