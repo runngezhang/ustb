@@ -30,6 +30,9 @@ classdef das < midprocess
                 beamformed_data= h.beamformed_data;
                 return;
             end
+
+            % clear GPU memory
+            if(h.code == code.matlab_gpu || h.code == code.matlab_gpu_frameloop) gpuDevice(1); end
             
             % short names
             N_pixels = h.scan.N_pixels;
@@ -55,6 +58,9 @@ classdef das < midprocess
             h.receive_apodization.focus=h.scan;
             rx_apodization=single(h.receive_apodization.data);
             rx_propagation_distance=(h.receive_apodization.propagation_distance);
+            if(h.code==code.matlab_gpu || h.code==code.matlab_gpu_frameloop ) 
+                rx_propagation_distance=gpuArray(rx_propagation_distance); 
+            end
             
             % calculate receive delay
             xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan.x);
@@ -108,11 +114,36 @@ classdef das < midprocess
                     tools.check_memory(prod([N_pixels N_frames 8]));
                     aux_data=zeros(N_pixels,1,1,N_frames);
             end
+            % set auxiliary data to be a gpuArray
+            if (h.code==code.matlab_gpu)
+                gpu_info=gpuDevice();
+                aux_data_memory=prod([size(aux_data) 8]) + prod([N_pixels N_waves N_frames 8]);
+                if (aux_data_memory*1.3>gpu_info.AvailableMemory)
+                    warning(sprintf('DAS GPU: The beamformed data %0.2f MB does not fit in the available GPU memory %0.2f MB. GPU computation will performed sequentially.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20));
+                else
+                    disp(sprintf('DAS GPU: The beamformed data %0.2f MB fits in the available GPU memory %0.2f MB.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20));
+                    aux_data=gpuArray(aux_data);
+                end
+            end
+            % set auxiliary data to be a gpuArray
+            if (h.code==code.matlab_gpu_frameloop)
+                gpu_info=gpuDevice();
+                aux_data_memory=prod([size(aux_data) 8]) + prod([N_pixels N_channels 8]);
+                if (aux_data_memory*1.3>gpu_info.AvailableMemory)
+                    warning(sprintf('DAS GPU: The beamformed data %0.2f MB does not fit in the available GPU memory %0.2f MB. GPU computation will performed sequentially.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20));
+                else
+                    disp(sprintf('DAS GPU: The beamformed data %0.2f MB fits in the available GPU memory %0.2f MB.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20));
+                    aux_data=gpuArray(aux_data);
+                end
+            end
             
             % delay & sum
             if any(data(:)>0) % only process if any data > 0
                 
                 switch h.code
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% MEX
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
                     case code.mex
                         aux_data=mex.das_c(data,...
                                            sampling_frequency,...
@@ -123,8 +154,11 @@ classdef das < midprocess
                                            receive_delay,...
                                            modulation_frequency,...
                                            int32(h.dimension));
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% MATLAB
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
                     case code.matlab
-                        % apply phase shift to apodization
+                        % workbar
                         tools.workbar();
                         N=N_waves*N_channels;
                         
@@ -138,7 +172,7 @@ classdef das < midprocess
                                         % progress bar
                                         n=(n_wave-1)*N_channels+n_rx;
                                         if mod(n,round(N/100))==0
-                                            tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB');
+                                            tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB MATLAB');
                                         end
                                         
                                         apodization= rx_apodization(:,n_rx).*tx_apodization(:,n_wave);
@@ -167,58 +201,145 @@ classdef das < midprocess
                                 end
                             end
                         end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                    case code.matlab_interpn
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% MATLAB GPU
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    case code.matlab_gpu
+                        % workbar
                         tools.workbar();
                         N=N_waves*N_channels;
-                        
-                        channel_idx_in = single(1:N_channels);
-                        channel_idx_out = single(repmat(channel_idx_in , [N_pixels, 1]));
-                        time = single(h.channel_data.time);
-                        
-                        % transmit loop
-                        for n_wave=1:N_waves
-                            if any(tx_apodization(:,n_wave))
-                                % progress bar
-                                tools.workbar(n_wave/N_waves,sprintf('%s (%s)',h.name,h.version),'USTB');
 
-                                if any(rx_apodization)
-                                    apodization= bsxfun(@times,rx_apodization,tx_apodization(:,n_wave));
-                                    delay= bsxfun(@plus,receive_delay, transmit_delay(:,n_wave));
+                        % convert structures to gpuArray
+                        time_gpu= gpuArray(h.channel_data.time);
+                        w0_gpu= gpuArray(w0);
 
-                                    % beamformed signal
-                                    temp = apodization.*interpn(time,channel_idx_in,data(:,:,n_wave,:),delay,channel_idx_out,'linear',0);
-                                
-                                    % apply phase correction factor to IQ data
-                                    if(w0>eps) 
-                                        temp = bsxfun(@times,exp(1i.*w0*delay),temp);
-                                    end
-                                    
-                                    % set into auxiliary data
-                                    switch h.dimension
-                                        case dimension.none
-                                            aux_data(:,:,n_wave,:)=temp;
-                                        case dimension.receive
-                                            aux_data(:,1,n_wave,:)=aux_data(:,1,n_wave,:)+sum(temp,2);
-                                        case dimension.transmit
-                                            aux_data(:,:,1,:)=aux_data(:,:,1,:)+temp;
-                                        case dimension.both
-                                            aux_data(:,1,1,:)=aux_data(:,1,1,:)+sum(temp,2);
+                        % receive loop
+                        for n_rx=1:N_channels
+                            if any(rx_apodization(:,n_rx))
+
+                                % move chunk of channel data to array
+                                data_gpu = gpuArray(data(:,n_rx,:,:));
+
+                                % transmit loop
+                                for n_wave=1:N_waves
+                                    if any(tx_apodization(:,n_wave))
+                                        
+                                        % progress bar
+                                        n=(n_rx-1)*N_waves+n_wave;
+                                        if mod(n,round(N/100))==0
+                                            tools.workbar(n/N,sprintf('%s (%s)',h.name,h.version),'USTB GPU');
+                                        end
+                                        
+                                        apodization_gpu= gpuArray(rx_apodization(:,n_rx).*tx_apodization(:,n_wave));
+                                        delay_gpu= gpuArray(receive_delay(:,n_rx) + transmit_delay(:,n_wave));
+                                        
+                                        % apply phase correction factor to IQ data
+                                        if(w0>eps) 
+                                            apodization_gpu = exp(1i.*w0_gpu*delay_gpu).*apodization_gpu;
+                                        end
+                                        
+                                        % beamformed signal
+                                        temp = bsxfun(@times,apodization_gpu,interp1(time_gpu,data_gpu(:,1,n_wave,:),delay_gpu,'linear',0));
+                                        
+                                        % set into auxiliary data
+                                        if ~isa(aux_data,'gpuArray') temp=gather(temp); end
+                                        switch h.dimension
+                                            case dimension.none
+                                                aux_data(:,n_rx,n_wave,:)=temp;
+                                            case dimension.receive
+                                                aux_data(:,1,n_wave,:)=aux_data(:,1,n_wave,:)+temp;
+                                            case dimension.transmit
+                                                aux_data(:,n_rx,1,:)=aux_data(:,n_rx,1,:)+temp;
+                                            case dimension.both
+                                                aux_data(:,1,1,:)=aux_data(:,1,1,:)+temp;
+                                        end
+                                        
+                                        % clear gpu variables
+                                        clear temp delay_gpu apodization_gpu;
                                     end
                                 end
                             end
-                        end  
-%%%%%%%%%%%%%%%%%%%%%%%%%%%                        
+                        end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %%% MATLAB GPU FRAMELOOP
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    case code.matlab_gpu_frameloop
+                        % workbar
+                        tools.workbar();
+                        N=N_waves*N_channels;
+
+                        % convert structures to gpuArray
+                        time_gpu= gpuArray(h.channel_data.time);
+                        w0_gpu= gpuArray(w0);
+
+                        % transmit loop
+                        for n_wave=1:N_waves
+                            if any(tx_apodization(:,n_wave))
+                                
+                                apodization_gpu= gpuArray(bsxfun(@times,rx_apodization,tx_apodization(:,n_wave)));
+                                delay_gpu= gpuArray(bsxfun(@plus, receive_delay, transmit_delay(:,n_wave)));
+                                
+                                % apply phase correction factor to IQ data
+                                if(w0>eps) 
+                                    apodization_gpu = exp(1i.*w0_gpu*delay_gpu).*apodization_gpu;
+                                end
+                                
+                                % frame loop
+                                for n_frame=1:N_frames
+                                    % progress bar
+                                    tools.workbar((n_frame + (n_wave-1)*N_frames)/N_frames/N_waves, sprintf('%s (%s)',h.name, h.version),'USTB GPU frameloop');
+                                
+                                    % channel data
+                                    data_gpu= gpuArray(single(data(:,:,n_wave,n_frame)));
+
+                                    % temporal data
+                                    temp = zeros([h.scan.N_pixels, h.channel_data.N_channels], 'single', 'gpuArray');
+    
+                                    % channel loop
+                                    for n_rx=1:N_channels
+                                        if any(rx_apodization(:,n_rx))
+                                            temp(:, n_rx) = interp1(time_gpu,data_gpu(:,n_rx),delay_gpu(:,n_rx),'linear',0);
+                                        end
+                                    end
+                                    
+                                    % apply apodization
+                                    temp = bsxfun(@times,apodization_gpu,temp);
+                                            
+                                    % set into auxiliary data
+                                    if ~isa(aux_data,'gpuArray') temp=gather(temp); end                                    
+                                    switch h.dimension
+                                        case dimension.none
+                                            aux_data(:,:,n_wave,n_frame)=temp;
+                                        case dimension.receive
+                                            aux_data(:,1,n_wave,n_frame)=aux_data(:,1,n_wave,n_frame)+sum(temp,2);
+                                        case dimension.transmit
+                                            aux_data(:,:,1,n_frame)=aux_data(:,n_rx,1,n_frame)+temp;
+                                        case dimension.both
+                                            aux_data(:,1,1,n_frame)=aux_data(:,1,1,n_frame)+sum(temp,2);
+                                    end
+                                    
+                                    % clear gpu variables
+                                    clear temp data_gpu;
+                                end
+                            end
+                        end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%  
                     otherwise
                         error('Unknown code implementation requested');
                 end
                 tools.workbar(1);
-                
+
                 % assign phase according to 2 times the receive propagation distance
                 if(w0>eps)
                     aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                 end
+                
+                % gather & clear GPU memory
+                if(h.code == code.matlab_gpu || h.code == code.matlab_gpu_frameloop) 
+                    aux_data=gather(aux_data); 
+                    gpuDevice(1); 
+                end
+
             end
             
             % copy data to object
