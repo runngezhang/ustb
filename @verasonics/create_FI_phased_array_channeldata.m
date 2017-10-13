@@ -37,7 +37,7 @@ channel_data.pulse.center_frequency = h.f0;
 %% Convert channel data from Verasonics format to USTB format
 data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data.N_waves, h.number_of_frames));
 
-offset_distance = calculate_offset_in_m(h); % Get offset distance for t0 compensation
+offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h); % Get offset distance for t0 compensation
 %Assuming the initial time is the same for all waves
 channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.sound_speed;
 plot_delayed_signal=0;
@@ -47,16 +47,16 @@ frame_idx = 0;
 for n_frame = h.frame_order
     frame_idx = frame_idx + 1;
     for n_tx = 1:length(channel_data.sequence)  
-        tools.workbar((n_tx+(n_frame-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of FI data from Verasonics.',length(h.frame_order)),'Reading FI data from Verasonics.')          
+        tools.workbar((n_tx+(frame_idx-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of FI data from Verasonics.',length(h.frame_order)),'Reading FI data from Verasonics.')          
         
         % compute the offset in time from center of probe to
         % center of transmit wave. We do this by finding the
         % mean between the two center transmit delays for a
         % even numbered probe, and the center transmit delay
         % for a odd elemtn probe
-        t0_1 = mean(h.TX(n_tx).Delay(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)))*h.lambda;
+        t0_comp_in_m = mean(h.TX(n_tx).Delay(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)))*h.lambda;
 
-        channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_1);
+        channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_comp_in_m);
         data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
 
         %%

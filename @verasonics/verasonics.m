@@ -17,7 +17,6 @@ classdef verasonics < handle
 
         
         % Some helpful parameters
-       
         number_of_frames       % The desired number of frames wanted
         frame_order            % The order of the frame in RcvData
         
@@ -105,7 +104,7 @@ classdef verasonics < handle
         
         % Calculate the offset distance from start of transmitted pulse to
         % center of pulse and compensate for the lens correction
-        function offset_distance = calculate_offset_in_m(h)
+        function offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h)
             % offset calculation
             offset_distance=(h.TW.peak)*h.lambda;   % in [m]
             if strcmp(h.Trans.units,'mm')

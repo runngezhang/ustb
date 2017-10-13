@@ -25,7 +25,7 @@ channel_data.pulse.center_frequency =h.f0;
 %% Convert channel data from Verasonics format to USTB format
 data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data.N_waves, h.Resource.RcvBuffer(1).numFrames));
 
-offset_distance = calculate_offset_in_m(h); % Get offset distance for t0 compensation
+offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h); % Get offset distance for t0 compensation
 %Assuming the initial time is the same for all waves
 channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.sound_speed;
 
@@ -34,7 +34,7 @@ plot_delayed_signal=0;
 frame_number = 1;
 for n_frame = 1:h.number_of_superframes
     for n_tx = 1:h.frames_in_superframe
-        tools.workbar((n_tx+(n_frame-1)*h.frames_in_superframe)/(h.number_of_superframes*h.frames_in_superframe),sprintf('CPWC data from Verasonics.',length(h.frame_order)),'Reading  CPWC data from Verasonics.')          
+        tools.workbar((n_tx+(n_frame-1)*h.frames_in_superframe)/(h.number_of_superframes*h.frames_in_superframe),sprintf('Reading %d superframe(s) of CPWC data from Verasonics.',length(h.number_of_superframes)),'Reading CPWC data from Verasonics.')          
         
         % Find t_0, when the plane wave "crosses" the center of
         % the probe

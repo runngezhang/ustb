@@ -30,7 +30,7 @@ channel_data.pulse.center_frequency = h.f0;
 %% Convert channel data from Verasonics format to USTB format
 data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data.N_waves, h.Resource.RcvBuffer(1).numFrames));
 
-offset_distance = calculate_offset_in_m(h); % Get offset distance for t0 compensation
+offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h); % Get offset distance for t0 compensation
 %Assuming the initial time is the same for all waves
 channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.sound_speed;
 plot_delayed_signal=0;
@@ -40,16 +40,16 @@ frame_idx = 0;
 for n_frame = h.frame_order
     frame_idx = frame_idx + 1;
     for n_tx = 1:length(channel_data.sequence)
-        tools.workbar((n_tx+(n_frame-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of CPWC data from Verasonics.',length(h.frame_order)),'Reading  CPWC data from Verasonics.')          
+        tools.workbar((n_tx+(frame_idx-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of CPWC data from Verasonics.',length(h.frame_order)),'Reading  CPWC data from Verasonics.')          
         
         % Find t_0, when the plane wave "crosses" the center of
         % the probe
         if 1  %Calculate geometrically
             D = abs(h.Trans.ElementPos(1,1)-h.Trans.ElementPos(end,1))*1e-3;
             q = abs((D/2)*sin(channel_data.sequence(n_tx).source.azimuth));
-            t0_1 = q;
+            t0_comp_in_m = q;
         else  %Calculate using Verasonics transmit delay, this will not work for the multiplexer probe NBNB!
-            t0_1 = mean(h.TX(n_tx).Delay)*h.lambda;
+            t0_comp_in_m = mean(h.TX(n_tx).Delay)*h.lambda;
             figure(100);hold all;
             plot(h.TX(n_tx).Delay)
             plot((h.TX(n_tx).Delay(end/2))*ones(1,128),'r')
@@ -63,7 +63,7 @@ for n_frame = h.frame_order
             validChannels = [1:128];
         end
         
-        channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_1);
+        channel_data.sequence(n_tx).t0_compensation = (offset_distance+t0_comp_in_m);
         % read data
         data(:,:,n_tx,frame_idx)=h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame);
 
