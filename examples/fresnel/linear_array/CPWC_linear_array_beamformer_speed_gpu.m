@@ -220,11 +220,12 @@ for n=1:length(n_frame)
     plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2); 
     plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2); 
 
-    %text(n_frame(n)+0.2,das_matlab_time(n),sprintf('%0.2f s',das_matlab_time(n))); 
-    text(n_frame(n)*do_per_frame/1e9,das_gpu_time(n),sprintf('%0.2f s',das_gpu_time(n))); 
-    text(n_frame(n)*do_per_frame/1e9,das_gpu_frameloop_time(n),sprintf('%0.2f s',das_gpu_frameloop_time(n))); 
-    text(n_frame(n)*do_per_frame/1e9,das_mex_time(n),sprintf('%0.2f s',das_mex_time(n))); 
-    
+    for nn=1:length(n_frame)
+        %text(n_frame(n)+0.2,das_matlab_time(n),sprintf('%0.2f s',das_matlab_time(n))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn))); 
+    end
     %legend('das MATLAB','das GPU','das MEX','Location','NorthWest');
     legend('das GPU','das GPU frameloop','das MEX','Location','NorthWest');
     xlabel('Delay operations [10^9]');
