@@ -70,7 +70,7 @@ pul.plot([],'2-way pulse');
 % covering an angle span of $[-0.3, 0.3]$ radians. The *wave* structure has 
 % a *plot* method which plots the direction of the transmitted plane-wave.
 
-N_plane_waves=15;
+N_plane_waves=3;
 angles=linspace(-0.3,0.3,N_plane_waves);
 seq=uff.wave();
 for n=1:N_plane_waves 
@@ -147,153 +147,91 @@ pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % respect to the others for increasing amounts of data.
 
 % beamforming
-n_frame=1:2:10;
+n_frame=1:100:401;
+do_per_frame = sca.N_pixels*channel_data.N_channels*channel_data.N_waves;
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
 
     %%% - MATLAB
     
-    % Time USTB's MATLAB delay implementation
-    proc=midprocess.das();
-    proc.code = code.matlab;
-    proc.dimension = dimension.none;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()});
-    delay_matlab_time(n)=toc
+%     % Time USTB's MATLAB delay implementation
+%     proc=midprocess.das();
+%     proc.code = code.matlab;
+%     proc.dimension = dimension.none;
+%     tic
+%     b_data=pipe.go({proc });
+%     delay_matlab_time(n)=toc
     
     %b_data.plot()
     
-    % Time USTB's MATLAB delay implementation
+%     % Time USTB's MATLAB delay implementation
+%     proc=midprocess.das();
+%     proc.code = code.matlab_gpu;
+%     proc.dimension = dimension.none;
+%     tic
+%     b_data=pipe.go({proc});
+%     delay_gpu_time(n)=toc
+    
+    %b_data.plot()
+    
+    % Time USTB's MATLAB implementation
+%     proc=midprocess.das();
+%     proc.code = code.matlab;
+%     proc.dimension = dimension.both;
+%     tic
+%     b_data=pipe.go({proc });
+%     das_matlab_time(n)=toc
+    
+    %b_data.plot()
+    
+    % Time USTB's GPU implementation
     proc=midprocess.das();
     proc.code = code.matlab_gpu;
-    proc.dimension = dimension.none;
+    proc.dimension = dimension.both;
     tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()});
-    delay_matlab_gpu_time(n)=toc
+    b_data=pipe.go({proc});
+    das_gpu_time(n)=toc
+    
+    % Time USTB's GPU implementation - frameloop
+    proc=midprocess.das();
+    proc.code = code.matlab_gpu_frameloop;
+    proc.dimension = dimension.both;
+    tic
+    b_data=pipe.go({proc});
+    das_gpu_frameloop_time(n)=toc
     
     %b_data.plot()
     
-    
-    
-    % Time USTB's MATLAB delay-and-sum implementation
-    proc=midprocess.das();
-    proc.code = code.matlab;
-    proc.dimension = dimension.receive;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_rx_matlab_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
-    proc=midprocess.das();
-    proc.code = code.matlab;
-    proc.dimension = dimension.transmit;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_tx_matlab_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
-    proc=midprocess.das();
-    proc.code = code.matlab;
-    proc.dimension = dimension.both;
-    tic
-    b_data=pipe.go({proc}); 
-    das_both_matlab_time(n)=toc;
-    
-    %%% - MATLAB GPU
-    
-    % Time USTB's MATLAB delay implementation
-    proc=midprocess.das_matlab_gpu_nvidia();
-    proc.dimension = dimension.none;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()});
-    delay_matlab_gpu_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum implementation
-    proc=midprocess.das_matlab_gpu_nvidia();
-    proc.dimension = dimension.receive;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_rx_matlab_gpu_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
-    proc=midprocess.das_matlab_gpu_nvidia();
-    proc.dimension = dimension.transmit;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_tx_matlab_gpu_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
-    proc=midprocess.das_matlab_gpu_nvidia();
-    proc.dimension = dimension.both;
-    tic
-    b_data=pipe.go({proc}); 
-    das_both_matlab_gpu_time(n)=toc;
-    
-    %%% - MEX
-    
-    % Time USTB's MATLAB delay implementation
-    proc=midprocess.das();
-    proc.code = code.mex;
-    proc.dimension = dimension.none;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()});
-    delay_mex_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum implementation
-    proc=midprocess.das();
-    proc.code = code.mex;
-    proc.dimension = dimension.receive;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_rx_mex_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
-    proc=midprocess.das();
-    proc.code = code.mex;
-    proc.dimension = dimension.transmit;
-    tic
-    b_data=pipe.go({proc postprocess.coherent_compounding()}); 
-    das_tx_mex_time(n)=toc;
-    
-    % Time USTB's MATLAB delay-and-sum transmit implementation
+    % Time USTB's MEX implementation
     proc=midprocess.das();
     proc.code = code.mex;
     proc.dimension = dimension.both;
     tic
-    b_data=pipe.go({proc}); 
-    das_both_mex_time(n)=toc;
+    b_data=pipe.go({proc});
+    das_mex_time(n)=toc
     
+    %b_data.plot()
+        
     % Plot the runtimes
-    figure(101);
-    plot(n_frame(1:n),delay_matlab_time(1:n),'bs--','linewidth',2);  hold on; grid on;
-    plot(n_frame(1:n),das_rx_matlab_time(1:n),'ro--','linewidth',2);
-    plot(n_frame(1:n),das_tx_matlab_time(1:n),'gx--','linewidth',2); 
-    plot(n_frame(1:n),das_both_matlab_time(1:n),'k^--','linewidth',2); 
-    
-    plot(n_frame(1:n),delay_mex_time(1:n),'bs-','linewidth',2); 
-    plot(n_frame(1:n),das_rx_mex_time(1:n),'ro-','linewidth',2); 
-    plot(n_frame(1:n),das_tx_mex_time(1:n),'gx-','linewidth',2); 
-    plot(n_frame(1:n),das_both_mex_time(1:n),'k^-','linewidth',2); 
+    figure(101); hold on; grid on;
+    %plot(n_frame(1:n),das_matlab_time(1:n),'k^-','linewidth',2); 
+    plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'g+-','linewidth',2); 
+    plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2); 
+    plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2); 
 
-    text(n_frame(n)+0.2,delay_matlab_time(n),sprintf('%0.2f s',delay_matlab_time(n))); 
-    text(n_frame(n)+0.2,delay_mex_time(n),sprintf('%0.2f s',delay_mex_time(n))); 
-
-    text(n_frame(n)+0.2,das_rx_matlab_time(n),sprintf('%0.2f s',das_rx_matlab_time(n))); 
-    text(n_frame(n)+0.2,das_rx_mex_time(n),sprintf('%0.2f s',das_rx_mex_time(n))); 
-    
-    text(n_frame(n)+0.2,das_tx_matlab_time(n),sprintf('%0.2f s',das_tx_matlab_time(n))); 
-    text(n_frame(n)+0.2,das_tx_mex_time(n),sprintf('%0.2f s',das_tx_mex_time(n))); 
-    
-    text(n_frame(n)+0.2,das_both_matlab_time(n),sprintf('%0.2f s',das_both_matlab_time(n))); 
-    text(n_frame(n)+0.2,das_both_mex_time(n),sprintf('%0.2f s',das_both_mex_time(n))); 
-
-    
-    legend('delay MATLAB','das RX MATLAB','das TX MATLAB','das RX&TX MATLAB','delay mex','das RX mex','das TX mex','das RX&TX mex','Location','NorthWest');
-    xlabel('Frames');
+    for nn=1:length(n_frame)
+        %text(n_frame(n)+0.2,das_matlab_time(n),sprintf('%0.2f s',das_matlab_time(n))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn))); 
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn))); 
+    end
+    %legend('das MATLAB','das GPU','das MEX','Location','NorthWest');
+    legend('das GPU','das GPU frameloop','das MEX','Location','NorthWest');
+    xlabel('Delay operations [10^9]');
     ylabel('Elapsed time [s]');
     set(gca,'fontsize',14)
-    ylim([0 80]);
-    xlim([0 10]);
+    %ylim([0 80]);
+    %xlim([0 10]);
 end
 
