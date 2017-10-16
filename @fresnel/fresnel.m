@@ -68,7 +68,7 @@ classdef fresnel < handle
             focusing_delay=zeros(h.N_elements,1,h.N_waves);
             apodization=zeros(h.N_elements,1,h.N_waves);
             for n_w=1:h.N_waves 
-                focusing_delay(:,1,n_w)=h.sequence(n_w).delay;
+                focusing_delay(:,1,n_w)=h.sequence(n_w).delay_values;
                 apodization(:,1,n_w)=h.sequence(n_w).apodization_values;
             end
             
@@ -144,7 +144,7 @@ classdef fresnel < handle
                         attenuation = 10.^(-current_phantom.alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)).*directivity.*delta0./(4*pi*distance);
                         
                         % computing the transmit signal 
-                        delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
+                        delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay_values)*ones(1,numel(time_1w));                
                         transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*attenuation),1);  
 
                         % computing the receive signal
