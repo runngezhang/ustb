@@ -15,7 +15,7 @@
 
 % data location
 url='http://www.ustb.no/datasets/';   % if not found data will be downloaded from here
-filename='test01.uff';
+filename='test02.uff';
 
 % checks if the data is in your data path, and downloads it otherwise.
 % The defaults data path is under USTB's folder, but you can change this
