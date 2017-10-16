@@ -277,7 +277,7 @@ for n=1:5
     temp=sum(abs(data(:,100:200)),1); 
     temp=temp./max(temp);
     temp=20*log10(temp);
-    xlat=interp1(temp,scan.x_axis(100:200),-6);
+    xlat=interp1(temp(2:end),scan.x_axis(101:200),-6);
     lateral_profile(n,:)=temp;
     fwhm(n)=2*xlat;
     
