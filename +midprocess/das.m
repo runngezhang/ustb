@@ -65,24 +65,40 @@ classdef das < midprocess
             % calculate transmit delay
             transmit_delay=zeros(N_pixels,N_waves);
             for n_wave=1:numel(h.channel_data.sequence)
-                if ~isinf(h.channel_data.sequence(n_wave).source.distance)
-                    % point sources
-                    transmit_delay(:,n_wave)=(-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-h.scan.x).^2+(h.channel_data.sequence(n_wave).source.y-h.scan.y).^2+(h.channel_data.sequence(n_wave).source.z-h.scan.z).^2);
+                switch(h.channel_data.sequence(n_wave).wavefront)
+                    % point source
+                    case uff.wavefront.spherical 
+                        % check if the point source is at infinity -> for backcompatibility of examples
+                        if isinf(h.channel_data.sequence(n_wave).source.distance)
+                            transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
+                        else
+                            % distance between source and elements
+                            transmit_delay(:,n_wave)=(-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-h.scan.x).^2+(h.channel_data.sequence(n_wave).source.y-h.scan.y).^2+(h.channel_data.sequence(n_wave).source.z-h.scan.z).^2);
+
+                            % add distance from source to origin
+                            if (h.channel_data.sequence(n_wave).source.z<-1e-3)
+                                transmit_delay(:,n_wave)=transmit_delay(:,n_wave)-h.channel_data.sequence(n_wave).source.distance;
+                            else
+                                transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
+                            end
+                        end
+                        
+                    % plane wave   
+                    case uff.wavefront.plane
+                        transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                     
-                    % add distance from source to origin
-                    if (h.channel_data.sequence(n_wave).source.z<-1e-3)
-                        transmit_delay(:,n_wave)=transmit_delay(:,n_wave)-h.channel_data.sequence(n_wave).source.distance;
-                    else
-                        transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
-                    end
-                else
-                    % plane waves
-                    transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
+                    % photoacoustic wave
+                    case uff.wavefront.photoacoustic
+                        transmit_delay(:,n_wave)=zeros(N_pixels,1);
+                        
+                    otherwise
+                        error('Unknown wavefront. Check available options at uff.wavefront');
                 end
-                %compensate for t0
-                transmit_delay(:,n_wave) = transmit_delay(:,n_wave) + h.channel_data.sequence(n_wave).t0_compensation;
+                % convert to seconds and include wave delay
+                transmit_delay(:,n_wave) = transmit_delay(:,n_wave)./h.channel_data.sequence(n_wave).sound_speed + h.channel_data.sequence(n_wave).delay;
             end
-            transmit_delay = single(transmit_delay./h.channel_data.sound_speed);
+            % convert to single
+            transmit_delay = single(transmit_delay);
             
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
