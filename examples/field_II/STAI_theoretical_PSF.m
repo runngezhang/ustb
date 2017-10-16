@@ -142,27 +142,21 @@ for n=1:probe.N
     % do calculation
     [v,t]=calc_scat_multi(Th, Rh, pha.points(1:3), pha.points(4));
     
-    % lag compensation
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt + probe.r(n)/c0;
+    % compensation for different number of samples and t_0 of first sample
+    % and for t_0, NB this is different here than other Fiield II STAI examples,
+    % since Field and Fresnel has a different definition of t0.
+    t_in=(0:dt:((size(v,1)-1)*dt))+t + probe.r(n)/c0 - lag*dt;
     v_aux=interp1(t_in,v,t_out,'linear',0);
 
     % build the dataset
     STA(:,:,n)=v_aux;
     
     % Sequence generation
-    %     
-    % Now, we shall generate our sequence! Keep in mind that the *fresnel* simulator
-    % takes the same sequence definition as the USTB beamformer. In UFF and
-    % USTB a sequence is defined as a collection of *wave* structures. 
-    % 
-    % For our example here, we define a sequence of 128
-    % waves each emanating from a single element on the probe aperture.
-    
     seq(n)=uff.wave();
     seq(n).probe=probe;
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
-    
+    seq(n).delay = 0; % t0 and center of pulse compensation
     seq(n).apodization = uff.apodization();
     seq(n).apodization.window=uff.window.sta;
     seq(n).apodization.origo=seq(n).source;
