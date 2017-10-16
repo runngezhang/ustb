@@ -146,8 +146,8 @@ for f=1:F
         % do calculation
         [v,t]=calc_scat_multi(Th, Rh, point_position, point_amplitudes);
          
-        % lag compensation
-        t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
+        % compensation for different number of samples and t_0 of first sample
+        t_in=(0:dt:((size(v,1)-1)*dt))+t;
         v_aux=interp1(t_in,v,t_out,'linear',0);
  
         % build the dataset
@@ -159,6 +159,8 @@ for f=1:F
         seq(n).source.azimuth=alpha(n);
         seq(n).source.distance=Inf;
         seq(n).sound_speed=c0;
+        % Compensate for time to center of pulse
+        seq(n).delay = lag*dt;
     end
 end
 close(wb);
