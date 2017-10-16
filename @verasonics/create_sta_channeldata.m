@@ -40,9 +40,9 @@ for n_frame = h.frame_order
     for n_tx = 1:length(channel_data.sequence)
         tools.workbar((n_tx+(frame_idx-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of STAI data from Verasonics.',length(h.frame_order)),'Reading STAI data from Verasonics.')
         
-        % compute the offset in time from center of probe to
-        % element to get correct t_0
-        channel_data.sequence(n_tx).t0_compensation = offset_distance-channel_data.probe.r(n_tx);
+        % time interval between t0 and acquistion start and compensate for
+        % center of puse + lens correction
+        channel_data.sequence(n_tx).delay = (offset_distance-channel_data.probe.r(n_tx))/channel_data.sound_speed;
         
         % read data
         data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,:,n_frame);

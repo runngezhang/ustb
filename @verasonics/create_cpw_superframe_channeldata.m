@@ -56,7 +56,9 @@ for n_frame = 1:h.number_of_superframes
                 validChannels = [1:128];
             end
             
-            channel_data.sequence(s).t0_compensation = offset_distance+t0_1;
+            % time interval between t0 and acquistion start and compensate for
+            % center of puse + lens correction
+            channel_data.sequence(s).delay = (offset_distance+t0_1)/channel_data.sound_speed;
             
             %% read data
             data(:,:,s,frame_number)=h.RcvData(h.Receive(RcvIdx).startSample:h.Receive(RcvIdx).endSample,validChannels,n_frame);

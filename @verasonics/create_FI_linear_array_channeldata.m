@@ -50,7 +50,10 @@ for n_frame = h.frame_order
         trans_delays_in_m = calculate_trans_delays_in_m(h,channel_data,n_tx);
         t0_comp_in_m = mean(trans_delays_in_m(ceil(channel_data.probe.N_elements/2):ceil((channel_data.probe.N_elements+1)/2)));
         
-        channel_data.sequence(n_tx).t0_compensation = offset_distance+t0_comp_in_m;
+        % time interval between t0 and acquistion start and compensate for
+        % center of puse + lens correction
+        channel_data.sequence(n_tx).delay = (offset_distance+t0_comp_in_m)/channel_data.sound_speed;
+        % read data
         data(:,:,n_tx,frame_idx) = h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,h.Trans.Connector,n_frame);
         
         if plot_delayed_signal
