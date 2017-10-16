@@ -45,10 +45,14 @@ classdef apodization < uff
     %% dependent properties
     properties  (Dependent)   
         data                        % apodization data 
-        origin                      % beam origin
         propagation_distance        % distance from the origin to the pixel
         element_position_matrix     % location of the elements as seen by the pixels [x y z] [m m m]
         N_elements                  % number of elements (real or synthetic)
+    end
+    
+    %% private & Hidden
+    properties  (Dependent, Hidden, Access = private)   
+            origin                      % beam origin
     end
     
     %% private properties
@@ -236,11 +240,11 @@ classdef apodization < uff
             
             % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
             if isinf(h.origo.distance)
-                origin(:,1)=h.focus.x+h.focus.z*tan(h.origo.azimuth)+h.focus.z*tan(h.tilt(1));
-                origin(:,2)=h.focus.y+h.focus.z*tan(h.origo.elevation)+h.focus.z*tan(h.tilt(2));
+                origin(:,1)=h.focus.x+h.focus.z*tan(h.origo.azimuth)-h.focus.z*tan(h.tilt(1));
+                origin(:,2)=h.focus.y+h.focus.z*tan(h.origo.elevation)-h.focus.z*tan(h.tilt(2));
             else
-                origin(:,1)=h.origo.x-h.origo.z*(h.focus.x-h.origo.x)./(h.focus.z-h.origo.z)+h.focus.z*tan(h.tilt(1));
-                origin(:,2)=(h.focus.y-h.origo.y)./(h.focus.x-h.origo.x).*(origin(:,1)-h.origo.x)+h.focus.y+h.focus.z*tan(h.tilt(2));
+                origin(:,1)=h.origo.x-h.origo.z*(h.focus.x-h.origo.x)./(h.focus.z-h.origo.z)-h.focus.z*tan(h.tilt(1));
+                origin(:,2)=(h.focus.y-h.origo.y)./(h.focus.x-h.origo.x).*(origin(:,1)-h.origo.x)+h.focus.y-h.focus.z*tan(h.tilt(2));
             end
             origin(:,3)=0;
             origin(isnan(origin))=0; % solve divisions by 0
