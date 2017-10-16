@@ -37,7 +37,8 @@ probe.N                 = 128;             % Number of elements
 pulse_duration          = 2.5;             % pulse duration [cycles]
 
 %% pulse definition
-pulse = uff.pulse(f0);
+pulse = uff.pulse();
+pulse.center_frequency = f0;
 pulse.fractional_bandwidth = 0.65;        % probe bandwidth [1]
 t0 = (-1/pulse.fractional_bandwidth/f0): dt : (1/pulse.fractional_bandwidth/f0);
 impulse_response = gauspuls(t0, f0, pulse.fractional_bandwidth);

@@ -62,7 +62,8 @@ probe.N                 =128;             % Number of elements
 % *fresnel* simulator's *pulse* structure. We could also use 
 % <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
-pulse = uff.pulse(f0);
+pulse = uff.pulse();
+pulse.center_frequency = f0;
 pulse.fractional_bandwidth = 0.1;             % probe bandwidth [1]
 t0=(-1.0/pulse.fractional_bandwidth /f0): dt : (1.0/pulse.fractional_bandwidth /f0);
 excitation=1;

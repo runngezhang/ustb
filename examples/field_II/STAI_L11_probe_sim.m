@@ -64,7 +64,8 @@ pulse_duration          = 2.5;             % pulse duration [cycles]
 % *fresnel* simulator's *pulse* structure. We could also use 
 % <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
-pulse = uff.pulse(f0);
+pulse = uff.pulse();
+puse.center_frequency = f0;
 pulse.fractional_bandwidth = 0.65;        % probe bandwidth [1]
 t0 = (-1/pulse.fractional_bandwidth/f0): dt : (1/pulse.fractional_bandwidth/f0);
 impulse_response = gauspuls(t0, f0, pulse.fractional_bandwidth);
