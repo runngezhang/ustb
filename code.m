@@ -11,5 +11,6 @@ classdef code < int32
       mex(1)
       matlab_gpu(2)
       matlab_gpu_frameloop(3)
+      matlab_gpu_frameloop_chunk(4)
    end
 end

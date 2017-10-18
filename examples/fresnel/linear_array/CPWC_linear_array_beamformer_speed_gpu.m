@@ -19,6 +19,8 @@
 
 clear all;
 close all;
+clear classes
+clc
 
 %% Phantom
 %
@@ -32,7 +34,7 @@ N_sca=length(x_sca);
 pha=uff.phantom();
 pha.sound_speed=1540;            % speed of sound [m/s]
 pha.points=[x_sca.', zeros(N_sca,1), z_sca.', ones(N_sca,1)];    % point scatterer position [m]
-fig_handle=pha.plot();             
+% fig_handle=pha.plot();             
              
 %% Probe
 %
@@ -47,7 +49,7 @@ prb.N=128;                  % number of elements
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
 prb.element_width=270e-6;   % element width [m]
 prb.element_height=5000e-6; % element height [m]
-prb.plot(fig_handle);
+% prb.plot(fig_handle);
 
 %% Pulse
 % 
@@ -58,7 +60,7 @@ prb.plot(fig_handle);
 pul=uff.pulse();
 pul.center_frequency=5.2e6;       % transducer frequency [MHz]
 pul.fractional_bandwidth=0.6;     % fractional bandwidth [unitless]
-pul.plot([],'2-way pulse');
+% pul.plot([],'2-way pulse');
 
 %% Sequence generation
 %
@@ -81,7 +83,7 @@ for n=1:N_plane_waves
     seq(n).sound_speed=pha.sound_speed;
     
     % show source
-    fig_handle=seq(n).source.plot(fig_handle);
+    % fig_handle=seq(n).source.plot(fig_handle);
 end
 
 %% The Fresnel simulator
@@ -111,7 +113,7 @@ channel_data=sim.go();
 % method it can call.
 
 sca=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(0e-3,40e-3,256).');
-sca.plot(fig_handle,'Scenario');    % show mesh
+% sca.plot(fig_handle,'Scenario');    % show mesh
  
 %% Pipeline
 %
@@ -153,85 +155,54 @@ for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
 
-    %%% - MATLAB
-    
-%     % Time USTB's MATLAB delay implementation
-%     proc=midprocess.das();
-%     proc.code = code.matlab;
-%     proc.dimension = dimension.none;
-%     tic
-%     b_data=pipe.go({proc });
-%     delay_matlab_time(n)=toc
-    
-    %b_data.plot()
-    
-%     % Time USTB's MATLAB delay implementation
-%     proc=midprocess.das();
-%     proc.code = code.matlab_gpu;
-%     proc.dimension = dimension.none;
-%     tic
-%     b_data=pipe.go({proc});
-%     delay_gpu_time(n)=toc
-    
-    %b_data.plot()
-    
-    % Time USTB's MATLAB implementation
-%     proc=midprocess.das();
-%     proc.code = code.matlab;
-%     proc.dimension = dimension.both;
-%     tic
-%     b_data=pipe.go({proc });
-%     das_matlab_time(n)=toc
-    
-    %b_data.plot()
-    
     % Time USTB's GPU implementation
-    proc=midprocess.das();
-    proc.code = code.matlab_gpu;
-    proc.dimension = dimension.both;
+%     proc            = midprocess.das();
+%     proc.code       = code.matlab_gpu;
+%     proc.dimension  = dimension.both;
+%     tic
+%     b_data          = pipe.go({proc});
+%     das_gpu_time(n) = toc
+    
+    % Time USTB's GPU implementation - frameloop chunk
+    proc            = midprocess.das();
+    proc.code       = code.matlab_gpu_frameloop_chunk;
+    proc.dimension  = dimension.both;
     tic
-    b_data=pipe.go({proc});
-    das_gpu_time(n)=toc
+    b_data          = pipe.go({proc});
+    das_gpu_frameloop_chunk_time(n) = toc
     
     % Time USTB's GPU implementation - frameloop
-    proc=midprocess.das();
-    proc.code = code.matlab_gpu_frameloop;
-    proc.dimension = dimension.both;
-    tic
-    b_data=pipe.go({proc});
-    das_gpu_frameloop_time(n)=toc
-    
-    %b_data.plot()
-    
-    % Time USTB's MEX implementation
-    proc=midprocess.das();
-    proc.code = code.mex;
-    proc.dimension = dimension.both;
-    tic
-    b_data=pipe.go({proc});
-    das_mex_time(n)=toc
-    
-    %b_data.plot()
-        
-    % Plot the runtimes
-    figure(101); hold on; grid on;
-    %plot(n_frame(1:n),das_matlab_time(1:n),'k^-','linewidth',2); 
-    plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'g+-','linewidth',2); 
-    plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2); 
-    plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2); 
+%     proc            = midprocess.das();
+%     proc.code       = code.matlab_gpu_frameloop;
+%     proc.dimension  = dimension.both;
+%     tic
+%     b_data          = pipe.go({proc});
+%     das_gpu_frameloop_time(n) = toc
 
-    for nn=1:length(n_frame)
-        %text(n_frame(n)+0.2,das_matlab_time(n),sprintf('%0.2f s',das_matlab_time(n))); 
-        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn))); 
-        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn))); 
-        text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn))); 
-    end
-    %legend('das MATLAB','das GPU','das MEX','Location','NorthWest');
-    legend('das GPU','das GPU frameloop','das MEX','Location','NorthWest');
-    xlabel('Delay operations [10^9]');
-    ylabel('Elapsed time [s]');
-    set(gca,'fontsize',14)
-    %ylim([0 80]);
-    %xlim([0 10]);
+    % Time USTB's MEX implementation
+%     proc            = midprocess.das();
+%     proc.code       = code.mex;
+%     proc.dimension  = dimension.both;
+%     tic
+%     b_data          = pipe.go({proc});
+%     das_mex_time(n) = toc
 end
+
+% Plot the runtimes
+% figure(101); hold on; grid on;
+% plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'go-','linewidth',2);
+% % plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_chunk_time(1:n),'go-','linewidth',2);
+% plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2);
+% plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2);
+% 
+% for nn=1:length(n_frame)
+%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn)));
+%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_chunk_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_chunk_time(nn)));
+%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn)));
+%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn)));
+% end
+% legend( 'DAS GPU', 'DAS GPU - frameloop',  'das MEX', 'Location','NorthWest');
+% xlabel('Delay operations [10^9]');
+% ylabel('Elapsed time [s]');
+% set(gca,'fontsize',14)
 
