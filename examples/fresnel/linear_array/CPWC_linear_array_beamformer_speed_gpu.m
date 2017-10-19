@@ -149,60 +149,55 @@ pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
 % respect to the others for increasing amounts of data.
 
 % beamforming
-n_frame=1:100:401;
+n_frame=1:200:1001;
 do_per_frame = sca.N_pixels*channel_data.N_channels*channel_data.N_waves;
+das_mex_time = zeros(length(n_frame), 1);
+das_gpu_frameloop_time = zeros(length(n_frame), 1);
+das_gpu_frameloop_chunk_time = zeros(length(n_frame), 1);
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
-
-    % Time USTB's GPU implementation
+    
+    % Time USTB's MEX implementation
 %     proc            = midprocess.das();
-%     proc.code       = code.matlab_gpu;
+%     proc.code       = code.mex;
 %     proc.dimension  = dimension.both;
 %     tic
-%     b_data          = pipe.go({proc});
-%     das_gpu_time(n) = toc
+%     [~]          = pipe.go({proc});
+%     das_mex_time(n) = toc;
     
     % Time USTB's GPU implementation - frameloop chunk
     proc            = midprocess.das();
     proc.code       = code.matlab_gpu_frameloop_chunk;
     proc.dimension  = dimension.both;
     tic
-    b_data          = pipe.go({proc});
+    [~]          = pipe.go({proc});
     das_gpu_frameloop_chunk_time(n) = toc
     
     % Time USTB's GPU implementation - frameloop
-%     proc            = midprocess.das();
-%     proc.code       = code.matlab_gpu_frameloop;
-%     proc.dimension  = dimension.both;
-%     tic
-%     b_data          = pipe.go({proc});
-%     das_gpu_frameloop_time(n) = toc
-
-    % Time USTB's MEX implementation
-%     proc            = midprocess.das();
-%     proc.code       = code.mex;
-%     proc.dimension  = dimension.both;
-%     tic
-%     b_data          = pipe.go({proc});
-%     das_mex_time(n) = toc
+    proc            = midprocess.das();
+    proc.code       = code.matlab_gpu_frameloop;
+    proc.dimension  = dimension.both;
+    tic
+    [~]          = pipe.go({proc});
+    das_gpu_frameloop_time(n) = toc
 end
 
 % Plot the runtimes
-% figure(101); hold on; grid on;
-% plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'go-','linewidth',2);
-% % plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_chunk_time(1:n),'go-','linewidth',2);
-% plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2);
-% plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2);
-% 
-% for nn=1:length(n_frame)
+figure(101); hold on; grid on; box on;
+%plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'go-','linewidth',2);
+plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_chunk_time(1:n),'go-','linewidth',2);
+plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2);
+plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2);
+
+for nn=1:length(n_frame)
 %     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn)));
-%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_chunk_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_chunk_time(nn)));
-%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn)));
-%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn)));
-% end
-% legend( 'DAS GPU', 'DAS GPU - frameloop',  'das MEX', 'Location','NorthWest');
-% xlabel('Delay operations [10^9]');
-% ylabel('Elapsed time [s]');
-% set(gca,'fontsize',14)
+    text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_chunk_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_chunk_time(nn)));
+    text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn)));
+    text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn)));
+end
+legend('DAS GPU - frameloop',  'DAS GPU - frameloop chunk', 'das MEX', 'Location','NorthWest');
+xlabel('Delay operations [10^9]');
+ylabel('Elapsed time [s]');
+set(gca,'fontsize', 12)
 

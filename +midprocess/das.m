@@ -113,9 +113,11 @@ classdef das < midprocess
             if any(data(:)>0) % only process if any data > 0
                 
                 switch h.code
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    % ==========================
+                    %
                     %           MEX
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %
+                    % ==========================
                     case code.mex
                         aux_data=mex.das_c(data,...
                                            sampling_frequency,...
@@ -126,9 +128,16 @@ classdef das < midprocess
                                            receive_delay,...
                                            modulation_frequency,...
                                            int32(h.dimension));
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %        MATLAB
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                       
+                   % assign phase according to 2 times the receive propagation distance
+                   if(w0>eps)
+                       aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                   end
+                    % ==========================
+                    %
+                    %          MATLAB
+                    %
+                    % ==========================
                     case code.matlab %#ok<PROP>
                         % workbar
                         tools.workbar();
@@ -173,18 +182,24 @@ classdef das < midprocess
                                 end
                             end
                         end
-                        %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        
+                        % assign phase according to 2 times the receive propagation distance
+                        if(w0>eps)
+                            aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                        end
+                        % ==========================
+                        %
                         %        MATLAB GPU
-                        %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %
+                        % ==========================
                     case code.matlab_gpu
                         
                         % set auxiliary data to be a gpuArray
-                        
                         if (h.code==code.matlab_gpu)
                             gpu_info=gpuDevice();
                             aux_data_memory=prod([size(aux_data) 8]) + prod([N_pixels N_waves N_frames 8]);
                             if (aux_data_memory*1.3>gpu_info.AvailableMemory)
-                                warning(sprintf('DAS GPU: The beamformed data %0.2f MB does not fit in the available GPU memory %0.2f MB. GPU computation will performed sequentially.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20));
+                                warning('DAS GPU: The beamformed data %0.2f MB does not fit in the available GPU memory %0.2f MB. GPU computation will performed sequentially.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20);
                             else
                                 fprintf(1, 'DAS GPU: The beamformed data %0.2f MB fits in the available GPU memory %0.2f MB.',aux_data_memory/2^20, gpu_info.AvailableMemory/2^20);
                                 aux_data=gpuArray(aux_data);
@@ -228,7 +243,9 @@ classdef das < midprocess
                                         temp = bsxfun(@times,apodization_gpu,interp1(time_gpu,data_gpu(:,1,n_wave,:),delay_gpu,'linear',0));
                                         
                                         % set into auxiliary data
-                                        if ~isa(aux_data,'gpuArray') temp=gather(temp); end
+                                        if ~isa(aux_data,'gpuArray') 
+                                            temp=gather(temp); 
+                                        end
                                         switch h.dimension
                                             case dimension.none
                                                 aux_data(:,n_rx,n_wave,:)=temp;
@@ -293,7 +310,7 @@ classdef das < midprocess
                             tools.workbar(n_frame/N_frames, sprintf('%s (%s)',h.name, h.version),'USTB');
                             
                             % transfer channel data to device
-                            ch_data = gpuArray(single(data(:,:,:,n_frame)));
+                            ch_data = gpuArray(data(:,:,:,n_frame));
                             
                             % beamformed data buffer
                             switch h.dimension
@@ -366,23 +383,26 @@ classdef das < midprocess
                         tx_delay_size = numel(receive_delay)  * 4;
                         rx_apod_size  = numel(rx_apodization) * 4;
                         tx_apod_size  = numel(tx_apodization) * 4;
-                        ch_data_size  = numel(size(data(:,:,:,1))) * 8;
+                        ch_data_size  = numel(data(:,:,1,1))  * 8;
+                        buff_size     = N_pixels *8;
                         
-                        availableMemory = @(x)  gpu_info.AvailableMemory - ...
-                                                rx_delay_size - ...
-                                                tx_delay_size - ...
-                                                rx_apod_size - ...
-                                                tx_apod_size - ...
-                                                ch_data_size*x;
-                        chunk_size = min(   [fzero(@(x) floor(availableMemory(x)/(N_pixels*8)) - 2*x, 1); ...
-                                            floor(intmax('int32')/(N_pixels)); ...
+                        availableMemory =   gpu_info.AvailableMemory - ...
+                                            rx_delay_size - ...
+                                            tx_delay_size - ...
+                                            rx_apod_size - ...
+                                            tx_apod_size;
+                                            
+                        chunk_size = min(   [floor(availableMemory/(ch_data_size*4 + buff_size*2)); ...
+                                            double(floor(intmax('int32')/(N_pixels))); ...
                                             N_frames]);
+                        N_chunks = double(ceil(N_frames/chunk_size));
                         
                         
                         fprintf(1, '=========== DAS GPU FRAMELOOP CHUNK ===========\n');
                         fprintf(1, 'Selected GPU: %s\n', gpu_info.Name);
                         fprintf(1, 'Available memory: %0.2f MB\n', gpu_info.AvailableMemory*1e-6);
-                        fprintf(1, 'GPU can accomodate %d frames at a time\n', chunk_size);
+                        fprintf(1, 'Chunk size: %d\n', chunk_size);
+                        fprintf(1, 'Number of chunks: %d\n', N_chunks);
                         
                         % workbar
                         tools.workbar();
@@ -399,27 +419,33 @@ classdef das < midprocess
                         phase_term_gpu  = exp(-1j*w0_gpu*2*rx_distance_gpu/c0_gpu);
                         
                         % frame loop
-                        for n_frame=1:chunk_size:N_frames
+                        for n_chunk=1:N_chunks
                             % channel data chunk
-                            chunk_start = n_frame;
+                            chunk_start = (n_chunk-1)*chunk_size+1;
                             
-                            if mod(N_frames-n_frame, chunk_size) == 0
-                                chunk_end = n_frame+chunk_size-1;
+                            if mod(N_frames, chunk_size) == 0 || n_chunk < N_chunks
+                                chunk_end = n_chunk*chunk_size;
                             else
                                 chunk_end = N_frames;
                             end
                             
-                            ch_data = gpuArray(single(data(:,:,:,chunk_start:chunk_end)));
-                            
                             % beamformed data buffer
-                            bf_data = complex(zeros([N_pixels, 1, 1, chunk_size], 'single', 'gpuArray'));
+                            switch h.dimension
+                                case dimension.receive
+                                    bf_data = complex(zeros([N_pixels, 1, 1, chunk_end-chunk_start+1], 'single', 'gpuArray'));
+                                case dimension.both
+                                    bf_data = complex(zeros([N_pixels, 1, 1, chunk_end-chunk_start+1], 'single', 'gpuArray'));
+                            end                                           
                             
                             % transmit loop
                             for n_wave=1:N_waves
-                                tools.workbar((n_wave + (n_frame-1))/N_waves/N_frames, sprintf('%s (%s)',h.name, h.version),'USTB GPU chunk frameloop');
+                                tools.workbar((n_wave + (n_chunk-1)*N_waves)/N_waves/N_chunks, sprintf('%s (%s)',h.name, h.version),'USTB GPU chunk frameloop');
+                                % transfer channel data to device
+                                ch_data = gpuArray(data(:,:,n_wave,chunk_start:chunk_end)); 
+                                
                                 if any(tx_apod_gpu(:,n_wave))
                                     
-                                    apod_gpu  = bsxfun(@times,rx_apod_gpu,tx_apod_gpu(:,n_wave));
+                                    apod_gpu  = bsxfun(@times,rx_apod_gpu,  tx_apod_gpu(:,n_wave));
                                     delay_gpu = bsxfun(@plus, rx_delay_gpu, tx_delay_gpu(:,n_wave));
                                     
                                     % apply phase correction factor to IQ data
@@ -430,7 +456,7 @@ classdef das < midprocess
                                     % channel loop
                                     for n_rx=1:N_channels
                                         if any(rx_apod_gpu(:,n_rx))
-                                            pre_bf_data = interp1(time_gpu, ch_data(:,n_rx, n_wave, :), delay_gpu(:,n_rx), 'linear',0);
+                                            pre_bf_data = interp1(time_gpu, ch_data(:,n_rx, 1, :), delay_gpu(:,n_rx), 'linear',0);
                                             
                                             % apply apodization
                                             pre_bf_data = bsxfun(@times, apod_gpu(:,n_rx), pre_bf_data);
@@ -439,14 +465,12 @@ classdef das < midprocess
                                             if(w0_gpu>eps)
                                                 pre_bf_data = bsxfun(@times, pre_bf_data, phase_term_gpu);
                                             end
-                                            
+                                                                                        
                                             switch h.dimension
                                                 case dimension.none
                                                     aux_data(:,n_rx,n_wave,chunk_start:chunk_end) = gather(pre_bf_data);
                                                 case dimension.receive
                                                     bf_data = bf_data + pre_bf_data;
-                                                case dimension.transmit
-                                                    aux_data(:,:,n_wave,chunk_start:chunk_end)
                                                 case dimension.both
                                                     bf_data = bf_data + pre_bf_data;
                                             end
