@@ -107,7 +107,7 @@
 
                     %Calculate t0 compensation
                     hardcoded_offset = (sqrt(channel_data.sequence(scan_line).source.x^2+channel_data.sequence(scan_line).source.z^2) - channel_data.sequence(scan_line).source.z);
-                    channel_data.sequence(scan_line).t0_compensation = -hardcoded_offset + System.Transducer.delayOffsetUsec*10^-6*channel_data.sound_speed;
+                    channel_data.sequence(scan_line).delay = -(-hardcoded_offset./channel_data.sound_speed + System.Transducer.delayOffsetUsec*10^-6);
 
                     %build the dataset
                     all_data(:,:,scan_line,frame_idx) = RF_Ch_data;

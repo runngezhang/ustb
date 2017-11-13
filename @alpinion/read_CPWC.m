@@ -75,7 +75,7 @@ for frame = 1:N_frames
         D = abs(channel_data.probe.geometry(1,1)-channel_data.probe.geometry(end,1));
         q = abs((D/2)*sin(channel_data.sequence(transmission).source.azimuth));
         
-        channel_data.sequence(transmission).t0_compensation = q-System.Transducer.delayOffsetUsec*10^-6*channel_data.sound_speed;
+        channel_data.sequence(transmission).delay = -(q./channel_data.sound_speed-System.Transducer.delayOffsetUsec*10^-6);
         
         % build the dataset
         all_data(:,:,transmission,frame)=rfData;
