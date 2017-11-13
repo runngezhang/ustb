@@ -112,14 +112,13 @@ xdc_center_focus(Rh,[0 0 0]);
 
 sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
 amp=1;                       % list with the scatterers amplitudes
-cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% Output data
 % 
 % We define the variables to store our output data
-
-t_out=0:dt:((cropat-1)*dt);                 % output time vector
+cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 STA=zeros(cropat,probe.N,probe.N);    % impulse response channel data
+
 %% Compute STA signals
 % 
 % Now, we finally reach the stage where we generate a STA (Synthetic
@@ -141,19 +140,15 @@ for n=1:probe.N
     % do calculation
     [v,t]=calc_scat_multi(Th, Rh, sca, amp);
     
-    % compensation for different number of samples and t_0 of first sample
-    t_in=(0:dt:((size(v,1)-1)*dt))+t;
-    v_aux=interp1(t_in,v,t_out,'linear',0);
-
     % build the dataset
-    STA(:,:,n)=v_aux;
+    STA(1:size(v,1),:,n)=v;
     
     % Sequence generation  
     seq(n)=uff.wave();
     seq(n).probe=probe;
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
-    seq(n).delay = -probe.r(n)/c0+lag*dt; % t0 and center of pulse compensation
+    seq(n).delay = probe.r(n)/c0-lag*dt+t; % t0 and center of pulse compensation
 end
 close(wb);
 
@@ -214,4 +209,4 @@ b_data.plot()
 %% Save UFF dataset
 % 
 % Finally, we save the data into a UFF file.
-channel_data.write([ustb_path(),'/data/FieldII_PSF_simulation.uff'],'channel_data');
+channel_data.write([ustb_path(),'/data/FieldII_PSF_simulation_v2.uff'],'channel_data');

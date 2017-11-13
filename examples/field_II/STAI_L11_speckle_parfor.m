@@ -163,19 +163,19 @@ else % Else, run the simulation
         % do calculation
         [v,t]=calc_scat_multi(Th, Rh, sca, amp);
         
-        % compensation for different number of samples and t_0 of first sample
-        t_in=(0:dt:((size(v,1)-1)*dt))+t;
-        v_aux=interp1(t_in,v,t_out,'linear',0);
-        
-        % build the dataset
-        STA(:,:,n)=v_aux;
+        % save data -> with parloop we need to pad the data
+        if size(v,1)<cropat
+            STA(:,:,n)=padarray(v,[cropat-size(v,1) 0],0,'post');    
+        else
+            STA(:,:,n)=v(1:cropat,:);
+        end
         
         % Sequence generation
         seq(n)=uff.wave();
         seq(n).probe=probe;
         seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
         seq(n).sound_speed=c0;
-        seq(n).delay = -probe.r(n)/c0+lag*dt; % t0 and center of pulse compensation
+        seq(n).delay = probe.r(n)/c0-lag*dt+t; % t0 and center of pulse compensation
     end
     
     %% Channel Data
