@@ -95,7 +95,7 @@ classdef das < midprocess
                         error('Unknown wavefront. Check available options at uff.wavefront');
                 end
                 % convert to seconds and include wave delay
-                transmit_delay(:,n_wave) = transmit_delay(:,n_wave)./h.channel_data.sequence(n_wave).sound_speed + h.channel_data.sequence(n_wave).delay;
+                transmit_delay(:,n_wave) = transmit_delay(:,n_wave)./h.channel_data.sequence(n_wave).sound_speed - h.channel_data.sequence(n_wave).delay;
             end
             % convert to single
             transmit_delay = single(transmit_delay);

@@ -54,7 +54,6 @@ classdef channel_data < uff
         N_channels                      % number of elements in the probe
         N_waves                         % number of transmitted waves
         N_frames                        % number of frames
-        time                            % time vector [s]
         lambda                          % wavelength [m]
     end
         
@@ -84,7 +83,7 @@ classdef channel_data < uff
             
             if abs(h.modulation_frequency)>eps
                 subplot(1,2,1);
-                pcolor(1:h.N_elements,h.time*1e6,real(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
+                pcolor(1:h.N_elements,h.time(n_wave)*1e6,real(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
                 caxis(max(max(abs(real(h.data(:,:,n_wave))))) .* [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
@@ -92,7 +91,7 @@ classdef channel_data < uff
                 set(gca,'fontsize',14);
                 title(sprintf('Real Part - Beam %d',n_wave));
                 subplot(1,2,2);                
-                pcolor(1:h.N_elements,h.time*1e6,imag(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
+                pcolor(1:h.N_elements,h.time(n_wave)*1e6,imag(h.data(:,:,n_wave))); grid on; axis tight; colormap(colorMap); shading interp;
                 caxis(max(max(abs(imag(h.data(:,:,n_wave))))) * [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
@@ -100,7 +99,7 @@ classdef channel_data < uff
                 set(gca,'fontsize',14);
                 title(sprintf('Imaginary Part - Beam %d',n_wave));
             else
-                pcolor(1:h.N_elements,h.time*1e6,h.data(:,:,n_wave)); grid on; axis tight; colormap(colorMap); shading interp;
+                pcolor(1:h.N_elements,h.time(n_wave)*1e6,h.data(:,:,n_wave)); grid on; axis tight; colormap(colorMap); shading interp;
                 caxis(max(max(abs(h.data(:,:,n_wave)))) .* [-1 1]);
                 xlabel('Channel');
                 ylabel('time [\mus]');
@@ -194,6 +193,15 @@ classdef channel_data < uff
         end
     end
     
+    methods
+         function value=time(h,n_wave)
+             value=(h.initial_time+(0:h.N_samples-1)/h.sampling_frequency).';
+             if nargin>1
+                value = value + h.sequence(n_wave).delay;
+             end
+         end
+    end
+    
     %% get methods
     methods
         function value=get.N_elements(h)
@@ -210,9 +218,6 @@ classdef channel_data < uff
         end
         function value=get.N_frames(h)
             value=size(h.data,4);
-        end
-        function value=get.time(h)
-            value=(h.initial_time+(0:h.N_samples-1)/h.sampling_frequency).';
         end
         function value=get.lambda(h)
             assert(~isempty(h.sound_speed),'You need to set the channel_data.sound_speed')
