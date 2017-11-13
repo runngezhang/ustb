@@ -29,7 +29,7 @@ function ok = TE_ps_sta_iq_mex(h)
         seq(n).probe=prb;
         seq(n).sound_speed=s.c0;
         seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
-        seq(n).delay=-seq(n).source.distance/s.c0;
+        seq(n).delay=seq(n).source.distance/s.c0;
     end
     
     % RAW DATA
