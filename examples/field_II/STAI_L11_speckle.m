@@ -19,7 +19,7 @@ fs=100e6;    % Sampling frequency [Hz]
 dt=1/fs;     % Sampling step [s] 
 
 %% field II initialisation
-field_init;
+field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements

@@ -43,7 +43,7 @@ else % Else, run the simulation
     % Field II simulation program (<field-ii.dk>) is in MATLAB's path. We also
     % pass our set constants to it.
     
-    field_init;
+    field_init(0);
     set_field('c',c0);              % Speed of sound [m/s]
     set_field('fs',fs);             % Sampling frequency [Hz]
     set_field('use_rectangles',1);  % use rectangular elements
