@@ -157,6 +157,14 @@ das_gpu_frameloop_chunk_time = zeros(length(n_frame), 1);
 for n=1:length(n_frame)
     % replicate frames
     channel_data.data=repmat(channel_data.data(:,:,:,1),[1 1 1 n_frame(n)]);
+
+    % Time USTB's GPU implementation - frameloop
+    proc            = midprocess.das();
+    proc.code       = code.matlab_gpu_frameloop;
+    proc.dimension  = dimension.both;
+    tic
+    [~]          = pipe.go({proc});
+    das_gpu_frameloop_time(n) = toc;
     
     % Time USTB's MEX implementation
     proc            = midprocess.das();
@@ -165,39 +173,22 @@ for n=1:length(n_frame)
     tic
     [~]          = pipe.go({proc});
     das_mex_time(n) = toc;
+
+    % Plot the runtimes
+    figure(101); hold on; grid on; box on;
+    plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2);
+    plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2);
+
+    for nn=1:length(n_frame)
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn)));
+        text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn)));
+    end
+    legend('DAS GPU - frameloop', 'das MEX', 'Location','NorthWest');
+    xlabel('Delay operations [10^9]');
+    ylabel('Elapsed time [s]');
+    set(gca,'fontsize', 12)
     
-    % Time USTB's GPU implementation - frameloop chunk
-    proc            = midprocess.das();
-    proc.code       = code.matlab_gpu_frameloop_chunk;
-    proc.dimension  = dimension.both;
-    tic
-    [~]          = pipe.go({proc});
-    das_gpu_frameloop_chunk_time(n) = toc
-    
-    % Time USTB's GPU implementation - frameloop
-    proc            = midprocess.das();
-    proc.code       = code.matlab_gpu_frameloop;
-    proc.dimension  = dimension.both;
-    tic
-    [~]          = pipe.go({proc});
-    das_gpu_frameloop_time(n) = toc
 end
 
-% Plot the runtimes
-figure(101); hold on; grid on; box on;
-%plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_time(1:n),'go-','linewidth',2);
-plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_chunk_time(1:n),'go-','linewidth',2);
-plot(n_frame(1:n)*do_per_frame/1e9,das_gpu_frameloop_time(1:n),'bs-','linewidth',2);
-plot(n_frame(1:n)*do_per_frame/1e9,das_mex_time(1:n),'ro-','linewidth',2);
 
-for nn=1:length(n_frame)
-%     text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_time(nn)-5,sprintf('%0.2f s',das_gpu_time(nn)));
-    text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_chunk_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_chunk_time(nn)));
-    text(n_frame(nn)*do_per_frame/1e9+0.1,das_gpu_frameloop_time(nn)-5,sprintf('%0.2f s',das_gpu_frameloop_time(nn)));
-    text(n_frame(nn)*do_per_frame/1e9+0.1,das_mex_time(nn)-5,sprintf('%0.2f s',das_mex_time(nn)));
-end
-legend('das MEX', 'DAS GPU - frameloop',  'DAS GPU - frameloop chunk',  'Location','NorthWest');
-xlabel('Delay operations [10^9]');
-ylabel('Elapsed time [s]');
-set(gca,'fontsize', 12)
 
