@@ -77,7 +77,7 @@ else
     end
     
     switch class_name
-        case {'double' 'single'}
+        case {'double' 'single' 'int16'}
             if ~h5readatt(filename, location, 'complex')
                 object=h5read(filename, location);
             else
