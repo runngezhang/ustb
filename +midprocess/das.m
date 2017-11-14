@@ -133,12 +133,8 @@ classdef das < midprocess
             if any(data(:)>0) % only process if any data > 0
                 
                 switch h.code
-                    % ==========================
-                    %
-                    %           MEX
-                    %
-                    % ==========================
-                    case code.mex %#ok<PROP>
+                    %% MEX
+                    case code.mex 
                         aux_data=mex.das_c(data,...
                                            sampling_frequency,...
                                            initial_time,...
@@ -149,11 +145,7 @@ classdef das < midprocess
                                            modulation_frequency,...
                                            int32(h.dimension));
                
-                    % ==========================
-                    %
-                    %          MATLAB
-                    %
-                    % ==========================
+                    %% MATLAB
                     case code.matlab 
                         % workbar
                         tools.workbar();
@@ -199,11 +191,7 @@ classdef das < midprocess
                             end
                         end
                         
-                    % =====================================
-                    %
-                    %         MATLAB GPU FRAMELOOP
-                    %
-                    % =====================================
+                    %% MATLAB GPU FRAMELOOP
                     case code.matlab_gpu_frameloop
                         
                         % clear GPU memory and show basic info
