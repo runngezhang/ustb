@@ -1,9 +1,11 @@
 classdef das < midprocess
     %DAS   Implementation of USTB DAS general beamformer
     %
-    %   authors: Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %   authors:    Alfonso Rodriguez-Molares (alfonso.r.molares@ntnu.no)
+    %               Ole Marius Hoel Rindal <olemarius@olemarius.net>
+    %               Stefano Fiorentini <stefano.fiorentini@ntnu.no>
     %
-    %   $Last updated: 2017/09/22$
+    %   $Last updated: 2017/11/14$
     
     %% Additional properties
     properties
@@ -16,8 +18,8 @@ classdef das < midprocess
         function h=das()
             h.name='USTB DAS General Beamformer';
             h.reference= 'www.ustb.no';
-            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.12';
+            h.implemented_by={'Stefano Fiorentini <stefano.fiorentini@ntnu.no>', 'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
+            h.version='v1.0.13';
         end
     end
     
