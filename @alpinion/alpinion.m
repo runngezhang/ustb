@@ -100,26 +100,7 @@ classdef alpinion < handle
                 xlabel('f [MHz]');
                 ylabel('Relative amplitude');
                 title('After bandpass filter');
-            end
-            
-            
-        end
-        
-        function data_out = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data)
-            % First do a sinc interpolation
-            t_in_interp = linspace(t_in(1),t_in(end)+((interpolation_factor-1)/interpolation_factor)*(1/channel_data.sampling_frequency),length(t_in)*interpolation_factor); 
-            data_tx_interpolated = interpft(double(data_in),length(t_in)*interpolation_factor);
-            %%
-            %                     channel = 64;
-            %                     figure(99);clf;hold all;
-            %                     subplot(211);hold all
-            %                     plot(t_in_interp,data_tx_interpolated(:,channel),'Displayname','interpolated');
-            %                     plot(t_in,data_tx(:,channel),'Displayname','original');
-            %                     subplot(212);hold all
-            
-            %%
-            % read data
-            data_out=interp1(t_in_interp,data_tx_interpolated,t_out,'linear',0);
+            end  
         end
     end
 end

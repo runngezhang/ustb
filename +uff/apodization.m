@@ -267,7 +267,7 @@ classdef apodization < uff
                 % is dependant on the pixel location according to 10.1109/TUFFC.2015.007183 
                 % (TODO: this is assuming a flat aperture, not accurate for curvilinear probes)
                 for n=1:length(h.sequence)
-                    if isinf(h.sequence(n).source.distance)
+                    if (h.sequence(n).wavefront==uff.wavefront.plane||isinf(h.sequence(n).source.distance))
                         element(:,1)=h.focus.x+h.focus.z*tan(h.sequence(n).source.azimuth);
                         element(:,2)=h.focus.y+h.focus.z*tan(h.sequence(n).source.elevation);
                     else

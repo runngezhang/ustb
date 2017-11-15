@@ -79,9 +79,8 @@ angles=linspace(-0.3,0.3,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
-    
+    seq(n).wavefront=uff.wavefront.plane;
     seq(n).source.azimuth=angles(n);
-    seq(n).source.distance=Inf;
     
     seq(n).probe=prb;
     

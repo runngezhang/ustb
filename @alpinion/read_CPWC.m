@@ -39,7 +39,8 @@ channel_data.probe.N = double(System.Transducer.elementCnt);
 channel_data.probe.pitch = double(System.Transducer.elementPitchCm)/100;
 
 % Save Pulse
-channel_data.pulse = uff.pulse(double(Tw{1}.freqMHz*10^6));
+channel_data.pulse = uff.pulse();
+channel_data.pulse.center_frequency = double(Tw{1}.freqMHz*10^6);
 
 % Read data
 load([h.data_folder,'/',frame_filename_sorted{1}]);
@@ -72,13 +73,12 @@ for frame = 1:N_frames
         
         %Compensate for steering regarding t0
         D = abs(channel_data.probe.geometry(1,1)-channel_data.probe.geometry(end,1));
-        q = abs((D/2)*sin(seq(transmission).source.azimuth));
+        q = abs((D/2)*sin(channel_data.sequence(transmission).source.azimuth));
         
-        t_in=time-q/(channel_data.sound_speed)-System.Transducer.delayOffsetUsec*10^-6;
-        v_aux=interp1(t_in,rfData,time,'linear',0);
+        channel_data.sequence(transmission).delay = -(q./channel_data.sound_speed-System.Transducer.delayOffsetUsec*10^-6);
         
         % build the dataset
-        all_data(:,:,transmission,frame)=v_aux;
+        all_data(:,:,transmission,frame)=rfData;
     end
 end
 

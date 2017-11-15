@@ -17,10 +17,6 @@ classdef verasonics < handle
 
         
         % Some helpful parameters
-        Fs                     % The sampling frequency in Hz
-        f0                     % The center frequency in Hz
-        c0                     % The speed of sound in m/s
-        lambda                 % The wavelength in m
         number_of_frames       % The desired number of frames wanted
         frame_order            % The order of the frame in RcvData
         
@@ -33,6 +29,12 @@ classdef verasonics < handle
         %
     end
     
+    properties (Dependent) 
+        Fs                     % The sampling frequency in Hz
+        f0                     % The center frequency in Hz    
+        c0                     % The speed of sound in m/s
+        lambda                 % The wavelength in m
+    end
     %% Constructor
     methods (Access = public)
         function h = verasonics()
@@ -46,27 +48,40 @@ classdef verasonics < handle
         function set.Trans(h,Trans)
             assert(strcmp(Trans.units,'mm'),'Please use mm as units in Verasonics.');
             h.Trans = Trans;
-            h.f0 = Trans.frequency*10^6;
         end
         
         function set.Receive(h,Receive)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
-            h.Receive = Receive;
-            h.Fs = h.f0*Receive(1).samplesPerWave;
+            h.Receive = Receive; 
             if isfield(Receive,'aperture') == 0 % Then this is a no-mux probe and we set this to one
                 h.Receive(1).aperture = 1;
             end
         end
         
         function set.Resource(h,Resource)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
             h.Resource = Resource;
-            h.c0 = Resource.Parameters.speedOfSound;
-            h.lambda = h.c0/h.f0;
         end
+        
         function set.TW(h,TW)
-            assert(isempty(h.Trans)==0,'Please set the Trans variable first.');
-            h.TW=TW;
+            h.TW=TW;    
+        end
+        
+        function Fs = get.Fs(h)
+            assert(isempty(h.Receive)==0,'To get Fs Receive needs to be set.');
+            Fs = h.f0*h.Receive(1).samplesPerWave;
+        end
+        
+        function f0 = get.f0(h)
+            assert(isempty(h.TW)==0,'To get f0 TW need to be set.');
+            f0 = double(h.TW.Parameters(1)*1e6);
+        end
+        
+        function lambda = get.lambda(h)
+            lambda = h.c0/h.f0;
+        end
+        
+        function c0 = get.c0(h)
+            assert(isempty(h.TW)==0,'To get c0 Resource need to be set.');
+            c0 = h.Resource.Parameters.speedOfSound;
         end
         
         function frame_order = get.frame_order(h)
@@ -87,9 +102,9 @@ classdef verasonics < handle
     % Private methods
     methods (Access = private)
         
-        % Calculate the offset time from start of transmitted pulse to
+        % Calculate the offset distance from start of transmitted pulse to
         % center of pulse and compensate for the lens correction
-        function offset_time = calculate_delay_offset(h)
+        function offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h)
             % offset calculation
             offset_distance=(h.TW.peak)*h.lambda;   % in [m]
             if strcmp(h.Trans.units,'mm')
@@ -97,12 +112,11 @@ classdef verasonics < handle
             elseif strcmp(h.Trans.units,'wavelengths')
                 offset_distance=offset_distance+2*h.Trans.lensCorrection*h.lambda;
             end
-            offset_time=offset_distance/h.c0;   % in [s]
         end
         
         % Generate a USTB probe object from the Verasonics parameters
         function prb = create_probe_object(h)
-            if strcmp(h.Trans.name,'L7-4') || strcmp(h.Trans.name,'P4-2v') || strcmp(h.Trans.name,'L11-4v')
+            if strcmp(h.Trans.name,'L7-4') || strcmp(h.Trans.name,'P4-2v') || strcmp(h.Trans.name,'L11-4v') || strcmp(h.Trans.name,'GE9L-D')
                 prb=uff.linear_array();
                 prb.N=h.Trans.numelements;                  % number of elements
                 prb.pitch=h.Trans.spacingMm/1000;           % probe pitch in azimuth [m]
@@ -112,7 +126,7 @@ classdef verasonics < handle
             end
         end
         
-        function trans_delays = calculate_trans_delays(h,channel_data,n_tx)
+        function trans_delays = calculate_trans_delays_in_m(h,channel_data,n_tx)
             %% Stolen from the computeTXDelays ;)
             % Hacked to work for the Verasonics definition of linear_array transmit focus with azimuth = 0
             % Delays are returned in seconds
@@ -131,26 +145,7 @@ classdef verasonics < handle
             %plot(D); hold on;
             %plot(h.TX(n_tx).Delay*h.lambda)
             
-            trans_delays = D/channel_data.sound_speed;
-        end
-        
-
-        
-        function data_out = time_shift_data(h,data_in,t_in,t_out,interpolation_factor,channel_data)
-            % First do a interpolation to avoid bug described in Issue #16
-            t_in_interp = linspace(t_in(1),t_in(end)+((interpolation_factor-1)/interpolation_factor)*(1/channel_data.sampling_frequency),length(t_in)*interpolation_factor); 
-            data_tx_interpolated = single(interpft(double(data_in),length(t_in)*interpolation_factor));
-            %%
-            %                     channel = 64;
-            %                     figure(99);clf;hold all;
-            %                     subplot(211);hold all
-            %                     plot(t_in_interp,data_tx_interpolated(:,channel),'Displayname','interpolated');
-            %                     plot(t_in,data_tx(:,channel),'Displayname','original');
-            %                     subplot(212);hold all
-            
-            %%
-            % then do the 
-            data_out=single(interp1(t_in_interp,data_tx_interpolated,t_out,'linear',0));
+            trans_delays = D;
         end
     end
 end

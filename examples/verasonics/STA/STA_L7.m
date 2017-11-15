@@ -39,7 +39,7 @@ pixels=[255 255];
 
 %% SI units
 c0=1540;                % reference speed of sound [m/s]
-f0=5.1e6;               % central frequency [Hz]
+f0=5.2e6;               % central frequency [Hz]
 ex_cycles = 2.5;        % number of cycles of the excitation signal
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element
 ex_polarity = 1;        % easy way of changing the polarity
@@ -73,7 +73,7 @@ SFormat.theta = 0;
 SFormat.numRays = 1;      % no. of Rays (1 for Flat Focus)
 SFormat.FirstRayLoc = [0,0,0];   % x,y,z
 SFormat.rayDelta = 192*Trans.spacing;  % spacing in radians(sector) or dist. between rays (wvlnghts)
-SFormat.startDepth = 2;   % Acquisition depth in wavelengths
+SFormat.startDepth = 0;   % Acquisition depth in wavelengths
 SFormat.endDepth = 3*128;%192;   % This should preferrably be a multiple of 128 samples.
 
 %% Specify PData structure array.
@@ -273,9 +273,6 @@ VSX;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Converting data format to USTB');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% converting the format to USTB
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Converting data format to USTB');
 %% create USTB data class structure with Verasonics class
 ver = verasonics();
 % The Verasonics class needs these structs to create a USTB dataset

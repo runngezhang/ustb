@@ -118,9 +118,9 @@ end
 % for i = 1:length(TX)
 %    Media.MP(i,:) = [TX(i).Origin(1),0,100,1];
 % end
-% Media.MP(1,:) = [0,0,100,1]
-pt1;
-Media.numPoints = length(Media.MP);
+Media.MP(1,:) = [0,0,100,1]
+%pt1;
+%Media.numPoints = length(Media.MP);
 %Media.function = 'movePoints';
 
 

@@ -61,7 +61,7 @@ te = (-pulse_duration/2/f0): dt : (pulse_duration/2/f0);
 excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
-lag = length(two_way_ir)/2;   
+lag = length(two_way_ir)/2+1;   
 
 % show the pulse to check that the lag estimation is on place (and that the pulse is symmetric)
 figure;
@@ -105,11 +105,11 @@ apo=ones(1,N_active);
 %% Pantom with simple point creating the PSF
 phantom_positions(1,:) = [0 0 z_focus];
 phantom_amplitudes(1) = 1;
-cropat=round(1.1*2*sqrt((max(phantom_positions(:,1))-min(probe.x))^2+max(phantom_positions(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% output data
-t_out=0:dt:((cropat-1)*dt);                 % output time vector
+cropat=round(1.1*2*sqrt((max(phantom_positions(:,1))-min(probe.x))^2+max(phantom_positions(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 STA=zeros(cropat,probe.N,no_lines);    % impulse response channel data
+
 %% Compute STA signals
 disp('Field II: Computing FI dataset');
 
@@ -145,17 +145,20 @@ parfor n=1:no_lines
 
     % do calculation
     [v,t]=calc_scat_multi(Th, Rh, phantom_positions, phantom_amplitudes);
-    time(n) = t;
-    % compensate for varying t from Field II and pulse lag
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
-    v_aux=interp1(t_in,v,t_out,'linear',0);
+
+    % save data -> with parloop we need to pad the data
+    if size(v,1)<cropat
+        STA(:,:,n)=padarray(v,[cropat-size(v,1) 0],0,'post');    
+    else
+        STA(:,:,n)=v(1:cropat,:);
+    end
     
     %% SEQUENCE GENERATION
     seq(n)=uff.wave();
     seq(n).probe=probe;
     seq(n).source.xyz=[x 0 z_focus];
     seq(n).sound_speed=c0;
-    STA(:,:,n)=v_aux;    
+    seq(n).delay = -lag*dt+t;
 end
 
 
@@ -173,7 +176,7 @@ clear STA;
 
 %% Run Fresnel beamformer to compare
 
-% Frenel Phantom
+% Fresnel Phantom
 pha=uff.phantom();
 pha.sound_speed=c0;            % speed of sound [m/s]
 pha.points=[0,  0, z_focus, 1];    % point scatterer position [m] 
@@ -182,13 +185,16 @@ sim=fresnel();
 
 % Setting up Frenel simulation
 sim.phantom=pha;                % phantom
-sim.pulse=pulse;                  % transmitted pulse
-sim.probe=probe;                  % probe
+sim.pulse=pulse;                % transmitted pulse
+sim.probe=probe;                % probe
 sim.sequence=seq;               % beam sequence
 sim.sampling_frequency=41.6e6;  % sampling frequency [Hz]
 
 % we launch the simulation
 channel_data_fresnel=sim.go();
+
+channel_data_fresnel.plot([],127);title('Fresnel')
+channel_data.plot([],127); title('Field II')
 
 %% Create Scan
 z_axis = linspace(35e-3,45e-3,200).';

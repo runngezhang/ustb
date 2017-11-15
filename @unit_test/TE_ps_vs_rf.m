@@ -30,18 +30,7 @@ function ok = TE_ps_vs_rf(h)
         seq(n).probe=prb;
         seq(n).sound_speed=s.c0;
         seq(n).source.xyz=s.source(n,:);
-    end
-    
-    % converting time vector standards
-    data=zeros(size(s.data));
-    for n=1:length(s.source)
-        delay=-seq(n).source.distance/s.c0;
-        if exist('s.modulation_frequency')
-            pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
-        else
-            pcf=1;
-        end
-        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
+        seq(n).delay=-seq(n).source.distance/s.c0;
     end
     
     % RAW DATA
@@ -51,7 +40,7 @@ function ok = TE_ps_vs_rf(h)
     r_data.initial_time=s.time(1);
     r_data.sampling_frequency=1/(s.time(2)-s.time(1));
     r_data.sound_speed=s.c0;
-    r_data.data=data;
+    r_data.data=s.data;
     
     % BEAMFORMER
     pipe=pipeline();
