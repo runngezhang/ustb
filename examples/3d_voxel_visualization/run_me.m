@@ -33,8 +33,8 @@ data = 20*log10(data);
 
 % === the intensity is converted into transparency values instead of grascale values ===
 
-AlphaInd = (data - Again)/Adyn;
-AlphaInd(data<Again)  = 0.25e-2;
+AlphaInd = (data - gain)/dyn;
+AlphaInd(data<gain)  = 0.1e-2;
 AlphaInd(isnan(data)) = 0;
 AlphaInd(AlphaInd>1)  = 1;
 
@@ -47,7 +47,7 @@ set(gca, 'GridLineStyle', ':')
 set(gca, 'GridAlpha', 0.5)
 set(gca, 'Xdir', 'Reverse')
 set(gca, 'Zdir', 'Reverse')
-axis equal
+axis equal tight
 
 if use_painters
     set(gcf, 'renderer', 'painters')
