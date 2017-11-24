@@ -6,8 +6,8 @@ clc
 
 load('3d_data.mat')
 
-dyn  = 60;
-gain = -90;
+dyn  = 45;
+gain = -100;
 
 use_painters = false; % set to true for best visualization effect, but really slow           
 
@@ -33,18 +33,25 @@ data = 20*log10(data);
 
 % === the intensity is converted into transparency values instead of grascale values ===
 
-AlphaInd = (data - gain)/dyn;
-AlphaInd(data<gain)  = 0.1e-2;
+ColorInd = reshape(ind2rgb(reshape(cast(256*(data-gain)/dyn, 'uint8'), [numel(data),1]), gray(256)), [size(data), 3]);
+
+AlphaInd = ones(size(data));
+AlphaInd(data<gain)   = 0;
 AlphaInd(isnan(data)) = 0;
-AlphaInd(AlphaInd>1)  = 1;
 
 
-vol3d('CData', repmat(permute([0.15, 0.15, 0.15], [1, 3, 4, 2]), size(Rq)), 'Alpha', AlphaInd, ...
+h = vol3d('CData', ColorInd, 'Alpha', AlphaInd, ...
     'XData', [min(xq), max(xq)], 'YData', [min(yq), max(yq)], 'ZData', [min(zq), max(zq)]);
 grid on
+set(gcf, 'Color', 'k')
+set(gca, 'Color', 'none')
+set(gca, 'XColor', 'w')
+set(gca, 'YColor', 'w')
+set(gca, 'ZColor', 'w')
 set(gca, 'box', 'on')
 set(gca, 'GridLineStyle', ':')
-set(gca, 'GridAlpha', 0.5)
+set(gca, 'GridColor', 'w')
+set(gca, 'GridAlpha', 0.75)
 set(gca, 'Xdir', 'Reverse')
 set(gca, 'Zdir', 'Reverse')
 axis equal tight
