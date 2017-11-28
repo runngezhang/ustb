@@ -35,6 +35,8 @@ classdef apodization < uff
         
         origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
+        minimum_aperture = 1e-3;        % minimum aperture to be used if dynamic expanding aperture goes zeros
+        
     end
     
     %% optional properties
@@ -103,7 +105,22 @@ classdef apodization < uff
     
     methods
         function value=rectangular(h,dist,aperture)
+           %%
             value=double(dist<=aperture/2);
+            dist_matrix = reshape(dist,512,256,128);
+            aperture_matrix = reshape(aperture,512,256,128);
+            value_matrix = reshape(value,512,256,128);
+            el_pos_matrix = reshape(h.element_position_matrix(:,:,1),512,256,128);
+            el = 64;
+           %%
+            figure(11)
+           subplot(311)
+           imagesc(el_pos_matrix(:,:,2));colorbar
+           title('dist');
+           subplot(312)
+           imagesc(aperture_matrix(:,:,el)/2);colorbar
+           subplot(313)
+           imagesc(value_matrix(:,:,el));colorbar
         end
         function value=hanning(h,dist,aperture)
             value=double(dist<=aperture/2).*(0.5 + 0.5*cos(2*pi*dist./aperture));
@@ -148,7 +165,7 @@ classdef apodization < uff
                 dist=sqrt((h.probe.x-h.origo.x).^2+(h.probe.y-h.origo.y).^2+(h.probe.z-h.origo.z).^2);
                 h.data_backup=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
             elseif (h.window==uff.window.scanline)
-            % SCALINE APODIZATION (MLA scanlines per wave)
+            % SCANLINE APODIZATION (MLA scanlines per wave)
                 assert(numel(h.sequence)>0,'uff.apodization:Scanline','The SEQUENCE parameter must be set to use uff.window.scanline apodization.');
                 if isa(h.focus,'uff.linear_scan')
                     N_waves=numel(h.sequence);
@@ -181,7 +198,14 @@ classdef apodization < uff
                 % computing aperture
                 Aperture_x=(abs(h.focus.z)./h.f_number(1))*ones(1,h.N_elements);
                 Aperture_y=(abs(h.focus.z)./h.f_number(2))*ones(1,h.N_elements);
-
+                %Aperture_x(Aperture_x<h.minimum_aperture) = h.minimum_aperture;
+                %Aperture_y(Aperture_y<h.minimum_aperture) = h.minimum_aperture;
+                
+                %%
+%                 ap_x = reshape(x_dist,512,256,128);
+% 
+%                 figure;imagesc(ap_x(:,:,64))
+                %%
                 % SWITCH
                 switch(h.window)
                     % BOXCAR/FLAT/RECTANGULAR
