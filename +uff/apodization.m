@@ -110,13 +110,12 @@ classdef apodization < uff
             dist_matrix = reshape(dist,512,256,128);
             aperture_matrix = reshape(aperture,512,256,128);
             value_matrix = reshape(value,512,256,128);
-            el_pos_matrix = reshape(h.element_position_matrix(:,:,1),512,256,128);
             el = 64;
            %%
             figure(11)
            subplot(311)
-           imagesc(el_pos_matrix(:,:,2));colorbar
-           title('dist');
+           imagesc(dist_matrix(:,:,2));colorbar
+           title('x_dist');
            subplot(312)
            imagesc(aperture_matrix(:,:,el)/2);colorbar
            subplot(313)
