@@ -293,5 +293,33 @@ classdef apodization < uff
             end
         
         end
+        
+        %% display methods 
+        function figure_handle=plot(h,figure_handle_in,n_wave)
+            % PLOT Plots channel data
+            if nargin>1 && not(isempty(figure_handle_in))
+                figure_handle=figure(figure_handle_in);
+            else
+                figure_handle=figure();
+            end
+            
+            if nargin <3
+                n_wave=round(size(h.data,2)/2);
+            end
+            
+            colorMap = tools.inferno;
+            
+            if isa(h.focus,'uff.linear_scan')
+                imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n_wave),[h.focus.N_z_axis h.focus.N_x_axis]))
+                xlabel('x [mm]');
+                ylabel('z [mm]');
+                set(gca,'Ydir','reverse');
+                set(gca,'fontsize',14);
+                colorbar;
+                title(sprintf('Apodization values for %d wave',n_wave));
+            else
+                error('Only apodization plot for uff.linear_scan are supported for now.');
+            end
+        end
     end
 end
