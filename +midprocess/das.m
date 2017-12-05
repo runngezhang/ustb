@@ -105,7 +105,7 @@ classdef das < midprocess
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
             data=single(h.channel_data.data);
-            if ~(w0>eps)
+            if ~(abs(w0)>eps)
                 data=single(reshape(hilbert(single(h.channel_data.data(:,:))),size(h.channel_data.data)));
             end
             
@@ -171,7 +171,7 @@ classdef das < midprocess
                                         temp = bsxfun(@times,apodization,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
                                         
                                         % apply phase correction factor to IQ data
-                                        if(w0>eps) 
+                                        if(abs(w0)>eps) 
                                             temp = bsxfun(@times,exp(1i.*w0*delay),temp);
                                         end
                                         
@@ -241,7 +241,7 @@ classdef das < midprocess
                                 end
                                 
                                 % If IQ data, multiply apod_gpu by a phase correction factor
-                                if (w0_gpu > eps)
+                                if (abs(w0_gpu) > eps)
                                     apod_gpu = exp(1i.*w0_gpu*delay_gpu).*apod_gpu;
                                 end
                                 
@@ -281,7 +281,7 @@ classdef das < midprocess
                 end % end switch
                 
                 % assign phase according to 2 times the receive propagation distance
-                if ( w0 > eps )
+                if ( abs(w0) > eps )
                     aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
                 end
                 

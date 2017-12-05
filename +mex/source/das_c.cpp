@@ -42,7 +42,7 @@
 #define TX 2
 #define BOTH 3
 
-#define VERSION "1.1.1"
+#define VERSION "1.1.2"
 
 // types
 typedef std::vector<float*> vec_p_float; // change to single
@@ -193,7 +193,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (mxIsDouble(M_APO_RX)) mexErrMsgTxt("The transmiy delays should be single precision");
     
     ///////////////////////////////////////
-    // FREQUENCY
+    // SAMPLING FREQUENCY
     ///////////////////////////////////////
     // dimensions
     const size_t len_Fs = mxGetNumberOfElements(M_FS);
@@ -231,7 +231,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     float wd = 0;
     bool IQ_version = false;
-    if (fd > EPS) {
+    if (abs(fd) > EPS) {
         if (!complex_data) mexErrMsgTxt("The modulation frequency > 0 but the input data is real. Check inputs.");
         wd =  2 * (float)PI * fd;
         IQ_version = true;
