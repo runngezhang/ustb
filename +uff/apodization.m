@@ -35,6 +35,7 @@ classdef apodization < uff
         
         origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
+        minimum_aperture = [1e-3 1e-3]  % minimum aperture size in the [x y] direction
     end
     
     %% optional properties
@@ -46,7 +47,6 @@ classdef apodization < uff
     properties  (Dependent)   
         data                        % apodization data 
         propagation_distance        % distance from the origin to the pixel
-        element_position_matrix     % location of the elements as seen by the pixels [x y z] [m m m]
         N_elements                  % number of elements (real or synthetic)
     end
     
@@ -102,17 +102,18 @@ classdef apodization < uff
     end
     
     methods
-        function value=rectangular(h,dist,aperture)
-            value=double(dist<=aperture/2);
+        % angular version
+        function value=rectangular(h,ratio)
+            value=double(ratio<=0.5);
         end
-        function value=hanning(h,dist,aperture)
-            value=double(dist<=aperture/2).*(0.5 + 0.5*cos(2*pi*dist./aperture));
+        function value=hanning(h,ratio)
+            value=double(ratio<=0.5).*(0.5 + 0.5*cos(2*pi*ratio));
         end
-        function value=hamming(h,dist,aperture)
-            value=double(dist<=aperture/2).*(0.53836 + 0.46164*cos(2*pi*dist./aperture));
+        function value=hamming(h,ratio)
+            value=double(ratio<=0.5).*(0.53836 + 0.46164*cos(2*pi*ratio));
         end
-        function value=tukey(h,dist,aperture,roll)
-            value=(dist<=(aperture/2*(1-roll))) + (dist>(aperture/2*(1-roll))).*(dist<(aperture/2)).*0.5.*(1+cos(2*pi/roll*(dist./aperture-roll/2-1/2)));
+        function value=tukey(h,ratio, roll)
+            value=(ratio<=(1/2*(1-roll))) + (ratio>(1/2*(1-roll))).*(ratio<(1/2)).*0.5.*(1+cos(2*pi/roll*(ratio-roll/2-1/2)));
         end
     end
     
@@ -174,41 +175,37 @@ classdef apodization < uff
                     error('uff.apodization:Scanline','The scan class does not support scanline based beamforming. This must be done manually, defining several scan and setting the apodization to uff.window.none.');
                 end
             else
-                % compute lateral distance 
-                x_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,1),h.origin(:,1)));
-                y_dist=abs(bsxfun(@minus,h.element_position_matrix(:,:,2),h.origin(:,2)));
 
-                % computing aperture
-                Aperture_x=(abs(h.focus.z)./h.f_number(1))*ones(1,h.N_elements);
-                Aperture_y=(abs(h.focus.z)./h.f_number(2))*ones(1,h.N_elements);
-
+                % incidence ratio
+                [ratio_theta ratio_phi]=h.incidence_ratios();
+                
                 % SWITCH
                 switch(h.window)
                     % BOXCAR/FLAT/RECTANGULAR
                     case uff.window.boxcar
-                        h.data_backup=h.rectangular(x_dist,Aperture_x).*h.rectangular(y_dist,Aperture_y);
+                        h.data_backup=h.rectangular(ratio_theta).*h.rectangular(ratio_phi);
                     % HANNING
                     case uff.window.hanning
-                        h.data_backup=h.hanning(x_dist,Aperture_x).*h.hanning(y_dist,Aperture_y);
+                        h.data_backup=h.hanning(ratio_theta).*h.hanning(ratio_phi);
                     % HAMMING
                     case uff.window.hamming
-                        h.data_backup=h.hamming(x_dist,Aperture_x).*h.hamming(y_dist,Aperture_y);
+                        h.data_backup=h.hamming(ratio_theta).*h.hamming(ratio_phi);
                     % TUKEY25        
                     case uff.window.tukey25
                         roll=0.25;
-                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                        h.data_backup=h.tukey(ratio_theta,roll).*h.tukey(ratio_phi,roll);
                     % TUKEY50        
                     case uff.window.tukey50
                         roll=0.50;
-                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                        h.data_backup=h.tukey(ratio_theta,roll).*h.tukey(ratio_phi,roll);
                     % TUKEY75        
                     case uff.window.tukey75
                         roll=0.75;
-                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                        h.data_backup=h.tukey(ratio_theta,roll).*h.tukey(ratio_phi,roll);
                     % TUKEY80        
                     case uff.window.tukey80
                         roll=0.80;
-                        h.data_backup=h.tukey(x_dist,Aperture_x,roll).*h.tukey(y_dist,Aperture_y,roll);
+                        h.data_backup=h.tukey_ang(ratio_theta,roll).*h.tukey_ang(ratio_phi,roll);
                     otherwise
                         error('Unknown apodization type!');
                 end
@@ -256,32 +253,60 @@ classdef apodization < uff
             value=sqrt(sum(([h.focus.x-h.origin(:,1) h.focus.y-h.origin(:,2) h.focus.z-h.origin(:,3)]).^2,2));
         end
         
-        function value=get.element_position_matrix(h)
+        function [ratio_theta ratio_phi]=incidence_ratios(h)
             if isempty(h.sequence)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-                value(:,:,1)=ones(h.focus.N_pixels,1)*(h.probe.x.'); 
-                value(:,:,2)=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
-                value(:,:,3)=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
+                x=ones(h.focus.N_pixels,1)*(h.probe.x.'); 
+                y=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
+                z=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
+                
+                % distances
+                x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
+                z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                
+                % clamping z=0
+                z_dist(abs(z_dist)<1e-6)=1e-6;
+                
+                % azimuth and elevation tangents
+                tan_theta = x_dist./z_dist;
+                tan_phi = y_dist./z_dist;
+
             else
-                % the transmit aperture in a synthetic scenario (CPWC, DW)
-                % is dependant on the pixel location according to 10.1109/TUFFC.2015.007183 
-                % (TODO: this is assuming a flat aperture, not accurate for curvilinear probes)
                 for n=1:length(h.sequence)
+                    % plane wave
                     if (h.sequence(n).wavefront==uff.wavefront.plane||isinf(h.sequence(n).source.distance))
-                        element(:,1)=h.focus.x+h.focus.z*tan(h.sequence(n).source.azimuth);
-                        element(:,2)=h.focus.y+h.focus.z*tan(h.sequence(n).source.elevation);
+                        z_dist(:,n)=h.focus.z;
+                        % clamping z=0
+                        z_dist(abs(z_dist)<1e-6)=1e-6;
+                        tan_theta(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.azimuth;
+                        tan_phi(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.elevation;
+                    % diverging or converging waves
                     else
-                        element(:,1)=h.sequence(n).source.x-h.sequence(n).source.z*(h.focus.x-h.sequence(n).source.x)./(h.focus.z-h.sequence(n).source.z);
-                        element(:,2)=h.sequence(n).source.y-h.sequence(n).source.z*(h.focus.y-h.sequence(n).source.y)./(h.focus.z-h.sequence(n).source.z);
+                        % distances
+                        x_dist=h.focus.x-h.sequence(n).source.x;
+                        y_dist=h.focus.y-h.sequence(n).source.y;
+                        z_dist(:,n)=h.focus.z-h.sequence(n).source.z;
+                        % clamping z=0
+                        z_dist(abs(z_dist)<1e-6)=1e-6;
+                        % azimuth and elevation tangents
+                        tan_theta(:,n) = x_dist./z_dist(:,n);
+                        tan_phi(:,n) = y_dist./z_dist(:,n);
                     end
-                    element(:,3)=0;
-                    element(isnan(element))=0; % solve divisions by 0
-                    
-                    value(:,n,1)=element(:,1);
-                    value(:,n,2)=element(:,2);
-                    value(:,n,3)=element(:,3);
                 end
             end
+            
+            % ratios
+            ratio_theta = abs(h.f_number(1)*tan_theta);
+            ratio_phi = abs(h.f_number(2)*tan_phi);
+            
+            % minimum aperture
+            min_theta_ratio=abs(z_dist.*tan_theta/h.minimum_aperture(1)); 
+            min_phi_ratio=abs(z_dist.*tan_phi/h.minimum_aperture(2));
+            min_theta_mask=ratio_theta>min_theta_ratio;
+            min_phi_mask=ratio_phi>min_phi_ratio;
+            ratio_theta(min_theta_mask)=min_theta_ratio(min_theta_mask);
+            ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
         end
         
         function value=get.N_elements(h)
@@ -316,6 +341,7 @@ classdef apodization < uff
                 set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 colorbar;
+                caxis([0 1]);
                 title(sprintf('Apodization values for %d wave',n_wave));
             else
                 error('Only apodization plot for uff.linear_scan are supported for now.');
