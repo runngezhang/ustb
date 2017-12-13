@@ -231,7 +231,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     float wd = 0;
     bool IQ_version = false;
-    if (abs(fd) > EPS) {
+    if (std::abs(fd) > EPS) {
         if (!complex_data) mexErrMsgTxt("The modulation frequency > 0 but the input data is real. Check inputs.");
         wd =  2 * (float)PI * fd;
         IQ_version = true;
