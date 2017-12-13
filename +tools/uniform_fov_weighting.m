@@ -1,4 +1,4 @@
-function [apod] = uniform_fov_weighting(mid)
+function [apod,array_gain_compensation,geo_spreading_compensation] = uniform_fov_weighting(mid)
 %UNIFORM_FOV_WEIGHTING Calculate weighting to give uniform field of view
 %   Compensate for the varying number of elements to go into the sum
 
@@ -38,6 +38,13 @@ for n_wave=1:mid.channel_data.N_waves
 end
 tools.workbar(1);
 
-apod = reshape(apod_matrix,mid.scan.N_z_axis,mid.scan.N_x_axis);
+array_gain_compensation = reshape(apod_matrix,mid.scan.N_z_axis,mid.scan.N_x_axis);
+
+%Calculate approximate compensation for r^2 geometrical spreading
+geo_spreading_compensation = (repmat(mid.scan.z_axis,1,512)).^2;
+
+
+apod = geo_spreading_compensation./array_gain_compensation;
+
 end
 
