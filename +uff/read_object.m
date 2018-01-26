@@ -40,6 +40,8 @@ if ~strcmp(file_version, uff.version)
     % Flags to enable backcompatibility. 
     if strcmp(file_version, 'v1.0.0')||strcmp(file_version, 'v1.0.1')
         flag_v10X=true;
+    elseif strcmp(file_version, 'v1.1.0')
+        % nothing to do really
     else
         error('UFF: Unsupported file version (%s). Current UFF version (%s). Please choose a new file instead.',file_version,uff.version);
     end
@@ -75,7 +77,7 @@ else
     end
     
     switch class_name
-        case {'double' 'single'}
+        case {'double' 'single' 'int16'}
             if ~h5readatt(filename, location, 'complex')
                 object=h5read(filename, location);
             else
@@ -86,6 +88,8 @@ else
             object=char(h5read(filename, location));
         case 'uff.window'
             object=uff.window(h5read(filename, location ));
+        case 'uff.wavefront'
+            object=uff.wavefront(h5read(filename, location ));
         case 'cell'
             data_size=h5readatt(filename, location ,'size');
             N=prod(data_size);

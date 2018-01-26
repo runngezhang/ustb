@@ -12,10 +12,6 @@
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun Asokan 
 % Nair <anair8@jhu.edu> 23.02.2017_
 
-%%
-clear all;
-close all;
-
 %% Phantom
 %
 % First step - define our phantom. Here, our phantom is a single point 
@@ -23,8 +19,14 @@ close all;
 % for free!
 
 pha=uff.phantom();
-pha.sound_speed=1540;            % speed of sound [m/s]
-pha.points=[0,  0, 40e-3, 1];    % point scatterer position [m]
+pha.sound_speed=1540;                 % speed of sound [m/s]
+pha.points=[0,  0,  5e-3, 1;...
+            0,  0, 10e-3, 1;...
+            0,  0, 20e-3, 1;...
+            0,  0, 30e-3, 1;...
+            0,  0, 40e-3, 1;...
+             10e-3,  0, 20e-3, 1;...
+            -10e-3,  0, 20e-3, 1];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% Probe
@@ -103,7 +105,7 @@ channel_data=sim.go();
 % which is defined with two axes - the lateral axis and the depth axis. 
 % *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis', linspace(-2e-3,2e-3,200).', 'z_axis', linspace(39e-3,41e-3,100).');
+scan=uff.linear_scan('x_axis', linspace(-19.2e-3,19.2e-3,200).', 'z_axis', linspace(0e-3,45e-3,100).');
 scan.plot(fig_handle,'Scenario');    % show mesh
  
 %% Midprocessor
@@ -117,11 +119,18 @@ mid.dimension = dimension.both;
 mid.channel_data=channel_data;
 mid.scan=scan;
 
-mid.receive_apodization.window=uff.window.tukey50;
-mid.receive_apodization.f_number=1.7;
+F_number=1.7;
+mid.receive_apodization.window=uff.window.hanning;
+mid.receive_apodization.f_number=F_number;
+mid.receive_apodization.minimum_aperture = [3e-3 3e-3];
 
-mid.transmit_apodization.window=uff.window.tukey50;
-mid.transmit_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.hanning;
+mid.transmit_apodization.f_number=F_number;
+mid.transmit_apodization.minimum_aperture = [3e-3 3e-3];
 
 b_data=mid.go();
 b_data.plot();
+
+% check out the transmit and receive apodization maps
+mid.receive_apodization.plot([],64); title('Receive apodization')
+mid.transmit_apodization.plot([],15); title('Transmit apodization')

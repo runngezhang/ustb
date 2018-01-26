@@ -18,9 +18,15 @@
 % a *plot* method
 
 pha=uff.phantom();
-pha.sound_speed=1540;            % speed of sound [m/s]
-pha.points=[0,  0, 40e-3, 1];    % point scatterer position [m]
-fig_handle=pha.plot();             
+pha.sound_speed=1540;                 % speed of sound [m/s]
+pha.points=[0,  0,  5e-3, 1;...
+            0,  0, 10e-3, 1;...
+            0,  0, 20e-3, 1;...
+            0,  0, 30e-3, 1;...
+            0,  0, 40e-3, 1;...
+             10e-3,  0, 20e-3, 1;...
+            -10e-3,  0, 20e-3, 1];    % point scatterer position [m]
+fig_handle=pha.plot();           
              
 %% Probe
 %
@@ -74,14 +80,15 @@ pul.plot([],'2-way pulse');
 % 0.3]$ radians. The *wave* structure has a *plot* method which plots the
 % direction of the transmitted plane-wave.
 
-N=31;                           % number of plane waves
-angles=linspace(-0.3,0.3,N);    % angle vector [rad]
+F_number=1.7;
+alpha_max=1/2/F_number;                
+N=31;                                       % number of plane waves
+angles=linspace(-alpha_max,alpha_max,N);    % angle vector [rad]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
-    
+    seq(n).wavefront=uff.wavefront.plane;
     seq(n).source.azimuth=angles(n);
-    seq(n).source.distance=Inf;
     
     seq(n).probe=prb;
     
@@ -120,7 +127,7 @@ channel_data=sim.go();
 % particular we here use the *linear_scan* structure, which is defined with
 % just two axes. The *plot* method shows the position of the pixels in a 3D
 % scenario.
-scan=uff.linear_scan('x_axis', linspace(-3e-3,3e-3,200).', 'z_axis', linspace(39e-3,43e-3,200).');
+scan=uff.linear_scan('x_axis', linspace(-19.2e-3,19.2e-3,200).', 'z_axis', linspace(0e-3,45e-3,100).');
 scan.plot(fig_handle,'Scenario');    % show mesh
  
 %% Pipeline
@@ -129,15 +136,17 @@ scan.plot(fig_handle,'Scenario');    % show mesh
 % ultrasound image. We now use a USTB structure *pipeline*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
-pipeline=pipeline();
-pipeline.channel_data=channel_data;
-pipeline.scan=scan;
+pipe=pipeline();
+pipe.channel_data=channel_data;
+pipe.scan=scan;
 
-pipeline.receive_apodization.window=uff.window.tukey50;
-pipeline.receive_apodization.f_number=1.7;
+pipe.receive_apodization.window=uff.window.hanning;
+pipe.receive_apodization.f_number=F_number;
+pipe.receive_apodization.minimum_aperture = [3e-3 3e-3];
 
-pipeline.transmit_apodization.window=uff.window.tukey50;
-pipeline.transmit_apodization.f_number=1.7;
+pipe.transmit_apodization.window=uff.window.hanning;
+pipe.transmit_apodization.f_number=F_number;
+pipe.transmit_apodization.minimum_aperture = [3e-3 3e-3];
 
 %% 
 %
@@ -164,7 +173,11 @@ pipeline.transmit_apodization.f_number=1.7;
 % which we can just display by using the method *plot*
 
 % beamforming
-b_data=pipeline.go({midprocess.das() postprocess.coherent_compounding()});
+b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % show
 b_data.plot();
+
+% check out the transmit and receive apodization maps
+pipe.receive_apodization.plot([],64); title('Receive apodization')
+pipe.transmit_apodization.plot([],15); title('Transmit apodization')

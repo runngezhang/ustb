@@ -16,7 +16,7 @@ local_path = [ustb_path(),'/data/']; % location of example data in this computer
 
 tag = 'FI_hyperechoic_scatterers';  % Dataset 1
 %tag = 'FI_hypoechoic';             % Dataset 2
-data_folder  = [local_path,'/Alpinion/FI_linear/',tag];
+data_folder  = [local_path,'Alpinion/FI_linear/',tag];
 
 %% initiate Alpinion object pointing to files with data
 alp = alpinion();

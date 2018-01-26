@@ -74,7 +74,7 @@ seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
     seq(n).probe=prb;
-
+    seq(n).wavefront=uff.wavefront.spherical;
     seq(n).source.xyz=[x_axis(n) 0 z0];
     
     seq(n).apodization=uff.apodization();

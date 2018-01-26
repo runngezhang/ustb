@@ -101,7 +101,7 @@ b_data.plot();
 % *write* of the *uff* class. To do we just have to pass the path to the
 % *uff* file to the *write* method of any uff class.
 
-filename = [data_path() filesep 'test01.uff']; 
+filename = [data_path() filesep 'test02.uff']; 
 b_data.write(filename);
 
 %%

@@ -82,8 +82,11 @@ classdef modified_autocorrelation_displacement_estimation < postprocess
             displacement_data = zeros(size(h.input.data,1),size(h.input.data,2),...
                         size(h.input.data,3),size(h.input.data,4)-h.packet_size+1);
             temp_fc_hat = zeros(size(images));
-                    
+            
+            tools.workbar()
             for i = h.packet_size:h.input.N_frames
+                 tools.workbar(i/h.input.N_frames,'Calculating modified autocorr displacement estimation','Modified autocorr displacement estimation');        
+                
                 % buffer
                 temp_disp = zeros(size(images(:,:,1,1,1)));
                 
@@ -91,6 +94,7 @@ classdef modified_autocorrelation_displacement_estimation < postprocess
                 [temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2),dummy,temp_fc_hat(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2,i-h.packet_size+1)] = modified_pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
                 displacement_data(:,1,1,i-h.packet_size+1) = temp_disp(:);
             end
+            tools.workbar(1)
             h.estimated_center_frequency = temp_fc_hat;
             output.data = displacement_data;
         end

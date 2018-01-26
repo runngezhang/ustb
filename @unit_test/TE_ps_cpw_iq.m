@@ -22,8 +22,7 @@ function ok = TE_ps_cpw_iq(h)
     % PROBE
     prb=probe();
     prb.geometry = s.geom;
-    
-    
+        
     % SEQUENCE 
     for n=1:length(s.angle)
         seq(n)=wave();

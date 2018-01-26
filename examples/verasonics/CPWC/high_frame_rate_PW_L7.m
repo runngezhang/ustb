@@ -60,7 +60,7 @@ uff_filename=[folderdata '/' filedata];
 
 
 % --- Frequently Modified Parameters ------------------------------------------
-P.startDepth = 5;   % Acquisition depth in wavelengths
+P.startDepth = 0;   % Acquisition depth in wavelengths
 P.endDepth = 192;   % This should preferrably be a multiple of 128 samples.
 
 P.numAcqs = 100;      % no. of Acquisitions in a Receive frame (this is a "superframe")

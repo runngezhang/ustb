@@ -36,7 +36,7 @@ dt=1/fs;     % Sampling step [s]
 % Field II simulation program (<field-ii.dk>) is in MATLAB's path. We also
 % pass our set constants to it.
 
-field_init;
+field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
@@ -64,7 +64,8 @@ pulse_duration          = 2.5;             % pulse duration [cycles]
 % *fresnel* simulator's *pulse* structure. We could also use 
 % <http://field-ii.dk/ 'Field II'> for a more accurate model.
 
-pulse = uff.pulse(f0);
+pulse = uff.pulse();
+puse.center_frequency = f0;
 pulse.fractional_bandwidth = 0.65;        % probe bandwidth [1]
 t0 = (-1/pulse.fractional_bandwidth/f0): dt : (1/pulse.fractional_bandwidth/f0);
 impulse_response = gauspuls(t0, f0, pulse.fractional_bandwidth);
@@ -111,14 +112,13 @@ xdc_center_focus(Rh,[0 0 0]);
 
 sca=[0 0 20e-3];             % list with the scatterers coordinates [m]
 amp=1;                       % list with the scatterers amplitudes
-cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 
 %% Output data
 % 
 % We define the variables to store our output data
-
-t_out=0:dt:((cropat-1)*dt);                 % output time vector
+cropat=round(1.1*2*sqrt((max(sca(:,1))-min(probe.x))^2+max(sca(:,3))^2)/c0/dt);   % maximum time sample, samples after this will be dumped
 STA=zeros(cropat,probe.N,probe.N);    % impulse response channel data
+
 %% Compute STA signals
 % 
 % Now, we finally reach the stage where we generate a STA (Synthetic
@@ -140,26 +140,15 @@ for n=1:probe.N
     % do calculation
     [v,t]=calc_scat_multi(Th, Rh, sca, amp);
     
-    % lag compensation
-    t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt + probe.r(n)/c0;
-    v_aux=interp1(t_in,v,t_out,'linear',0);
-
     % build the dataset
-    STA(:,:,n)=v_aux;
+    STA(1:size(v,1),:,n)=v;
     
-    % Sequence generation
-    %     
-    % Now, we shall generate our sequence! Keep in mind that the *fresnel* simulator
-    % takes the same sequence definition as the USTB beamformer. In UFF and
-    % USTB a sequence is defined as a collection of *wave* structures. 
-    % 
-    % For our example here, we define a sequence of 128
-    % waves each emanating from a single element on the probe aperture.
-    
+    % Sequence generation  
     seq(n)=uff.wave();
     seq(n).probe=probe;
     seq(n).source.xyz=[probe.x(n) probe.y(n) probe.z(n)];
     seq(n).sound_speed=c0;
+    seq(n).delay = probe.r(n)/c0-lag*dt+t; % t0 and center of pulse compensation
 end
 close(wb);
 
@@ -220,4 +209,4 @@ b_data.plot()
 %% Save UFF dataset
 % 
 % Finally, we save the data into a UFF file.
-channel_data.write([ustb_path(),'/data/FieldII_PSF_simulation.uff'],'channel_data');
+channel_data.write([ustb_path(),'/data/FieldII_PSF_simulation_v2.uff'],'channel_data');

@@ -68,7 +68,7 @@ classdef fresnel < handle
             focusing_delay=zeros(h.N_elements,1,h.N_waves);
             apodization=zeros(h.N_elements,1,h.N_waves);
             for n_w=1:h.N_waves 
-                focusing_delay(:,1,n_w)=h.sequence(n_w).delay;
+                focusing_delay(:,1,n_w)=h.sequence(n_w).delay_values;
                 apodization(:,1,n_w)=h.sequence(n_w).apodization_values;
             end
             
@@ -88,7 +88,7 @@ classdef fresnel < handle
                 end
             end
             time_1w=(min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth + max(focusing_delay(:)));                                                  % time vector [s]
-            time_2w=(2*min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                                  % time vector [s]
+            time_2w=(2*min_range/c0-8/h.pulse.center_frequency/h.pulse.fractional_bandwidth+min(focusing_delay(:))):(1/h.sampling_frequency):(2*max_range/c0+4/h.pulse.center_frequency/h.pulse.fractional_bandwidth+ max(focusing_delay(:)));                                               % time vector [s]
             N_samples=numel(time_2w);                                                                              % number of time samples
 
             % save the data into a CHANNEL_DATA structure
@@ -99,7 +99,22 @@ classdef fresnel < handle
             out_dataset.sequence=h.sequence();
             out_dataset.sampling_frequency=h.sampling_frequency();
             out_dataset.sound_speed=c0;
-            out_dataset.initial_time=time_2w(1);
+            wave_delays=false;
+            
+            % check if there wave delays are imposed in the sequence
+            % definition
+            for n_w=1:h.N_waves
+                if abs(h.sequence(n_w).delay)>0
+                    wave_delays=true;
+                    continue;
+                end
+            end
+            if wave_delays
+                out_dataset.initial_time=0;
+            else
+                out_dataset.initial_time=time_2w(1);
+            end
+            
             out_dataset.data=zeros(N_samples,h.N_elements,h.N_waves,h.N_frames);
             out_dataset.PRF=h.PRF;
                   
@@ -138,20 +153,23 @@ classdef fresnel < handle
                         directivity = sinc(k*h.probe.width/2/pi.*tan(theta)).*sinc(k*h.probe.height/2/pi.*tan(phi)./cos(theta));
                         
                         % delay between probe and the point
-                        propagation_delay = distance/current_phantom.sound_speed;
+                        propagation_delay = distance/current_phantom.sound_speed;%
 
                         % attenuation (absorption & geometrical dispersion)
                         attenuation = 10.^(-current_phantom.alpha*(distance/1e-2)*(h.pulse.center_frequency/1e6)).*directivity.*delta0./(4*pi*distance);
                         
                         % computing the transmit signal 
-                        delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay)*ones(1,numel(time_1w));                
+                        delayed_time=ones(h.N_elements,1)*time_1w-(propagation_delay+h.sequence(n_w).delay_values)*ones(1,numel(time_1w));                
                         transmit_signal=sum(bsxfun(@times,h.pulse.signal(delayed_time),apodization(:,:,n_w).*attenuation),1);  
 
                         % computing the receive signal
                         delayed_time=ones(h.N_elements,1)*time_2w-propagation_delay*ones(1,N_samples);                
+                        if wave_delays
+                            delayed_time=delayed_time+h.sequence(n_w).delay-time_2w(1);
+                        end
                         out_dataset.data(:,:,n_w,n_f)=out_dataset.data(:,:,n_w,n_f)+bsxfun(@times,interp1(time_1w,transmit_signal,delayed_time,'linear',0),attenuation).';
                         
-                        % computing first order reverberation
+                        % computing second order scattering
 %                         extra_distance = sqrt(sum((bsxfun(@minus,current_phantom.points([1:n_p-1 n_p+1:h.N_points],1:3),current_phantom.points(n_p,1:3))).^2,2));
 %                         extra_delay = extra_distance/current_phantom.sound_speed;
 %                         extra_attenuation= 10.^(-current_phantom.alpha*(extra_distance/1e-2)*(h.pulse.center_frequency/1e6)).*delta0./(4*pi*extra_distance);

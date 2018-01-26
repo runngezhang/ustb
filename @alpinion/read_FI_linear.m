@@ -36,7 +36,8 @@
             channel_data.probe.element_width = double(System.Transducer.elementWidthCm)*10^-2;
             
             % Save Pulse
-            channel_data.pulse = uff.pulse(double(Tw{1}.freqMHz*10^6))
+            channel_data.pulse = uff.pulse();
+            channel_data.pulse.center_frequency = double(Tw{1}.freqMHz*10^6);
             
             %Need this to figure out how many scan lines
             load([h.data_folder,'/',frame_filename_sorted{1}]);
@@ -79,7 +80,7 @@
             f_stop = channel_data.pulse.center_frequency+2*channel_data.pulse.center_frequency/3;
             f_transition = channel_data.pulse.center_frequency/5;
             %f_transition = 1.5e6;
-            interpolation_factor = 5;
+            %interpolation_factor = 5;
             F = [f_start f_start+f_transition f_stop f_stop+f_transition];
             %%
             for frame = start_frame:N_frames+start_frame-1
@@ -103,20 +104,20 @@
                     RF_Ch_data(1:size(data_reordered,1),idx1) = data_reordered(:,idx);
 
                     clear data_reordered;
-                    
-                    hardcoded_offset = (sqrt(seq(scan_line).source.x^2+seq(scan_line).source.z^2) - seq(scan_line).source.z)/channel_data.sound_speed;
-                    
-                    t_in= t_out + hardcoded_offset - System.Transducer.delayOffsetUsec*10^-6;
-                    
+
+                    %Calculate t0 compensation
+                    hardcoded_offset = (sqrt(channel_data.sequence(scan_line).source.x^2+channel_data.sequence(scan_line).source.z^2) - channel_data.sequence(scan_line).source.z);
+                    channel_data.sequence(scan_line).delay = -(-hardcoded_offset./channel_data.sound_speed + System.Transducer.delayOffsetUsec*10^-6);
+
                     %build the dataset
-                    all_data(:,:,scan_line,frame_idx) = time_shift_data(h,RF_Ch_data,t_in,t_out,interpolation_factor,channel_data); 
+                    all_data(:,:,scan_line,frame_idx) = RF_Ch_data;
         
                     clear(var_names{scan_line});
                 end
                 frame_idx = frame_idx + 1;
             end
             tools.workbar(1)
-            if channel_data.pulse.center_frequency > 10*10^6 %Only filter for L8-17 probe
+            if channel_data.pulse.center_frequency > 10*10^6 
                 fc = channel_data.pulse.center_frequency;
                 fs = channel_data.sampling_frequency;
                 F = [fc-8*10^6 fc-7.5*10^6 fs/2-10^6 fs/2-0.5*10^6]

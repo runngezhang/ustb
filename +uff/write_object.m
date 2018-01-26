@@ -64,7 +64,7 @@ if ~isempty(uff.index(filename,[location '/' name],false));
 end
 
 switch class(object)
-    case {'double' 'single'}
+    case {'double' 'single' 'int16'}
         if isreal(object)
             h5create(filename,[location '/' name], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
             h5write(filename,[location '/' name], single(object));

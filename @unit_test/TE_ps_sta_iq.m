@@ -29,14 +29,7 @@ function ok = TE_ps_sta_iq(h)
         seq(n).probe=prb;
         seq(n).sound_speed=s.c0;
         seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
-    end
-    
-    % converting time vector standards
-    data=zeros(size(s.data));
-    for n=1:prb.N_elements
-        delay=seq(n).source.distance/s.c0;
-        pcf=exp(-1i.*2*pi*s.modulation_frequency*delay);
-        data(:,:,n)=pcf.*interp1(s.time+delay,s.data(:,:,n),s.time,'pchip',0);
+        seq(n).delay=seq(n).source.distance/s.c0
     end
     
     % RAW DATA
@@ -47,7 +40,7 @@ function ok = TE_ps_sta_iq(h)
     r_data.sampling_frequency=1/(s.time(2)-s.time(1));
     r_data.sound_speed=s.c0;
     r_data.modulation_frequency=s.modulation_frequency;
-    r_data.data=data;
+    r_data.data=s.data;
     
     % BEAMFORMER
     pipe=pipeline();

@@ -30,7 +30,7 @@ dt=1/fs;     % Sampling step [s]
 % Field II simulation program (<field-ii.dk>) is in MATLAB's path. We also
 % pass our set constants to it.
 
-field_init;
+field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
@@ -119,10 +119,8 @@ point_position(4,:) = [0 0 15e-3];
 % Set point amplitudes
 point_amplitudes = ones(size(point_position,1),1);
 
-cropat=round(2*50e-3/c0/dt);  % maximum time sample, samples after this will be dumped
-
 %% output data
-t_out=0:dt:((cropat-1)*dt);         % output time vector
+cropat=round(2*50e-3/c0/dt);    % maximum time sample, samples after this will be dumped
 CPW=zeros(cropat,probe.N,Na,F);  % impulse response channel data
  
 %% Compute CPW signals
@@ -146,12 +144,8 @@ for f=1:F
         % do calculation
         [v,t]=calc_scat_multi(Th, Rh, point_position, point_amplitudes);
          
-        % lag compensation
-        t_in=(0:dt:((size(v,1)-1)*dt))+t-lag*dt;
-        v_aux=interp1(t_in,v,t_out,'linear',0);
- 
         % build the dataset
-        CPW(:,:,n,f)=v_aux;
+        CPW(1:size(v,1),:,n,f)=v;
          
         % Save transmit sequence
         seq(n)=uff.wave();
@@ -159,6 +153,7 @@ for f=1:F
         seq(n).source.azimuth=alpha(n);
         seq(n).source.distance=Inf;
         seq(n).sound_speed=c0;
+        seq(n).delay = -lag*dt+t;
     end
 end
 close(wb);
@@ -217,4 +212,4 @@ b_data.plot()
 %% Save UFF dataset
 % 
 % Finally, we can save the data into a UFF file.
-channel_data.write([ustb_path(),'/data/FieldII_CPWC_simulation.uff'],'channel_data');
+channel_data.write([ustb_path(),'/data/FieldII_CPWC_simulation_v2.uff'],'channel_data');

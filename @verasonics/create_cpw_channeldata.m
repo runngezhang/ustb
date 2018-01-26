@@ -1,9 +1,14 @@
 function channel_data = create_cpw_channeldata(h)
+%%%%%%
+%
+%   Get channel_data object for CPWC imaging with a linear array from the
+%   Verasonics scanner
+%   
+
 %% Create channel_data object and set some parameters
 channel_data = uff.channel_data();
 channel_data.sampling_frequency = h.Fs;
 channel_data.sound_speed = h.c0;
-channel_data.initial_time = 0;
 channel_data.probe=create_probe_object(h);
 
 %% SEQUENCE GENERATION
@@ -20,38 +25,36 @@ channel_data.sequence = seq;
 
 %% Save Pulse
 channel_data.pulse = uff.pulse();
-channel_data.pulse.center_frequency = double(h.Trans.frequency*10^6);
+channel_data.pulse.center_frequency = h.f0;
 
 %% Convert channel data from Verasonics format to USTB format
-no_samples = h.Receive(1).endSample;
-data = single(zeros(no_samples, h.Resource.Parameters.numRcvChannels, length(seq), h.Resource.RcvBuffer(1).numFrames));
+data = int16(zeros(h.Receive(1).endSample, channel_data.N_elements, channel_data.N_waves, h.Resource.RcvBuffer(1).numFrames));
 
-offset_time = calculate_delay_offset(h); % Get offset time
-n=1;
-time = [0:(1/h.Fs):((no_samples-1)/h.Fs)]';
+offset_distance = calc_lens_corr_and_center_of_pulse_in_m(h); % Get offset distance for t0 compensation
+%Assuming the initial time is the same for all waves
+channel_data.initial_time = 2*h.Receive(1).startDepth*h.lambda/channel_data.sound_speed;
 plot_delayed_signal=0;
+tools.workbar()
+n=1;% idx for Receive
+frame_idx = 0;
 for n_frame = h.frame_order
+    frame_idx = frame_idx + 1;
     for n_tx = 1:length(channel_data.sequence)
-        %% compute time vector for this line
-        t_ini=2*h.Receive(n).startDepth*h.lambda/h.c0;
-        t_end=2*h.Receive(n).endDepth*h.lambda/h.c0;
-        no_t=(h.Receive(n).endSample-h.Receive(n).startSample+1);
+        tools.workbar((n_tx+(frame_idx-1)*length(channel_data.sequence))/(length(h.frame_order)*length(channel_data.sequence)),sprintf('Reading %d frame(s) of CPWC data from Verasonics.',length(h.frame_order)),'Reading  CPWC data from Verasonics.')          
         
         % Find t_0, when the plane wave "crosses" the center of
         % the probe
         if 1  %Calculate geometrically
             D = abs(h.Trans.ElementPos(1,1)-h.Trans.ElementPos(end,1))*1e-3;
             q = abs((D/2)*sin(channel_data.sequence(n_tx).source.azimuth));
-            t0_1 = q/(channel_data.sound_speed);
+            t0_comp_in_m = q;
         else  %Calculate using Verasonics transmit delay, this will not work for the multiplexer probe NBNB!
-            t0_1 = mean(h.TX(n_tx).Delay)*h.lambda/h.Resource.Parameters.speedOfSound;
+            t0_comp_in_m = mean(h.TX(n_tx).Delay)*h.lambda;
             figure(100);hold all;
             plot(h.TX(n_tx).Delay)
             plot((h.TX(n_tx).Delay(end/2))*ones(1,128),'r')
             plot(mean(h.TX(n_tx).Delay)*ones(1,128),'b')
         end
-        
-        t_in=linspace(t_ini,t_end,no_t)-offset_time-t0_1;
         
         if isfield(h.Trans,'HVMux') % If Transducer has MUX, for example the L12-4v, we need to re arrange channels
             validChannels = h.Trans.HVMux.Aperture(:,h.Receive(n_tx).aperture)';
@@ -59,22 +62,29 @@ for n_frame = h.frame_order
         else
             validChannels = [1:128];
         end
-        %% read data
-        data(:,:,n_tx,n_frame)=single(interp1(t_in,double(h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame)),time,'linear',0));
-        n=n+1;
+        
+        % time interval between t0 and acquistion start and compensate for
+        % center of puse + lens correction
+        channel_data.sequence(n_tx).delay = -(offset_distance+t0_comp_in_m)/channel_data.sound_speed;
+        % read data
+        data(:,:,n_tx,frame_idx)=h.RcvData{1}(h.Receive(n).startSample:h.Receive(n).endSample,validChannels,n_frame);
+
         %%
         % to check delay calculation
         if plot_delayed_signal
-            %delay= 20e-3*cos(angles(n_tx))/h.c0+delay_x0;
             %%
             z = 20e-3;
             x = 0;
             y = 0;
             TF = z*cos(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)+x*sin(channel_data.sequence(n_tx).source.azimuth)*cos(channel_data.sequence(n_tx).source.elevation)
+            %compensate for t0
+            TF = TF + channel_data.sequence(n_tx).t0_compensation;
             % receive delay
             RF=sqrt((channel_data.probe.x-x).^2+(channel_data.probe.y-y).^2+(channel_data.probe.z-z).^2);
             % total delay
             delay=(RF+TF)/channel_data.sound_speed;
+            
+            time = (channel_data.initial_time+(0:h.Receive(1).endSample-1)/channel_data.sampling_frequency);
             
             figure(101); hold off;
             pcolor(1:length(channel_data.probe.x),time,abs(data(:,:,n_tx,n_frame))); shading flat; colormap gray; colorbar; hold on;
@@ -83,9 +93,9 @@ for n_frame = h.frame_order
             ylim([0.95*min(delay) 1.05*max(delay)]);
             pause();
         end
+        n=n+1;
     end
 end
-
-channel_data.data = single(data);
-
+channel_data.data = data;
+tools.workbar(1);
 end

@@ -73,8 +73,11 @@ classdef autocorrelation_displacement_estimation < postprocess
             % create a buffer for the output
             displacement_data = zeros(size(h.input.data,1),size(h.input.data,2),...
                         size(h.input.data,3),size(h.input.data,4)-h.packet_size+1);
-                    
+
+            tools.workbar();
             for i = h.packet_size:h.input.N_frames
+                tools.workbar(i/h.input.N_frames,'Calculating autocorr displacement estimation','Autocorr displacement estimation');        
+
                 % buffer
                 temp_disp = zeros(size(images(:,:,1,1,1)));
                 
@@ -82,6 +85,7 @@ classdef autocorrelation_displacement_estimation < postprocess
                 [temp_disp(h.z_gate/2:end-h.z_gate/2-1,h.x_gate/2:end-h.x_gate/2)] = pulsed_doppler_displacement_estimation(h,images(:,:,i-h.packet_size+1:i));
                 displacement_data(:,1,1,i-h.packet_size+1) = temp_disp(:);
             end
+            tools.workbar(1);
             
             output.data = displacement_data;
         end
