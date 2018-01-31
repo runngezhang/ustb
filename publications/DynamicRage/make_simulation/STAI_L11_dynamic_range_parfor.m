@@ -105,7 +105,7 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
-[point_position, point_amplitudes] = simulatedPhantomDynamicRange(60);
+[point_position, point_amplitudes] = simulatedPhantomDynamicRange(200);
 
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
 %% Output data
@@ -199,5 +199,5 @@ pipe.scan=scan;
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Finally, we can save the data into a UFF file.
-channel_data.write('./FieldII_STAI_dynamic_range.uff','channel_data');
-b_data.write('./FieldII_STAI_dynamic_range.uff','b_data');
+channel_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','channel_data');
+b_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','b_data');
