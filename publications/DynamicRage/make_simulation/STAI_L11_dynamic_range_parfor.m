@@ -105,52 +105,8 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
-%
-% In our next step, we define our phantom. Here, our goal is to simulate
-% speckle so we have a 100 scatterrers with axial and lateral coordinates
-% randomly drawn from a uniform distribution and scatterer amplitudes
-% randomly drawn from a normal distribution.
+[point_position, point_amplitudes] = simulatedPhantomDynamicRange(60);
 
-[point_position, point_amplitudes] = simulatedPhantomDynamicRange(20);
-
-%% Create axial gradient (ag)
-% sca_per_mm2 = 10;
-% x_min_ag = 10/1000;
-% x_max_ag = 15/1000;
-% z_min_ag = 12.5/1000;
-% z_max_ag = 42.5/1000;
-% Intensity_ag = 0;
-% dB_mm_ag = 2;
-% 
-% [sca_ag,amp_ag] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag])
-% 
-% x_min_ag_top = 10/1000;
-% x_max_ag_top = 15/1000;
-% z_min_ag_top = 2.5/1000;
-% z_max_ag_top = 12.5/1000;
-% Intensity_ag_top = 0;
-% dB_mm_ag_top = 0;
-% 
-% [sca_ag_top,amp_ag_top] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag_top,x_max_ag_top,z_min_ag_top,z_max_ag_top,Intensity_ag_top,[0 dB_mm_ag_top])
-% 
-% x_min_ag_bottom = 10/1000;
-% x_max_ag_bottom = 15/1000;
-% z_min_ag_bottom = 42.5/1000;
-% z_max_ag_bottom = 45.5/1000;
-% Intensity_ag_bottom= -abs(z_min_ag-z_max_ag)*1000*dB_mm_ag;
-% dB_mm_ag_bottom = 0;
-% 
-% [sca_ag_bottom,amp_ag_bottom] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag_bottom,x_max_ag_bottom,z_min_ag_bottom,z_max_ag_bottom,Intensity_ag_bottom,[0 dB_mm_ag_bottom])
-% 
-% point_position = [sca_ag; sca_ag_top; sca_ag_bottom];
-% point_amplitudes = [amp_ag; amp_ag_top; amp_ag_bottom];
-% 
-% figure;
-% plot3(point_position(:,1)*1e3,point_position(:,3)*1e3,20*log10(point_amplitudes),'b.'); axis equal;
-% zlim([-60 5]);
-% xlabel('X [mm]');ylabel('Z [mm]');zlabel('Amplitude [dB]');
-
-%%
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
 %% Output data
 %
@@ -243,5 +199,5 @@ pipe.scan=scan;
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Finally, we can save the data into a UFF file.
-channel_data.write('./FieldII_STAI_dynamic_range_alternative_2.uff','channel_data');
-b_data.write('./FieldII_STAI_dynamic_range_alternative_2.uff','b_data');
+channel_data.write('./FieldII_STAI_dynamic_range.uff','channel_data');
+b_data.write('./FieldII_STAI_dynamic_range.uff','b_data');
