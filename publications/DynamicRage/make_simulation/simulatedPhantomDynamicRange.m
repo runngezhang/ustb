@@ -1,4 +1,4 @@
-function [sca_tot,amp_tot] = simulatedPhantomDynamicRange_test(sca_per_mm2)
+function [sca_tot,amp_tot] = simulatedPhantomDynamicRange(sca_per_mm2)
 
 
 %% Create lateral gradient (lg)

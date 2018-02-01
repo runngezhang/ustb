@@ -105,7 +105,7 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
-[point_position, point_amplitudes] = simulatedPhantomDynamicRange(200);
+[point_position, point_amplitudes] = simulatedPhantomDynamicRange(500);
 
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
 %% Output data
