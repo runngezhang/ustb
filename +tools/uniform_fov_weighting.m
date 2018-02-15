@@ -41,7 +41,7 @@ tools.workbar(1);
 array_gain_compensation = reshape(apod_matrix,mid.scan.N_z_axis,mid.scan.N_x_axis);
 
 %Calculate approximate compensation for r^2 geometrical spreading
-geo_spreading_compensation = (repmat(mid.scan.z_axis,1,512)).^2;
+geo_spreading_compensation = (repmat(mid.scan.z_axis,1,length(mid.scan.x_axis))).^2;
 
 
 apod = geo_spreading_compensation./array_gain_compensation;
