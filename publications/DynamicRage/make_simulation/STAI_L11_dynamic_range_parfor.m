@@ -18,6 +18,12 @@
 clear all;
 close all;
 
+% We have to options, the full simulation, and only the axial gradient.
+% Set this variable to true, if you want to run the full, else to false
+full_simulation = false;
+
+
+
 
 %% Basic Constants
 %
@@ -105,7 +111,21 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
-[point_position, point_amplitudes] = simulatedPhantomDynamicRange(500);
+
+if full_simulation
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange(500);
+else
+    %% Create axial gradient (ag)
+    sca_per_mm2 = 500;
+    x_min_ag = 10/1000;
+    x_max_ag = 15/1000;
+    z_min_ag = 12.5/1000;
+    z_max_ag = 42.5/1000;
+    Intensity_ag = 0;
+    dB_mm_ag = 2;
+    
+    [point_position,point_amplitudes] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
+end
 
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
 %% Output data
@@ -199,5 +219,10 @@ pipe.scan=scan;
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Finally, we can save the data into a UFF file.
-channel_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','channel_data');
-b_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','b_data');
+if full_simulation
+    channel_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','channel_data');
+    b_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','b_data');
+else
+    channel_data.write('./FieldII_STAI_axial_gradient.uff','channel_data');
+    b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
+end
