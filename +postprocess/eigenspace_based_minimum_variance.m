@@ -1,4 +1,4 @@
-classdef eigenspace_based_minimum_variance < process
+classdef eigenspace_based_minimum_variance < postprocess
     %CAPON_MINIMUM_VARIANCE
     %
     %             Beamform a ultrasound image using the Capon beamformer
@@ -35,8 +35,12 @@ classdef eigenspace_based_minimum_variance < process
         K_in_lambda
         regCoef
         doForwardBackward = 0;
+        receive_apodization                           % APODIZATION class
+        transmit_apodization                          % APODIZATION class
         dimension
         gamma = 0.5;
+        channel_data                                  % Channel data 
+        scan
     end
     
     properties (Access = private)
@@ -44,22 +48,45 @@ classdef eigenspace_based_minimum_variance < process
     end
     
     methods
-        function [out_data h]=go(h)
-           % check if we have information about apodization
-            rx_apodization=ones([h.beamformed_data(1).N_pixels,h.beamformed_data.N_channels]);
-            tx_apodization=ones([h.beamformed_data(1).N_pixels,h.beamformed_data.N_waves]);
+        function [output]=go(h)
+            % check if we can skip calculation
+            if h.check_hash()
+                output = h.output;
+                return;
+            end
+            
+            % check dimensions
+            if (h.dimension==dimension.receive) && (h.input.N_channels<2)
+                error('Not enough channels to compute factor');
+            end
+            if (h.dimension==dimension.transmit) && (h.input.N_waves<2)
+                error('Not enough waves to compute factor');
+            end
+            if (h.dimension==dimension.both)
+                if (h.input.N_channels<2)&&(h.input.N_waves>1)
+                    warning('Not enough channels to compute factor. Changing dimension to dimension.transmit');
+                    h.dimension = dimension.transmit;
+                elseif (h.input.N_waves<2)&&(h.input.N_channels>1)
+                    warning('Not enough waves to compute factor. Changing dimension to dimension.receive');
+                    h.dimension = dimension.receive;
+                elseif (h.input.N_waves<2)&&(h.input.N_channels<2)
+                    error('Not enough waves and channels to compute factor');
+                end
+            end
+            
+            % check if we have information about apodization
+            rx_apodization=ones([h.input(1).N_pixels,h.input.N_channels]);
+            tx_apodization=ones([h.input(1).N_pixels,h.input.N_waves]);
             if ~isempty(h.transmit_apodization)&~isempty(h.receive_apodization)&~isempty(h.channel_data.probe)
                 % receive
-                if h.beamformed_data.N_channels > 1
-                    h.receive_apodization.scan=h.beamformed_data(1).scan;
+                if h.input.N_channels > 1
                     h.receive_apodization.probe=h.channel_data.probe;
                     rx_apodization=h.receive_apodization.data();
                 end
                 
                 % transmit
-                if h.beamformed_data.N_waves > 1
+                if h.input.N_waves > 1
                     h.transmit_apodization.sequence = h.channel_data.sequence;
-                    h.transmit_apodization.scan=h.beamformed_data(1).scan;
                     h.transmit_apodization.probe=h.channel_data.probe;
                     tx_apodization=h.transmit_apodization.data();
                 end
@@ -68,7 +95,7 @@ classdef eigenspace_based_minimum_variance < process
             end
             
             % declare output structure
-            out_data=uff.beamformed_data(h.beamformed_data); % ToDo: instead we should copy everything but the data
+            h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             switch h.dimension
                 case dimension.both
@@ -78,56 +105,120 @@ classdef eigenspace_based_minimum_variance < process
                     warning(str);
 
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,1,1,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        apod_matrix = zeros(size(tx_apodization,1),h.beamformed_data.N_waves*h.beamformed_data.N_channels);
-                        for i = 1:h.beamformed_data.N_waves
-                            apod_matrix(:,1+(i-1)*h.beamformed_data.N_channels:h.beamformed_data.N_channels*i) = tx_apodization(:,i).*rx_apodization;
+                    aux_data=zeros(h.input.N_pixels,1,1,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        apod_matrix = zeros(size(tx_apodization,1),h.input.N_waves*h.input.N_channels);
+                        for i = 1:h.input.N_waves
+                            apod_matrix(:,1+(i-1)*h.input.N_channels:h.input.N_channels*i) = tx_apodization(:,i).*rx_apodization;
                         end
-                        apod_matrix = reshape(apod_matrix,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves*h.beamformed_data.N_channels);
+                        apod_matrix = reshape(apod_matrix,h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves*h.input.N_channels);
 %                     
                         % Apodization matrix indicating active elements
-                        %apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
-                        data_cube = reshape(h.beamformed_data.data(:,:,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels*h.beamformed_data.N_waves);
+                        %apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
+                        data_cube = reshape(h.input.data(:,:,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels*h.input.N_waves);
                         image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,['1/1']);
                         aux_data(:,1,1,n_frame) = image(:); 
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                 case dimension.transmit
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,h.beamformed_data.N_channels,1,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        for n_channel = 1:h.beamformed_data.N_channels
+                    aux_data=zeros(h.input.N_pixels,h.input.N_channels,1,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        for n_channel = 1:h.input.N_channels
                             % Apodization matrix indicating active elements
-                            apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
-                            data_cube = reshape(h.beamformed_data.data(:,n_channel,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
-                            image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_channel),'/',num2str(h.beamformed_data.N_channels)]);
+                            apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
+                            data_cube = reshape(h.input.data(:,n_channel,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
+                            image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_channel),'/',num2str(h.input.N_channels)]);
                             aux_data(:,n_channel,:,n_frame) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.out_data.data = aux_data;
                 case dimension.receive
                     % auxiliary data
-                    aux_data=zeros(h.beamformed_data.N_pixels,1,h.beamformed_data.N_waves,h.beamformed_data.N_frames);
-                    for n_frame = 1:h.beamformed_data.N_frames
-                        for n_wave = 1:h.beamformed_data.N_waves
+                    aux_data=zeros(h.input.N_pixels,1,h.input.N_waves,h.input.N_frames);
+                    for n_frame = 1:h.input.N_frames
+                        for n_wave = 1:h.input.N_waves
                             % Apodization matrix indicating active elements
-                            apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
-                            data_cube = reshape(h.beamformed_data.data(:,:,n_wave,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
+                            apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
+                            data_cube = reshape(h.input.data(:,:,n_wave,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
                             %A hack to set non active elements to zero for the
                             %alpinion scanner FI who only use 64 active
                             %elements
                             if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
                                 apod_matrix(abs(data_cube)<eps) = 0;
                             end
-                            image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_wave),'/',num2str(h.beamformed_data.N_waves)]);
+                            image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_wave),'/',num2str(h.input.N_waves)]);
                             aux_data(:,1,n_wave,n_frame) = image(:);
                         end
                     end
-                    out_data.data = aux_data;
+                    h.output.data = aux_data;
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
+            
+            % pass reference
+            output = h.output;
+            
+%             % update hash
+%             h.save_hash();
+%             switch h.dimension
+%                 case dimension.both
+%                     str = ['You are trying to run the Capon minimum variance beamformer on both dimensions simultaneously. ',...
+%                         'This is to my knowledge not been done in the litterature before, and might not make sense. ',...
+%                         'I also takes forever...'];
+%                     warning(str);
+%                     
+%                     % auxiliary data
+%                     aux_data=zeros(h.beamformed_data.N_pixels,1,1,h.beamformed_data.N_frames);
+%                     for n_frame = 1:h.beamformed_data.N_frames
+%                         apod_matrix = zeros(size(tx_apodization,1),h.beamformed_data.N_waves*h.beamformed_data.N_channels);
+%                         for i = 1:h.beamformed_data.N_waves
+%                             apod_matrix(:,1+(i-1)*h.beamformed_data.N_channels:h.beamformed_data.N_channels*i) = tx_apodization(:,i).*rx_apodization;
+%                         end
+%                         apod_matrix = reshape(apod_matrix,h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves*h.beamformed_data.N_channels);
+%                         %
+%                         % Apodization matrix indicating active elements
+%                         %apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
+%                         data_cube = reshape(h.beamformed_data.data(:,:,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels*h.beamformed_data.N_waves);
+%                         image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,['1/1']);
+%                         aux_data(:,1,1,n_frame) = image(:);
+%                     end
+%                     out_data.data = aux_data;
+%                 case dimension.transmit
+%                     % auxiliary data
+%                     aux_data=zeros(h.beamformed_data.N_pixels,h.beamformed_data.N_channels,1,h.beamformed_data.N_frames);
+%                     for n_frame = 1:h.beamformed_data.N_frames
+%                         for n_channel = 1:h.beamformed_data.N_channels
+%                             % Apodization matrix indicating active elements
+%                             apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
+%                             data_cube = reshape(h.beamformed_data.data(:,n_channel,:,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_waves);
+%                             image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_channel),'/',num2str(h.beamformed_data.N_channels)]);
+%                             aux_data(:,n_channel,:,n_frame) = image(:);
+%                         end
+%                     end
+%                     out_data.data = aux_data;
+%                 case dimension.receive
+%                     % auxiliary data
+%                     aux_data=zeros(h.beamformed_data.N_pixels,1,h.beamformed_data.N_waves,h.beamformed_data.N_frames);
+%                     for n_frame = 1:h.beamformed_data.N_frames
+%                         for n_wave = 1:h.beamformed_data.N_waves
+%                             % Apodization matrix indicating active elements
+%                             apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
+%                             data_cube = reshape(h.beamformed_data.data(:,:,n_wave,n_frame),h.beamformed_data(1).scan.N_z_axis,h.beamformed_data(1).scan.N_x_axis,h.beamformed_data.N_channels);
+%                             %A hack to set non active elements to zero for the
+%                             %alpinion scanner FI who only use 64 active
+%                             %elements
+%                             if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
+%                                 apod_matrix(abs(data_cube)<eps) = 0;
+%                             end
+%                             image = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,[num2str(n_wave),'/',num2str(h.beamformed_data.N_waves)]);
+%                             aux_data(:,1,n_wave,n_frame) = image(:);
+%                         end
+%                     end
+%                     out_data.data = aux_data;
+%                 otherwise
+%                     error('Unknown dimension mode; check HELP dimension');
+%             end
         end
         
         function z = eigenspace_based_minimum_variance_implementation(h,data_cube,apod_matrix,progress)
@@ -143,11 +234,6 @@ classdef eigenspace_based_minimum_variance < process
                 rf_data = squeeze(data_cube(:,e,:));
                 %For every sample
                 for k = 1:N
-                    
-                    %if e == 192 && k == 131 %e = 187
-                    if e == 220 && k == 718 
-                        disp('Her!');
-                    end
                     
                     if (sum(abs(rf_data(k,:))>eps) == 0)
                         z(k,e) = 0;
@@ -186,7 +272,7 @@ classdef eigenspace_based_minimum_variance < process
                         end
                         
                         %Steering vector
-                        a = ones(L_new,1); 
+                        a = ones(L_new,1);
                         
                         %Invert matrix with
                         Ria = (R_sub + I_new*(h.regCoef/L_new)*trace(R_sub))\a;
@@ -199,15 +285,15 @@ classdef eigenspace_based_minimum_variance < process
                         eig_values = D;
                         signal_space_idx = find(eig_values > max(eig_values)*h.gamma);
                         
-%                         if length(signal_space_idx) > 1 && k > 10
-%                            disp('her!') 
-%                         end
-%                         
+                        %                         if length(signal_space_idx) > 1 && k > 10
+                        %                            disp('her!')
+                        %                         end
+                        %
                         size_signal_space(k,e) = length(signal_space_idx);
-
+                        
                         %Extract just the signal space based on gamma treshold
                         Es = V(:,signal_space_idx);
-                       
+                        
                         %projecting the MV weight vector onto the constructed signal subspace
                         w_esmv = Es*Es'*w_mv;
                         
