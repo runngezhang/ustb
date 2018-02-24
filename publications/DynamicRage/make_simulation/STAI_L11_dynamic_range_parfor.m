@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = false;
+full_simulation = true;
 
 
 
@@ -113,7 +113,7 @@ xdc_center_focus(Rh,[0 0 0]);
 %% Speckle Phantom
 
 if full_simulation
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange(500);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_2(500);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 500;
@@ -220,8 +220,8 @@ b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_more_scatteres.uff','b_data');
+    channel_data.write('./FieldII_STAI_dynamic_range_alt.uff','channel_data');
+    b_data.write('./FieldII_STAI_dynamic_range_alt.uff','b_data');
 else
     channel_data.write('./FieldII_STAI_axial_gradient.uff','channel_data');
     b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
