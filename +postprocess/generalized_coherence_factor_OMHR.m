@@ -1,4 +1,4 @@
-classdef generalized_coherence_factor < postprocess
+classdef generalized_coherence_factor_OMHR < postprocess
     %GENERALIZED COHERENCE FACTOR MATLAB implementation of the Generalized
     % Coherence Factor
     %
@@ -19,7 +19,7 @@ classdef generalized_coherence_factor < postprocess
     
     %% constructor
     methods (Access = public)
-        function h=generalized_coherence_factor()
+        function h=generalized_coherence_OMHR()
             h.name='Generalized Coherence Factor MATLAB';
             h.reference='';
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Andreas Austeng <AndreasAusteng.ifi.uio.no'};
@@ -167,20 +167,18 @@ classdef generalized_coherence_factor < postprocess
         function CFweights = generalized_coherence_factor_implementation(h,data_cube, apod_matrix,nBeams)
             
             assert(mod(nBeams,2) ~= 0, ['No of beams must be odd']);
-            
-            
             CFweights = zeros(size(data_cube,1),size(data_cube,2));
             
             for zs = 1:size(data_cube,1)
                 for xs = 1:size(data_cube,2)
-                    % Tx Rx apod
+                    % Find which channels have data
                     valid_channels = squeeze(data_cube(zs,xs,logical(squeeze(apod_matrix(zs,xs,:)))));
                     if sum(apod_matrix(zs,xs,:)) > nBeams
                         K = length(valid_channels);
                         
                         dataFFT = fft(valid_channels);
                         if nBeams > 1
-                            indToSumFFT = [1:ceil(nBeams/2) K+1-fix(nBeams/2):K];
+                            indToSumFFT = [1:ceil(nBeams/2) K+1-floor(nBeams/2):K];
                         else
                             indToSumFFT = 1;
                         end
