@@ -150,7 +150,7 @@ classdef delay_multiply_and_sum < postprocess
             if isempty(h.filter_freqs)
                 [f0, bw] = tools.estimate_frequency(2*h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
                 f_start = 2*f0-f0;
-                f_stop = 2*f0+f0;
+                f_stop = 2*f0+f0/2;
                 f_transition = f0/4;
 
                 F = [f_start f_start+f_transition f_stop f_stop+f_transition];
@@ -159,7 +159,7 @@ classdef delay_multiply_and_sum < postprocess
             end
             
             
-            %fCheck that the pixel sampling frequency is high enogh to
+            %Check that the pixel sampling frequency is high enogh to
             %support 2 times the center frequency, aaand the later hilbert
             %transform. Added a extra transition for the Hilbert transform
             assert(fs/2>(F(end)),['We need ',num2str(ceil((F(end))*2/fs)),...
@@ -204,7 +204,7 @@ classdef delay_multiply_and_sum < postprocess
             
             
             warning('If the result looks funky, you might need to tune the filter paramters of DMAS using the filter_freqs property. Use the plot to check that everything is OK.')
-            if 0 %Plot to check the filtering
+            if 1 %Plot to check the filtering
                 %%
                 [freq_resp,f_ax]=freqz(b);
                 
