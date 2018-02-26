@@ -29,12 +29,12 @@ classdef generalized_coherence_factor_OMHR < postprocess
     
     %% Additional properties
     properties
-        nBeams= 3;                                       
+        M0 = 3;                                       % Low frequency region
+        channel_data                                  % Need the probe 
         GCF                                           % BEAMFORMED_DATA class with the computed phase coherent factor
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
         receive_apodization                           % APODIZATION class
         transmit_apodization                          % APODIZATION class
-        channel_data                                  % Channel data 
     end
     
     methods
@@ -86,6 +86,8 @@ classdef generalized_coherence_factor_OMHR < postprocess
 
             % declare output structure
             h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
+            h.GCF=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
+
             
             switch h.dimension
                 case dimension.both
@@ -107,7 +109,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
                         % Apodization matrix indicating active elements
                         %apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
                         data_cube = reshape(h.input.data(:,:,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels*h.input.N_waves);
-                        GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.nBeams);
+                        GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.M0);
                         image = sum(data_cube,3).*GCF;  
                         GCF_weights(:,1,1,n_frame) = GCF(:);
                         aux_data(:,1,1,n_frame) = image(:);
@@ -122,7 +124,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
                             % Apodization matrix indicating active elements
                             apod_matrix = reshape(bsxfun(@times,tx_apodization,rx_apodization(n_channel)),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
                             data_cube = reshape(h.input.data(:,n_channel,:,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_waves);
-                            GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.nBeams);
+                            GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.M0);
                             image = sum(data_cube,3).*GCF;
                             GCF_weights(:,n_channel,:,n_frame) = GCF(:);     
                             aux_data(:,n_channel,:,n_frame) = image(:);
@@ -145,13 +147,13 @@ classdef generalized_coherence_factor_OMHR < postprocess
                             if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
                                 apod_matrix(abs(data_cube)<eps) = 0;
                             end
-                            GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.nBeams);
+                            GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.M0);
                             image = sum(data_cube,3).*GCF;
                             GCF_weights(:,1,n_wave,n_frame) = GCF(:);
                             aux_data(:,1,n_wave,n_frame) = image(:);
                         end
                     end
-                     h.GCF = GCF_weights;
+                     h.GCF.data = GCF_weights;
                     h.output.data = aux_data;
                 otherwise
                     error('Unknown dimension mo de; check HELP dimension');
@@ -164,28 +166,25 @@ classdef generalized_coherence_factor_OMHR < postprocess
             h.save_hash();
         end
         
-        function CFweights = generalized_coherence_factor_implementation(h,data_cube, apod_matrix,nBeams)
-            
-            assert(mod(nBeams,2) ~= 0, ['No of beams must be odd']);
-            CFweights = zeros(size(data_cube,1),size(data_cube,2));
+        function GCFweights = generalized_coherence_factor_implementation(h,data_cube, apod_matrix,M0)
+            GCFweights = zeros(size(data_cube,1),size(data_cube,2));
             
             for zs = 1:size(data_cube,1)
                 for xs = 1:size(data_cube,2)
-                    % Find which channels have data
-                    valid_channels = squeeze(data_cube(zs,xs,logical(squeeze(apod_matrix(zs,xs,:)))));
-                    if sum(apod_matrix(zs,xs,:)) > nBeams
-                        K = length(valid_channels);
-                        
-                        dataFFT = fft(valid_channels);
-                        if nBeams > 1
-                            indToSumFFT = [1:ceil(nBeams/2) K+1-floor(nBeams/2):K];
+                    % Find active channels
+                    active_channels = squeeze(data_cube(zs,xs,logical(squeeze(apod_matrix(zs,xs,:)))));
+                    if sum(apod_matrix(zs,xs,:)) > M0
+                        K = length(active_channels);
+                        dataFFT = fft(active_channels);
+                        if M0 > 1
+                            indToSumFFT = [1:ceil(M0) K+1-floor(M0):K];
                         else
                             indToSumFFT = 1;
                         end
                         
-                        CFweights(zs,xs) = sum(abs(dataFFT(indToSumFFT)).^2) ./ (sum(abs(dataFFT).^2));
+                        GCFweights(zs,xs) = sum(abs(dataFFT(indToSumFFT)).^2) ./ (sum(abs(dataFFT).^2));
                     else
-                        CFweights(zs,xs) = 0;
+                        GCFweights(zs,xs) = 0;
                     end
                 end
             end
