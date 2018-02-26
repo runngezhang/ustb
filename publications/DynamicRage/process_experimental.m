@@ -2,17 +2,30 @@ clear all;
 close all;
 
 
-filename = 'data/experimental_gradient_phantom.uff';
-
+filename = [data_path,filesep,'experimental_gradient_phantom.uff'];
+filename = '/Users/omrindal/Development/USTB_dynamic_range/data/experimental_gradient_phantom.uff';
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
 
-% demod
-demod = preprocess.demodulation();
-demod.input = channel_data;
-channel_data_demod = demod.go();
+
+
+%% To avoid a noise artifact and avoid having to use IQ data we need to interpolate the data
+channel_data_interpolated = uff.channel_data();
+channel_data_interpolated.copy(channel_data);
+
+interpolation_factor = 2;
+
+channel_data_interpolated.data = interpft(double(channel_data.data),length(channel_data.data)*interpolation_factor);
+channel_data_interpolated.sampling_frequency = channel_data.sampling_frequency*2;
+
+freq_lim = [1e6 1.5e6 9e6 10e6];
+data_filtered = tools.band_pass(channel_data_interpolated.data, channel_data_interpolated.sampling_frequency,freq_lim);
+channel_data_interpolated.data = data_filtered;
 %%
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).','z_axis',linspace(8e-3,52e-3,512).');
+channel_data_interpolated.sound_speed = 1440;
+%%
+
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512*2).','z_axis',linspace(8e-3,52e-3,2048).')
 
 %% Beamformer
 %
@@ -21,37 +34,38 @@ scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).','z_axis',linspace(8e-
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
 mid = midprocess.das();
-mid.channel_data=channel_data_demod;
+mid.channel_data=channel_data_interpolated;
 mid.scan=scan;
 mid.dimension = dimension.transmit();
 
 mid.receive_apodization.window=uff.window.boxcar;
-mid.receive_apodization.f_number=2;
+mid.receive_apodization.f_number=1.75;
 
-mid.transmit_apodization.window=uff.window.hanning;
-mid.transmit_apodization.f_number=2;
+mid.transmit_apodization.window=uff.window.boxcar;
+mid.transmit_apodization.f_number=1.75;
 
-% Delay and sum on receive, then coherent compounding
-b_data_tx = mid.go();
-
-%% Add some noise to avoid white areas in e.g. CF
-
-%b_data_tx.data = b_data_tx.data + randn(size(b_data_tx.data))*eps;
 
 %%
+[weights,array_gain_compensation,geo_spreading_compensation] = ...
+                                           tools.uniform_fov_weighting(mid);
+%% 
+b_data_weights = uff.beamformed_data();                                       
+b_data_weights.scan = scan;
+b_data_weights.data = weights(:);
+%%
 
-figure;hold all;
-%plot(data_test(:,64));
-plot(real(b_data_tx.data(:,64)));
+% Delay and sum on receive, then coherent compounding
+%b_data_tx = mid.go();
+
+
 %% DELAY AND SUM
 das=postprocess.coherent_compounding();
 das.input = b_data_tx;
 b_data_das = das.go();
-f1 = figure(1);clf;
-%b_data_das.plot(f1,['DAS'],60)
+f1 = figure(2);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_das.get_image);
-colormap gray;caxis([-60 0]);axis image;colorbar;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
-saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/DAS'],'eps2c')
+colormap gray;caxis([-60 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
 
 %%
 cf = postprocess.coherence_factor();
@@ -62,8 +76,9 @@ cf.input = b_data_tx;
 b_data_cf = cf.go();
 f2 = figure(2);
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_cf.get_image);
-colormap gray;caxis([-60 0]);axis image;colorbar;title('CF');xlabel('x [mm]');ylabel('z [mm]');
-saveas(f2,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/CF'],'eps2c')
+colormap gray;caxis([-60 0]);axis image;title('CF');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
+
 %%
 pcf = postprocess.phase_coherence_factor();
 pcf.dimension = dimension.receive;
@@ -72,10 +87,9 @@ pcf.transmit_apodization = mid.transmit_apodization;
 pcf.input = b_data_tx;
 b_data_pcf = pcf.go();
 f3 = figure(3);clf;
-%b_data_pcf.plot(f3,'PCF');
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_pcf.get_image);
-colormap gray;caxis([-60 0]);axis image;colorbar;title('PCF');xlabel('x [mm]');ylabel('z [mm]');
-saveas(f3,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/PCF'],'eps2c')
+colormap gray;caxis([-60 0]);axis image;title('PCF');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
 
 %%
 gcf=postprocess.generalized_coherence_factor();
@@ -88,8 +102,8 @@ gcf.nBeams = 5;
 b_data_gcf = gcf.go();
 f4 = figure(4);
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_gcf.get_image);
-colormap gray;caxis([-60 0]);axis image;colorbar;title('GCF');xlabel('x [mm]');ylabel('z [mm]');
-saveas(f4,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/GCF'],'eps2c')
+colormap gray;caxis([-60 0]);axis image;title('GCF');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
 
 %%
 mv = postprocess.capon_minimum_variance();
@@ -106,43 +120,145 @@ b_data_mv = mv.go();
 %%
 f5 = figure(6);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_mv.get_image);
-colormap gray;caxis([-60 0]);axis image;colorbar;title('MV');xlabel('x [mm]');ylabel('z [mm]');
-saveas(f5,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/MV'],'eps2c')
-%%
-addpath ../../Functions/
+colormap gray;caxis([-60 0]);axis image;title('MV');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
 
-image.all{1} = b_data_das.get_image();
+%% Process DMAS
+dmas=postprocess.delay_multiply_and_sum();
+dmas.dimension = dimension.receive;
+dmas.transmit_apodization = mid.transmit_apodization;
+dmas.receive_apodization = mid.receive_apodization;
+dmas.input = b_data_tx;
+dmas.channel_data = channel_data;
+b_data_dmas = dmas.go();
+b_data_dmas.plot(6,['DMAS'])
+
+%%
+dmas_img = b_data_dmas.get_image('none');
+dmas_img = db(abs(dmas_img./max(dmas_img(:))));
+f7 = figure(7);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap gray;caxis([-60 0]);axis image;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
+
+%% EIGENSPACE BASED MINIMUM VARIANCE
+ebmv=postprocess.eigenspace_based_minimum_variance();
+ebmv.dimension = dimension.receive;
+ebmv.input = b_data_tx;
+ebmv.channel_data = channel_data;
+ebmv.scan = scan;
+ebmv.K_in_lambda = 1.5;
+ebmv.gamma = 0.5;
+ebmv.L_elements = floor(channel_data.probe.N/3);
+ebmv.transmit_apodization = mid.transmit_apodization;
+ebmv.receive_apodization = mid.receive_apodization;
+ebmv.regCoef = 1/100;
+
+b_data_ebmv = ebmv.go();
+%%
+
+%b_data_ebmv.plot(f6,['EBMV'])
+ebmv_img = b_data_ebmv.get_image('none');
+ebmv_img = db(abs(ebmv_img./max(ebmv_img(:))));
+f6 = figure(8);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
+colormap gray;caxis([-60 0]);axis image;title('EBMV');xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14);
+
+%%
+addpath functions/
+
+b_data_tx.write(filename,'/b_data_tx');
+b_data_das.write(filename,'/b_data_das');
+b_data_cf.write(filename,'/b_data_cf');
+b_data_pcf.write(filename,'/b_data_pcf');
+b_data_gcf.write(filename,'/b_data_gcf');
+b_data_mv.write(filename,'/b_data_mv');
+b_data_ebmv.write(filename,'/b_data_ebmv');
+b_data_dmas.write(filename,'/b_data_dmas');
+%%
+b_data_weights.write(filename,'/b_data_weights');
+%%
+image.all{1} = b_data_das.get_image;
 image.tags{1} = 'DAS';
-image.all{2} = b_data_mv.get_image();
-image.tags{2} = 'MV';
-image.all{3} = b_data_cf.get_image();
-image.tags{3} = 'CF';
-image.all{4} = b_data_pcf.get_image();
-image.tags{4} = 'PCF';
-image.all{5} = b_data_gcf.get_image();
-image.tags{5} = 'GCF';
-
+image.all{5} = b_data_mv.get_image;
+image.tags{5} = 'MV';
+image.all{6} = b_data_ebmv.get_image
+image.tags{6} = 'EBMV';
+image.all{2} = b_data_cf.get_image
+image.tags{2} = 'CF';
+image.all{7} = b_data_pcf.get_image
+image.tags{7} = 'PCF';
+image.all{3} = b_data_gcf.get_image
+image.tags{3} = 'GCF';
+image.all{4} =  b_data_das.get_image;%b_data_dmas.get_image
+image.tags{4} = 'DMAS';
 %%
+addpath functions
+addpath cbrewer
 
-[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,40,50,scan.x(1)*10^3,scan.x(end)*10^3);
+load colorbrewer.mat
+
+colors = colorbrewer.qual.Dark2{8}./255;
+[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,40,50,-15,15);
 
 mask=abs(scan.x_axis)<15e-3;
 theory=-50*(scan.x_axis(mask)+15e-3)/30e-3;
 
-f89 = figure(89);clf;hold all;
-plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1});hold on;
-plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2});
-plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3});
-plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4});
-plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5});
-plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
+f89 = figure(89);clf
+subplot(211);hold all;
+plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',colors(5,:));
+plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
+plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
+plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
+plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
 
-ylim([-80 0]);
-%xlim([-17.5 1.5]);
-legend show; grid on;
+ylim([-60 0]);
+xlim([-15 15])
+legend('Location','sw'); grid on;
 ylabel('Normalized amplitude [dB]');
 xlabel('x [mm]');
-saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/gradient'],'eps2c')
+title('Lateral gradient');
+set(gca,'Fontsize',14)
+
+subplot(212);hold all;
+plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',colors(5,:));
+plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(6,:));
+plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(7,:));
+plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(8,:));
+ylim([-60 0]);
+xlim([-15 15])
+legend('Location','sw'); grid on;
+ylabel('Normalized amplitude [dB]');
+xlabel('x [mm]');
+title('Lateral gradient');
+
+set(gca,'Fontsize',14)
+%saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/gradient'],'eps2c')
+
+%%
+[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,40,50,-20,20);
+mask=abs(scan.x_axis)<15e-3;
+theory=-50*(scan.x_axis(mask)+15e-3)/30e-3;
+
+f89 = figure(89);clf;hold all;
+plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',colors(5,:));
+plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
+plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
+plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
+plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
+plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(6,:));
+plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(7,:));
+plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(8,:));
+ylim([-80 0]);
+xlim([-20 20])
+legend('Location','sw'); grid on;
+ylabel('Normalized amplitude [dB]');
+xlabel('x [mm]');
+title('Lateral gradient');
+
+set(gca,'Fontsize',20)
+%saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/gradient_2'],'eps2c')
 
 %%
 mask=abs(scan.x_axis)<15e-3;
