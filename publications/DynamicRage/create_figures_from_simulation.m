@@ -1,8 +1,7 @@
 %clear all;
 close all;
 
-filename = [data_path,filesep,'FieldII_STAI_dynamic_range_more_scatteres_old.uff'];
-filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_dynamic_range_alt_2.uff';
+filename = [data_path,filesep,'FieldII_STAI_dynamic_range_alt_2.uff'];
 
 b_data_tx = uff.beamformed_data();
 b_data_das = uff.beamformed_data();
@@ -26,6 +25,7 @@ b_data_weights.read(filename,'/b_data_weights');
 %%
 weights = b_data_weights.get_image('none');
 %%
+mkdir([ustb_path,filesep,'publications/DynamicRage/figures/simulation/'])
 
 das_img = b_data_das.get_image('none').*weights;  % Compensation weighting
 das_img = db(abs(das_img./max(das_img(:))));                 % Normalize on max
@@ -100,7 +100,7 @@ saveas(f6,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/EBMV_z
 
 
 %%
-addpath functions/
+addpath([ustb_path,'/publications/DynamicRage/functions']);
 
 image.all{1} = das_img;
 image.tags{1} = 'DAS';
@@ -224,9 +224,9 @@ saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradi
 saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient_lateral'],'png')
 %%
 
-[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,12.5,45,11,14);
+[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,12.5,42.5,11,14);
 
-mask= b_data_tx.scan.z_axis<45e-3 & b_data_tx.scan.z_axis>12.5e-3;
+mask= b_data_tx.scan.z_axis<42.5e-3 & b_data_tx.scan.z_axis>12.5e-3;
 theory=-60*(b_data_tx.scan.z_axis(mask)-12.5e-3)/30e-3;
 
 f33 = figure(33);clf; hold all;
@@ -237,7 +237,7 @@ plot(z_axis,meanLines_axial.all{2}-max(meanLines_axial.all{2}),'Linewidth',2,'Di
 plot(z_axis,meanLines_axial.all{3}-max(meanLines_axial.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
 plot(z_axis,meanLines_axial.all{4}-max(meanLines_axial.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
 ylim([-100 0]);
-xlim([12.5 45]);
+xlim([12.5 42.5]);
 legend show; grid on;
 ylabel('Normalized amplitude [dB]');
 xlabel('z [mm]');
@@ -250,7 +250,7 @@ plot(z_axis,meanLines_axial.all{6}-max(meanLines_axial.all{6}),'Linewidth',2,'Di
 plot(z_axis,meanLines_axial.all{7}-max(meanLines_axial.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(7,:));
 
 ylim([-100 0]);
-xlim([12.5 45]);
+xlim([12.5 42.5]);
 legend show; grid on;
 ylabel('Normalized amplitude [dB]');
 xlabel('z [mm]');
