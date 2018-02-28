@@ -110,6 +110,7 @@ classdef coherence_factor < postprocess
             
             % Coherent Factor
             h.CF.data = bsxfun(@times,abs(coherent_sum).^2./incoherent_2_sum,1./M); 
+            h.CF.data(isnan(h.CF.data)) = 0;
             % coherent factor image            
             h.output.data = h.CF.data .* coherent_sum;
             
