@@ -103,18 +103,32 @@ saveas(f6,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/EBMV_z
 addpath([ustb_path,'/publications/DynamicRage/functions']);
 
 image.all{1} = das_img;
+image.all_intensity{1} = double(b_data_das.get_image('none').*weights);
+image.all_intensity{1} = abs(image.all_intensity{1}./max(image.all_intensity{1}(:)));
 image.tags{1} = 'DAS';
 image.all{5} = mv_img;
+image.all_intensity{5} = double(b_data_mv.get_image('none').*weights);
+image.all_intensity{5} = abs(image.all_intensity{5}./max(image.all_intensity{5}(:)));
 image.tags{5} = 'MV';
 image.all{6} = ebmv_img;
+image.all_intensity{6} = double(b_data_ebmv.get_image('none').*weights);
+image.all_intensity{6} = abs(image.all_intensity{6}./max(image.all_intensity{6}(:)));
 image.tags{6} = 'EBMV';
 image.all{2} = cf_img;
+image.all_intensity{2} = double(b_data_cf.get_image('none').*weights);
+image.all_intensity{2} = abs(image.all_intensity{2}./max(image.all_intensity{2}(:)));
 image.tags{2} = 'CF';
 image.all{7} = pcf_img;
+image.all_intensity{7} = double(b_data_pcf.get_image('none').*weights);
+image.all_intensity{7} = abs(image.all_intensity{7}./max(image.all_intensity{7}(:)));
 image.tags{7} = 'PCF';
 image.all{3} = gcf_img;
+image.all_intensity{3} = double(b_data_gcf.get_image('none').*weights);
+image.all_intensity{3} = abs(image.all_intensity{3}./max(image.all_intensity{3}(:)));
 image.tags{3} = 'GCF';
 image.all{4} = dmas_img;
+image.all_intensity{4} = double(b_data_dmas.get_image('none').*weights);
+image.all_intensity{4} = abs(image.all_intensity{4}./max(image.all_intensity{4}(:)));
 image.tags{4} = 'DMAS';
 
 %%
@@ -335,23 +349,124 @@ text(x_pos,double(fwhm_all(:)),num2str(fwhm_all(:),'%0.2f'),...
 grid on;
 saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/FWHM'],'eps2c')
 %% Measure contrast
-[CR,CNR] = measureContrast(b_data_tx,image,-7.5,25,3.3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+[CR,CR_ratio,CNR,C,CNR_picmus,v,v_db] = measureContrast(b_data_tx,image,-7.5,25,3.3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+
 %%
+
 f9 = figure
-subplot(211);
+subplot(411);
 bar([CR])
 set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
 set(gca,'XTickLabel',image.tags)
-%title('Contrast');
 ylabel('CR [dB]');
 x_pos = [1 2 3 4 5 6 7];
-text(x_pos,double(CR(:)),num2str(round(CR(:)),'%d'),...
+text(x_pos,double(CR(:)),num2str(round(CR(:)),'%.2f'),...
     'HorizontalAlignment','center',...
     'VerticalAlignment','bottom',...
     'FontSize',12)
-% subplot(212);
-% bar([CNR'])
-% set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
-% set(gca,'XTickLabel',image.tags)
-% ylabel('CNR');
-saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/contrast'],'eps2c')
+title('Contrast calculated after log-compression');
+
+subplot(412);
+bar([CNR_picmus])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR_{picmus}');
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double(CNR_picmus(:)),num2str(round(CNR_picmus(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+
+subplot(413);
+bar([C])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('C');
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double(C(:)),num2str((C(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+
+title('Contrast calculated before log-compression');
+subplot(414);
+bar([CNR])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR');
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double(CNR(:)),num2str((CNR(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+
+%%
+
+%saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/contrast_all'],'eps2c')
+%%
+f999 = figure(999);
+subplot(211);
+bar(v_db)
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('variance');
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double(v_db(:)),num2str(round(v_db(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+title('Variance of speckle after log-compression');
+
+subplot(212);
+bar(v)
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('variance');
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double(v(:)),num2str((v(:)),'%.6f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+title('Variance of speckle before log-compression');
+
+
+saveas(f999,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/variance'],'eps2c')
+%%
+
+figure;
+subplot(421)
+imagesc(image.all{1})
+caxis([-60 0])
+colorbar
+title(image.tags{1})
+subplot(422)
+imagesc(image.all_intensity{1})
+colorbar
+title(image.tags{1})
+subplot(423)
+imagesc(image.all{2})
+colorbar
+caxis([-60 0])
+title(image.tags{2});
+subplot(424)
+imagesc(image.all_intensity{2})
+colorbar
+title(image.tags{2});
+subplot(425)
+imagesc(image.all{6})
+colorbar
+caxis([-60 0])
+title(image.tags{6});
+subplot(426)
+imagesc(image.all_intensity{6})
+colorbar
+title(image.tags{6});
+subplot(427)
+imagesc(image.all{5})
+colorbar
+caxis([-60 0])
+title(image.tags{5});
+subplot(428)
+imagesc(image.all_intensity{5})
+colorbar
+title(image.tags{5});

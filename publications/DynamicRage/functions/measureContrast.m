@@ -1,4 +1,4 @@
-function [CR,CNR] = measureContrast(sta_image,image,xc_nonecho,zc_nonecho,r_nonecho,r_speckle_inner,r_speckle_outer,f_filename)
+function [CR,CR_ratio,CNR,C,CNR_picmus,v,v_db] = measureContrast(sta_image,image,xc_nonecho,zc_nonecho,r_nonecho,r_speckle_inner,r_speckle_outer,f_filename)
 %PLOTLATERALLINE Plot lateral line from all images saved in image struct
 %   
 %% Non echo Cyst contrast
@@ -46,9 +46,20 @@ if nargin == 8
     saveas(f1,f_filename,'eps2c');
 end
 
+%%
+
+%%
 for i = 1:length(image.all)
-    CR(i) = abs(mean(image.all{i}(idx_cyst))-mean(image.all{i}(idx_speckle)))
-    CNR(i) = CR(i)/sqrt((var(image.all{i}(idx_cyst))+var(image.all{i}(idx_speckle)))/2)
+    CR(i) = abs(mean(image.all{i}(idx_cyst))-mean(image.all{i}(idx_speckle)));
+    CR_ratio(i) = abs(mean(image.all{i}(idx_cyst))/mean(image.all{i}(idx_speckle)))
+    CNR(i) = abs( mean(image.all_intensity{i}(idx_cyst)) - mean(image.all_intensity{i}(idx_speckle)) )...
+            /sqrt( (var(image.all_intensity{i}(idx_cyst)) + var(image.all_intensity{i}(idx_speckle)))/2 );
+    C(i) = abs(20*log10( mean(image.all_intensity{i}(idx_cyst)) / mean(image.all_intensity{i}(idx_speckle)) ));
+    CNR_picmus(i) = 20*log10( abs( mean(image.all{i}(idx_cyst)) - mean(image.all{i}(idx_speckle)) )...
+            /sqrt( (var(image.all{i}(idx_cyst)) + var(image.all{i}(idx_speckle)))/2 ) );
+        
+    v(i) = var(image.all_intensity{i}(idx_speckle));
+    v_db(i) = var(image.all{i}(idx_speckle));
 end
 
 end
