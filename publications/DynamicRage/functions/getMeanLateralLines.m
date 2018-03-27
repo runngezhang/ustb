@@ -19,6 +19,9 @@ x_max = temp(end);
 
 for i = 1:length(image.all)
     meanLines.all{i} = mean(image.all{i}(z_min_top:z_max_top,x_min:x_max),1);
+    if isfield(image,'all_signal')
+         meanLines.all_signal{i} = mean(image.all_signal{i}(z_min_top:z_max_top,x_min:x_max),1);
+    end
 end
 
 x_axis = linspace(x_start,x_stop,length(meanLines.all{1}));
