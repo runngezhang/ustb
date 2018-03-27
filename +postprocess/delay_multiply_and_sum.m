@@ -209,18 +209,19 @@ classdef delay_multiply_and_sum < postprocess
                 [freq_resp,f_ax]=freqz(b);
                 
                 freq_axis = linspace(-fs/2,fs/2,length(filtered_y_dmas_signed));
+                ax = fs/2*(2*[0:size(filtered_y_dmas_signed,1)-1]/size(filtered_y_dmas_signed,1)-1);
                 figure(100);clf;
                 subplot(411)
                 plot(freq_axis*10^-6,orig_plot);
                 subplot(412)
                 F_temp = (abs(fftshift(fft(sum(y_dmas_signed,3)))));
-                plot(freq_axis(floor(end/2):end)*10^-6,F_temp(floor(end/2):end,:));hold on
+                plot(ax(floor(end/2):end)*10^-6,F_temp(floor(end/2):end,:));hold on
                 axis tight
                 subplot(413)
                 plot(f_ax,db(abs(freq_resp)));
                 axis tight
                 subplot(414)
-                plot(freq_axis*10^-6,(abs(fftshift(fft(filtered_y_dmas_signed)))));
+                plot(freq_axis*10^-6,db(abs(fftshift(fft(filtered_y_dmas_signed)))));
                 axis tight
             end
             
