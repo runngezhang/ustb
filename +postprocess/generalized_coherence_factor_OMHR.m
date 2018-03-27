@@ -177,7 +177,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
                         K = length(active_channels);
                         dataFFT = fft(active_channels);
                         if M0 > 1
-                            indToSumFFT = [1:M0+1 K+1-M0:K];
+                            indToSumFFT = [1:M0+1 K-M0+1:K];
                         else
                             indToSumFFT = 1;
                         end
