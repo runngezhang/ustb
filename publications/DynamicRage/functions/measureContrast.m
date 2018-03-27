@@ -1,4 +1,4 @@
-function [CR,CR_ratio,CNR,C,CNR_picmus,v,v_db] = measureContrast(sta_image,image,xc_nonecho,zc_nonecho,r_nonecho,r_speckle_inner,r_speckle_outer,f_filename)
+function [CR_signal, CR_signal_dagger, CR_image, CNR_signal, CNR_image] = measureContrast(sta_image,image,xc_nonecho,zc_nonecho,r_nonecho,r_speckle_inner,r_speckle_outer,f_filename)
 %PLOTLATERALLINE Plot lateral line from all images saved in image struct
 %   
 %% Non echo Cyst contrast
@@ -50,16 +50,26 @@ end
 
 %%
 for i = 1:length(image.all)
-    CR(i) = abs(mean(image.all{i}(idx_cyst))-mean(image.all{i}(idx_speckle)));
-    CR_ratio(i) = abs(mean(image.all{i}(idx_cyst))/mean(image.all{i}(idx_speckle)))
-    CNR(i) = abs( mean(image.all_intensity{i}(idx_cyst)) - mean(image.all_intensity{i}(idx_speckle)) )...
-            /sqrt( (var(image.all_intensity{i}(idx_cyst)) + var(image.all_intensity{i}(idx_speckle)))/2 );
-    C(i) = abs(20*log10( mean(image.all_intensity{i}(idx_cyst)) / mean(image.all_intensity{i}(idx_speckle)) ));
-    CNR_picmus(i) = 20*log10( abs( mean(image.all{i}(idx_cyst)) - mean(image.all{i}(idx_speckle)) )...
-            /sqrt( (var(image.all{i}(idx_cyst)) + var(image.all{i}(idx_speckle)))/2 ) );
-        
-    v(i) = var(image.all_intensity{i}(idx_speckle));
-    v_db(i) = var(image.all{i}(idx_speckle));
+    u_ROI_signal = mean( abs(image.all_signal{i}(idx_cyst)).^2 );
+    u_B_signal = mean( abs(image.all_signal{i}(idx_speckle)).^2 ); 
+    
+    sigma_ROI_signal = std(abs(image.all_signal{i}(idx_cyst)).^2);
+    sigma_B_signal  = std(abs(image.all_signal{i}(idx_speckle)).^2);
+    
+    u_ROI_image = mean( image.all{i}(idx_cyst) );
+    u_B_image = mean( image.all{i}(idx_speckle) ); 
+    
+    sigma_ROI_image = std( image.all{i}(idx_cyst) );
+    sigma_B_image  = std( image.all{i}(idx_speckle) );
+    
+    %Current definition on the manuscript
+    CR_signal(i) =  u_ROI_signal / u_B_signal;
+    CR_signal_dagger(i) = (u_ROI_signal - u_B_signal) / sqrt(u_ROI_signal^2+u_B_signal^2);
+
+    CR_image(i) = abs(u_ROI_image - u_B_image);
+    
+    CNR_signal(i) = abs(u_ROI_signal - u_B_signal) / sqrt((sigma_ROI_signal^2 + sigma_B_signal^2));
+    CNR_image(i) = abs(u_ROI_image - u_B_image) / sqrt((sigma_ROI_image^2 + sigma_B_image^2));
 end
 
 end
