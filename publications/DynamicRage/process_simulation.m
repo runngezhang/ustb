@@ -11,10 +11,15 @@ channel_data.read([data_path,filesep,filename],'/channel_data');
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-19e-3,19e-3,512*2).', 'z_axis', linspace(10e-3,55e-3,2048).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(8e-3,55e-3,2048).');
 
 %scan=uff.linear_scan('x_axis',linspace(-19e-3,19e-3,256).', 'z_axis', linspace(10e-3,55e-3,256).');
-
+%scan=uff.linear_scan('x_axis',linspace(-12.5e-3,-2.5e-3,50).', 'z_axis', linspace(43e-3,46e-3,200).');
+%%
+% demod = preprocess.demodulation;
+% demod.input = channel_data;
+% 
+% channel_data_demod = demod.go();
 %% Beamformer
 
 mid = midprocess.das();
@@ -27,7 +32,7 @@ mid.receive_apodization.f_number=1.75;
 
 mid.transmit_apodization.window=uff.window.boxcar;
 mid.transmit_apodization.f_number=1.75;
-
+%%
 % Delay and sum on receive, then coherent compounding
 b_data_tx = mid.go();
 
@@ -50,7 +55,7 @@ das_img = b_data_das.get_image('none').*weights;  % Compensation weighting
 das_img = db(abs(das_img./max(das_img(:))));                 % Normalize on max
 f1 = figure(1);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
-colormap gray;caxis([-60 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
+colormap gray;caxis([-120 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
 
 %%
 cf = postprocess.coherence_factor();
@@ -158,12 +163,21 @@ dmas.channel_data = channel_data;
 b_data_dmas = dmas.go();
 b_data_dmas.plot(6,['DMAS'])
 
+%%
 dmas_img = b_data_dmas.get_image('none').*weights;
 dmas_img = db(abs(dmas_img./max(dmas_img(:))));
 f7 = figure(9);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
 colormap gray;caxis([-60 0]);axis image;colorbar;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
 
+%% Process GLT
+
+%% Gray Level Transform
+glt = postprocess.gray_level_transform();
+glt.input = b_data_das;
+
+b_data_glt = glt.go();
+b_data_glt.plot()
 
 %%
 b_data_tx.write([data_path,filesep,filename],'/b_data_tx');
@@ -174,8 +188,29 @@ b_data_gcf.write([data_path,filesep,filename],'/b_data_gcf');
 b_data_mv.write([data_path,filesep,filename],'/b_data_mv');
 b_data_ebmv.write([data_path,filesep,filename],'/b_data_ebmv');
 b_data_dmas.write([data_path,filesep,filename],'/b_data_dmas');
+b_data_glt.write([data_path,filesep,filename],'/b_data_glt');
 b_data_weights.write([data_path,filesep,filename],'/b_data_weights');
 
+%%
+%Using "colorbrewer" colors
+colors =     [27   158   119; ...
+             217    95     2; ...
+             117   112   179; ...
+             231    41   138; ...
+             102   166    30; ...
+             230   171     2; ...
+             166   118    29; ...
+             102   102   102]/255;
+         
+image.all{1} = das_img;
+image.tags{1} = 'DAS';
+image.all{2} = dmas_img;
+image.tags{2} = 'DMAS';
+
+[handle_2] = plotLateralLine(b_data_tx,image,45,-9,-6,colors)
+
+
+%%
 % %%
 % addpath functions/
 % 

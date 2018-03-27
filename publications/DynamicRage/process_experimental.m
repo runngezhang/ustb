@@ -1,31 +1,15 @@
 clear all;
 close all;
 
-
+%%
 filename = [data_path,filesep,'experimental_gradient_phantom.uff'];
-filename = '/Users/omrindal/Development/USTB_dynamic_range/data/experimental_gradient_phantom.uff';
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
 
-
-
-%% To avoid a noise artifact and avoid having to use IQ data we need to interpolate the data
-channel_data_interpolated = uff.channel_data();
-channel_data_interpolated.copy(channel_data);
-
-interpolation_factor = 2;
-
-channel_data_interpolated.data = interpft(double(channel_data.data),length(channel_data.data)*interpolation_factor);
-channel_data_interpolated.sampling_frequency = channel_data.sampling_frequency*2;
-
-freq_lim = [1e6 1.5e6 9e6 10e6];
-data_filtered = tools.band_pass(channel_data_interpolated.data, channel_data_interpolated.sampling_frequency,freq_lim);
-channel_data_interpolated.data = data_filtered;
 %%
-channel_data_interpolated.sound_speed = 1440;
 %%
-
 scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512*2).','z_axis',linspace(8e-3,52e-3,2048).')
+%scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).','z_axis',linspace(8e-3,52e-3,256).')
 
 %% Beamformer
 %
@@ -34,7 +18,7 @@ scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512*2).','z_axis',linspace(8
 % *apodization* structure in addition to the *channel_data* and *scan*.
 
 mid = midprocess.das();
-mid.channel_data=channel_data_interpolated;
+mid.channel_data=channel_data;
 mid.scan=scan;
 mid.dimension = dimension.transmit();
 
@@ -55,14 +39,14 @@ b_data_weights.data = weights(:);
 %%
 
 % Delay and sum on receive, then coherent compounding
-%b_data_tx = mid.go();
+b_data_tx = mid.go();
 
 
 %% DELAY AND SUM
 das=postprocess.coherent_compounding();
 das.input = b_data_tx;
 b_data_das = das.go();
-f1 = figure(2);clf;
+f1 = figure(3);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_das.get_image);
 colormap gray;caxis([-60 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
@@ -92,13 +76,13 @@ colormap gray;caxis([-60 0]);axis image;title('PCF');xlabel('x [mm]');ylabel('z 
 set(gca,'FontSize',14);
 
 %%
-gcf=postprocess.generalized_coherence_factor();
+gcf=postprocess.generalized_coherence_factor_OMHR();
 gcf.dimension = dimension.receive;
 gcf.transmit_apodization = mid.transmit_apodization;
 gcf.receive_apodization = mid.receive_apodization;
 gcf.input = b_data_tx;
 gcf.channel_data = channel_data;
-gcf.nBeams = 5;
+gcf.M0 = 2;
 b_data_gcf = gcf.go();
 f4 = figure(4);
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_gcf.get_image);
@@ -149,7 +133,7 @@ ebmv.channel_data = channel_data;
 ebmv.scan = scan;
 ebmv.K_in_lambda = 1.5;
 ebmv.gamma = 0.5;
-ebmv.L_elements = floor(channel_data.probe.N/3);
+ebmv.L_elements = floor(channel_data.probe.N/2);
 ebmv.transmit_apodization = mid.transmit_apodization;
 ebmv.receive_apodization = mid.receive_apodization;
 ebmv.regCoef = 1/100;
@@ -165,6 +149,22 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
 colormap gray;caxis([-60 0]);axis image;title('EBMV');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
+
+%% Gray Level Transform
+glt = postprocess.gray_level_transform();
+glt.input = b_data_das;
+
+b_data_glt = glt.go();
+b_data_glt.plot()
+
+%%
+
+f100 = figure(100);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gamma_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f100,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/GAMMA'],'eps2c')
+
 %%
 addpath functions/
 
@@ -176,7 +176,9 @@ b_data_gcf.write(filename,'/b_data_gcf');
 b_data_mv.write(filename,'/b_data_mv');
 b_data_ebmv.write(filename,'/b_data_ebmv');
 b_data_dmas.write(filename,'/b_data_dmas');
+b_data_glt.write(filename,'/b_data_glt');
 %%
+
 b_data_weights.write(filename,'/b_data_weights');
 %%
 image.all{1} = b_data_das.get_image;
