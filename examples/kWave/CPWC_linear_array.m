@@ -1,24 +1,23 @@
-% 2D simulation of linear array and CPWC sequence
+%% 2D simulation of CPWC sequence with kWave
 %
-% This example demonstrates the use of k-Wave simulation of ultrasounic
-% beams in a 2D domain and how it can interact with USTB structures.
+% This example demonstrates the use of k-Wave for simulation of ultrasonic
+% imaging modalities and how to beamform it with USTB.
 %
-% author: Alfonso Rodriguez-Molares
-% last update: 28th February 2018
 %
-% based on a script by:
+% authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-% author: Bradley Treeby
-% date: 2nd July 2009
-% last update: 4th June 2017
+% Based on code by Bradley Treeby k-Wave Toolbox (http://www.k-wave.org) Copyright (C) 2009-2017 Bradley Treeby
 %
-% This function is part of the k-Wave Toolbox (http://www.k-wave.org)
-% Copyright (C) 2009-2017 Bradley Treeby
+% Last updated: 14.03.2018
+
 
 clear all;
 close all;
 
-%% basic definitions
+%% Basic definitions
+%
+% We define some constants to be used on the script
+
 f0 = 2e6;       % pulse center frequency [Hz]
 cycles=2;       % number of cycles in pulse
 c0 = 1540;      % medium speed of sound [m/s]
@@ -27,6 +26,9 @@ F_number = 1.7; % F number for CPWC sequence (i.e. maximum angle)
 N=3;            % number of plane waves in CPWC sequence
 
 %% uff.probe
+%
+% We define the ultrasound probe as a USTB structure.
+
 prb=uff.linear_array();
 prb.N=128;                  % number of elements
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
@@ -34,7 +36,12 @@ prb.element_width=250e-6;   % element width [m]
 prb.element_height=5000e-6; % element height [m]
 fig_handle = prb.plot([],'Linear array');
 
-%% create the computational grid
+%% Computational grid
+%
+% We can define the computational grid as a uff.linear_scan strcuture. We
+% set different resolution options depending on frequency reference speed
+% of sound.
+
 f_max = 1.2*f0;
 lambda_min = c0/f_max;
 
@@ -58,7 +65,11 @@ scan=uff.linear_scan('x_axis', linspace(-grid_width/2,grid_width/2,Nx).', 'z_axi
 
 kgrid = kWaveGrid(scan.N_z_axis, scan.z_step, scan.N_x_axis, scan.x_step);
 
-%% define the properties of the propagation medium
+%% Propagation medium
+%
+% We define the medium based by setting the sound speed and density in
+% every pixel of the uff.scan. Here we set an hyperechoic cyst at the
+% center of the domain.
 
 % transparent background
 medium.sound_speed = c0*ones(scan.N_z_axis, scan.N_x_axis);   % sound speed [m/s]
@@ -88,12 +99,19 @@ xlabel('x [mm]');
 ylabel('z [mm]');
 title('\rho [kg/m^3]');
 
-%% create the time array
+%% Time vector
+%
+% We define the time vector depending on the CFL number, the size of the
+% domain and the mean speed of sound.
+
 t_end=3*grid_depth/mean(medium.sound_speed(:));
 cfl=0.3;
 kgrid.makeTime(medium.sound_speed,cfl,t_end);
 
-%% sequence
+%% Sequence
+%
+% We define a sequence of plane-waves
+
 alpha_max=1/2/F_number;
 if N>1
     angles=linspace(-alpha_max,alpha_max,N);    % angle vector [rad]
@@ -112,7 +130,11 @@ for n=1:N
     seq(n).source.plot(fig_handle);
 end
 
-%% source & sensor mask
+%% Source & sensor mask
+%
+% Based on the uff.probe we find the pixels in the domain that must work as
+% source and sensors.
+
 % find the grid-points that match the element
 source_pixels={};
 element_sensor_index = {};
@@ -142,6 +164,9 @@ xlabel('x [mm]');
 ylabel('z [mm]');
 
 %% Calculation
+%
+% We are ready to launch the k-Wave calculation
+
 disp('Launching kWave. This can take a while.');
 for n=1:N
     delay=seq(n).delay_values-seq(n).delay;
@@ -166,7 +191,10 @@ for n=1:N
 end
 sensor_data(isnan(sensor_data))=0;
 
-%% gather element signals
+%% Gather element signals
+%
+% After calculaton we combine the signal recorded by the sensors according to the
+% corresponding element
 element_data=zeros(numel(kgrid.t_array),prb.N_elements,numel(seq));
 for m=1:prb.N_elements
     if  ~isempty(element_sensor_index{m})
@@ -174,10 +202,14 @@ for m=1:prb.N_elements
     end
 end
 
-% band-pass filter
+%% Band-pass filter
+%
+% We remove some numerical noise by band-pass filtering
 filtered_element_data=tools.band_pass(element_data,1/kgrid.dt,[0 1e6 8e6 10e6]);
 
-%% channel_data
+%% Channel_data
+%
+% We can now store the simulated data into a uff.channel_data class
 channel_data = uff.channel_data();
 channel_data.probe = prb;
 channel_data.sequence = seq;
@@ -188,7 +220,11 @@ channel_data.data = filtered_element_data;
 % taking care of NaNs
 channel_data.data(isnan(channel_data.data))=0;
 
-%% beamforming
+%% Beamforming
+%
+% To beamform we define a new (coarser) uff.linear_scan. We also define the
+% processing pipeline and launch the beamformer
+
 scan=uff.linear_scan('x_axis',linspace(scan.x_axis(1),scan.x_axis(end),512).',...
     'z_axis',linspace(scan.z_axis(1),scan.z_axis(end),512).');
 
@@ -203,9 +239,11 @@ b=postprocess.coherent_compounding();
 b.dimension = dimension.both;
 
 das = pipe.go({midprocess.das b});
-das.plot(); hold on;
+das.plot([],'DAS'); hold on;
 
 %% Coherence Factor
+%
+% As an example, we change the pipeline and produce a CF-based image
 m = midprocess.das();
 m.dimension = dimension.transmit;
 
@@ -213,5 +251,4 @@ b=postprocess.coherence_factor();
 b.dimension = dimension.receive;
 
 cf = pipe.go({m b});
-cf.plot(); hold on;
-title('Mallart-Fink CF');
+cf.plot([],'Mallart-Fink CF'); hold on;
