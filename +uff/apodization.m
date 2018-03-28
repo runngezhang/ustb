@@ -222,6 +222,9 @@ classdef apodization < uff
     %             end
             end
             
+            % normalize
+            %h.data_backup=h.data_backup./sum(sum(h.data_backup,3),2);
+            
             % pass a reference
             value=h.data_backup;
                 
