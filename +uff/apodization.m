@@ -112,7 +112,7 @@ classdef apodization < uff
         function value=hamming(h,ratio)
             value=double(ratio<=0.5).*(0.53836 + 0.46164*cos(2*pi*ratio));
         end
-        function value=tukey(h,ratio, roll)
+        function value=tukey(h,ratio, roll)            
             value=(ratio<=(1/2*(1-roll))) + (ratio>(1/2*(1-roll))).*(ratio<(1/2)).*0.5.*(1+cos(2*pi/roll*(ratio-roll/2-1/2)));
         end
     end
@@ -274,6 +274,41 @@ classdef apodization < uff
                 % azimuth and elevation tangents
                 tan_theta = x_dist./z_dist;
                 tan_phi = y_dist./z_dist;
+                
+                %%
+%                 if isa(h.focus,'uff.sector_scan')
+%                     figure(88);
+%                     subplot(121);
+%                     imagesc(reshape(z_dist(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+%                     shading('flat');
+%                     set(gca,'fontsize',14);
+%                     set(gca,'YDir','reverse');
+%                     axis('tight','equal');
+%                     colorbar();
+%                     subplot(122);
+%                     imagesc(reshape(x_dist(:,10),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+%                     shading('flat');
+%                     set(gca,'fontsize',14);
+%                     set(gca,'YDir','reverse');
+%                     axis('tight','equal');
+%                     colorbar();
+%                 else isa(h.focus,'uff.linear_scan')                   
+%                     figure(88);
+%                     subplot(121);
+%                     imagesc(reshape(z_dist(:,1),[h.focus.N_z_axis h.focus.N_x_axis]));
+%                     shading('flat');
+%                     set(gca,'fontsize',14);
+%                     set(gca,'YDir','reverse');
+%                     axis('tight','equal');
+%                     colorbar();
+%                     subplot(122);
+%                     imagesc(reshape(x_dist(:,1),[h.focus.N_z_axis h.focus.N_x_axis]));
+%                     shading('flat');
+%                     set(gca,'fontsize',14);
+%                     set(gca,'YDir','reverse');
+%                     axis('tight','equal');
+%                     colorbar();
+%                 end
 
             else
                 for n=1:length(h.sequence)
@@ -346,6 +381,43 @@ classdef apodization < uff
                 colorbar;
                 caxis([0 1]);
                 title(sprintf('Apodization values for %d wave',n_wave));
+            elseif isa(h.focus,'uff.sector_scan')
+                %%
+                 x_matrix=reshape(h.focus.x,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
+                 z_matrix=reshape(h.focus.z,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
+                 
+                 subplot(221);
+                 imagesc(reshape(h.data(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 shading('flat');
+                 set(gca,'fontsize',14);
+                 set(gca,'YDir','reverse');
+                 axis('tight','equal');
+                 title('Apodization for TX 1 in "beamspace"');
+                 colorbar();
+                 subplot(222);
+                 pcolor(x_matrix,z_matrix,reshape(h.data(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 shading('flat');
+                 set(gca,'fontsize',14);
+                 set(gca,'YDir','reverse');
+                 axis('tight','equal');
+                 colorbar();
+                 title('Apodization for TX 1 after scan conversion');
+                 subplot(223);
+                 pcolor(x_matrix,z_matrix,reshape(h.data(:,end/2),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 shading('flat');
+                 set(gca,'fontsize',14);
+                 set(gca,'YDir','reverse');
+                 axis('tight','equal');
+                 colorbar();
+                 title('Apodization for TX end/2 after scan conversion');
+                 subplot(224);
+                 pcolor(x_matrix,z_matrix,reshape(h.data(:,end),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 shading('flat');
+                 set(gca,'fontsize',14);
+                 set(gca,'YDir','reverse');
+                 axis('tight','equal');
+                 colorbar();
+                 title('Apodization for TX end after scan conversion');
             else
                 error('Only apodization plot for uff.linear_scan are supported for now.');
             end
