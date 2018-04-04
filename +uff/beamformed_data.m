@@ -141,8 +141,8 @@ classdef beamformed_data < uff
                     min_value=-dynamic_range;
                 case 'sqrt'
                     envelope=sqrt(abs(data));
-                    max_value=max(envelope(:));
-                    min_value=10^(-dynamic_range/20);
+                    max_value=prctile(envelope(:),99.9);
+                    min_value=prctile(envelope(:),1);
                 case 'none'
                     envelope=data;
                     max_value=max(envelope(:));

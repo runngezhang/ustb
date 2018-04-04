@@ -1,12 +1,11 @@
-classdef coherence_factor < postprocess
-%COHERENCE_FACTOR   Matlab implementation of Mallart-Fink Coherence Factor
+classdef generalized_coherence_factor < postprocess
+%GENERALIZED_COHERENCE_FACTOR   Matlab implementation of Li et al Generalized Coherence Factor
 %
-%   MATLAB implementation of Mallart-Fink coherence factor beamforming
+%   MATLAB implementation of Li et al Generalized coherence factor beamforming
 %   method as described in the paper:
 %
-%   R. Mallart and M. Fink, "Adaptive focusing in scattering media through 
-%   sound-speed inhomogeneities: The van Cittert Zernike approach and focusing 
-%   criterion", J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994
+%   Pai-Chi Lin and Meng-Lin Li, "Adaptive Imaging Using the Generalized
+%   Coherence Factor" IEEE TUFFC 50(2):128-141, 2003.
 %
 %   The implementation computes coherence either on transmit, receive, or
 %   both.
@@ -19,20 +18,21 @@ classdef coherence_factor < postprocess
     %% constructor
     methods (Access = public)
         function h=coherence_factor()
-            h.name='Coherence Factor MATLAB';   
-            h.reference= 'R. Mallart and M. Fink, Adaptive focusing in scattering media through sound-speed inhomogeneities: The van Cittert Zernike approach and focusing criterion, J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994';                
+            h.name='Generalized Coherence Factor MATLAB';   
+            h.reference= 'Pai-Chi Lin and Meng-Lin Li, "Adaptive Imaging Using the Generalized Coherence Factor" IEEE TUFFC 50(2):128-141, 2003.';                
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};    
-            h.version='v1.0.5';
+            h.version='v1.0.1';
         end
     end
         
     %% Additional properties
     properties
-        CF                                            % BEAMFORMED_DATA class with the computed coherent factor
+        GCF                                           % BEAMFORMED_DATA class with the computed coherent factor
         receive_apodization                           % APODIZATION class
         transmit_apodization                          % APODIZATION class
         active_element_criterium=0.16;                % value to decide whether an element is used or not. This value depends on the SNR so it must be adjusted on a case-by-case basis.
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
+        M0 = 4;                                       % low frequency
     end
 
     methods
@@ -86,33 +86,39 @@ classdef coherence_factor < postprocess
 
             % declare output structure
             h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
-            h.CF=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
+            h.GCF=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
 
             switch h.dimension
                 case dimension.both
                     active_elements=double(bsxfun(@times,tx_apodization,rx_apodization)>h.active_element_criterium);
                     coherent_sum=sum(sum(h.input.data,2),3);
-                    incoherent_2_sum=sum(sum(abs(h.input.data).^2,2),3);
+                    fft_data=permute(fft2(permute(h.input.data,[2 3 1 4])),[3 1 2 4]);
+                    LF_sum=sum(sum(abs(fft_data(:,1:h.M0,1:h.M0,:)).^2,2),3);
+                    total_sum=sum(sum(abs(fft_data).^2,2),3);
                     M=sum(sum(active_elements,2),3);
                 case dimension.transmit
                     active_elements=double(tx_apodization>h.active_element_criterium);
                     coherent_sum=sum(h.input.data,3);
-                    incoherent_2_sum=sum(abs(h.input.data).^2,3);
+                    fft_data=fft(h.input.data,[],3);
+                    LF_sum=sum(abs(fft_data(:,:,1:h.M0,:)).^2,3);
+                    total_sum=sum(abs(fft_data).^2,3);
                     M=sum(active_elements,3);
                 case dimension.receive
                     active_elements=double(rx_apodization>h.active_element_criterium);
                     coherent_sum=sum(h.input.data,2);
-                    incoherent_2_sum=sum(abs(h.input.data).^2,2);
+                    fft_data=fft(h.input.data,[],2);
+                    LF_sum=sum(abs(fft_data(:,1:h.M0,:,:)).^2,2);
+                    total_sum=sum(abs(fft_data).^2,2);
                     M=sum(active_elements,2);
                 otherwise
                     error('Unknown dimension mode; check HELP dimension');
             end
             
             % Coherent Factor
-            h.CF.data = bsxfun(@times,abs(coherent_sum).^2./incoherent_2_sum,1./M); 
-            h.CF.data(isnan(h.CF.data)) = 0;
-            % coherent factor image            
-            h.output.data = h.CF.data .* coherent_sum;
+            h.GCF.data = bsxfun(@times,LF_sum./total_sum,1./M); 
+            h.GCF.data(isnan(h.GCF.data))=0;
+            % generalized coherent factor image            
+            h.output.data = h.GCF.data .* coherent_sum;
             
             % pass reference
             output = h.output;

@@ -133,7 +133,8 @@ classdef demodulation < preprocess
             
             % resampling
             dt=1./h.downsample_frequency;
-            t=(h.input.time(1):dt:h.input.time(end));
+            temp_time = h.input.time;
+            t =  temp_time(1):dt:temp_time(end);
             data=reshape(data,size(h.input.data)); % we get back singleton dimmensions
             downsample_data=zeros(length(t),size(data,2),size(data,3),size(data,4));
             wb = waitbar(0, 'Resampling...');
