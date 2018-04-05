@@ -257,20 +257,27 @@ classdef apodization < uff
         end
         
         function [ratio_theta ratio_phi]=incidence_ratios(h)
-            if isempty(h.sequence)
+            if isempty(h.sequence) % no sequence then it must be a receive aperture
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
                 x=ones(h.focus.N_pixels,1)*(h.probe.x.'); 
                 y=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
                 z=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
-                
-                % distances
-                x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
-                y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
-                z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+
+                if isa(h.focus,'uff.linear_scan')
+                    % distances
+                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                else
+                    % distances
+                    x_dist=h.focus.apex.x-x;
+                    y_dist=h.focus.apex.y-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                end
                 
                 % clamping z=0
                 z_dist(abs(z_dist)<1e-6)=1e-6;
-                
+
                 % azimuth and elevation tangents
                 tan_theta = x_dist./z_dist;
                 tan_phi = y_dist./z_dist;
@@ -310,7 +317,7 @@ classdef apodization < uff
 %                     colorbar();
 %                 end
 
-            else
+            else % transmit apodization
                 for n=1:length(h.sequence)
                     % plane wave
                     if (h.sequence(n).wavefront==uff.wavefront.plane||isinf(h.sequence(n).source.distance))
