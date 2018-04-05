@@ -78,12 +78,13 @@ b_data=mid.go();
 % And finally display the image.
 b_data.plot([],'Beamformed image');
 
+%%
 img = b_data.get_image('none');
 figure;imagesc(db(abs(fftshift(fft2(ifftshift(img))))));
 title('No MLA no apod');
 colormap jet;
 %% Beamforming with MLA's
-MLA = 2;
+MLA = 4;
 
 scan_MLA=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),length(x_axis)*MLA)','z_axis',z_axis);
 
@@ -93,20 +94,20 @@ mid_MLA.dimension = dimension.receive();
 mid_MLA.channel_data=channel_data;
 mid_MLA.scan=scan_MLA;
 
-mid_MLA.transmit_apodization.window=uff.window.boxcar;
+mid_MLA.transmit_apodization.window=uff.window.scanline; %uff.window.none;
 mid_MLA.transmit_apodization.MLA = MLA;
 mid_MLA.transmit_apodization.MLA_overlap = MLA;
-mid_MLA.transmit_apodization.f_number = 1.7;
-mid_MLA.transmit_apodization.probe = channel_data.probe;
-mid_MLA.transmit_apodization.sequence = channel_data.sequence;
-mid_MLA.transmit_apodization.focus = scan_MLA;
-tx_apo = mid_MLA.transmit_apodization.data;
+%mid_MLA.transmit_apodization.f_number = 1.7;
+%mid_MLA.transmit_apodization.probe = channel_data.probe;
+%mid_MLA.transmit_apodization.sequence = channel_data.sequence;
+%mid_MLA.transmit_apodization.focus = scan_MLA;
+%tx_apo = mid_MLA.transmit_apodization.data;
 %%
-tx_apo_matrix = reshape(tx_apo,scan_MLA.N_z_axis,scan_MLA.N_x_axis,128);
+%tx_apo_matrix = reshape(tx_apo,scan_MLA.N_z_axis,scan_MLA.N_x_axis,128);
 
-f999 = figure(999);imagesc(tx_apo_matrix(:,:,55))
-title('Tx apodization MLA/RTB');
-saveas(f999,'tx_apod_img')
+%f999 = figure(999);imagesc(tx_apo_matrix(:,:,55))
+%title('Tx apodization MLA/RTB');
+%saveas(f999,'tx_apod_img')
 %%
 mid_MLA.receive_apodization.window=uff.window.boxcar;
 mid_MLA.receive_apodization.f_number=1.7;
@@ -118,6 +119,8 @@ rx_apo_matrix = reshape(rx_apo,scan_MLA.N_z_axis,scan_MLA.N_x_axis,128);
 figure;imagesc(rx_apo_matrix(:,:,50))
 %%
 b_data_MLA=mid_MLA.go();
+
+%%
 b_data_MLA.plot(777,'Beamformed image MLA');
 
 
