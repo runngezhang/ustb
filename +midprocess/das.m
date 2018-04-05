@@ -102,6 +102,22 @@ classdef das < midprocess
             % convert to single
             transmit_delay = single(transmit_delay);
             
+            %%
+            tx_delay = reshape(transmit_delay(:,end/2),h.scan.N_z_axis,h.scan.N_x_axis);
+            figure(77);clf;
+            subplot(121)
+            imagesc(h.scan.x_axis*1000,h.scan.z_axis*1000,tx_delay);
+            ylabel('z [mm]');xlabel('x [mm]');
+            title(['TX delay with focus (the virtual source) at x =',num2str(h.channel_data.sequence(end/2).source.x*1000),' z = ',num2str(h.channel_data.sequence(end/2).source.z*1000)]);
+            axis image
+            subplot(122);hold all;
+            plot(h.scan.z_axis*1000,tx_delay(:,end/2),'DisplayName',['Delay through source at x = ',num2str(h.scan.x_axis(end/2)*1000)])
+            plot(h.scan.z_axis*1000,tx_delay(:,end/2-10),'DisplayName',['Delay through x = ',num2str(h.scan.x_axis(end/2-10)*1000)])
+            legend show
+            ylabel('Delay [s]');xlabel('z [mm]');
+            xlim([20 40])
+            %%
+            
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
             data=single(h.channel_data.data);
