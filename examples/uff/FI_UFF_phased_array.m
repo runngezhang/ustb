@@ -41,4 +41,4 @@ b_data = mid.go();
 
 %% Plot the two images
 b_data.plot(3,['DAS']);
-mid.receive_apodization.plot();
+mid.receive_apodization.plot([],32);

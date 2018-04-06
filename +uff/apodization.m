@@ -365,7 +365,7 @@ classdef apodization < uff
         end
         
         %% display methods 
-        function figure_handle=plot(h,figure_handle_in,n_wave)
+        function figure_handle=plot(h,figure_handle_in,n)
             % PLOT Plots channel data
             if nargin>1 && not(isempty(figure_handle_in))
                 figure_handle=figure(figure_handle_in);
@@ -374,59 +374,67 @@ classdef apodization < uff
             end
             
             if nargin <3
-                n_wave=round(size(h.data,2)/2);
+                n=round(size(h.data,2)/2);
             end
             
             colorMap = tools.inferno;
             
+            isreceive = isempty(h.sequence);
+            
             if isa(h.focus,'uff.linear_scan')
-                imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n_wave),[h.focus.N_z_axis h.focus.N_x_axis]))
+                imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n),[h.focus.N_z_axis h.focus.N_x_axis]))
                 xlabel('x [mm]');
                 ylabel('z [mm]');
                 set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 colorbar;
-                caxis([0 1]);
-                title(sprintf('Apodization values for %d wave',n_wave));
+                %caxis([0 1]);
+                if isreceive
+                    title(sprintf('Apodization values for element %d',n));
+                else
+                    title(sprintf('Apodization values for wave %d',n));
+                end
+            
             elseif isa(h.focus,'uff.sector_scan')
-                %%
                  x_matrix=reshape(h.focus.x,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
                  z_matrix=reshape(h.focus.z,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
                  
-                 subplot(221);
-                 imagesc(reshape(h.data(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
-                 shading('flat');
-                 set(gca,'fontsize',14);
-                 set(gca,'YDir','reverse');
-                 axis('tight','equal');
-                 title('Apodization for TX 1 in "beamspace"');
-                 colorbar();
-                 subplot(222);
-                 pcolor(x_matrix,z_matrix,reshape(h.data(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 
+                 subplot(1,2,1);
+                 pcolor(x_matrix*1e3,z_matrix*1e3,reshape(h.data(:,n),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 xlabel('x [mm]');
+                 ylabel('z [mm]');
                  shading('flat');
                  set(gca,'fontsize',14);
                  set(gca,'YDir','reverse');
                  axis('tight','equal');
                  colorbar();
-                 title('Apodization for TX 1 after scan conversion');
-                 subplot(223);
-                 pcolor(x_matrix,z_matrix,reshape(h.data(:,end/2),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
-                 shading('flat');
-                 set(gca,'fontsize',14);
-                 set(gca,'YDir','reverse');
-                 axis('tight','equal');
-                 colorbar();
-                 title('Apodization for TX end/2 after scan conversion');
-                 subplot(224);
-                 pcolor(x_matrix,z_matrix,reshape(h.data(:,end),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
-                 shading('flat');
-                 set(gca,'fontsize',14);
-                 set(gca,'YDir','reverse');
-                 axis('tight','equal');
-                 colorbar();
-                 title('Apodization for TX end after scan conversion');
+                 %caxis([0 1]);
+                 if isreceive
+                    title(sprintf('Apodization for element %d. Click or Enter.',n));
+                 else
+                    title(sprintf('Apodization for wave %d. Click or Enter.',n));
+                 end
+                 [x z]=ginput(1);
+                 while ~isempty(x)
+                     [~, ns]=min(sum((h.focus(1).xyz-[x 0 z]/1e3).^2,2));
+                     subplot(1,2,2);
+                     plot(h.data(ns,:)); grid on; axis tight;
+                     ylim([0 1.2]);
+                     if isreceive
+                        title(sprintf('Receive apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('Element');
+                     else
+                        title(sprintf('Transmit apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('wave');
+                     end
+                     set(gca,'fontsize',14);
+                     
+                     subplot(1,2,1);
+                     [x z]=ginput(1);
+                 end
             else
-                error('Only apodization plot for uff.linear_scan are supported for now.');
+                error('Only apodization plot for uff.linear_scan and uff.sector_scan are supported for now.');
             end
         end
     end
