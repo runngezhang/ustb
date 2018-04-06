@@ -281,41 +281,6 @@ classdef apodization < uff
                 % azimuth and elevation tangents
                 tan_theta = x_dist./z_dist;
                 tan_phi = y_dist./z_dist;
-                
-                %%
-%                 if isa(h.focus,'uff.sector_scan')
-%                     figure(88);
-%                     subplot(121);
-%                     imagesc(reshape(z_dist(:,1),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
-%                     shading('flat');
-%                     set(gca,'fontsize',14);
-%                     set(gca,'YDir','reverse');
-%                     axis('tight','equal');
-%                     colorbar();
-%                     subplot(122);
-%                     imagesc(reshape(x_dist(:,10),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
-%                     shading('flat');
-%                     set(gca,'fontsize',14);
-%                     set(gca,'YDir','reverse');
-%                     axis('tight','equal');
-%                     colorbar();
-%                 else isa(h.focus,'uff.linear_scan')                   
-%                     figure(88);
-%                     subplot(121);
-%                     imagesc(reshape(z_dist(:,1),[h.focus.N_z_axis h.focus.N_x_axis]));
-%                     shading('flat');
-%                     set(gca,'fontsize',14);
-%                     set(gca,'YDir','reverse');
-%                     axis('tight','equal');
-%                     colorbar();
-%                     subplot(122);
-%                     imagesc(reshape(x_dist(:,1),[h.focus.N_z_axis h.focus.N_x_axis]));
-%                     shading('flat');
-%                     set(gca,'fontsize',14);
-%                     set(gca,'YDir','reverse');
-%                     axis('tight','equal');
-%                     colorbar();
-%                 end
 
             else % transmit apodization
                 for n=1:length(h.sequence)
