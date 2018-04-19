@@ -138,9 +138,16 @@ classdef capon_minimum_variance < postprocess
                     for n_frame = 1:h.input.N_frames
                         for n_wave = 1:h.input.N_waves
                             % Apodization matrix indicating active elements
-                            apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
-                            data_cube = reshape(h.input.data(:,:,n_wave,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
-                            %A hack to set non active elements to zero for the
+                            if isa(h.scan,'uff.linear_scan')
+                                apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
+                                data_cube = reshape(h.input.data(:,:,n_wave,n_frame),h.input(1).scan.N_z_axis,h.input(1).scan.N_x_axis,h.input.N_channels);
+                                
+                            elseif isa(h.scan,'uff.sector_scan')
+                                apod_matrix = reshape(bsxfun(@times,tx_apodization(:,n_wave),rx_apodization),h.input(1).scan.N_depth_axis,h.input(1).scan.N_azimuth_axis,h.input.N_channels);
+                                data_cube = reshape(h.input.data(:,:,n_wave,n_frame),h.input(1).scan.N_depth_axis,h.input(1).scan.N_azimuth_axis,h.input.N_channels);
+                                
+                            end
+                                                       %A hack to set non active elements to zero for the
                             %alpinion scanner FI who only use 64 active
                             %elements
                             if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
@@ -240,10 +247,17 @@ classdef capon_minimum_variance < postprocess
             assert(~isempty(h.scan),'You need to set the scan.')
             assert(~isempty(h.channel_data),'You need to set the channel_data.')
           
-            h.K_in_lambda = K_in_lambda;
-            z_in_lambda = h.scan(1).z_axis./h.channel_data.lambda;
-            z_in_lambda = z_in_lambda - z_in_lambda(1);
-            [~,samples] = min(abs(z_in_lambda-h.K_in_lambda));
+            if isa(h.scan,'uff.linear_scan')
+                h.K_in_lambda = K_in_lambda;
+                z_in_lambda = h.scan(1).z_axis./h.channel_data.lambda;
+                z_in_lambda = z_in_lambda - z_in_lambda(1);
+                [~,samples] = min(abs(z_in_lambda-h.K_in_lambda));
+            elseif isa(h.scan,'uff.sector_scan')
+                h.K_in_lambda = K_in_lambda;
+                z_in_lambda = h.scan(1).depth_axis./h.channel_data.lambda;
+                z_in_lambda = z_in_lambda - z_in_lambda(1);
+                [~,samples] = min(abs(z_in_lambda-h.K_in_lambda));
+            end
             
             if mod(round(samples),2)    % Check if odd
                 h.K_samples = round(samples);
