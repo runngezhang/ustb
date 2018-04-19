@@ -170,14 +170,18 @@ f7 = figure(9);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
 colormap gray;caxis([-60 0]);axis image;colorbar;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
 
-%% Process GLT
-
 %% Gray Level Transform
 glt = postprocess.gray_level_transform();
+glt.a = 0.0001;
+glt.b = 0;
+glt.c = 1;
+glt.plot_functions = 1;
+
 glt.input = b_data_das;
 
 b_data_glt = glt.go();
 b_data_glt.plot()
+
 
 %%
 b_data_tx.write([data_path,filesep,filename],'/b_data_tx');

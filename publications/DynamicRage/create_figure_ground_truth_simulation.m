@@ -1,74 +1,3 @@
-% addpath make_simulation
-% 
-% [point_position, point_amplitudes] = simulatedPhantomDynamicRange_2(650);
-% 
-% %%
-% figure(10);
-% plot3(point_position(:,1)*1e3,point_position(:,3)*1e3,20*log10(point_amplitudes),'b.'); axis equal;
-% zlim([-60 5]);
-% xlabel('X [mm]');ylabel('Z [mm]');zlabel('Amplitude [dB]');
-% 
-% %%
-% addpath([ustb_path,filesep,'publications/DynamicRage/functions'])
-% addpath([ustb_path,filesep,'publications/DynamicRage/functions/tightfig'])
-% f1 = figure(11);
-% scatter3(point_position(:,1)*1e3,point_position(:,3)*1e3,20*log10(point_amplitudes),13,20*log10(point_amplitudes),'filled'); axis equal;
-% colormap gray;
-% 
-% az = 0;
-% el = 90;
-% view(az, el);
-% %set(gca, 'Xdir', 'reverse')
-% set(gca, 'Ydir', 'reverse')
-% xlabel('x [mm]');ylabel('z [mm]');
-% 
-% set(gca,'Color','k')
-% ylim([10 55])
-% %xlim([-20 20])
-% caxis([-60 0])
-% 
-% axi = gca;
-% 
-% xc_nonecho = -7.5;
-% zc_nonecho = 25;
-% r_nonecho = 3.3;
-% r_speckle_inner = 4.5;
-% r_speckle_outer = 7.5;
-% viscircles(axi,[xc_nonecho,zc_nonecho],r_nonecho,'EdgeColor','r','EnhanceVisibility',0);
-% viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_inner,'EdgeColor','b','EnhanceVisibility',0);
-% viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_outer,'EdgeColor','b','EnhanceVisibility',0);
-% 
-% set(gca,'FontSize',14)
-% axis image;
-% f1 = tightfig(f1);
-% f1.InvertHardcopy = 'off';
-% saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_alt_1'],'eps2c')
-% savefig(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_alt_1'])
-% %%
-% caxis([-90 0])
-% saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_alt_2'],'eps2c')
-% 
-% h = colorbar;
-% ylabel(h,'Amplitude [dB]');
-% saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_alt_3'],'eps2c')
-% caxis([-60 0])
-% saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_alt_4'],'eps2c')
-% 
-% %%
-% axis([-17 2 33 42]);
-% caxis([-60 0])
-% saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GT_zoomed'],'eps2c')
-% 
-% 
-% %%
-% 
-% Z = [point_position(:,1)*1e3 point_position(:,3)*1e3 (point_amplitudes)];
-% 
-% %%
-% figure;
-% 
-% mesh(Z); axis equal;
-
 scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(8e-3,55e-3,2048).');
 
 b_data_t = uff.beamformed_data();
@@ -148,6 +77,17 @@ theoretical_image_non_db = 10.^(theoretical_image/20);
 b_data_t.data = theoretical_image_non_db(:);
 b_data_t.plot([],[],60)
 
+
+
+xc_nonecho = -7.5;
+zc_nonecho = 25;
+r_nonecho = 3;
+r_speckle_inner = 4.5;
+r_speckle_outer = 7.5;
+viscircles(axi,[xc_nonecho,zc_nonecho],r_nonecho,'EdgeColor','r','EnhanceVisibility',0);
+viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_inner,'EdgeColor','b','EnhanceVisibility',0);
+viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_outer,'EdgeColor','b','EnhanceVisibility',0);
+
 %%
 
 theory_img = b_data_t.get_image('none');  % Compensation weighting
@@ -156,6 +96,16 @@ f1 = figure(1);clf;
 imagesc(b_data_t.scan.x_axis*1000,b_data_t.scan.z_axis*1000,theory_img);
 colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
+axi = gca;
+xc_nonecho = -7.5;
+zc_nonecho = 25;
+r_nonecho = 3;
+r_speckle_inner = 4.5;
+r_speckle_outer = 7.5;
+viscircles(axi,[xc_nonecho,zc_nonecho],r_nonecho,'EdgeColor','r','EnhanceVisibility',0);
+viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_inner,'EdgeColor','b','EnhanceVisibility',0);
+viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_outer,'EdgeColor','b','EnhanceVisibility',0);
+
 saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/theoretical'],'eps2c')
-axis([-17 2 33 42]);
-saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/theoretical_zoomed'],'eps2c')
+%axis([-17 2 33 42]);
+%saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/theoretical_zoomed'],'eps2c')
