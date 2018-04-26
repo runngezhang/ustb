@@ -65,13 +65,13 @@ b_data.plot(3,['DAS']);
 MLA = 4;
 scan_MLA=uff.sector_scan('azimuth_axis',...
     linspace(channel_data.sequence(1).source.azimuth,channel_data.sequence(end).source.azimuth,...
-    length(channel_data.sequence)*MLA)'...
-    ,'depth_axis',depth_axis);
+    length(channel_data.sequence)*MLA)','depth_axis',depth_axis);
 
 mid_MLA=midprocess.das();
 mid_MLA.channel_data=channel_data;
 mid_MLA.dimension = dimension.both();
 mid_MLA.scan=scan_MLA;
+mid_MLA.use_PW_fix = 1;
 mid_MLA.transmit_apodization.window=uff.window.scanline;
 mid_MLA.transmit_apodization.MLA = MLA;
 mid_MLA.transmit_apodization.MLA_overlap = MLA/2;
