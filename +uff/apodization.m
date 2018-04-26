@@ -174,6 +174,72 @@ classdef apodization < uff
                 else
                     error('uff.apodization:Scanline','The scan class does not support scanline based beamforming. This must be done manually, defining several scan and setting the apodization to uff.window.none.');
                 end
+            elseif (h.window == uff.window.sector_scan_rtb)
+                %% This apodization is used when we have a sector scan for RTB and
+                % for 
+                assert(numel(h.probe)>0,'The probe object is not set.')
+                
+                apod_all = zeros(h.focus.N_pixels,length(h.sequence));
+                for n = 1:length(h.sequence)
+                    first_element = 1; 
+                    last_element = h.probe.N_elements-first_element+1;
+                    min_size = 4;
+                    
+                    x_dist = h.focus.x-h.focus.apex.x - h.sequence(n).source.x;
+                    y_dist = h.focus.y-h.sequence(n).source.y;
+                    z_dist= h.focus.z- h.focus.apex.z  - h.sequence(n).source.z;
+                    
+                    % Calculate the angle of the "rays" from the source to
+                    % the end of the probe at both sides.
+                    R1 = norm(h.sequence(n).source.xyz - [h.probe.x(last_element) h.probe.y(last_element) h.probe.z(last_element)]);
+                    R2 = norm(h.sequence(n).source.xyz - [h.probe.x(first_element) h.probe.y(first_element) h.probe.z(first_element)]);
+                    a1 = norm(h.sequence(n).source.x - h.probe.x(last_element));
+                    a2 = norm(h.sequence(n).source.x - h.probe.x(first_element));
+                    phi = acosd(a1/R1);
+                    phi_2 = acosd(a2/R2);
+                    
+                    %Calculate all "thetas"
+                    theta = atand(x_dist./z_dist);
+                    theta_matrix =reshape(theta,[h.focus.N_depth_axis h.focus.N_azimuth_axis]);
+                    
+                    %Depending on where the source is located compared to
+                    %the probe mask out the apod based on the angles
+                    %calculated above
+                    if norm(h.sequence(n).source.x - h.focus.apex.x) > norm(h.probe.x(first_element)- h.focus.apex.x) && h.sequence(n).source.x < 0 
+                        % Left of the probe
+                        apod = single(theta_matrix > -(90-phi) & theta_matrix < -(90-phi_2));
+                    elseif norm(h.sequence(n).source.x - h.focus.apex.x) > norm(h.probe.x(last_element)- h.focus.apex.x) && h.sequence(n).source.x > 0 
+                        % right of the probe
+                        apod = single(theta_matrix > (90-phi) & theta_matrix < (90-phi_2));
+                    else % Under the probe
+                        apod = single(theta_matrix > -(90-phi) & theta_matrix < (90-phi_2));
+                    end
+                    
+                    %If minimum aperture is set to zero, skip this
+                    if sum(h.minimum_aperture) ~= 0
+                        % Set the "minimum size" of the aperture
+                        idx = find(sum(apod,2) < min_size);
+                        [~,idx_x] = min(abs(h.focus.azimuth_axis-h.sequence(n).source.azimuth));
+                        if idx_x-min_size/2 < 1
+                            apod(idx,idx_x:idx_x+min_size/2) = 1;
+                        elseif idx_x+min_size/2 > h.focus.N_azimuth_axis
+                            apod(idx,idx_x-min_size/2:idx_x) = 1;
+                        else
+                            apod(idx,idx_x-min_size/2:idx_x+min_size/2) = 1;
+                        end
+                        
+                        % Do some smooting and dialation to get the apod smooth
+                        % This is kind of a hack, it needs to be dynamic to
+                        % minimum size and number of MLA's I believe
+                        kernel = fspecial('disk',4);
+                        kernel_dilation = fspecial('disk',2);
+                        
+                        apod = imdilate(apod,logical(kernel_dilation));
+                        apod = imfilter(apod,kernel);
+                    end
+                    apod_all(:,n) = apod(:);
+                end
+                h.data_backup = apod_all;
             else
 
                 % incidence ratio

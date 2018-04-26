@@ -11,6 +11,10 @@ classdef das < midprocess
     properties
         dimension = dimension.receive;      % dimension enumeration class that specifies whether the process will run only on transmit, receive, both, or none.
         code = code.mex;                    % code enumeration class that specifies the code to be run (code.matlab, code.mex)
+        use_PW_fix = 0;                     % Flag to use PW fix when virtual source is in front of transducer
+        margin_in_m = 1;                    % The margin of the area around focus to change with PW for PW fix for virtual source in front of transducer
+        use_unified_fix = 0;                % Flag to use unified beamforming fix when virtual source is in front of transducer, see reference 
+        tx_delay_hack                       % Variabl returning the calculated tx delay so that it can be plotted
     end
     
     %% constructor
@@ -65,31 +69,139 @@ classdef das < midprocess
             receive_delay=single(sqrt(xm.^2+ym.^2+zm.^2)/h.channel_data.sound_speed);
             
             % calculate transmit delay
+            
+            % get an apodization mask for unified beamforming fix
+            if h.use_unified_fix && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3) 
+                if isa(h.scan,'uff.sector_scan')
+                    mask_apod = uff.apodization();
+                    mask_apod.window = uff.window.sector_scan_rtb;
+                    mask_apod.sequence = h.channel_data.sequence;
+                    mask_apod.minimum_aperture = [0 0];
+                    mask_apod.focus = h.scan;
+                    mask_apod.probe = h.channel_data.probe;
+                    mask_all_waves = reshape(mask_apod.data,h.scan.N_depth_axis,h.scan.N_azimuth_axis,numel(h.channel_data.sequence));
+                elseif isa(h.scan,'uff.linear_scan')
+                    %%
+                    mask_apod = uff.apodization();
+                    mask_apod.window = uff.window.boxcar;
+                    mask_apod.f_number = 0.85; %Why do we need this lower than one to cover the "full" aperture. This should probably be the transmit f_number, and thus should be higher
+                    mask_apod.sequence = h.channel_data.sequence;
+                    mask_apod.minimum_aperture = [0 0];
+                    mask_apod.focus = h.scan;
+                    mask_apod.probe = h.channel_data.probe;
+                    mask_all_waves = reshape(mask_apod.data,h.scan.N_z_axis,h.scan.N_x_axis,numel(h.channel_data.sequence));
+                else
+                    error('Only linear scan and sector scan is supported for unified fix.');
+                end
+            end
+            
             transmit_delay=zeros(N_pixels,N_waves);
             for n_wave=1:numel(h.channel_data.sequence)
                 switch(h.channel_data.sequence(n_wave).wavefront)
                     % point source
-                    case uff.wavefront.spherical 
+                    case uff.wavefront.spherical
                         % check if the point source is at infinity -> for backcompatibility of examples
                         if isinf(h.channel_data.sequence(n_wave).source.distance)
                             transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                         else
-                            % distance between source and elements
+                            
+                            %% distance between source and elements
                             transmit_delay(:,n_wave)=(-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-h.scan.x).^2+(h.channel_data.sequence(n_wave).source.y-h.scan.y).^2+(h.channel_data.sequence(n_wave).source.z-h.scan.z).^2);
-
+                            
                             % add distance from source to origin
                             if (h.channel_data.sequence(n_wave).source.z<-1e-3)
                                 transmit_delay(:,n_wave)=transmit_delay(:,n_wave)-h.channel_data.sequence(n_wave).source.distance;
-                            else
-                                transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
+                            else % if virtual source in front of transducer
+                                
+                                if h.use_PW_fix
+                                    % This will hopefully be well
+                                    % documented in a IUS2018 publication
+                                    
+                                    % Calculate the "plane wave" in the transmit direction
+                                    if isa(h.scan,'uff.linear_scan')
+                                        plane_delay = (-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.z-h.scan.z).^2) + h.channel_data.sequence(n_wave).source.distance;
+                                    elseif isa(h.scan,'uff.sector_scan')
+                                        plane_delay = h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
+                                    else
+                                        error('Only linear scan and sector scan in 2D is supported for virtual source fix');
+                                    end
+                                    
+                                    % Find region in front of and after the
+                                    % focus with margins given by h.margin_in_m
+                                    z_mask = logical(h.scan.z < (h.channel_data.sequence(n_wave).source.z + h.margin_in_m)) & logical(h.scan.z > (h.channel_data.sequence(n_wave).source.z - h.margin_in_m));
+                                    
+                                    % Replace the region in the virtual source delay with the plane delay in
+                                    % the region indicated by the mask
+                                    transmit_delay_temp = transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
+                                    transmit_delay_temp(z_mask) = plane_delay(z_mask);
+                                    transmit_delay(:,n_wave) = transmit_delay_temp;
+                                    
+                                elseif h.use_unified_fix
+                                    % Implementation of the transmit delay model introduced in  Nguyen, N. Q., & Prager, R. W. (2016). 
+                                    % High-Resolution Ultrasound Imaging With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98?108.
+                                    % To do:
+                                    %       1. Fix the delay outside the first and last valid pixel according to the "mask"
+                                    %       2. The edge of the resulting image has an
+                                    %       artifact. Is this related to
+                                    %       the f_number size used in the
+                                    %       mask?
+                                    transmit_delay_temp = transmit_delay(:,n_wave);
+                                    
+                                    % Reshape the delays into the size of the scan
+                                    if isa(h.scan,'uff.linear_scan')
+                                        tx_delay = reshape(transmit_delay_temp,h.scan.N_z_axis,h.scan.N_x_axis);
+                                        x_matrix = reshape(h.scan.x,h.scan.N_z_axis,h.scan.N_x_axis);
+                                        z_matrix = reshape(h.scan.z,h.scan.N_z_axis,h.scan.N_x_axis);
+                                        N_lines = h.scan.N_x_axis;
+                                    elseif isa(h.scan,'uff.sector_scan')
+                                        tx_delay = reshape(transmit_delay_temp,h.scan.N_depth_axis,h.scan.N_azimuth_axis); 
+                                        x_matrix = reshape(h.scan.x,h.scan.N_depth_axis,h.scan.N_azimuth_axis);
+                                        z_matrix = reshape(h.scan.z,h.scan.N_depth_axis,h.scan.N_azimuth_axis);
+                                        N_lines = h.scan.N_azimuth_axis;
+                                    end
+                                    % Mask out the valid delays within the "cone" in front of and after the transmit delay
+                                    % The mask is calculated using the uff.apodization class before the TX delay loop.
+                                    mask = logical(mask_all_waves(:,:,n_wave));
+                                    masked_delays = mask.*tx_delay;
+                                    
+                                    % Interpolate the delays on the "edge" of the valid region 
+                                    % Yes, the code can probably be written more efficiently and intuitive
+                                    interpolated_delay = zeros(size(tx_delay));                                    
+                                    for x = 1:N_lines          
+                                            ray_of_masked_delays = masked_delays(:,x);
+                                            pos_ray_of_masked_delays = ray_of_masked_delays;
+                                            pos_ray_of_masked_delays(ray_of_masked_delays > 0) = 0;
+                                            pos_ray_of_masked_delays(pos_ray_of_masked_delays == 0) = -inf;
+                                            neg_ray_of_masked_delays = ray_of_masked_delays;
+                                            neg_ray_of_masked_delays(ray_of_masked_delays < 0) = 0;
+                                            neg_ray_of_masked_delays(neg_ray_of_masked_delays == 0) = inf;
+                                            
+                                            [~,idx_a] = max(pos_ray_of_masked_delays);
+                                            [~,idx_b] = min(neg_ray_of_masked_delays);
+                                            
+                                            pos_a = [ x_matrix(idx_a,x) z_matrix(idx_a,x) ];
+                                            pos_b = [ x_matrix(idx_b,x) z_matrix(idx_b,x) ];
+            
+                                            interpolated_delay(:,x) = (sqrt((z_matrix(idx_a,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_b,x) + (sqrt((z_matrix(idx_b,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_a,x);
+                                    end
+                                    
+                                    % Use the virtual source model within the "valid region"
+                                    interpolated_delay(mask) = tx_delay(mask);
+                                    interpolated_delay(isinf(interpolated_delay)) = 0;
+                                    transmit_delay(:,n_wave) = interpolated_delay(:) + h.channel_data.sequence(n_wave).source.distance;
+                                else
+                                    % Use conventional virtual source model
+                                    transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
+                                end
                             end
+                            
                         end
                         
-                    % plane wave   
+                        % plane wave
                     case uff.wavefront.plane
                         transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
-                    
-                    % photoacoustic wave
+                        
+                        % photoacoustic wave
                     case uff.wavefront.photoacoustic
                         transmit_delay(:,n_wave)=zeros(N_pixels,1);
                         
@@ -102,21 +214,8 @@ classdef das < midprocess
             % convert to single
             transmit_delay = single(transmit_delay);
             
-            %%
-            tx_delay = reshape(transmit_delay(:,end/2),h.scan.N_z_axis,h.scan.N_x_axis);
-            figure(77);clf;
-            subplot(121)
-            imagesc(h.scan.x_axis*1000,h.scan.z_axis*1000,tx_delay);
-            ylabel('z [mm]');xlabel('x [mm]');
-            title(['TX delay with focus (the virtual source) at x =',num2str(h.channel_data.sequence(end/2).source.x*1000),' z = ',num2str(h.channel_data.sequence(end/2).source.z*1000)]);
-            axis image
-            subplot(122);hold all;
-            plot(h.scan.z_axis*1000,tx_delay(:,end/2),'DisplayName',['Delay through source at x = ',num2str(h.scan.x_axis(end/2)*1000)])
-            plot(h.scan.z_axis*1000,tx_delay(:,end/2-10),'DisplayName',['Delay through x = ',num2str(h.scan.x_axis(end/2-10)*1000)])
-            legend show
-            ylabel('Delay [s]');xlabel('z [mm]');
-            xlim([20 40])
-            %%
+            % Saving tx delay to a parameter to be able to plot it
+            h.tx_delay_hack = transmit_delay;
             
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
@@ -150,19 +249,19 @@ classdef das < midprocess
                 
                 switch h.code
                     %% MEX
-                    case code.mex 
+                    case code.mex
                         aux_data=mex.das_c(data,...
-                                           sampling_frequency,...
-                                           initial_time,...
-                                           tx_apodization,...
-                                           rx_apodization,...
-                                           transmit_delay,...
-                                           receive_delay,...
-                                           modulation_frequency,...
-                                           int32(h.dimension));
-               
-                    %% MATLAB
-                    case code.matlab 
+                            sampling_frequency,...
+                            initial_time,...
+                            tx_apodization,...
+                            rx_apodization,...
+                            transmit_delay,...
+                            receive_delay,...
+                            modulation_frequency,...
+                            int32(h.dimension));
+                        
+                        %% MATLAB
+                    case code.matlab
                         % workbar
                         tools.workbar();
                         N=N_waves*N_channels;
@@ -187,7 +286,7 @@ classdef das < midprocess
                                         temp = bsxfun(@times,apodization,interp1(h.channel_data.time,data(:,n_rx,n_wave,:),delay,'linear',0));
                                         
                                         % apply phase correction factor to IQ data
-                                        if(abs(w0)>eps) 
+                                        if(abs(w0)>eps)
                                             temp = bsxfun(@times,exp(1i.*w0*delay),temp);
                                         end
                                         
@@ -207,7 +306,7 @@ classdef das < midprocess
                             end
                         end
                         
-                    %% MATLAB GPU FRAMELOOP
+                        %% MATLAB GPU FRAMELOOP
                     case code.matlab_gpu_frameloop
                         
                         % clear GPU memory and show basic info
@@ -281,17 +380,17 @@ classdef das < midprocess
                                         bf_data = bf_data + pre_bf_data;
                                     case dimension.both
                                         bf_data(:,1,N_waves) = sum(pre_bf_data, 2);
-                                end           
+                                end
                             end % end wave loop
                             
-                            switch (h.dimension) 
+                            switch (h.dimension)
                                 case dimension.transmit
                                     aux_data(:,:,1,n_frame) = gather(sum(bf_data, 3));
                                 case dimension.both
                                     aux_data(:,1,1,n_frame) = gather(sum(bf_data, 3));
                             end
                         end % end frame loop
-          
+                        
                     otherwise
                         error('Unknown code implementation requested');
                 end % end switch
