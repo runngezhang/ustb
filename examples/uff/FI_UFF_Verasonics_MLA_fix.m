@@ -1,4 +1,4 @@
-%% Focused Linear scan with L7-4 probe in Verasonics demonstrating MLA
+    %% Focused Linear scan with L7-4 probe in Verasonics demonstrating MLA
 %
 %   This example demonstrates the MLA implementation and demonstrates
 %   different fixes to the artifact occuring near the focus.
@@ -18,8 +18,8 @@ clear all; close all;
 
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
-filename='L7_FI_Verasonics.uff';
-%filename='L7_FI_155020.uff'; % The same dataset, but the foci hits the point scatteres, enhancing the artifact
+%filename='L7_FI_Verasonics.uff';
+filename='L7_FI_155020.uff'; % The same dataset, but the foci hits the point scatteres, enhancing the artifact
 tools.download(filename, url, data_path);   
 channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 
@@ -63,7 +63,7 @@ mid_MLA.scan=scan_MLA;
 
 mid_MLA.transmit_apodization.window=uff.window.scanline; 
 mid_MLA.transmit_apodization.MLA = MLA;
-mid_MLA.transmit_apodization.MLA_overlap = MLA;
+mid_MLA.transmit_apodization.MLA_overlap = MLA/2;
 
 mid_MLA.receive_apodization.window=uff.window.boxcar;
 mid_MLA.receive_apodization.f_number=1.7;
@@ -93,11 +93,11 @@ b_data_MLA_unified_fix=mid_MLA_unified_fix.go();
 b_data_MLA_unified_fix.plot(777,'Beamformed image MLA with unified fix');
 ax(2) = gca;
 
-% beamforming using a simpler model assuming PW around focus
+%% beamforming using a simpler model assuming PW around focus
 mid_MLA_with_plane_fix=midprocess.das();
 mid_MLA_with_plane_fix.dimension = dimension.both();
 mid_MLA_with_plane_fix.use_PW_fix = 1; % Set this flag to use this model
-mid_MLA_with_plane_fix.margin_in_m = 3/1000; %Optionally set the margin of the region around focus to use PW tx delay
+mid_MLA_with_plane_fix.margin_in_m = 1/1000; %Optionally set the margin of the region around focus to use PW tx delay
 
 mid_MLA_with_plane_fix.channel_data=channel_data;
 mid_MLA_with_plane_fix.scan=scan_MLA;
@@ -129,9 +129,18 @@ ax(2) = gca;
 b_data_MLA_with_plane_fix.plot(subplot(2,3,3),'1c : Virtual source + PW model');
 ax(3) = gca;
 linkaxes(ax);
+
 subplot(2,3,4); imagesc(scan_MLA.x_axis*1000, scan_MLA.z_axis*1000, tx_delay_virtual_source(:,:,channel_data.N_waves/2));
 title('1d: Tx delay virtual source');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14); 
 subplot(2,3,5); imagesc(scan_MLA.x_axis*1000, scan_MLA.z_axis*1000, tx_delay_unified_fix(:,:,channel_data.N_waves/2)); 
 title('1e: Tx delay model from [2]');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14);
 subplot(2,3,6); imagesc(scan_MLA.x_axis*1000, scan_MLA.z_axis*1000, tx_delay_plane_fix(:,:,channel_data.N_waves/2));
 title('1f: Tx delay virtual source + PW model');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14);
+
+%%
+tx_apod = reshape(mid_MLA_with_plane_fix.transmit_apodization.data,scan_MLA.N_z_axis,scan_MLA.N_x_axis,channel_data.N_waves);
+
+figure;
+imagesc(scan_MLA.x_axis*1000, scan_MLA.z_axis*1000,tx_apod(:,:,64));
+title('Tx apod ');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14); 
+
