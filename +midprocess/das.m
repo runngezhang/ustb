@@ -84,7 +84,7 @@ classdef das < midprocess
                     %%
                     mask_apod = uff.apodization();
                     mask_apod.window = uff.window.boxcar;
-                    mask_apod.f_number = 0.85; %Why do we need this lower than one to cover the "full" aperture. This should probably be the transmit f_number, and thus should be higher
+                    mask_apod.f_number = 2; %This should be set according to the actually transmitted f number
                     mask_apod.sequence = h.channel_data.sequence;
                     mask_apod.minimum_aperture = [0 0];
                     mask_apod.focus = h.scan;
@@ -166,8 +166,13 @@ classdef das < midprocess
                                     
                                     % Interpolate the delays on the "edge" of the valid region 
                                     % Yes, the code can probably be written more efficiently and intuitive
-                                    interpolated_delay = zeros(size(tx_delay));                                    
+                                    interpolated_delay = zeros(size(tx_delay)); 
+                                    mask_before = zeros(size(tx_delay));  
+                                    last_before_idx = [];
+                                    mask_after = zeros(size(tx_delay));
+                                    first_after_idx = [];
                                     for x = 1:N_lines          
+                                        if sum(mask(:,x) > 0)
                                             ray_of_masked_delays = masked_delays(:,x);
                                             pos_ray_of_masked_delays = ray_of_masked_delays;
                                             pos_ray_of_masked_delays(ray_of_masked_delays > 0) = 0;
@@ -181,13 +186,33 @@ classdef das < midprocess
                                             
                                             pos_a = [ x_matrix(idx_a,x) z_matrix(idx_a,x) ];
                                             pos_b = [ x_matrix(idx_b,x) z_matrix(idx_b,x) ];
-            
+                                            
                                             interpolated_delay(:,x) = (sqrt((z_matrix(idx_a,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_b,x) + (sqrt((z_matrix(idx_b,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_a,x);
+                                        elseif  sum(masked_delays(:,x) == 0) & x_matrix(1,x) < h.channel_data.sequence(n_wave).source.x 
+                                            last_before_idx = x; 
+                                            mask_before(:,x) = 1;
+                                        elseif  sum(masked_delays(:,x) == 0) & x_matrix(1,x) > h.channel_data.sequence(n_wave).source.x
+                                            if isempty(first_after_idx) 
+                                                first_after_idx = x; 
+                                            end
+                                            mask_after(:,x) = 1;
+                                        %else % we are outside the "cone" alltogether
+                                            % set the delay "plane" in this region
+                                            %interpolated_delay(:,x) = (-1).^(z_matrix(:,x)<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.z-z_matrix(:,x)-8*h.scan.z_step).^2);
+                                        end
+                                    end
+                                    
+                                    if sum(mask_before(:)) > 0
+                                        interpolated_delay(logical(mask_before)) = repmat(interpolated_delay(:,last_before_idx+1),1,sum(mask_before(1,:)));
+                                    end
+                                    if sum(mask_after(:)) > 0
+                                        interpolated_delay(logical(mask_after)) = repmat(interpolated_delay(:,first_after_idx-1),1,sum(mask_after(1,:)));
                                     end
                                     
                                     % Use the virtual source model within the "valid region"
                                     interpolated_delay(mask) = tx_delay(mask);
                                     interpolated_delay(isinf(interpolated_delay)) = 0;
+                                    
                                     transmit_delay(:,n_wave) = interpolated_delay(:) + h.channel_data.sequence(n_wave).source.distance;
                                 else
                                     % Use conventional virtual source model
