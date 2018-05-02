@@ -10,6 +10,7 @@ classdef apodization < uff
     %         
     %         window              % UFF.WINDOW class, default uff.window.noen
     %         f_number            % F-number [Fx Fy] [unitless unitless] 
+    %         M                   % Number of elements [Mx My] in case f_number=0
     %         
     %         origo               % POINT class
     %         tilt                % tilt angle [azimuth elevation] [rad rad] 
@@ -36,6 +37,7 @@ classdef apodization < uff
         origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
         minimum_aperture = [1e-3 1e-3]  % minimum aperture size in the [x y] direction
+        maximum_aperture = [10 10]      % maximum aperture size in the [x y] direction
     end
     
     %% optional properties
@@ -99,6 +101,22 @@ classdef apodization < uff
              assert(isa(in_window,'uff.window'),'The window input should be a WINDOW class. Check help WINDOW');
              h.window=in_window;
         end
+        
+        function h=set.minimum_aperture(h,in_ap)
+            if(numel(in_ap)==1) % we allow for escalar input
+                 in_ap=[in_ap in_ap];
+             end 
+            assert(size(in_ap,1)==1&&size(in_ap,2)==2,'The minimum aperture should be a row vector [Ax Ay]');
+            h.minimum_aperture=in_ap;
+        end     
+        
+        function h=set.maximum_aperture(h,in_ap)
+            if(numel(in_ap)==1) % we allow for escalar input
+                 in_ap=[in_ap in_ap];
+             end 
+            assert(size(in_ap,1)==1&&size(in_ap,2)==2,'The maximum aperture should be a row vector [Ax Ay]');
+            h.maximum_aperture=in_ap;
+        end     
     end
     
     methods
@@ -112,7 +130,7 @@ classdef apodization < uff
         function value=hamming(h,ratio)
             value=double(ratio<=0.5).*(0.53836 + 0.46164*cos(2*pi*ratio));
         end
-        function value=tukey(h,ratio, roll)
+        function value=tukey(h,ratio, roll)            
             value=(ratio<=(1/2*(1-roll))) + (ratio>(1/2*(1-roll))).*(ratio<(1/2)).*0.5.*(1+cos(2*pi/roll*(ratio-roll/2-1/2)));
         end
     end
@@ -222,6 +240,9 @@ classdef apodization < uff
     %             end
             end
             
+            % normalize
+            %h.data_backup=h.data_backup./sum(sum(h.data_backup,3),2);
+            
             % pass a reference
             value=h.data_backup;
                 
@@ -254,25 +275,32 @@ classdef apodization < uff
         end
         
         function [ratio_theta ratio_phi]=incidence_ratios(h)
-            if isempty(h.sequence)
+            if isempty(h.sequence) % no sequence then it must be a receive aperture
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
                 x=ones(h.focus.N_pixels,1)*(h.probe.x.'); 
                 y=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
                 z=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
-                
-                % distances
-                x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
-                y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
-                z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+
+                if isa(h.focus,'uff.linear_scan')
+                    % distances
+                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                else
+                    % distances
+                    x_dist=h.focus.apex.x-x;
+                    y_dist=h.focus.apex.y-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                end
                 
                 % clamping z=0
                 z_dist(abs(z_dist)<1e-6)=1e-6;
-                
+
                 % azimuth and elevation tangents
                 tan_theta = x_dist./z_dist;
                 tan_phi = y_dist./z_dist;
 
-            else
+            else % transmit apodization
                 for n=1:length(h.sequence)
                     % plane wave
                     if (h.sequence(n).wavefront==uff.wavefront.plane||isinf(h.sequence(n).source.distance))
@@ -307,6 +335,14 @@ classdef apodization < uff
             min_phi_mask=ratio_phi>min_phi_ratio;
             ratio_theta(min_theta_mask)=min_theta_ratio(min_theta_mask);
             ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
+            
+            % maximum aperture
+            max_theta_ratio=abs(z_dist.*tan_theta/h.maximum_aperture(1)); 
+            max_phi_ratio=abs(z_dist.*tan_phi/h.maximum_aperture(2));
+            max_theta_mask=ratio_theta<max_theta_ratio;
+            max_phi_mask=ratio_phi<max_phi_ratio;
+            ratio_theta(max_theta_mask)=max_theta_ratio(max_theta_mask);
+            ratio_phi(max_phi_mask)=max_phi_ratio(max_phi_mask);
         end
         
         function value=get.N_elements(h)
@@ -320,7 +356,7 @@ classdef apodization < uff
         end
         
         %% display methods 
-        function figure_handle=plot(h,figure_handle_in,n_wave)
+        function figure_handle=plot(h,figure_handle_in,n)
             % PLOT Plots channel data
             if nargin>1 && not(isempty(figure_handle_in))
                 figure_handle=figure(figure_handle_in);
@@ -329,22 +365,67 @@ classdef apodization < uff
             end
             
             if nargin <3
-                n_wave=round(size(h.data,2)/2);
+                n=round(size(h.data,2)/2);
             end
             
             colorMap = tools.inferno;
             
+            isreceive = isempty(h.sequence);
+            
             if isa(h.focus,'uff.linear_scan')
-                imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n_wave),[h.focus.N_z_axis h.focus.N_x_axis]))
+                imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n),[h.focus.N_z_axis h.focus.N_x_axis]))
                 xlabel('x [mm]');
                 ylabel('z [mm]');
                 set(gca,'Ydir','reverse');
                 set(gca,'fontsize',14);
                 colorbar;
-                caxis([0 1]);
-                title(sprintf('Apodization values for %d wave',n_wave));
+                %caxis([0 1]);
+                if isreceive
+                    title(sprintf('Apodization values for element %d',n));
+                else
+                    title(sprintf('Apodization values for wave %d',n));
+                end
+            
+            elseif isa(h.focus,'uff.sector_scan')
+                 x_matrix=reshape(h.focus.x,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
+                 z_matrix=reshape(h.focus.z,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
+                 
+                 
+                 subplot(1,2,1);
+                 pcolor(x_matrix*1e3,z_matrix*1e3,reshape(h.data(:,n),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
+                 xlabel('x [mm]');
+                 ylabel('z [mm]');
+                 shading('flat');
+                 set(gca,'fontsize',14);
+                 set(gca,'YDir','reverse');
+                 axis('tight','equal');
+                 colorbar();
+                 %caxis([0 1]);
+                 if isreceive
+                    title(sprintf('Apodization for element %d. Click or Enter.',n));
+                 else
+                    title(sprintf('Apodization for wave %d. Click or Enter.',n));
+                 end
+                 [x z]=ginput(1);
+                 while ~isempty(x)
+                     [~, ns]=min(sum((h.focus(1).xyz-[x 0 z]/1e3).^2,2));
+                     subplot(1,2,2);
+                     plot(h.data(ns,:)); grid on; axis tight;
+                     ylim([0 1.2]);
+                     if isreceive
+                        title(sprintf('Receive apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('Element');
+                     else
+                        title(sprintf('Transmit apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('wave');
+                     end
+                     set(gca,'fontsize',14);
+                     
+                     subplot(1,2,1);
+                     [x z]=ginput(1);
+                 end
             else
-                error('Only apodization plot for uff.linear_scan are supported for now.');
+                error('Only apodization plot for uff.linear_scan and uff.sector_scan are supported for now.');
             end
         end
     end

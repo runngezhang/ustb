@@ -65,8 +65,10 @@ end
 
 switch class(object)
     case {'double' 'single' 'int16'}
+        sz=size(object);
         if isreal(object)
-            h5create(filename,[location '/' name], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
+            sz=size(object);
+            h5create(filename,[location '/' name], size(object), 'Datatype', 'single', 'ChunkSize',[sz(1:end-1) 1]);
             h5write(filename,[location '/' name], single(object));
             h5writeatt(filename,[location '/' name],'class',class(object));
             h5writeatt(filename,[location '/' name],'name',name);
@@ -75,14 +77,14 @@ switch class(object)
             dumped_objects=1;
         else
             % real
-            h5create(filename,[location '/' name '/real'], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
+            h5create(filename,[location '/' name '/real'], size(object), 'Datatype', 'single', 'ChunkSize',[sz(1:end-1) 1]);
             h5write(filename,[location '/' name '/real'], single(real(object)));
             h5writeatt(filename,[location '/' name '/real'],'class',class(object));
             h5writeatt(filename,[location '/' name '/real'],'name',name);
             h5writeatt(filename,[location '/' name '/real'],'imaginary',0);
             
             % imag
-            h5create(filename,[location '/' name '/imag'], size(object), 'Datatype', 'single', 'ChunkSize',size(object));
+            h5create(filename,[location '/' name '/imag'], size(object), 'Datatype', 'single', 'ChunkSize',[sz(1:end-1) 1]);
             h5write(filename,[location '/' name '/imag'], single(imag(object)));
             h5writeatt(filename,[location '/' name '/imag'],'class',class(object));
             h5writeatt(filename,[location '/' name '/imag'],'name',name);

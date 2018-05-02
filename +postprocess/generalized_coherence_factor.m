@@ -116,6 +116,7 @@ classdef generalized_coherence_factor < postprocess
             
             % Coherent Factor
             h.GCF.data = bsxfun(@times,LF_sum./total_sum,1./M); 
+            h.GCF.data(isnan(h.GCF.data))=0;
             % generalized coherent factor image            
             h.output.data = h.GCF.data .* coherent_sum;
             
