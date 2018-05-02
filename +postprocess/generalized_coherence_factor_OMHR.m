@@ -19,7 +19,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
     
     %% constructor
     methods (Access = public)
-        function h=generalized_coherence_OMHR()
+        function h=generalized_coherence_factor_OMHR()
             h.name='Generalized Coherence Factor MATLAB';
             h.reference='';
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Andreas Austeng <AndreasAusteng.ifi.uio.no'};
@@ -29,7 +29,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
     
     %% Additional properties
     properties
-        M0 = 3;                                       % Low frequency region
+        M0 = 2;                                       % Low frequency region
         channel_data                                  % Need the probe 
         GCF                                           % BEAMFORMED_DATA class with the computed phase coherent factor
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
@@ -144,9 +144,9 @@ classdef generalized_coherence_factor_OMHR < postprocess
                             %A hack to set non active elements to zero for the
                             %alpinion scanner FI who only use 64 active
                             %elements
-                            if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
-                                apod_matrix(abs(data_cube)<eps) = 0;
-                            end
+%                            if ~isempty(h.channel_data.N_active_elements) && sum(h.channel_data.N_active_elements ~= h.channel_data.N_elements)
+ %                               apod_matrix(abs(data_cube)<eps) = 0;
+  %                          end
                             GCF = h.generalized_coherence_factor_implementation(data_cube, apod_matrix,h.M0);
                             image = sum(data_cube,3).*GCF;
                             GCF_weights(:,1,n_wave,n_frame) = GCF(:);
