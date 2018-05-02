@@ -10,6 +10,7 @@ classdef apodization < uff
     %         
     %         window              % UFF.WINDOW class, default uff.window.noen
     %         f_number            % F-number [Fx Fy] [unitless unitless] 
+    %         M                   % Number of elements [Mx My] in case f_number=0
     %         
     %         origo               % POINT class
     %         tilt                % tilt angle [azimuth elevation] [rad rad] 
@@ -36,6 +37,7 @@ classdef apodization < uff
         origo     = uff.point('xyz',[0, 0, -Inf]);  % POINT class
         tilt      = [0 0]                           % tilt angle [azimuth elevation] [rad rad] 
         minimum_aperture = [1e-3 1e-3]  % minimum aperture size in the [x y] direction
+        maximum_aperture = [10 10]      % maximum aperture size in the [x y] direction
     end
     
     %% optional properties
@@ -99,6 +101,22 @@ classdef apodization < uff
              assert(isa(in_window,'uff.window'),'The window input should be a WINDOW class. Check help WINDOW');
              h.window=in_window;
         end
+        
+        function h=set.minimum_aperture(h,in_ap)
+            if(numel(in_ap)==1) % we allow for escalar input
+                 in_ap=[in_ap in_ap];
+             end 
+            assert(size(in_ap,1)==1&&size(in_ap,2)==2,'The minimum aperture should be a row vector [Ax Ay]');
+            h.minimum_aperture=in_ap;
+        end     
+        
+        function h=set.maximum_aperture(h,in_ap)
+            if(numel(in_ap)==1) % we allow for escalar input
+                 in_ap=[in_ap in_ap];
+             end 
+            assert(size(in_ap,1)==1&&size(in_ap,2)==2,'The maximum aperture should be a row vector [Ax Ay]');
+            h.maximum_aperture=in_ap;
+        end     
     end
     
     methods
@@ -317,6 +335,14 @@ classdef apodization < uff
             min_phi_mask=ratio_phi>min_phi_ratio;
             ratio_theta(min_theta_mask)=min_theta_ratio(min_theta_mask);
             ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
+            
+            % maximum aperture
+            max_theta_ratio=abs(z_dist.*tan_theta/h.maximum_aperture(1)); 
+            max_phi_ratio=abs(z_dist.*tan_phi/h.maximum_aperture(2));
+            max_theta_mask=ratio_theta<max_theta_ratio;
+            max_phi_mask=ratio_phi<max_phi_ratio;
+            ratio_theta(max_theta_mask)=max_theta_ratio(max_theta_mask);
+            ratio_phi(max_phi_mask)=max_phi_ratio(max_phi_mask);
         end
         
         function value=get.N_elements(h)
