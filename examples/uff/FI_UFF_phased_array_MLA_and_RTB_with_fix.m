@@ -229,7 +229,7 @@ ylim([45 60]);xlim([-10 10]);
 % fix to the side
 b_data.plot(subplot(2,4,5),['DAS']);
 ax_sub_bottom(1) = gca;
-b_data_RTB_weighted.plot(subplot(2,4,6),['RTB MLAs']);
+b_data_RTB_weighted.plot(subplot(2,4,6),['RTB']);
 ax_sub_bottom(2) = gca;
 b_data_RTB_unified_fix_weighted.plot(subplot(2,4,7),['RTB unified FIX']);
 ax_sub_bottom(3) = gca;
