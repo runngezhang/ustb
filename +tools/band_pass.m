@@ -10,11 +10,12 @@ function [filtered_p,h,w] = band_pass(p,Fs,F)
     [h,w] = freqz(b);
 
     % filtering
+    sz=size(p);
     filt_delay=round((length(b)-1)/2);
-    filtered_p=filter(b,1,[p; zeros(filt_delay,size(p,2),size(p,3),size(p,4))],[],1);
+    filtered_p=filter(b,1,[p; zeros([filt_delay sz(2:end)])],[],1);
 
     % correcting the delay
-    filtered_p=filtered_p((filt_delay+1):end,:,:);
+    filtered_p=filtered_p((filt_delay+1):end,:,:,:);
 
 end
 
