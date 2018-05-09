@@ -32,8 +32,6 @@ classdef phase_coherence_factor < postprocess
         sound_speed=1540;                             % reference sound speed [m/s]
         gamma=1;                                      % mixing ratio
         sigma_0=pi/sqrt(3);                           % reference phase value
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         FCA                                           % BEAMFORMED_DATA class with the computed absolute phase coherence factor
         FCC                                           % BEAMFORMED_DATA class with the computed complex phase coherence factor
     end
@@ -156,20 +154,6 @@ classdef phase_coherence_factor < postprocess
             h.save_hash();
         end   
     end
-    
-   %% set methods
-    methods
-        function h=set.receive_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.receive_apodization=in_apodization;
-        end
-        
-        function h=set.transmit_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.transmit_apodization=in_apodization;
-        end
-    end
-
 end
 
 

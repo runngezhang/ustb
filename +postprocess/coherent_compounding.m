@@ -17,7 +17,7 @@ classdef coherent_compounding < postprocess
     end
     
     properties (Access = public)
-       dimension = dimension.both;          %Which "dimension" to sum over
+       dimension = dimension.both;          % Which "dimension" to sum over
     end
     
     methods
