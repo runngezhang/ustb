@@ -1,0 +1,23 @@
+classdef median < postprocess
+    methods
+        function output=go(h)
+            % check that the input is combined image
+            assert(size(h.input.data,2)==1,'median only works on combined images');
+            assert(size(h.input.data,3)==1,'median only works on combined images');
+            assert(isa(h.input.scan,'uff.linear_scan'),'median only works for linear scans');
+            
+            % declare output structure
+            h.output=uff.beamformed_data(h.input);
+
+            % the actual thing
+            temp=reshape(h.input.data,[h.input.scan.N_z_axis, h.input.scan.N_x_axis, 1, size(h.input.data,4)]);
+            for n=1:size(temp,4)
+                img(:, :, 1, n)=medfilt2(abs(temp(:,:,n)),[20 20]);
+            end
+            h.output.data=reshape(img,size(h.input.data));
+            
+            % pass reference
+            output = h.output;
+        end
+    end
+end
