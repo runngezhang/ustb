@@ -12,7 +12,7 @@ classdef das < midprocess
         dimension = dimension.receive;      % dimension enumeration class that specifies whether the process will run only on transmit, receive, both, or none.
         code = code.mex;                    % code enumeration class that specifies the code to be run (code.matlab, code.mex)
         use_PW_fix = 0;                     % Flag to use PW fix when virtual source is in front of transducer
-        margin_in_m = 1;                    % The margin of the area around focus to change with PW for PW fix for virtual source in front of transducer
+        margin_in_m = 1/1000;                    % The margin of the area around focus to change with PW for PW fix for virtual source in front of transducer
         use_unified_fix = 0;                % Flag to use unified beamforming fix when virtual source is in front of transducer, see reference 
         tx_delay_hack                       % Variabl returning the calculated tx delay so that it can be plotted
     end
@@ -172,7 +172,8 @@ classdef das < midprocess
                                     mask_after = zeros(size(tx_delay));
                                     first_after_idx = [];
                                     for x = 1:N_lines          
-                                        if sum(mask(:,x) > 0)
+                                        [~,z_idx_focus] = min(abs(z_matrix(:,x)-h.channel_data.sequence(n_wave).source.z));
+                                        if sum(mask(z_idx_focus:end,x) > 0)
                                             ray_of_masked_delays = masked_delays(:,x);
                                             pos_ray_of_masked_delays = ray_of_masked_delays;
                                             pos_ray_of_masked_delays(ray_of_masked_delays > 0) = 0;
@@ -187,18 +188,22 @@ classdef das < midprocess
                                             pos_a = [ x_matrix(idx_a,x) z_matrix(idx_a,x) ];
                                             pos_b = [ x_matrix(idx_b,x) z_matrix(idx_b,x) ];
                                             
-                                            interpolated_delay(:,x) = (sqrt((z_matrix(idx_a,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_b,x) + (sqrt((z_matrix(idx_b,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a)) .* tx_delay(idx_a,x);
-                                        elseif  sum(masked_delays(:,x) == 0) & x_matrix(1,x) < h.channel_data.sequence(n_wave).source.x 
+                                            % The "weight" vectors needs to normalized a second time to
+                                            % get correct values (0 to 1) for the sector scan. It could be dependent on transmit angle...
+                                            weight_vector_1 = (sqrt((z_matrix(idx_a,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a));
+                                            weight_vector_1 = weight_vector_1./weight_vector_1(idx_b);
+                                            weight_vector_2 = (sqrt((z_matrix(idx_b,x) - z_matrix(:,x)).^2) / norm(pos_b-pos_a));
+                                            weight_vector_2 = weight_vector_2./weight_vector_2(idx_a);
+                                            interpolated_delay(:,x) = weight_vector_1.* tx_delay(idx_b,x) + weight_vector_2.* tx_delay(idx_a,x);
+                                 
+                                        elseif  sum(masked_delays(z_idx_focus:end,x) == 0) & x_matrix(z_idx_focus,x) < h.channel_data.sequence(n_wave).source.x 
                                             last_before_idx = x; 
                                             mask_before(:,x) = 1;
-                                        elseif  sum(masked_delays(:,x) == 0) & x_matrix(1,x) > h.channel_data.sequence(n_wave).source.x
+                                        elseif  sum(masked_delays(z_idx_focus:end,x) == 0) & x_matrix(z_idx_focus,x) > h.channel_data.sequence(n_wave).source.x
                                             if isempty(first_after_idx) 
                                                 first_after_idx = x; 
                                             end
                                             mask_after(:,x) = 1;
-                                        %else % we are outside the "cone" alltogether
-                                            % set the delay "plane" in this region
-                                            %interpolated_delay(:,x) = (-1).^(z_matrix(:,x)<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.z-z_matrix(:,x)-8*h.scan.z_step).^2);
                                         end
                                     end
                                     
@@ -212,7 +217,7 @@ classdef das < midprocess
                                     % Use the virtual source model within the "valid region"
                                     interpolated_delay(mask) = tx_delay(mask);
                                     interpolated_delay(isinf(interpolated_delay)) = 0;
-                                    
+
                                     transmit_delay(:,n_wave) = interpolated_delay(:) + h.channel_data.sequence(n_wave).source.distance;
                                 else
                                     % Use conventional virtual source model

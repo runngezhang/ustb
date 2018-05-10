@@ -79,12 +79,30 @@ b_data_MLA_unified_fix.plot(42,['DAS with MLAs unified FIX']);
 ax(4) = gca;
 
 linkaxes(ax)
+
+%%
+
+x_matrix=reshape(scan_MLA.x,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
+z_matrix=reshape(scan_MLA.z,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
+tx_delay = reshape(mid_MLA_unified_fix.tx_delay_hack,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis,channel_data.N_waves]);
+
+%%
+n_wave = 10;
+axis_handle = figure(88);
+subplot(211);
+imagesc(tx_delay(:,:,n_wave))
+subplot(212);
+pcolor(x_matrix*1e3,z_matrix*1e3,tx_delay(:,:,n_wave));
+shading(gca,'flat');
+set(gca,'fontsize',14);
+set(gca,'YDir','reverse');
+axis(gca,'tight','equal');
 %%
 mid_MLA_plane_fix=midprocess.das();
 mid_MLA_plane_fix.channel_data=channel_data;
 mid_MLA_plane_fix.dimension = dimension.both();
 mid_MLA_plane_fix.use_PW_fix = 1;
-mid_MLA_plane_fix.margin_in_m = 2;
+mid_MLA_plane_fix.margin_in_m = 4/1000;
 mid_MLA_plane_fix.scan=scan_MLA;
 mid_MLA_plane_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_plane_fix.transmit_apodization.MLA = MLA;
@@ -98,6 +116,23 @@ b_data_MLA_plane_fix.plot(43,['DAS with MLAs using PW fix']);
 ax(5) = gca;
 
 linkaxes(ax)
+
+
+x_matrix=reshape(scan_MLA.x,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
+z_matrix=reshape(scan_MLA.z,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
+tx_delay_PW = reshape(mid_MLA_plane_fix.tx_delay_hack,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis,channel_data.N_waves]);
+
+%%
+n_wave = 64;
+axis_handle = figure(89);
+subplot(211);
+imagesc(tx_delay_PW(:,:,n_wave))
+subplot(212);
+pcolor(x_matrix*1e3,z_matrix*1e3,tx_delay_PW(:,:,n_wave));
+shading(gca,'flat');
+set(gca,'fontsize',14);
+set(gca,'YDir','reverse');
+axis(gca,'tight','equal');
 
 
 %% Lets have a closer look at the focal region
@@ -193,7 +228,7 @@ mid_RTB_PW_fix=midprocess.das();
 mid_RTB_PW_fix.channel_data=channel_data;
 mid_RTB_PW_fix.dimension = dimension.both();
 mid_RTB_PW_fix.use_PW_fix = 1;
-mid_RTB_PW_fix.margin_in_m = 3;
+mid_RTB_PW_fix.margin_in_m = 4/1000;
 mid_RTB_PW_fix.scan=scan_MLA;
 mid_RTB_PW_fix.transmit_apodization.window = uff.window.sector_scan_rtb;
 mid_RTB_PW_fix.transmit_apodization.probe = channel_data.probe;
