@@ -29,8 +29,6 @@ classdef coherence_factor < postprocess
     %% Additional properties
     properties
         CF                                            % BEAMFORMED_DATA class with the computed coherent factor
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         active_element_criterium=0.16;                % value to decide whether an element is used or not. This value depends on the SNR so it must be adjusted on a case-by-case basis.
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
     end
@@ -132,20 +130,6 @@ classdef coherence_factor < postprocess
             h.save_hash();
         end   
     end
-    
-    %% set methods
-    methods
-        function h=set.receive_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.receive_apodization=in_apodization;
-        end
-        
-        function h=set.transmit_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.transmit_apodization=in_apodization;
-        end
-    end
-
 end
 
 
