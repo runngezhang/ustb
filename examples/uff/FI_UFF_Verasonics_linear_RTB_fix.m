@@ -1,27 +1,38 @@
-    %% Focused Linear scan with L7-4 probe in Verasonics demonstrating MLA
+%% Focused Linear scan with L7-4 probe in Verasonics demonstrating RTB
 %
-%   This example demonstrates the MLA implementation and demonstrates
-%   different fixes to the artifact occuring near the focus.
+% This script is available in the USTB repository as
+% examples/uff/FI_UFF_Verasonics_linear_RTB.m
 %
-%   The solution with the transmit delay model introduced in  Nguyen, N. Q., & Prager, R. W. (2016). 
-%   High-Resolution Ultrasound Imaging With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98?108.
-%   But also a second simpler model assuming PW around focus.
+% This example demonstrates the RTB implementation and demonstrates
+% different fixes to the artifact occuring near the focus.
 %
+% One solution is the transmit delay model introduced in  Nguyen, N. Q., &
+% Prager, R. W. (2016). High-Resolution Ultrasound Imaging With Unified Pixel-Based 
+% Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
 %
-% _by Ole Marius Hoel Rindal <olemarius@olemarius.net>
+% Another solution is a simpler model assuming PW around focus.
 %
-%   $Last updated: 2018/20/04$
+% This scripts creates the figure used in the abstract submitted to
+% the IEEE IUS 2018 with title "A simple, artifact-free virtual source model"
+%   
+% _by Ole Marius Hoel Rindal <olemarius@olemarius.net> Last updated: 2018/10/05
 
-%% Read channeldata
+%% Read channel data
 
 clear all; close all;
 
 % data location
 url='http://ustb.no/datasets/';      % if not found downloaded from here
-%filename='L7_FI_Verasonics.uff';
-filename='L7_FI_155020.uff'; % The same dataset, but the foci hits the point scatteres, enhancing the artifact
+
+filename='L7_FI_IUS2018.uff';
 tools.download(filename, url, data_path);   
-channel_data=uff.read_object([data_path filesep filename],'/channel_data');
+channel_data_rf =uff.read_object([data_path filesep filename],'/channel_data');
+
+%%
+demod = preprocess.demodulation();
+demod.input = channel_data_rf;
+
+channel_data = demod.go();
 
 %% Define Scan
 x_axis=zeros(channel_data.N_waves,1);
@@ -45,15 +56,17 @@ mid.receive_apodization.f_number=1.7;
 
 b_data=mid.go();
 
-%% Display image
+%%
+% Display image
 b_data.plot([],'Conventional one scanline per transmit');
 
 
-%% Beamforming with MLA's
-% create MLA scan
+%% Retrospective beamforming (RTB) with conventional virtual source model
+% Create scan with MLA's
 MLA = 4;
-scan_RTB=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),length(x_axis)*MLA)','z_axis',z_axis);
-%%
+scan_RTB=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),...
+                                    length(x_axis)*MLA)','z_axis',z_axis);
+
 % beamform without any fix using conventional virtual source model
 mid_RTB=midprocess.das();
 mid_RTB.dimension = dimension.both();
@@ -70,20 +83,31 @@ mid_RTB.receive_apodization.window=uff.window.boxcar;
 mid_RTB.receive_apodization.f_number=1.7;
 b_data_RTB=mid_RTB.go();
 
-b_data_RTB.plot(767,'Beamformed image RTB');
-ax(1) = gca;
-
+b_data_RTB.plot(767,'RTB image using virtual source model');
 %%
+% We need to compensate with the TX transmit apodization as weighting to
+% get a more uniform image
+
+% Calculate the transmit apodzation used to compensate image
 tx_apod = mid_RTB.transmit_apodization.data;
 
 b_data_RTB_weighted = uff.beamformed_data(b_data_RTB);
 b_data_RTB_weighted.data = b_data_RTB_weighted.data.*(1./sum(tx_apod,2));
-b_data_RTB_weighted.plot(10,'Beamformed image RTB')
-%%
+b_data_RTB_weighted.plot(10,'RTB image using virtual source model, TX weighted');
 
+%%
+% Notice the darker right side. Not sure why this occurs, it is not there
+% for conventional scanline beamforming, and not for MLA's. Could it be
+% that the elemets to the right of the probe are weaker? I'll investigate
+% this further...
+%
+% Also notice the line/articat along 29.6 mm, the transmit focus, which is 
+% the artifact we aimt get rid of :)
+
+%% RTB using Nguyen & Prager model
 % beamforming using the "unified pixelbased beamforming" model from 
 % Nguyen, N. Q., & Prager, R. W. (2016). High-Resolution Ultrasound Imaging 
-% With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98?108.
+% With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
 mid_RTB_unified_fix =midprocess.das();
 mid_RTB_unified_fix.dimension = dimension.both();
 
@@ -100,20 +124,23 @@ mid_RTB_unified_fix.receive_apodization.window=uff.window.boxcar;
 mid_RTB_unified_fix.receive_apodization.f_number=1.7;
 b_data_RTB_unified_fix=mid_RTB_unified_fix.go();
 
-b_data_RTB_unified_fix.plot(777,'Beamformed image MLA with unified fix');
-
-%%
+% Calculate the transmit apodzation used to compensate image
 tx_apod = mid_RTB_unified_fix.transmit_apodization.data;
 
 b_data_RTB_unified_fix_weighted = uff.beamformed_data(b_data_RTB_unified_fix);
-b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data.*(1./sum(tx_apod,2));
-b_data_RTB_unified_fix_weighted.plot(11,'Beamformed image RTB')
+b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data...
+                                                        .*(1./sum(tx_apod,2));
+b_data_RTB_unified_fix_weighted.plot(11,'RTB image Nguyen & Prager mode');
 
-%% beamforming using a simpler model assuming PW around focus
+%%
+% Their model sucessfully removes the artifact at focus (29.6 mm)!
+
+%% RTB using a simpler model assuming PW around focus
 mid_RTB_with_plane_fix=midprocess.das();
 mid_RTB_with_plane_fix.dimension = dimension.both();
 mid_RTB_with_plane_fix.use_PW_fix = 1; % Set this flag to use this model
-mid_RTB_with_plane_fix.margin_in_m = 1/1000; %Optionally set the margin of the region around focus to use PW tx delay
+%Optionally set the margin of the region around focus to use PW tx delay
+mid_RTB_with_plane_fix.margin_in_m = 1/1000; 
 
 mid_RTB_with_plane_fix.channel_data=channel_data;
 mid_RTB_with_plane_fix.scan=scan_RTB;
@@ -127,25 +154,31 @@ mid_RTB_with_plane_fix.receive_apodization.window=uff.window.boxcar;
 mid_RTB_with_plane_fix.receive_apodization.f_number=1.7;
 b_data_RTB_with_plane_fix=mid_RTB_with_plane_fix.go();
 
-b_data_RTB_with_plane_fix.plot(778,'Beamformed image MLA with PW fix');
-ax(3) = gca;
-linkaxes(ax);
-
-%%
+% Calculate the transmit apodzation used to compensate image
 tx_apod = mid_RTB_with_plane_fix.transmit_apodization.data;
 
 b_data_RTB_plane_fix_weighted = uff.beamformed_data(b_data_RTB_with_plane_fix);
-b_data_RTB_plane_fix_weighted.data = b_data_RTB_plane_fix_weighted.data.*(1./sum(tx_apod,2));
-b_data_RTB_plane_fix_weighted.plot(10,'Beamformed image RTB')
-%% Create plot to be used in abstract showing the images and the TX delays
-% The images can be zoomed in on the aartifact as we did in the abstract
-% We are plotting the TX delay used for the center transmit beam
-tx_delay_virtual_source = reshape(mid_RTB.tx_delay_hack,scan_RTB.N_z_axis,scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_unified_fix = reshape(mid_RTB_unified_fix.tx_delay_hack,scan_RTB.N_z_axis,scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_plane_fix = reshape(mid_RTB_with_plane_fix.tx_delay_hack,scan_RTB.N_z_axis,scan_RTB.N_x_axis,channel_data.N_waves);
+b_data_RTB_plane_fix_weighted.data = b_data_RTB_plane_fix_weighted.data...
+                                                        .*(1./sum(tx_apod,2));
+b_data_RTB_plane_fix_weighted.plot(10,'RTB image with PW hybrid virtual source model');
 
 %%
-figure(1);
+% Our simplified model also removes the artifact
+
+%% Create plot to be used in abstract showing the images and the TX delays
+% The images can be zoomed in on the artifact as we did in the abstract,
+% and we can see that both the Nguyen & Prager model, and our simple PW
+% model sucessfully removes the artifact at focus.
+
+% We are plotting the TX delay used for the center transmit beam
+tx_delay_virtual_source = reshape(mid_RTB.tx_delay_hack,scan_RTB.N_z_axis,...
+                                    scan_RTB.N_x_axis,channel_data.N_waves);
+tx_delay_unified_fix = reshape(mid_RTB_unified_fix.tx_delay_hack,scan_RTB.N_z_axis,...
+                                    scan_RTB.N_x_axis,channel_data.N_waves);
+tx_delay_plane_fix = reshape(mid_RTB_with_plane_fix.tx_delay_hack,scan_RTB.N_z_axis,...
+                                    scan_RTB.N_x_axis,channel_data.N_waves);
+
+h = figure(100);clf;
 b_data_RTB_weighted.plot(subplot(2,3,1),'1a : Virtual source model');
 ax(1) = gca;
 b_data_RTB_unified_fix_weighted.plot(subplot(2,3,2),'1b : Model from [1]');
@@ -154,13 +187,21 @@ b_data_RTB_plane_fix_weighted.plot(subplot(2,3,3),'1c : Virt. source+PW model');
 ax(3) = gca;
 linkaxes(ax);
 axis([5 12 26 36])
-%%
-subplot(2,3,4); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, tx_delay_virtual_source(:,:,channel_data.N_waves/2));
-title('1d: Tx delay virtual source model');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14); 
-subplot(2,3,5); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, tx_delay_unified_fix(:,:,channel_data.N_waves/2)); 
-title('1e: Tx delay model from [1]');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14);
-subplot(2,3,6); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, tx_delay_plane_fix(:,:,channel_data.N_waves/2));
-title('1f: Tx delay virt. source+PW model');xlabel('x [mm]');ylabel('z [mm]');colorbar; set(gca,'fontsize',14);%colormap jet;
+
+subplot(2,3,4); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, ...
+                    tx_delay_virtual_source(:,:,channel_data.N_waves/2));
+title('1d: Tx delay virtual source model');xlabel('x [mm]');ylabel('z [mm]');
+colorbar; set(gca,'fontsize',14); 
+subplot(2,3,5); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, ...
+                            tx_delay_unified_fix(:,:,channel_data.N_waves/2)); 
+title('1e: Tx delay model from [1]');xlabel('x [mm]');ylabel('z [mm]');
+colorbar; set(gca,'fontsize',14);
+subplot(2,3,6); imagesc(scan_RTB.x_axis*1000, scan_RTB.z_axis*1000, ....
+                            tx_delay_plane_fix(:,:,channel_data.N_waves/2));
+title('1f: Tx delay virt. source+PW model');xlabel('x [mm]');ylabel('z [mm]');
+colorbar; set(gca,'fontsize',14);%colormap jet;
+
+set(h,'Position',[271    38   843   621]);
 
 % A few trics to get the colormap in the submitted abstract:
 % 1. Run the three bottom subplots with colormap jet
