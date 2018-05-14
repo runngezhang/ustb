@@ -175,8 +175,8 @@ classdef apodization < uff
                     error('uff.apodization:Scanline','The scan class does not support scanline based beamforming. This must be done manually, defining several scan and setting the apodization to uff.window.none.');
                 end
             elseif (h.window == uff.window.sector_scan_rtb)
-                %% This apodization is used when we have a sector scan for RTB and
-                % for 
+                %% This apodization is used when we have a sector scan for RTB
+                % It only works for 2D scans.
                 assert(numel(h.probe)>0,'The probe object is not set.')
                 
                 apod_all = zeros(h.focus.N_pixels,length(h.sequence));
