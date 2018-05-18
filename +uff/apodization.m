@@ -347,15 +347,15 @@ classdef apodization < uff
                 y=ones(h.focus.N_pixels,1)*(h.probe.y.'); 
                 z=ones(h.focus.N_pixels,1)*(h.probe.z.'); 
 
-                if isa(h.focus,'uff.linear_scan')
-                    % distances
-                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
-                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
-                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
-                else
+                if isa(h.focus,'uff.sector_scan')
                     % distances
                     x_dist=h.focus.apex.x-x;
                     y_dist=h.focus.apex.y-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                else
+                    % distances
+                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
                     z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
                 end
                 
@@ -373,19 +373,49 @@ classdef apodization < uff
                         z_dist(:,n)=h.focus.z;
                         % clamping z=0
                         z_dist(abs(z_dist)<1e-6)=1e-6;
-                        tan_theta(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.azimuth;
+                        tan_theta(:,n)=h.sequence(n).source.azimuth;
                         tan_phi(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.elevation;
                     % diverging or converging waves
                     else
                         % distances
-                        x_dist=h.focus.x-h.sequence(n).source.x;
-                        y_dist=h.focus.y-h.sequence(n).source.y;
-                        z_dist(:,n)=h.focus.z-h.sequence(n).source.z;
-                        % clamping z=0
-                        z_dist(abs(z_dist)<1e-6)=1e-6;
-                        % azimuth and elevation tangents
-                        tan_theta(:,n) = x_dist./z_dist(:,n);
-                        tan_phi(:,n) = y_dist./z_dist(:,n);
+                        if isa(h.focus,'uff.sector_scan')
+                            % distances to source
+                            x_dist=h.focus.x - h.sequence(n).source.x;
+                            y_dist=h.focus.y - h.sequence(n).source.y;
+                            z_dist(:,n)=h.focus.z-h.sequence(n).source.z; % without abs
+                            dist(:,n)=sqrt(sum((h.focus.xyz-h.sequence(n).source.xyz).^2,2)); 
+
+                            % angle
+                            pixel_theta=atan2(x_dist,z_dist(:,n));
+                            pixel_phi=atan2(y_dist,z_dist(:,n));
+                            
+                            % clamping z=0
+                            z_dist=abs(z_dist);
+                            z_dist(z_dist<1e-6)=1e-6;
+
+                            % source angle respect apex
+                            source_theta=atan2(h.sequence(n).source.x-h.focus.apex.x,h.sequence(n).source.z-h.focus.apex.z);
+                            source_phi=atan2(h.sequence(n).source.y-h.focus.apex.y,h.sequence(n).source.z-h.focus.apex.z);
+                            
+                            % tangents
+                            tan_theta(:,n)=tan(pixel_theta-source_theta);
+                            tan_phi(:,n)=tan(pixel_phi-source_phi);
+                            
+                        else
+                            % distances
+                            x_dist=h.focus.x-h.sequence(n).source.x;
+                            y_dist=h.focus.y-h.sequence(n).source.y;
+                            z_dist(:,n)=abs(h.focus.z-h.sequence(n).source.z);
+                            
+                            % clamping z=0
+                            z_dist(z_dist<1e-6)=1e-6;
+                        
+                            % azimuth and elevation tangents
+                            tan_theta(:,n) = x_dist./z_dist(:,n);
+                            tan_phi(:,n) = y_dist./z_dist(:,n);
+                        end
+                        
+
                     end
                 end
             end
@@ -395,16 +425,20 @@ classdef apodization < uff
             ratio_phi = abs(h.f_number(2)*tan_phi);
             
             % minimum aperture
-            min_theta_ratio=abs(z_dist.*tan_theta/h.minimum_aperture(1)); 
-            min_phi_ratio=abs(z_dist.*tan_phi/h.minimum_aperture(2));
+            if exist('dist')~=1 
+                dist=z_dist; 
+            end
+            
+            min_theta_ratio=abs(dist.*tan_theta/h.minimum_aperture(1)); 
+            min_phi_ratio=abs(dist.*tan_phi/h.minimum_aperture(2));
             min_theta_mask=ratio_theta>min_theta_ratio;
             min_phi_mask=ratio_phi>min_phi_ratio;
             ratio_theta(min_theta_mask)=min_theta_ratio(min_theta_mask);
             ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
             
             % maximum aperture
-            max_theta_ratio=abs(z_dist.*tan_theta/h.maximum_aperture(1)); 
-            max_phi_ratio=abs(z_dist.*tan_phi/h.maximum_aperture(2));
+            max_theta_ratio=abs(dist.*tan_theta/h.maximum_aperture(1)); 
+            max_phi_ratio=abs(dist.*tan_phi/h.maximum_aperture(2));
             max_theta_mask=ratio_theta<max_theta_ratio;
             max_phi_mask=ratio_phi<max_phi_ratio;
             ratio_theta(max_theta_mask)=max_theta_ratio(max_theta_mask);
@@ -472,11 +506,12 @@ classdef apodization < uff
                  else
                     title(sprintf('Apodization for wave %d. Click or Enter.',n));
                  end
+                 data=h.data; % copy of h.data to avoid cheking hash in between events
                  [x z]=ginput(1);
                  while ~isempty(x)
                      [~, ns]=min(sum((h.focus(1).xyz-[x 0 z]/1e3).^2,2));
                      subplot(1,2,2);
-                     plot(h.data(ns,:)); grid on; axis tight;
+                     plot(data(ns,:)); grid on; axis tight;
                      ylim([0 1.2]);
                      if isreceive
                         title(sprintf('Receive apodization at pixel (%0.2f,%0.2f) mm.',x,z));
