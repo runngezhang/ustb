@@ -392,14 +392,14 @@ classdef apodization < uff
                             % clamping z=0
                             z_dist=abs(z_dist);
                             z_dist(z_dist<1e-6)=1e-6;
-
+                            
                             % source angle respect apex
                             source_theta=atan2(h.sequence(n).source.x-h.focus.apex.x,h.sequence(n).source.z-h.focus.apex.z);
                             source_phi=atan2(h.sequence(n).source.y-h.focus.apex.y,h.sequence(n).source.z-h.focus.apex.z);
                             
                             % tangents
                             tan_theta(:,n)=tan(pixel_theta-source_theta);
-                            tan_phi(:,n)=tan(pixel_phi-source_phi);
+                            tan_phi(:,n)=tan(pixel_phi-source_phi);                            
                             
                         else
                             % distances
@@ -429,7 +429,7 @@ classdef apodization < uff
                 dist=z_dist; 
             end
             
-            min_theta_ratio=abs(dist.*tan_theta/h.minimum_aperture(1)); 
+            min_theta_ratio=abs(dist.*tan_theta/h.minimum_aperture(1));
             min_phi_ratio=abs(dist.*tan_phi/h.minimum_aperture(2));
             min_theta_mask=ratio_theta>min_theta_ratio;
             min_phi_mask=ratio_phi>min_phi_ratio;
@@ -437,18 +437,64 @@ classdef apodization < uff
             ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
             
             % maximum aperture
-            max_theta_ratio=abs(dist.*tan_theta/h.maximum_aperture(1)); 
+            max_theta_ratio=abs(dist.*tan_theta/h.maximum_aperture(1));
             max_phi_ratio=abs(dist.*tan_phi/h.maximum_aperture(2));
             max_theta_mask=ratio_theta<max_theta_ratio;
             max_phi_mask=ratio_phi<max_phi_ratio;
             ratio_theta(max_theta_mask)=max_theta_ratio(max_theta_mask);
             ratio_phi(max_phi_mask)=max_phi_ratio(max_phi_mask);
+            
+            
+            
+            %% Debug plot
+            if 0
+                figure(77);
+                subplot(321);
+                imagesc(reshape(tan_theta(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                caxis([-3.14 3.14])
+                title('tan theta');
+                set(gca,'FontSize',14);
+                ax(1) = gca;
+                subplot(322);
+                imagesc(reshape(min_theta_ratio(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                title('min theta ratio')
+                caxis([0 1])
+                set(gca,'FontSize',14);
+                ax(2) = gca;
+                subplot(323);
+                imagesc(reshape(ratio_theta(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                title('ratio theta');
+                caxis([0 1])
+                set(gca,'FontSize',14);
+                ax(3) = gca;
+                subplot(324);
+                imagesc(reshape(min_theta_mask(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                ax(4) = gca;
+                set(gca,'FontSize',14);
+                title('min theta mask');
+                
+                % Calculating the apod for boxcar
+                value=double(ratio_theta<=0.5);
+                
+                subplot(325)
+                imagesc(reshape(value(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                title('apod boxcar');
+                ax(5) = gca;
+                set(gca,'FontSize',14);
+                subplot(326)
+                imagesc(reshape(value(:,64).*min_theta_mask(:,64),[h.focus.N_depth_axis h.focus.N_azimuth_axis,1]));
+                ax(6) = gca;
+                title('apod boxcar .* min theta mask');
+                set(gca,'FontSize',14);
+                linkaxes(ax);
+            end
+            
         end
         
         function value=get.N_elements(h)
             if isempty(h.sequence)
                 assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-                value=h.probe.N_elements; 
+                value=h.probe.N_elements;
             else
                 value=length(h.sequence);
             end
