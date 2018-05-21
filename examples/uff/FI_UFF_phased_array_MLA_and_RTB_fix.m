@@ -87,7 +87,7 @@ mid_MLA_unified_fix=midprocess.das();
 mid_MLA_unified_fix.channel_data=channel_data;
 mid_MLA_unified_fix.dimension = dimension.both();
 %By setting this we use the Prager & Nguyen model
-mid_MLA_unified_fix.use_unified_fix = 1;  
+mid_MLA_unified_fix.transmit_delay_model = transmit_delay_model.unified;  
 mid_MLA_unified_fix.scan=scan_MLA;
 mid_MLA_unified_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_unified_fix.transmit_apodization.MLA = MLA;
@@ -110,8 +110,8 @@ mid_MLA_plane_fix=midprocess.das();
 mid_MLA_plane_fix.channel_data=channel_data;
 mid_MLA_plane_fix.dimension = dimension.both();
 %By setting this we use the simple PW model
-mid_MLA_plane_fix.use_PW_fix = 1;
-mid_MLA_plane_fix.margin_in_m = 4/1000;
+mid_MLA_plane_fix.transmit_delay_model = transmit_delay_model.hybrid;  
+mid_MLA_plane_fix.pw_margin = 4/1000;
 mid_MLA_plane_fix.scan=scan_MLA;
 mid_MLA_plane_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_plane_fix.transmit_apodization.MLA = MLA;
@@ -159,12 +159,14 @@ ylim([40 55]);xlim([15 35]);
 % model, and our simple PW model both in front front of the probe (around x=0mm),
 % and to the side (x=25mm) which was an earlier issue.
 
-%% RTB using convetional virtual source model
+%% RTB using conventional virtual source model
+clear mid_RTB;
 mid_RTB=midprocess.das();
 mid_RTB.channel_data=channel_data;
 mid_RTB.dimension = dimension.both();
 mid_RTB.scan=scan_MLA;
 mid_RTB.transmit_apodization.window = uff.window.sector_scan_rtb;
+%mid_RTB.transmit_apodization.f_number = 2;
 mid_RTB.transmit_apodization.probe = channel_data.probe;
 mid_RTB.receive_apodization.window = uff.window.tukey25;
 mid_RTB.receive_apodization.f_number = 1.7;
@@ -182,15 +184,28 @@ x_matrix=reshape(scan_MLA.x,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
 z_matrix=reshape(scan_MLA.z,[scan_MLA.N_depth_axis scan_MLA.N_azimuth_axis]);
 
 figure(88);
+subplot(211);
 pcolor(x_matrix*1e3,z_matrix*1e3,...
-       reshape(tx_apod(:,51),scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
+       reshape(tx_apod(:,64),scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
 xlabel('x [mm]');
 ylabel('z [mm]');
 shading('flat');
 set(gca,'fontsize',14);
 set(gca,'YDir','reverse');
 axis('tight','equal');
-title('TX apod from sequence 51');
+title('TX apod from sequence 64');
+
+%%
+subplot(212);
+pcolor(x_matrix*1e3,z_matrix*1e3,...
+       reshape(tx_apod(:,64),scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
+xlabel('x [mm]');
+ylabel('z [mm]');
+shading('flat');
+set(gca,'fontsize',14);
+set(gca,'YDir','reverse');
+axis('tight','equal');
+title('TX apod from sequence 64 zoomed');
 
 %%
 % For illustrational purposes, we'll include a plot of the transmit
@@ -198,6 +213,18 @@ title('TX apod from sequence 51');
 
 % Calculate weights based on the transmit apod
 weighting = 1./sum(tx_apod,2);
+
+
+figure(89);
+pcolor(x_matrix*1e3,z_matrix*1e3,...
+       reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
+xlabel('x [mm]');
+ylabel('z [mm]');
+shading('flat');
+set(gca,'fontsize',14);
+set(gca,'YDir','reverse');
+axis('tight','equal');
+title('TX apod from sequence 51');
 
 b_data_RTB_weighted = uff.beamformed_data(b_data_RTB);
 b_data_RTB_weighted.data = b_data_RTB_weighted.data.*weighting;
@@ -211,7 +238,7 @@ b_data_RTB_weighted.plot(11,'RTB with virtual source model weighted');
 mid_RTB_unified_fix=midprocess.das();
 mid_RTB_unified_fix.channel_data=channel_data;
 mid_RTB_unified_fix.dimension = dimension.both();
-mid_RTB_unified_fix.use_unified_fix = 1;
+mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
 mid_RTB_unified_fix.scan=scan_MLA;
 mid_RTB_unified_fix.transmit_apodization.window = uff.window.sector_scan_rtb;
 mid_RTB_unified_fix.transmit_apodization.probe = channel_data.probe;
@@ -234,8 +261,8 @@ b_data_RTB_unified_fix_weighted.plot(12,'RTB with Nguyen & Prager model');
 mid_RTB_PW_fix=midprocess.das();
 mid_RTB_PW_fix.channel_data=channel_data;
 mid_RTB_PW_fix.dimension = dimension.both();
-mid_RTB_PW_fix.use_PW_fix = 1;
-mid_RTB_PW_fix.margin_in_m = 4/1000;
+mid_RTB_PW_fix.transmit_delay_model = transmit_delay_model.hybrid;
+mid_RTB_PW_fix.pw_margin = 4/1000;
 mid_RTB_PW_fix.scan=scan_MLA;
 mid_RTB_PW_fix.transmit_apodization.window = uff.window.sector_scan_rtb;
 mid_RTB_PW_fix.transmit_apodization.probe = channel_data.probe;

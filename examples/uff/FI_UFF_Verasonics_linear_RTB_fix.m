@@ -113,7 +113,7 @@ mid_RTB_unified_fix.dimension = dimension.both();
 
 mid_RTB_unified_fix.channel_data=channel_data;
 mid_RTB_unified_fix.scan=scan_RTB;
-mid_RTB_unified_fix.use_unified_fix = 1; %When this flat is set this model is used
+mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
 
 mid_RTB_unified_fix.transmit_apodization.window=uff.window.tukey50;
 mid_RTB_unified_fix.transmit_apodization.f_number = 3;
@@ -138,9 +138,9 @@ b_data_RTB_unified_fix_weighted.plot(11,'RTB image Nguyen & Prager mode');
 %% RTB using a simpler model assuming PW around focus
 mid_RTB_with_plane_fix=midprocess.das();
 mid_RTB_with_plane_fix.dimension = dimension.both();
-mid_RTB_with_plane_fix.use_PW_fix = 1; % Set this flag to use this model
+mid_RTB_with_plane_fix.transmit_delay_model = transmit_delay_model.hybrid;
 %Optionally set the margin of the region around focus to use PW tx delay
-mid_RTB_with_plane_fix.margin_in_m = 1/1000; 
+mid_RTB_with_plane_fix.pw_margin = 1/1000; 
 
 mid_RTB_with_plane_fix.channel_data=channel_data;
 mid_RTB_with_plane_fix.scan=scan_RTB;
@@ -171,11 +171,11 @@ b_data_RTB_plane_fix_weighted.plot(10,'RTB image with PW hybrid virtual source m
 % model sucessfully removes the artifact at focus.
 
 % We are plotting the TX delay used for the center transmit beam
-tx_delay_virtual_source = reshape(mid_RTB.tx_delay_hack,scan_RTB.N_z_axis,...
+tx_delay_virtual_source = reshape(mid_RTB.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_unified_fix = reshape(mid_RTB_unified_fix.tx_delay_hack,scan_RTB.N_z_axis,...
+tx_delay_unified_fix = reshape(mid_RTB_unified_fix.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_plane_fix = reshape(mid_RTB_with_plane_fix.tx_delay_hack,scan_RTB.N_z_axis,...
+tx_delay_plane_fix = reshape(mid_RTB_with_plane_fix.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
 
 h = figure(100);clf;
