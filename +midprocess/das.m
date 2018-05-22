@@ -70,7 +70,9 @@ classdef das < midprocess
             
             % calculate transmit delay
             
-            % get an apodization mask for unified beamforming fix
+            % get an apodization mask only needed for
+            % transmit_delay_model.unified used for transmit delay when the
+            % source is within the imaging plane
             if h.transmit_delay_model == transmit_delay_model.unified && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3) 
                 if isa(h.scan,'uff.sector_scan')
                     mask_apod = uff.apodization();
@@ -104,8 +106,7 @@ classdef das < midprocess
                         if isinf(h.channel_data.sequence(n_wave).source.distance)
                             transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                         else
-                            
-                            %% distance between source and elements
+                            % distance between source and elements
                             transmit_delay(:,n_wave)=(-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.x-h.scan.x).^2+(h.channel_data.sequence(n_wave).source.y-h.scan.y).^2+(h.channel_data.sequence(n_wave).source.z-h.scan.z).^2);
                             
                             % add distance from source to origin
@@ -222,11 +223,11 @@ classdef das < midprocess
                             
                         end
                         
-                        % plane wave
+                    % plane wave
                     case uff.wavefront.plane
                         transmit_delay(:,n_wave)=h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                         
-                        % photoacoustic wave
+                    % photoacoustic wave
                     case uff.wavefront.photoacoustic
                         transmit_delay(:,n_wave)=zeros(N_pixels,1);
                         
@@ -276,16 +277,16 @@ classdef das < midprocess
                     %% MEX
                     case code.mex
                         aux_data=mex.das_c(data,...
-                            sampling_frequency,...
-                            initial_time,...
-                            tx_apodization,...
-                            rx_apodization,...
-                            transmit_delay,...
-                            receive_delay,...
-                            modulation_frequency,...
-                            int32(h.dimension));
+                                           sampling_frequency,...
+                                           initial_time,...
+                                           tx_apodization,...
+                                           rx_apodization,...
+                                           transmit_delay,...
+                                           receive_delay,...
+                                           modulation_frequency,...
+                                           int32(h.dimension));
                         
-                        %% MATLAB
+                    %% MATLAB
                     case code.matlab
                         % workbar
                         tools.workbar();
@@ -331,7 +332,7 @@ classdef das < midprocess
                             end
                         end
                         
-                        %% MATLAB GPU FRAMELOOP
+                    %% MATLAB GPU FRAMELOOP
                     case code.matlab_gpu_frameloop
                         
                         % clear GPU memory and show basic info
