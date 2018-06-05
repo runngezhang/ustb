@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = true;
+full_simulation = false;
 
 
 
@@ -116,11 +116,11 @@ if full_simulation
     [point_position, point_amplitudes] = simulatedPhantomDynamicRange_2(650);
 else
     %% Create axial gradient (ag)
-    sca_per_mm2 = 500;
+    sca_per_mm2 = 650;
     x_min_ag = 10/1000;
     x_max_ag = 15/1000;
-    z_min_ag = 12.5/1000;
-    z_max_ag = 42.5/1000;
+    z_min_ag = 10/1000;
+    z_max_ag = 45/1000;
     Intensity_ag = 0;
     dB_mm_ag = 2;
     
@@ -223,6 +223,6 @@ if full_simulation
     channel_data.write('./FieldII_STAI_dynamic_range_alt_2.uff','channel_data');
     b_data.write('./FieldII_STAI_dynamic_range_alt.uff','b_data');
 else
-    channel_data.write('./FieldII_STAI_axial_gradient.uff','channel_data');
+    channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
     b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
 end
