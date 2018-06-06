@@ -7,15 +7,18 @@
 % NB! You need to run the create_figures_from_experimental.m first since we
 % are using the stored experimental gradient values and contrast values to
 % plot both the simulated and the experimental in the same plot.
-
+%
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
+
+%% Load the data from the uff file
 clear all;
 close all;
 
-%% Load the data from the uff file
 filename = [data_path,filesep,'FieldII_STAI_simulated_dynamic_range.uff'];
 
-b_data_tx = uff.beamformed_data();
+channel_data = uff.channel_data();
+channel_data.read(filename,'/channel_data');
+
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
 b_data_pcf = uff.beamformed_data();
@@ -23,10 +26,8 @@ b_data_gcf = uff.beamformed_data();
 b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
-b_data_glt = uff.beamformed_data();
 b_data_weights = uff.beamformed_data();
 
-b_data_tx.read(filename,'/b_data_tx');
 b_data_das.read(filename,'/b_data_das');
 b_data_cf.read(filename,'/b_data_cf');
 b_data_pcf.read(filename,'/b_data_pcf');
@@ -34,10 +35,13 @@ b_data_gcf.read(filename,'/b_data_gcf');
 b_data_mv.read(filename,'/b_data_mv');
 b_data_ebmv.read(filename,'/b_data_ebmv');
 b_data_dmas.read(filename,'/b_data_dmas');
-b_data_glt.read(filename,'/b_data_glt');
 b_data_weights.read(filename,'/b_data_weights');
 
 weights = b_data_weights.get_image('none');
+
+%% Print authorship and citation details for the dataset
+channel_data.print_authorship
+
 
 %% DAS - Delay-And-Sum
 % Create the individual images and the zoomed images on the boxes
@@ -69,7 +73,7 @@ glt.d = 0;
 glt.plot_functions = 1;
 
 glt.input = b_data_das;
-glt.scan = b_data_tx.scan;
+glt.scan = b_data_das.scan;
 b_data_glt = glt.go();
 
 glt_img = b_data_glt.get_image('none').*weights;  % Compensation weighting
@@ -240,13 +244,13 @@ theory_lateral_exp=-40*(b_data_das_exp.scan.x_axis(mask_lateral_exp)+12.05e-3)/2
 
 
 [meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-10,10);
-mask_lateral=abs(b_data_tx.scan.x_axis)<10e-3;
-theory_lateral=-40*(b_data_tx.scan.x_axis(mask_lateral)+10e-3)/20e-3;
+mask_lateral=abs(b_data_das.scan.x_axis)<10e-3;
+theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
 
 
 [meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,20,40,11,14);
-mask_axial= b_data_tx.scan.z_axis<40e-3 & b_data_tx.scan.z_axis>20e-3;
-theory_axial=-40*(b_data_tx.scan.z_axis(mask_axial)-20e-3)/20e-3;
+mask_axial= b_data_das.scan.z_axis<40e-3 & b_data_das.scan.z_axis>20e-3;
+theory_axial=-40*(b_data_das.scan.z_axis(mask_axial)-20e-3)/20e-3;
 
 for i = 1:length(image.all)
     f88 = figure(8888+i);clf;hold all;
@@ -267,7 +271,7 @@ for i = 1:length(image.all)
 end
 
 %% Plot the lateral line through the boxes
-[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,b_data_tx.scan.x(1)*10^3,b_data_tx.scan.x(end)*10^3);
+[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,b_data_das.scan.x(1)*10^3,b_data_das.scan.x(end)*10^3);
 theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-35 -100];
 x_axis_theoretical = linspace(-15,0,1536);
 
@@ -291,7 +295,7 @@ xlabel('x [mm]');
 saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/boxes'],'eps2c')
 
 %% Measure contrast and plot together with the experimental
-[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_tx,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
 
 load('Experimental.mat','CR_signal_exp','CNR_signal_exp','CR_image_exp','CNR_image_exp');
 

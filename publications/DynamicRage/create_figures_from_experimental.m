@@ -1,8 +1,10 @@
 %% Create the figures from the experimental dynamic range phantom
-% For the publication ?Rindal, O. M. H., Austeng, A., Fatemi, A., 
+% For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., 
 % & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations
 % in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
 % Ferroelectrics, and Frequency Control.
+%
+% Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
 
 clear all;
 close all;
@@ -12,7 +14,6 @@ filename = [data_path,filesep,'experimental_dynamic_range_phantom.uff'];
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
 
-b_data_tx = uff.beamformed_data();
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
 b_data_pcf = uff.beamformed_data();
@@ -20,9 +21,7 @@ b_data_gcf = uff.beamformed_data();
 b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
-b_data_glt = uff.beamformed_data();
 
-b_data_tx.read(filename,'/b_data_tx');
 b_data_das.read(filename,'/b_data_das');
 b_data_cf.read(filename,'/b_data_cf');
 b_data_pcf.read(filename,'/b_data_pcf');
@@ -30,10 +29,9 @@ b_data_gcf.read(filename,'/b_data_gcf');
 b_data_mv.read(filename,'/b_data_mv');
 b_data_ebmv.read(filename,'/b_data_ebmv');
 b_data_dmas.read(filename,'/b_data_dmas');
-b_data_glt.read(filename,'/b_data_glt');
 
 %% Print authorship and citation details for the dataset
-print_authorship
+channel_data.print_authorship
 
 %% Display and save the images from all beamformers under study
 mkdir([ustb_path,filesep,'publications/DynamicRage/figures/experimental/'])
@@ -111,7 +109,7 @@ glt.d = 0;
 glt.plot_functions = 1;
 
 glt.input = b_data_das;
-glt.scan = b_data_tx.scan;
+glt.scan = b_data_das.scan;
 b_data_glt = glt.go();
 
 glt_img = b_data_glt.get_image('none');
@@ -178,8 +176,8 @@ colors=    [0.9047    0.1918    0.1988; ...
 %  for now.
 
 [meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,39,48.5,-12.5,12.5);
-mask_lateral=abs(b_data_tx.scan.x_axis)<12.5e-3;
-theory_lateral=-40*(b_data_tx.scan.x_axis(mask_lateral)+12.5e-3)/25e-3;
+mask_lateral=abs(b_data_das.scan.x_axis)<12.5e-3;
+theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+12.5e-3)/25e-3;
 
 mkdir([ustb_path,filesep,'publications/DynamicRage/figures/experimental/gradient/'])
 
@@ -205,7 +203,7 @@ end
 % Once again we are just saving the values to make the final plot combined
 % with the simulated data in the create_figures_from_simulation.m
 [CR_signal_exp, CR_signal_dagger, CR_image_exp, CNR_signal_exp, CNR_image_exp] ...
-    = measureContrast(b_data_tx,image,-5.5,17.5,3.5,5,8,[ustb_path,filesep,...
+    = measureContrast(b_data_das,image,-5.5,17.5,3.5,5,8,[ustb_path,filesep,...
     'publications/DynamicRage/figures/experimental/DAS_cyst_indicated']);
 
 f9 = figure;

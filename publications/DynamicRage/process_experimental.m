@@ -156,7 +156,6 @@ channel_data.print_authorship
 channel_data.write(filename,'channel_data');
 %%
 
-b_data_tx.write(filename,'/b_data_tx');
 b_data_das.write(filename,'/b_data_das');
 b_data_cf.write(filename,'/b_data_cf');
 b_data_pcf.write(filename,'/b_data_pcf');

@@ -170,30 +170,14 @@ f7 = figure(9);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
 colormap gray;caxis([-60 0]);axis image;colorbar;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
 
-%% Gray Level Transform
-glt = postprocess.gray_level_transform();
-glt.a = 0.0001;
-glt.b = 0;
-glt.c = 1;
-glt.plot_functions = 1;
-
-glt.input = b_data_das;
-
-b_data_glt = glt.go();
-b_data_glt.plot()
-
 
 %%
-channel_data.name = {'Simulated dynamic range phantom. Created with Field II. See the reference for details'};
-channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
-channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
-channel_data.version = {'1.0.1'};
+
 
 channel_data.print_authorship
 
 channel_data.write([data_path,filesep,filename],'channel_data');
 %%
-b_data_tx.write([data_path,filesep,filename],'/b_data_tx');
 b_data_das.write([data_path,filesep,filename],'/b_data_das');
 b_data_cf.write([data_path,filesep,filename],'/b_data_cf');
 b_data_pcf.write([data_path,filesep,filename],'/b_data_pcf');
@@ -201,5 +185,4 @@ b_data_gcf.write([data_path,filesep,filename],'/b_data_gcf');
 b_data_mv.write([data_path,filesep,filename],'/b_data_mv');
 b_data_ebmv.write([data_path,filesep,filename],'/b_data_ebmv');
 b_data_dmas.write([data_path,filesep,filename],'/b_data_dmas');
-b_data_glt.write([data_path,filesep,filename],'/b_data_glt');
 b_data_weights.write([data_path,filesep,filename],'/b_data_weights');
