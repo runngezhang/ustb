@@ -1,7 +1,7 @@
 clear all; close all;
 
 %filename = [data_path,filesep,'FieldII_STAI_dynamic_range_more_scatteres.uff'];
-filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_axial_gradient.uff';
+filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_axial_gradient_updated.uff';
 
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data');
@@ -12,7 +12,7 @@ channel_data.read(filename,'/channel_data');
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-19e-3,19e-3,512).', 'z_axis', linspace(10e-3,55e-3,512).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).', 'z_axis', linspace(8e-3,55e-3,512).');
 
 %% Beamformer
 %
@@ -97,15 +97,21 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,pcf_img);
 colormap gray;caxis([-60 0]);axis image;title('PCF');xlabel('x [mm]');ylabel('z [mm]');
 
 %%
-addpath('../')
-gcf=postprocess.generalized_coherence_factor();
+gcf=postprocess.generalized_coherence_factor_OMHR();
 gcf.dimension = dimension.receive;
 gcf.transmit_apodization = mid.transmit_apodization;
 gcf.receive_apodization = mid.receive_apodization;
 gcf.input = b_data_tx;
 gcf.channel_data = channel_data;
-gcf.nBeams = 5;
+gcf.M0 = 2;
 b_data_gcf = gcf.go();
+
+gcf_img = b_data_gcf.get_image('none').*weights;
+gcf_img = db(abs(gcf_img./max(gcf_img(:))));
+f4 = figure(4);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gcf_img);
+colormap gray;caxis([-60 0]);axis image;title('GCF');xlabel('x [mm]');ylabel('z [mm]');
+
 %%
 gcf_img = b_data_gcf.get_image('none').*weights;
 gcf_img = db(abs(gcf_img./max(gcf_img(:))));
@@ -161,7 +167,7 @@ ebmv.channel_data = channel_data;
 ebmv.scan = scan;
 ebmv.K_in_lambda = 1.5;
 ebmv.gamma = 0.5;
-ebmv.L_elements = floor(channel_data.N_elements/3);
+ebmv.L_elements = floor(channel_data.N_elements/2);
 ebmv.transmit_apodization = mid.transmit_apodization;
 ebmv.receive_apodization = mid.receive_apodization;
 ebmv.regCoef = 1/100;
