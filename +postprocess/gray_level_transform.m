@@ -29,7 +29,10 @@ classdef gray_level_transform < postprocess
         a = 0;
         b = 0.01;
         c = 0.8;
+        d = 0;
         plot_functions = 0;
+        scan;
+        is_exp = 0;
     end
     
     methods
@@ -49,13 +52,24 @@ classdef gray_level_transform < postprocess
             % dB space
             x_dB=20*log10(x);
             %x_dB_compressed=-a*x_dB.^2+b*x_dB;
-            x_dB_compressed=h.a*x_dB.^3-h.b*x_dB.^2+h.c*x_dB;
+            x_dB_compressed=h.a*x_dB.^3+h.b*x_dB.^2+h.c*x_dB + h.d;
             % find the cublic spline that approximate the compressed values
             x_compressed=10.^(x_dB_compressed/20);
             gamma = fit(x.',x_compressed.','cubicspline');
+
             
+            % Prøv : GLT( signal./ sqrt( |mean signal power at the top of the gradient| ) ) 
+            %%
+%             if h.is_exp
+%                 mask = h.scan.z > 40.5/1000 & h.scan.z < 48/1000 & h.scan.x > -12.5/1000 & h.scan.x < -12/1000;
+%             else % Is simulation
+%                 mask = h.scan.z > 47.5/1000 & h.scan.z < 52.5/1000 & h.scan.x > -10.5/1000 & h.scan.x < -9.5/1000;
+%             end
+            
+            %%
             signal = abs(h.input.data);
             max_value = max(signal(:));
+            %max_value = (mean(abs(h.input.data(mask))))
             for ch = 1:h.input.N_channels
                 for wa = 1:h.input.N_waves
                     for fr = 1:h.input.N_frames
@@ -63,6 +77,26 @@ classdef gray_level_transform < postprocess
                     end
                 end
             end
+           
+            
+%             %%
+%             h.input.data = h.input.data;
+%             img = h.input.get_image('none');
+%             img_db = db(abs(img./max_value));
+%             figure;
+%             imagesc(img_db);colormap gray;
+%             colorbar;caxis([-60 max(img_db(:))]);
+%             
+%             img = h.input.get_image();
+%             img_vect = img(:);
+%             value_at = mean(img_vect(mask))
+%             
+%             figure;
+%             subplot(211)
+%             imagesc(reshape(img(:).*mask,2048,1024));;caxis([-60 0]);colorbar
+%             subplot(212)
+%             imagesc(reshape(img(:),2048,1024));caxis([-60 0]);colorbar
+            %%
    
             if h.plot_functions
                 f8888 = figure(8888);clf;
@@ -80,12 +114,12 @@ classdef gray_level_transform < postprocess
                 plot(x_dB,x_dB,'k','LineWidth',2); hold on; grid on; axis equal tight;
                 plot(x_dB,x_dB_compressed,'b','LineWidth',2); hold on;
                 plot(x_dB,20*log10(gamma(x)),'r:','LineWidth',2); hold on;
-                title('Log space');
+                %title('Log space');
                 xlabel('Input signal [dB]');
                 ylabel('Output signal [dB]');
                 legend('location','nw','Uniform','p(b)','20log_{10}(v(b))');
-                %saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_lin'],'eps2c')
-                %saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_log'],'eps2c')
+                saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_lin'],'eps2c')
+                saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_log'],'eps2c')
             end
             
             % update hash
