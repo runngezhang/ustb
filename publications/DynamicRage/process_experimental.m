@@ -147,7 +147,7 @@ set(gca,'FontSize',14);
 
 %%
 channel_data.name = {'Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details'};
-channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
+channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ali Fatemi <ali.fatemi@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
 channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
 channel_data.version = {'1.0.1'};
 
