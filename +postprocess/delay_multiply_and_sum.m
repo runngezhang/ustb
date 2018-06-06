@@ -29,8 +29,6 @@ classdef delay_multiply_and_sum < postprocess
     %% Additional properties
     properties
         dimension
-        receive_apodization                           % UFF.APODIZATION class
-        transmit_apodization                          % UFF.APODIZATION class
         channel_data                                  % UFF.CHANNEL_DATA class
         filter_freqs % optional: four increasing numbers specifying the passband and stopband edges of the bandpass filter
     end
@@ -232,22 +230,12 @@ classdef delay_multiply_and_sum < postprocess
     
     %% set methods
     methods
-        function h=set.channel_data(h,in_channel_data)
+        % TODO: why defining channel_data if we already have it in input? 
+        function h=set.channel_data(h,in_channel_data) 
             assert(isa(in_channel_data,'uff.channel_data'), 'The input is not a UFF.CHANNEL_DATA class. Check HELP UFF.CHANNEL_DATA.');
             h.channel_data=in_channel_data;
         end
-        
-        function h=set.receive_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.receive_apodization=in_apodization;
-        end
-        
-        function h=set.transmit_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.transmit_apodization=in_apodization;
-        end
     end
-
 end
 
 

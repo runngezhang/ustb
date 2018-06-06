@@ -37,8 +37,6 @@ classdef short_lag_spatial_coherence < postprocess
     
     %% Additional properties
     properties
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         active_element_criterium=0.16;                % value to decide whether an element is used or not
         K_in_lambda;
         dimension                                     % dimension class that specifies whether the process will run only on transmit, receive, or both.
