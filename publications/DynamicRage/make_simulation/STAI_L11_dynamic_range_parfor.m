@@ -1,4 +1,4 @@
-%% Computation of a STAI dataset with Field II to simulate specular tissue using parameters of an L11-4v 128 element Verasonics Transducer and beamforming with USTB and using MATLAB's parfor function for parallelization
+%% Computation of a STAI dataset with Field II to simulate L11-4v 128 element Verasonics Transducer and beamforming with USTB and using MATLAB's parfor function for parallelization
 %
 % This example shows how to load the data from a Field II simulation of specular tissue into
 % USTB objects, and then beamform it with the USTB routines.
@@ -217,6 +217,11 @@ pipe.scan=scan;
 
 % Delay and sum on receive, then coherent compounding
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
+
+channel_data.name = {'Simulated dynamic range phantom. Created with Field II. See the reference for details'};
+channel_data.author = {'Ole Marius Hoel Rindal <omrindal@ifi.uio.no','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
+channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
+channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
