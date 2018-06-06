@@ -28,8 +28,6 @@ classdef generalized_coherence_factor < postprocess
     %% Additional properties
     properties
         GCF                                           % BEAMFORMED_DATA class with the computed coherent factor
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         active_element_criterium=0.16;                % value to decide whether an element is used or not. This value depends on the SNR so it must be adjusted on a case-by-case basis.
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
         M0 = 4;                                       % low frequency
@@ -88,26 +86,33 @@ classdef generalized_coherence_factor < postprocess
             h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             h.GCF=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
 
+            % integrated cofficients
+            if h.M0 > 1
+                indToSumFFT = [1:h.M0+1 h.input.N_channels-h.M0+1:h.input.N_channels];
+            else
+                indToSumFFT = 1;
+            end
+
             switch h.dimension
                 case dimension.both
                     active_elements=double(bsxfun(@times,tx_apodization,rx_apodization)>h.active_element_criterium);
                     coherent_sum=sum(sum(h.input.data,2),3);
                     fft_data=permute(fft2(permute(h.input.data,[2 3 1 4])),[3 1 2 4]);
-                    LF_sum=sum(sum(abs(fft_data(:,1:h.M0,1:h.M0,:)).^2,2),3);
+                    LF_sum=sum(sum(abs(fft_data(:,indToSumFFT,indToSumFFT,:)).^2,2),3);
                     total_sum=sum(sum(abs(fft_data).^2,2),3);
                     M=sum(sum(active_elements,2),3);
                 case dimension.transmit
                     active_elements=double(tx_apodization>h.active_element_criterium);
                     coherent_sum=sum(h.input.data,3);
                     fft_data=fft(h.input.data,[],3);
-                    LF_sum=sum(abs(fft_data(:,:,1:h.M0,:)).^2,3);
+                    LF_sum=sum(abs(fft_data(:,:,indToSumFFT,:)).^2,3);
                     total_sum=sum(abs(fft_data).^2,3);
                     M=sum(active_elements,3);
                 case dimension.receive
                     active_elements=double(rx_apodization>h.active_element_criterium);
                     coherent_sum=sum(h.input.data,2);
                     fft_data=fft(h.input.data,[],2);
-                    LF_sum=sum(abs(fft_data(:,1:h.M0,:,:)).^2,2);
+                    LF_sum=sum(abs(fft_data(:,indToSumFFT,:,:)).^2,2);
                     total_sum=sum(abs(fft_data).^2,2);
                     M=sum(active_elements,2);
                 otherwise
@@ -115,7 +120,7 @@ classdef generalized_coherence_factor < postprocess
             end
             
             % Coherent Factor
-            h.GCF.data = bsxfun(@times,LF_sum./total_sum,1./M); 
+            h.GCF.data = LF_sum./total_sum; 
             h.GCF.data(isnan(h.GCF.data))=0;
             % generalized coherent factor image            
             h.output.data = h.GCF.data .* coherent_sum;
@@ -127,20 +132,6 @@ classdef generalized_coherence_factor < postprocess
             h.save_hash();
         end   
     end
-    
-    %% set methods
-    methods
-        function h=set.receive_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.receive_apodization=in_apodization;
-        end
-        
-        function h=set.transmit_apodization(h,in_apodization)
-            assert(isa(in_apodization,'uff.apodization'), 'The input is not a UFF.APODIZATION class. Check HELP UFF.APODIZATION.');
-            h.transmit_apodization=in_apodization;
-        end
-    end
-
 end
 
 
