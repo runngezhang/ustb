@@ -131,7 +131,7 @@ classdef capon_minimum_variance < postprocess
                             aux_data(:,n_channel,:,n_frame) = image(:);
                         end
                     end
-                    h.out_data.data = aux_data;
+                    h.output.data = aux_data;
                 case dimension.receive
                     % auxiliary data
                     aux_data=zeros(h.input.N_pixels,1,h.input.N_waves,h.input.N_frames);
