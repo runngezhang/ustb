@@ -1,6 +1,6 @@
 clear all; close all;
 
-filename = 'FieldII_STAI_dynamic_range_alt_2.uff';
+filename = 'FieldII_STAI_simulated_dynamic_range.uff';
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
@@ -184,6 +184,15 @@ b_data_glt.plot()
 
 
 %%
+channel_data.name = {'Simulated dynamic range phantom. Created with Field II. See the reference for details'};
+channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
+channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
+channel_data.version = {'1.0.1'};
+
+channel_data.print_authorship
+
+channel_data.write([data_path,filesep,filename],'channel_data');
+%%
 b_data_tx.write([data_path,filesep,filename],'/b_data_tx');
 b_data_das.write([data_path,filesep,filename],'/b_data_das');
 b_data_cf.write([data_path,filesep,filename],'/b_data_cf');
@@ -194,161 +203,3 @@ b_data_ebmv.write([data_path,filesep,filename],'/b_data_ebmv');
 b_data_dmas.write([data_path,filesep,filename],'/b_data_dmas');
 b_data_glt.write([data_path,filesep,filename],'/b_data_glt');
 b_data_weights.write([data_path,filesep,filename],'/b_data_weights');
-
-%%
-%Using "colorbrewer" colors
-colors =     [27   158   119; ...
-             217    95     2; ...
-             117   112   179; ...
-             231    41   138; ...
-             102   166    30; ...
-             230   171     2; ...
-             166   118    29; ...
-             102   102   102]/255;
-         
-image.all{1} = das_img;
-image.tags{1} = 'DAS';
-image.all{2} = dmas_img;
-image.tags{2} = 'DMAS';
-
-[handle_2] = plotLateralLine(b_data_tx,image,45,-9,-6,colors)
-
-
-%%
-% %%
-% addpath functions/
-% 
-% image.all{1} = das_img;
-% image.tags{1} = 'DAS';
-% image.all{5} = mv_img;
-% image.tags{5} = 'MV';
-% image.all{6} = ebmv_img;
-% image.tags{6} = 'EBMV';
-% image.all{2} = cf_img;
-% image.tags{2} = 'CF';
-% image.all{7} = pcf_img;
-% image.tags{7} = 'PCF';
-% image.all{3} = gcf_img;
-% image.tags{3} = 'GCF';
-% image.all{4} = das_img;%dmas_img;
-% image.tags{4} = 'DMAS';
-% 
-% %%
-% [meanLines,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-20,20);
-% 
-% mask=abs(scan.x_axis)<10e-3;
-% theory=-60*(scan.x_axis(mask)+10e-3)/30e-3-15;
-% 
-% f88 = figure(90);clf;hold all;
-% subplot(211);
-% plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1});hold on;
-% plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2});
-% plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3});
-% plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4});
-% plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% ylim([-100 0]);
-% xlim([-20 20])
-% ylim([-100 0]);
-% xlim([-20 20])
-% legend show; grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% title('Lateral gradient');
-% 
-% subplot(212); hold all;
-% plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5});
-% plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6});
-% plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7});
-% plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% ylim([-100 0]);
-% xlim([-20 20])
-% legend show; grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% %saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient_lateral'],'eps2c')
-% 
-% %%
-% [meanLines,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-12.5,12.5);
-% 
-% mask=abs(scan.x_axis)<12.5e-3;
-% theory=-60*(scan.x_axis(mask)+12.5e-3)/30e-3;
-% 
-% f88 = figure(88);clf;hold all;
-% subplot(211);
-% plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1});hold on;
-% plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2});
-% plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3});
-% plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4});
-% plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% 
-% ylim([-100 0]);
-% xlim([-12.5 12.5])
-% legend('Location','sw'); grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% title('Lateral gradient');
-% 
-% subplot(212);hold all;
-% plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5});
-% plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6});
-% plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7});
-% plot(scan.x_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% ylim([-100 0]);
-% xlim([-12.5 12.5])
-% legend('Location','sw'); grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% %saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient_lateral'],'eps2c')
-% 
-% %%
-% 
-% [meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,scan.z(1)*10^3,scan.z(end)*10^3,11,14);
-% 
-% mask= scan.z_axis<50e-3 & scan.z_axis>10e-3;
-% theory=-60*(scan.z_axis(mask)-10e-3)/30e-3;
-% 
-% f33 = figure(33);clf; hold all;
-% %set(f33,'Position',[100 100 1200 800]); hold all;
-% plot(z_axis,meanLines_axial.all{1}-max(meanLines_axial.all{1}),'Linewidth',2,'DisplayName',image.tags{1});
-% plot(z_axis,meanLines_axial.all{2}-max(meanLines_axial.all{2}),'Linewidth',2,'DisplayName',image.tags{2});
-% plot(z_axis,meanLines_axial.all{3}-max(meanLines_axial.all{3}),'Linewidth',2,'DisplayName',image.tags{3});
-% plot(z_axis,meanLines_axial.all{4}-max(meanLines_axial.all{4}),'Linewidth',2,'DisplayName',image.tags{4});
-% plot(z_axis,meanLines_axial.all{5}-max(meanLines_axial.all{5}),'Linewidth',2,'DisplayName',image.tags{5});
-% plot(scan.z_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% ylim([-100 0]);
-% xlim([10 43.5]);
-% legend show; grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('z [mm]');
-% title('Axial gradient');
-% saveas(f33,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/axial_gradient'],'eps2c')
-% addpath ../Functions/
-% 
-% %%
-% 
-% [meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,scan.x(1)*10^3,scan.x(end)*10^3);
-% theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-25 -100];
-% x_axis_theoretical = linspace(-15,0,1536);
-% 
-% f89 = figure(89);clf;hold all;
-% subplot(211)
-% plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1});hold on;
-% plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2});
-% plot(x_axis_theoretical,theoretical,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color','r');
-% ylim([-80 0]);
-% xlim([-17.5 1.5]);
-% legend show; grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% title('Boxes');
-% subplot(212); hold all;
-% plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3});
-% plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4});
-% plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5});
-% ylim([-80 0]);
-% xlim([-17.5 1.5]);
-% legend show; grid on;
-% ylabel('Normalized amplitude [dB]');
-% xlabel('x [mm]');
-% title('Boxes');
-% %saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/boxes'],'eps2c')
