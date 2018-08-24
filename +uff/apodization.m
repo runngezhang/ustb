@@ -307,7 +307,7 @@ classdef apodization < uff
                         z_dist(:,n)=h.focus.z;
                         % clamping z=0
                         z_dist(abs(z_dist)<1e-6)=1e-6;
-                        tan_theta(:,n)=h.sequence(n).source.azimuth;
+                        tan_theta(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.azimuth;
                         tan_phi(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.elevation;
                     % diverging or converging waves
                     else
