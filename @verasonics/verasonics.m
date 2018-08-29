@@ -139,11 +139,15 @@ classdef verasonics < handle
             D = sqrt(X.*X + FocalPt(3)*FocalPt(3));
             Indices = find(logical(h.TX(n_tx).Apod));
             D = max(D) - D;
-            D = D - D(Indices(end));
+            if n_tx < channel_data.N_waves/2
+                D = D - D(Indices(end));
+            else
+                D = D - D(Indices(1));
+            end
             
-            %figure(101);
-            %plot(D); hold on;
-            %plot(h.TX(n_tx).Delay*h.lambda)
+            %figure(101);clf;
+            %plot(D,'b'); hold on;
+            %plot(h.TX(n_tx).Delay*h.lambda,'r')
             
             trans_delays = D;
         end
