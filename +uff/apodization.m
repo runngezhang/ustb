@@ -357,6 +357,7 @@ classdef apodization < uff
             h.save_hash();
         end
         
+        %% incidence aperture
         function [tan_theta tan_phi distance] = incidence_aperture(h)
             % Location of the elements
             x=ones(h.focus.N_pixels,1)*(h.probe.x.');
@@ -368,28 +369,33 @@ classdef apodization < uff
                 x_dist=h.origin.x-x;
                 y_dist=h.origin.y-y;
                 z_dist=h.origin.z-z;
-                % if not, if a sector scan then the origin is the apex
+            
+            % if not, if we have a curvilinear array
+            elseif isa(h.probe,'uff.curvilinear_array')
+                h.origin = uff.point('xyz',[0 0 -h.probe.radius]);
+                element_azimuth = atan2(x-h.origin.x, z-h.origin.z);
+                
+                % we find the intersection between the ray and the probe
+                % surface
+                pixel_azimuth = atan2(h.focus.x-h.origin.x, h.focus.z-h.origin.z);
+                pixel_distance = sqrt((h.focus.x-h.origin.x).^2+(h.focus.z-h.origin.z).^2);
+                
+                x_dist=h.probe.radius*bsxfun(@minus,pixel_azimuth, element_azimuth);
+                y_dist=h.origin.y-y;
+                z_dist=pixel_distance*ones(1,h.N_elements)-h.probe.radius;
+
+            % if not, if we have a sector scan
             elseif isa(h.focus,'uff.sector_scan')
-                h.origin = h.focus.apex;
+                h.origin = uff.focus.apex;
                 x_dist=h.origin.x-x;
                 y_dist=h.origin.y-y;
                 z_dist=h.origin.z-z;
-                % otherwise we compute it based on the location of pixels
-            else
-                % if curvilinear we set the center at center of
-                % curvature
-                if isa(h.probe,'uff.curvilinear_array')
-                    h.origo = uff.point('xyz',[0 0 -h.probe.radius]);
-                    x_dist=h.origo.x-x;
-                    y_dist=h.origo.y-y;
-                    z_dist=h.origo.z*ones(1,h.probe.N_elements)-z;
                     
-                    % if flat we set the center right on top
-                else
-                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
-                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
-                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
-                end
+            % if not, then we have a flat probe and a linear scan. We set the aperture center right on top
+            else
+                x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
+                z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
             end
             
             % azimuth and elevation tangents, including tilting overwrite
