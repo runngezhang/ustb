@@ -365,15 +365,15 @@ classdef apodization < uff
             
             % if the apodization center has been set by the user
             if ~isempty(h.origin)
-                x_dist=h.origo.x-x;
-                y_dist=h.origo.y-y;
-                z_dist=h.origo.z*ones(1,h.probe.N_elements)-z;
+                x_dist=h.origin.x-x;
+                y_dist=h.origin.y-y;
+                z_dist=h.origin.z-z;
                 % if not, if a sector scan then the origin is the apex
             elseif isa(h.focus,'uff.sector_scan')
-                h.origo = h.focus.apex;
-                x_dist=h.origo.x-x;
-                y_dist=h.origo.y-y;
-                z_dist=h.origo.z*ones(1,h.probe.N_elements)-z;
+                h.origin = h.focus.apex;
+                x_dist=h.origin.x-x;
+                y_dist=h.origin.y-y;
+                z_dist=h.origin.z-z;
                 % otherwise we compute it based on the location of pixels
             else
                 % if curvilinear we set the center at center of

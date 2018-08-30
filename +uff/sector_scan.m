@@ -52,10 +52,13 @@ classdef sector_scan < uff.scan
             % defining the pixel mesh 
             [h.theta h.rho]=meshgrid(h.azimuth_axis,h.depth_axis);
             
+            h.theta=h.theta(:);
+            h.rho=h.rho(:);
+            
             % position of the pixels
-            h.x=h.rho(:).*sin(h.theta(:))+h.apex.x;
-            h.y=0.*h.rho(:)+h.apex.y;
-            h.z=h.rho(:).*cos(h.theta(:))+h.apex.z;
+            h.x=h.rho.*sin(h.theta)+h.apex.x;
+            h.y=0.*h.rho+h.apex.y;
+            h.z=h.rho.*cos(h.theta)+h.apex.z;
         end
     end
     
