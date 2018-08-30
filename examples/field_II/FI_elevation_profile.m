@@ -52,8 +52,8 @@ pii_x=reshape(sum(px.^2,1)*dt/rho0/c0,[scan_x.N_z_axis scan_x.N_x_axis]);
 pii_y=reshape(sum(py.^2,1)*dt/rho0/c0,[scan_y.N_axial_axis scan_y.N_radial_axis]);
 
 %% depth normalized, dB, PII map
-pii_x_dB=10*log10(pii_x./max(pii_x,[],2));
-pii_y_dB=10*log10(pii_y./max(pii_y,[],2));
+pii_x_dB=10*log10(bsxfun(@rdivide,pii_x, max(pii_x,[],2)));
+pii_y_dB=10*log10(bsxfun(@rdivide,pii_y, max(pii_y,[],2)));
 
 figure;
 subplot(1,2,1);
