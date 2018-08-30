@@ -407,6 +407,8 @@ classdef apodization < uff
             isreceive = isempty(h.sequence);
             
             if isa(h.focus,'uff.linear_scan')
+                
+                subplot(1,2,1);
                 imagesc(h.focus.x_axis*1e3,h.focus.z_axis*1e3,reshape(h.data(:,n),[h.focus.N_z_axis h.focus.N_x_axis]))
                 xlabel('x [mm]');
                 ylabel('z [mm]');
@@ -419,12 +421,31 @@ classdef apodization < uff
                 else
                     title(sprintf('Apodization values for wave %d',n));
                 end
+                
+                data=h.data; % copy of h.data to avoid cheking hash in between events
+                 [x z]=ginput(1);
+                 while ~isempty(x)
+                     [~, ns]=min(sum(bsxfun(@minus, h.focus(1).xyz, [x 0 z]/1e3).^2,2));
+                     subplot(1,2,2);
+                     plot(data(ns,:)); grid on; axis tight;
+                     ylim([0 1.2]);
+                     if isreceive
+                        title(sprintf('Receive apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('Element');
+                     else
+                        title(sprintf('Transmit apodization at pixel (%0.2f,%0.2f) mm.',x,z));
+                        xlabel('wave');
+                     end
+                     set(gca,'fontsize',14);
+                     
+                     subplot(1,2,1);
+                     [x z]=ginput(1);
+                 end
             
             elseif isa(h.focus,'uff.sector_scan')
                  x_matrix=reshape(h.focus.x,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
                  z_matrix=reshape(h.focus.z,[h.focus(1).N_depth_axis h.focus(1).N_azimuth_axis]);
-                 
-                 
+
                  subplot(1,2,1);
                  pcolor(x_matrix*1e3,z_matrix*1e3,reshape(h.data(:,n),[h.focus.N_depth_axis h.focus.N_azimuth_axis]));
                  xlabel('x [mm]');
