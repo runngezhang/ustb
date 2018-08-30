@@ -48,14 +48,12 @@ classdef apodization < uff
     %% dependent properties
     properties  (Dependent)
         data                        % apodization data
-        propagation_distance        % distance from the origin to the pixel
         N_elements                  % number of elements (real or synthetic)
     end
     
     %% private properties
     properties (Access = private)
         data_backup
-        propagation_distance_backup
     end
     
     %% constructor
@@ -127,18 +125,7 @@ classdef apodization < uff
                 value = h.data_backup;
             end
         end
-        
-        %% get propagation_distance
-        function value=get.propagation_distance(h)
-            % check if we can skip calculation
-            if h.check_hash()&&~isempty(h.propagation_distance_backup)
-                value = h.propagation_distance_backup;
-            else
-                h.compute();
-                value = h.propagation_distance_backup;
-            end
-        end
-        
+              
         %% get N_elements
         function value=get.N_elements(h)
             if isempty(h.sequence)
@@ -242,7 +229,7 @@ classdef apodization < uff
             if ~(numel(h.sequence)>0)
                 h.compute_aperture_apodization();
                 
-                % wave apodization
+            % wave apodization
             else
                 h.compute_wave_apodization();
             end
@@ -303,10 +290,7 @@ classdef apodization < uff
                 
                 % clamping distance to avoid division by 0
                 distance(abs(distance)<1e-6)=1e-6;
-                
-                % save distance
-                h.propagation_distance_backup = distance;
-                                
+                                               
                 % clamping aperture
                 [ratio_theta ratio_phi] = h.limit_minimum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
                 [ratio_theta ratio_phi] = h.limit_maximum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
@@ -356,14 +340,7 @@ classdef apodization < uff
                 
                 % clamping distance
                 distance(abs(distance)<1e-6)=1e-6;
-                
-                % propagation distance
-                if isa(h.focus,'uff.linear_scan')
-                    h.propagation_distance_backup = h.focus.z;
-                elseif isa(h.focus,'uff.sector_scan')
-                    h.propagation_distance_backup=distance
-                end
-                
+                               
                 % clamping aperture
                 [ratio_theta ratio_phi] = h.limit_minimum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
                 [ratio_theta ratio_phi] = h.limit_maximum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
@@ -379,42 +356,6 @@ classdef apodization < uff
             % update hash
             h.save_hash();
         end
-        
-        %         function compute_origin_from_waves(h)
-        %             % checking we have all we need
-        %             %assert(numel(h.probe)>0,'The PROBE parameter is not set.');
-        %             assert(h.focus.N_pixels>0,'The focus parameter is not set.');
-        %             assert(numel(h.origo)>0,'The origo parameter is not set.');
-        %
-        %             % compute lateral distance (assuming flat apertures, not accurate for curvilinear probes)
-        %             if isinf(h.origo.distance)
-        %                 origin(:,1)=h.focus.x+h.focus.z*tan(h.origo.azimuth)-h.focus.z*tan(h.tilt(1));
-        %                 origin(:,2)=h.focus.y+h.focus.z*tan(h.origo.elevation)-h.focus.z*tan(h.tilt(2));
-        %             else
-        %                 origin(:,1)=h.origo.x-h.origo.z*(h.focus.x-h.origo.x)./(h.focus.z-h.origo.z)-h.focus.z*tan(h.tilt(1));
-        %                 origin(:,2)=(h.focus.y-h.origo.y)./(h.focus.x-h.origo.x).*(origin(:,1)-h.origo.x)+h.focus.y-h.focus.z*tan(h.tilt(2));
-        %             end
-        %             origin(:,3)=0;
-        %             origin(isnan(origin))=0; % solve divisions by 0
-        %
-        %             h.origin = origin;
-        %
-        %             %             oo=reshape(origin,[256 256 3]);
-        %             %             ff=reshape(h.focus.xyz,[256 256 3]);
-        %             %             figure;
-        %             %             plot([oo(128,128,1) ff(128,128,1)]*1e3, [oo(128,128,3) ff(128,128,3)]*1e3,'ro-'); axis equal;
-        %             %             set(gca,'Ydir','reverse')
-        %
-        %         end
-        
-        %         function value=get.propagation_distance(h)
-        %             if ~isempty(h.propagation_distance_backup)
-        %                 value=h.propagation_distance_backup;
-        %             else
-        %                 h.data;
-        %                 value=h.propagation_distance_backup;
-        %             end
-        %         end
         
         function [tan_theta tan_phi distance] = incidence_aperture(h)
             % Location of the elements
