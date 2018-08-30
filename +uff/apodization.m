@@ -443,7 +443,7 @@ classdef apodization < uff
                  data=h.data; % copy of h.data to avoid cheking hash in between events
                  [x z]=ginput(1);
                  while ~isempty(x)
-                     [~, ns]=min(sum((h.focus(1).xyz-[x 0 z]/1e3).^2,2));
+                     [~, ns]=min(sum(bsxfun(@minus, h.focus(1).xyz, [x 0 z]/1e3).^2,2));
                      subplot(1,2,2);
                      plot(data(ns,:)); grid on; axis tight;
                      ylim([0 1.2]);
