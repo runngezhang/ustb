@@ -263,7 +263,7 @@ classdef das < midprocess
                                     case dimension.transmit
                                         bf_data = bf_data + pre_bf_data;
                                     case dimension.both
-                                        bf_data(:,1,n_waves) = sum(pre_bf_data, 2);
+                                        bf_data(:,1,n_wave) = sum(pre_bf_data, 2);
                                 end           
                             end % end wave loop
                             
