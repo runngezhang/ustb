@@ -323,7 +323,7 @@ classdef apodization < uff
             if(h.window==uff.window.none)
                 h.data_backup=ones(h.focus.N_pixels,h.probe.N_elements);
                 
-                % STA APODIZATION (just use the element closest to user setted origin)
+            % STA APODIZATION (just use the element closest to user setted origin)
             elseif (h.window==uff.window.sta)
                 assert(~isempty(h.origin), 'origin must be set to use STA apodization')
                 
