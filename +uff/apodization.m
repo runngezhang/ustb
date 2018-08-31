@@ -445,6 +445,9 @@ classdef apodization < uff
                         y_dist=h.focus.y-h.sequence(n).source.y;
                         z_dist=abs(h.focus.z-h.sequence(n).source.z);
                         
+                        % clamping
+                        z_dist(z_dist<1e-6) = 1e-6;
+                        
                         % azimuth and elevation tangents
                         tan_theta(:,n) = x_dist./z_dist - h.tilt(1);
                         tan_phi(:,n) = y_dist./z_dist - h.tilt(2);
