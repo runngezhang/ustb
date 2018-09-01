@@ -191,32 +191,6 @@ classdef apodization < uff
     %% computation methods
     methods
         
-        %% minimum_aperture
-        function [ratio_theta, ratio_phi] = limit_minimum_aperture(h, distance, tan_theta, tan_phi, ratio_theta, ratio_phi)            
-            % computing minimum ratio for given maximum aperture
-            min_theta_ratio=abs(distance.*tan_theta/h.minimum_aperture(1));
-            min_phi_ratio=abs(distance.*tan_phi/h.minimum_aperture(2));
-            % masks
-            min_theta_mask=ratio_theta>min_theta_ratio;
-            min_phi_mask=ratio_phi>min_phi_ratio;
-            % and clamping
-            ratio_theta(min_theta_mask)=min_theta_ratio(min_theta_mask);
-            ratio_phi(min_phi_mask)=min_phi_ratio(min_phi_mask);
-        end
-        
-        %% maximum_aperture
-        function [ratio_theta, ratio_phi] = limit_maximum_aperture(h, distance, tan_theta, tan_phi, ratio_theta, ratio_phi)
-            % computing maximum ratio for given maximum aperture
-            max_theta_ratio=abs(distance.*tan_theta/h.maximum_aperture(1));
-            max_phi_ratio=abs(distance.*tan_phi/h.maximum_aperture(2));
-            % masks
-            max_theta_mask=ratio_theta<max_theta_ratio;
-            max_phi_mask=ratio_phi<max_phi_ratio;
-            % and clamping
-            ratio_theta(max_theta_mask)=max_theta_ratio(max_theta_mask);
-            ratio_phi(max_phi_mask)=max_phi_ratio(max_phi_mask);            
-        end
-        
         %% compute
         function compute(h)
             
@@ -236,7 +210,9 @@ classdef apodization < uff
             
         end
         
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% compute wave apodization
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function compute_wave_apodization(h)
             assert(numel(h.sequence)>0,'uff.apodization:Scanline','The SEQUENCE parameter must be set to use uff.window.scanline apodization.');
             N_waves=numel(h.sequence);
@@ -253,7 +229,7 @@ classdef apodization < uff
             if(h.window==uff.window.none)
                 h.data_backup=ones(h.focus.N_pixels,N_waves);
                 
-                % SCALINE APODIZATION (MLA scanlines per wave)
+            % SCALINE APODIZATION (MLA scanlines per wave)
             elseif (h.window==uff.window.scanline)
                 
                 % linear scan
@@ -267,7 +243,7 @@ classdef apodization < uff
                     end
                     h.data_backup=kron(ABlock,ones(h.focus.N_z_axis,1));
                     
-                    % sector scan
+                % sector scan
                 elseif isa(h.focus,'uff.sector_scan')
                     assert(N_waves==h.focus.N_azimuth_axis/h.MLA,'The number of waves in the sequence does not match with the number of scanlines and set MLA.');
                     ACell=repmat({ones(h.MLA,1)},[1,h.focus.N_azimuth_axis/h.MLA]);
@@ -282,19 +258,12 @@ classdef apodization < uff
                 end
             else
                 % incidence angles
-                [tan_theta tan_phi distance] = incidence_wave(h);
+                [tan_theta tan_phi] = incidence_wave(h);
                 
                 % ratios
                 ratio_theta = abs(h.f_number(1)*tan_theta);
                 ratio_phi = abs(h.f_number(2)*tan_phi);
-                
-                % clamping distance to avoid division by 0
-                distance(abs(distance)<1e-6)=1e-6;
                                                
-                % clamping aperture
-                [ratio_theta ratio_phi] = h.limit_minimum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
-                [ratio_theta ratio_phi] = h.limit_maximum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
-                
                 % apodization window
                 h.data_backup = apply_window(h, ratio_theta, ratio_phi);
                 
@@ -307,7 +276,9 @@ classdef apodization < uff
             h.save_hash();
         end
         
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% aperture apodization
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function compute_aperture_apodization(h)
             assert(numel(h.probe)>0,'The PROBE parameter must be set to compute aperture apodization.');
             
@@ -331,19 +302,12 @@ classdef apodization < uff
                 h.data_backup=ones(h.focus.N_pixels,1)*double(dist==min(dist(:)));
                 
             else
-                % incidence ratio
-                [tan_theta tan_phi distance] = incidence_aperture(h);
+                % incidence 
+                [tan_theta tan_phi] = incidence_aperture(h);
                 
-                % ratios
+                % ratios F*tan(angle)
                 ratio_theta = abs(h.f_number(1)*tan_theta);
                 ratio_phi = abs(h.f_number(2)*tan_phi);
-                
-                % clamping distance
-                distance(abs(distance)<1e-6)=1e-6;
-                               
-                % clamping aperture
-                [ratio_theta ratio_phi] = h.limit_minimum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
-                [ratio_theta ratio_phi] = h.limit_maximum_aperture(distance, tan_theta, tan_phi, ratio_theta, ratio_phi);
                 
                 % apodization window
                 h.data_backup = apply_window(h, ratio_theta, ratio_phi);
@@ -357,26 +321,27 @@ classdef apodization < uff
             h.save_hash();
         end
         
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% incidence aperture
-        function [tan_theta tan_phi distance] = incidence_aperture(h)
+        function [tan_theta tan_phi] = incidence_aperture(h)
             % Location of the elements
             x=ones(h.focus.N_pixels,1)*(h.probe.x.');
             y=ones(h.focus.N_pixels,1)*(h.probe.y.');
             z=ones(h.focus.N_pixels,1)*(h.probe.z.');
             
-            % if the apodization center has been set by the user
-            if ~isempty(h.origin)
-                x_dist=h.origin.x-x;
-                y_dist=h.origin.y-y;
-                z_dist=h.origin.z-z;
+            % if the apodization center has not been set by the user
+            if isempty(h.origin)
+                if isa(h.probe,'uff.curvilinear_array')
+                    h.origin = uff.point('xyz',[0 0 -h.probe.radius]);
+                elseif isa(h.focus,'uff.sector_scan')
+                    h.origin = h.focus.apex;
+                end
+            end
             
-            % if not, if we have a curvilinear array
-            elseif isa(h.probe,'uff.curvilinear_array')
-                h.origin = uff.point('xyz',[0 0 -h.probe.radius]);
+            % if we have a curvilinear array
+            if isa(h.probe,'uff.curvilinear_array')
                 element_azimuth = atan2(x-h.origin.x, z-h.origin.z);
                 
-                % we find the intersection between the ray and the probe
-                % surface
                 pixel_azimuth = atan2(h.focus.x-h.origin.x, h.focus.z-h.origin.z);
                 pixel_distance = sqrt((h.focus.x-h.origin.x).^2+(h.focus.z-h.origin.z).^2);
                 
@@ -384,27 +349,44 @@ classdef apodization < uff
                 y_dist=h.origin.y-y;
                 z_dist=pixel_distance*ones(1,h.N_elements)-h.probe.radius;
 
-            % if not, if we have a sector scan
+            % if we have a sector scan
             elseif isa(h.focus,'uff.sector_scan')
-                h.origin = uff.focus.apex;
-                x_dist=h.origin.x-x;
+                pixel_distance = sqrt((h.focus.x-h.origin.x).^2+(h.focus.z-h.origin.z).^2);
+                
+                x_dist=x - h.origin.x;
                 y_dist=h.origin.y-y;
-                z_dist=h.origin.z-z;
+                z_dist=pixel_distance*ones(1,h.N_elements);
                     
             % if not, then we have a flat probe and a linear scan. We set the aperture center right on top
             else
-                x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
-                y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
-                z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                if isempty(h.origin)
+                    x_dist=h.focus.x*ones(1,h.probe.N_elements)-x;
+                    y_dist=h.focus.y*ones(1,h.probe.N_elements)-y;
+                    z_dist=h.focus.z*ones(1,h.probe.N_elements)-z;
+                else
+                    x_dist=h.origin.x-x;
+                    y_dist=h.origin.y-y;
+                    z_dist=h.origin.z-z;                    
+                end
+            end
+
+            % apply tilt
+            if any(abs(h.tilt)>0)
+                [x_dist, y_dist, z_dist] = tools.rotate_points(x_dist, y_dist, z_dist, h.tilt(1), h.tilt(2));
             end
             
+            % minimum aperture
+            z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
+            z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+            
             % azimuth and elevation tangents, including tilting overwrite
-            tan_theta = x_dist./z_dist - h.tilt(1);
-            tan_phi = y_dist./z_dist - h.tilt(2);
-            distance = sqrt(x_dist.^2 + y_dist.^2 + z_dist.^2);
+            tan_theta = x_dist./z_dist;
+            tan_phi = y_dist./z_dist;
         end
         
-        function [tan_theta tan_phi distance] = incidence_wave(h)
+        %%%%%%%%%%%%%%%%%%%%%%%%%
+        %% incidence wave
+        function [tan_theta tan_phi] = incidence_wave(h)
             
             assert(numel(h.sequence)>0,'The SEQUENCE is not set.');
             tan_theta=zeros(h.focus.N_pixels,length(h.sequence));
@@ -414,44 +396,58 @@ classdef apodization < uff
             for n=1:length(h.sequence)
                 % plane wave
                 if (h.sequence(n).wavefront==uff.wavefront.plane||isinf(h.sequence(n).source.distance))
-                    tan_theta(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.azimuth;
-                    tan_phi(:,n)=ones(h.focus.N_pixels,1)*h.sequence(n).source.elevation;
-                    distance(:,n)=h.focus.z;
                     
-                    % diverging or converging waves
+                    tan_theta(:,n)=ones(h.focus.N_pixels,1)*tan(h.sequence(n).source.azimuth - h.tilt(1));
+                    tan_phi(:,n)=ones(h.focus.N_pixels,1)*tan(h.sequence(n).source.elevation - h.tilt(2));
+                    
+                % diverging or converging waves
                 else
                     % distances
                     if isa(h.focus,'uff.sector_scan')
-                        % distances to source
-                        x_dist=h.focus.x - h.sequence(n).source.x;
-                        y_dist=h.focus.y - h.sequence(n).source.y;
-                        z_dist=h.focus.z-h.sequence(n).source.z;
                         
-                        % angle
-                        pixel_theta=atan2(x_dist,z_dist);
-                        pixel_phi=atan2(y_dist,z_dist);
-                        
-                        % source angle respect apex
-                        source_theta=atan2(h.sequence(n).source.x-h.focus.apex.x,h.sequence(n).source.z-h.focus.apex.z);
-                        source_phi=atan2(h.sequence(n).source.y-h.focus.apex.y,h.sequence(n).source.z-h.focus.apex.z);
-                        
-                        % tangents
-                        tan_theta(:,n)=tan(pixel_theta-source_theta) - h.tilt(1);
-                        tan_phi(:,n)=tan(pixel_phi-source_phi) - h.tilt(2);
-                        distance(:,z)=sqrt(sum((h.focus.xyz-h.sequence(n).source.xyz).^2,2));
-                    else
-                        % distances
+                        % distance to source
                         x_dist=h.focus.x-h.sequence(n).source.x;
                         y_dist=h.focus.y-h.sequence(n).source.y;
-                        z_dist=abs(h.focus.z-h.sequence(n).source.z);
+                        z_dist=h.focus.z-h.sequence(n).source.z;
+
+                        % source angle respect apex
+                        z_source_apex=h.sequence(n).source.z-h.focus.apex.z;
+                        if abs(z_source_apex)>0
+                            source_theta=atan2(h.sequence(n).source.x-h.focus.apex.x, z_source_apex);
+                            source_phi=atan2(h.sequence(n).source.y-h.focus.apex.y, z_source_apex);
+                        else
+                            source_theta=0; source_phi=0;
+                        end
                         
-                        % clamping
-                        z_dist(z_dist<1e-6) = 1e-6;
+                        % apply beam & tilt
+                        [x_dist, y_dist, z_dist] = tools.rotate_points(x_dist, y_dist, z_dist, h.tilt(1) + source_theta, h.tilt(2) + source_phi);
                         
-                        % azimuth and elevation tangents
-                        tan_theta(:,n) = x_dist./z_dist - h.tilt(1);
-                        tan_phi(:,n) = y_dist./z_dist - h.tilt(2);
-                        distance(:,n) = z_dist;
+                        % minimum aperture
+                        z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
+                        z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+                        
+                        % compute tangents & distance
+                        tan_theta(:,n) = x_dist./z_dist;
+                        tan_phi(:,n) = y_dist./z_dist;
+                        
+                    else
+                        % distance to source
+                        x_dist=h.focus.x-h.sequence(n).source.x;
+                        y_dist=h.focus.y-h.sequence(n).source.y;
+                        z_dist=h.focus.z-h.sequence(n).source.z;
+
+                        % apply tilt
+                        if any(abs(h.tilt)>0)
+                            [x_dist, y_dist, z_dist] = tools.rotate_points(x_dist, y_dist, z_dist, h.tilt(1), h.tilt(2));
+                        end
+                        
+                        % minimum aperture
+                        z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
+                        z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+                        
+                        % compute tangents & distance
+                        tan_theta(:,n) = x_dist./z_dist;
+                        tan_phi(:,n) = y_dist./z_dist;
                     end
                 end
             end
