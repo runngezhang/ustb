@@ -84,7 +84,7 @@ for n=1:N
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.rectangular;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
+    seq(n).apodization.focus=uff.sector_scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -117,8 +117,7 @@ channel_data=sim.go();
 % interest. For our example here, we use the *sector_scan* structure to 
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
-depth_axis=linspace(10e-3,110e-3,256).';
-scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
+scan=uff.sector_scan('azimuth_axis',linspace(-10*pi/180,10*pi/180,100).','depth_axis',linspace(10e-3,110e-3,512).');
  
 %% Beamformer
 %
@@ -133,7 +132,8 @@ mid.channel_data=channel_data;
 mid.scan=scan;
 
 mid.transmit_apodization.window = uff.window.tukey25;
-mid.receive_apodization.f_number=1.2;
+mid.transmit_apodization.f_number=1.2;
+mid.transmit_apodization.minimum_aperture = 5e-3;
 
 mid.receive_apodization.window=uff.window.tukey50;
 mid.receive_apodization.f_number=1.7;
@@ -143,4 +143,4 @@ b_data=mid.go();
 % show
 b_data.plot();
 
-mid.transmit_apodization.plot([],50)
+mid.transmit_apodization.plot([],25)
