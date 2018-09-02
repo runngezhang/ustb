@@ -125,7 +125,6 @@ mid.scan=scan;
 
 mid.receive_apodization.window=uff.window.tukey50;
 mid.receive_apodization.f_number=1.7;
-mid.receive_apodization.origo=scan.apex;
 
 % beamforming
 b_data=mid.go();

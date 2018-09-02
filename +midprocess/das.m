@@ -60,7 +60,6 @@ classdef das < midprocess
             h.receive_apodization.probe=h.channel_data.probe;
             h.receive_apodization.focus=h.scan;
             rx_apodization=single(h.receive_apodization.data);
-            rx_propagation_distance=(h.receive_apodization.propagation_distance);
             
             % calculate receive delay
             xm=bsxfun(@minus,h.channel_data.probe.x.',h.scan.x);
@@ -409,8 +408,13 @@ classdef das < midprocess
                                     case dimension.transmit
                                         bf_data = bf_data + pre_bf_data;
                                     case dimension.both
+<<<<<<< HEAD
                                         bf_data(:,1,n_waves) = sum(pre_bf_data, 2);
                                 end
+=======
+                                        bf_data(:,1,n_wave) = sum(pre_bf_data, 2);
+                                end           
+>>>>>>> c4d329b1681e2673003ec72bba7544e8b651c2b2
                             end % end wave loop
                             
                             switch (h.dimension)
@@ -427,7 +431,7 @@ classdef das < midprocess
                 
                 % assign phase according to 2 times the receive propagation distance
                 if ( abs(w0) > eps )
-                    aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*rx_propagation_distance/h.channel_data.sound_speed));
+                    aux_data=bsxfun(@times,aux_data,exp(-1i*w0*2*h.scan.reference_distance/h.channel_data.sound_speed));
                 end
                 
                 tools.workbar(1);

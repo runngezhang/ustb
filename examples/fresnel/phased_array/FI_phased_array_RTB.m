@@ -30,8 +30,14 @@ close all;
 
 pha=uff.phantom();
 pha.sound_speed=1540;                                               % speed of sound [m/s]
-[X Z] = meshgrid(0,linspace(10e-3,110e-3,11));
+[X Z] = meshgrid(0,linspace(20e-3,100e-3,3));
 pha.points=[X(:),  zeros(numel(X),1), Z(:), ones(numel(X),1)];      % point scatterer position [m]
+radius=60e-3;
+angles=linspace(-25,25,3)*pi/180;
+for n=1:length(angles) 
+    pha.points=[pha.points; radius*sin(angles(n)),  0, radius*cos(angles(n)), 1];    % point scatterer position [m]
+end
+
 fig_handle=pha.plot();             
              
 %% Probe
@@ -69,9 +75,9 @@ pul.plot([],'2-way pulse');
 % an angular range of $[-\frac{\pi}{18}, \frac{\pi}{18}]$  radians. The 
 % focal depth is set as 40 mm. The *wave* structure too has a *plot* method.
 
-N=64;                                            % number of focused beams
-azimuth_axis=linspace(-30*pi/180,30*pi/180,N).'; % beam angle vector [rad]
-depth=50e-3;                                     % fixed focal depth [m]
+N=100;                                            % number of focused beams
+azimuth_axis=linspace(-35*pi/180,35*pi/180,N).'; % beam angle vector [rad]
+depth=60e-3;                                     % fixed focal depth [m]
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
@@ -84,7 +90,7 @@ for n=1:N
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.rectangular;
     seq(n).apodization.f_number=1.7;
-    seq(n).apodization.focus=uff.scan('xyz',seq(n).source.xyz);
+    seq(n).apodization.focus=uff.sector_scan('xyz',seq(n).source.xyz);
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -117,8 +123,7 @@ channel_data=sim.go();
 % interest. For our example here, we use the *sector_scan* structure to 
 % generate a sector scan. *scan* too has a useful *plot* method it can call.
 
-depth_axis=linspace(10e-3,110e-3,256).';
-scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
+scan=uff.sector_scan('azimuth_axis',linspace(-35*pi/180,35*pi/180,256).','depth_axis',linspace(5e-3,110e-3,512).');
  
 %% Beamformer
 %
@@ -132,10 +137,11 @@ mid.dimension = dimension.both;
 mid.channel_data=channel_data;
 mid.scan=scan;
 
-mid.transmit_apodization.window = uff.window.tukey25;
-mid.receive_apodization.f_number=1.2;
+mid.transmit_apodization.window = uff.window.hamming;
+mid.transmit_apodization.f_number=1.2;
+mid.transmit_apodization.minimum_aperture = 5e-3;
 
-mid.receive_apodization.window=uff.window.tukey50;
+mid.receive_apodization.window=uff.window.hamming;
 mid.receive_apodization.f_number=1.7;
 
 b_data=mid.go();
@@ -143,4 +149,4 @@ b_data=mid.go();
 % show
 b_data.plot();
 
-mid.transmit_apodization.plot([],50)
+mid.transmit_apodization.plot([],N/2)

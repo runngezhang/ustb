@@ -177,7 +177,3 @@ b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
 % show
 b_data.plot();
-
-% check out the transmit and receive apodization maps
-pipe.receive_apodization.plot([],64); title('Receive apodization')
-pipe.transmit_apodization.plot([],15); title('Transmit apodization')
