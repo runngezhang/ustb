@@ -26,13 +26,7 @@ url='http://ustb.no/datasets/';      % if not found downloaded from here
 
 filename='L7_FI_IUS2018.uff';
 tools.download(filename, url, data_path);   
-channel_data_rf =uff.read_object([data_path filesep filename],'/channel_data');
-
-%%
-demod = preprocess.demodulation();
-demod.input = channel_data_rf;
-
-channel_data = demod.go();
+channel_data =uff.read_object([data_path filesep filename],'/channel_data');
 
 %% Define Scan
 x_axis=zeros(channel_data.N_waves,1);
