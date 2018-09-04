@@ -28,6 +28,12 @@ classdef sector_scan < uff.scan
         N_azimuth_axis            % number of pixels in the x_axis
         N_depth_axis              % number of pixels in the z_axis
         depth_step                % the step size in m of the depth samples
+        reference_distance        % distance used for the calculation of the phase term      
+    end
+    
+    properties (Access = private)
+        theta                     % azimuth coordinates in radians
+        rho                       % depth coordinates in m
     end
     
     %% constructor -> uff constructor
@@ -44,12 +50,15 @@ classdef sector_scan < uff.scan
             if isempty(h.azimuth_axis)||isempty(h.depth_axis)||isempty(h.apex) return; end
             
             % defining the pixel mesh 
-            [T R]=meshgrid(h.azimuth_axis,h.depth_axis);
+            [h.theta h.rho]=meshgrid(h.azimuth_axis,h.depth_axis);
+            
+            h.theta=h.theta(:);
+            h.rho=h.rho(:);
             
             % position of the pixels
-            h.x=R(:).*sin(T(:))+h.apex.x;
-            h.y=0.*R(:)+h.apex.y;
-            h.z=R(:).*cos(T(:))+h.apex.z;
+            h.x=h.rho.*sin(h.theta)+h.apex.x;
+            h.y=0.*h.rho+h.apex.y;
+            h.z=h.rho.*cos(h.theta)+h.apex.z;
         end
     end
     
@@ -82,6 +91,9 @@ classdef sector_scan < uff.scan
         end      
         function value=get.depth_step(h)
             value = mean(diff(h.depth_axis(1:end)));
+        end
+        function value=get.reference_distance(h)
+            value = h.rho;
         end
     end
    

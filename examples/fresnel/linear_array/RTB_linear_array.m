@@ -63,7 +63,7 @@ pul.plot([],'2-way pulse');
 % For our example here, we define a sequence of 31 diverging
 % waves. The *wave* structure too has a useful *plot* method.
 
-N=31;                      % number of diverging waves
+N=31;                               % number of waves
 x0=linspace(-19.2e-3,19.2e-3,N);
 z0=20e-3;
 seq=uff.wave();
@@ -118,7 +118,7 @@ mid.dimension = dimension.both;
 mid.channel_data=channel_data;
 mid.scan=scan;
 
-F_number=1.7;
+F_number=1.2;
 mid.receive_apodization.window=uff.window.hanning;
 mid.receive_apodization.f_number=F_number;
 mid.receive_apodization.minimum_aperture = [3e-3 3e-3];
@@ -129,7 +129,3 @@ mid.transmit_apodization.minimum_aperture = [3e-3 3e-3];
 
 b_data=mid.go();
 b_data.plot();
-
-% check out the transmit and receive apodization maps
-mid.receive_apodization.plot([],64); title('Receive apodization')
-mid.transmit_apodization.plot([],15); title('Transmit apodization')
