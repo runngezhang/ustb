@@ -1,8 +1,8 @@
-%% STA simulation on a linear array with the USTB built-in Fresnel simulator
+%% RTB simulation on a linear array with the USTB built-in Fresnel simulator
 %
 % In this example we show how to use the built-in fresnel simulator in USTB
-% to generate a Synthetic Transmit Aperture (STA) dataset for a linear 
-% array and a linear scan and how it can be beamformed with USTB.
+% to generate a Retrospective Transmit focus Beamforming (RTB) dataset for 
+% a linear array and a linear scan and show how it can be beamformed with USTB.
 %
 % This tutorial assumes familiarity with the contents of the 
 % <./CPWC_linear_array.html 'CPWC simulation with the 
@@ -12,14 +12,6 @@
 % % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun 
 % Asokan Nair <anair8@jhu.edu> 11.03.2017_
 
-%%
-% 
-% Clear the memory of any lingering settings and data, and close all 
-% previously opened plots.
-
-clear all;
-close all;
-
 %% Phantom
 %
 % We start off defining an appropriate *phantom* structure to image. 
@@ -28,7 +20,7 @@ close all;
 
 pha=uff.phantom();
 pha.sound_speed=1540;            % speed of sound [m/s]
-pha.points=[0,  0, 40e-3, 1];    % point scatterer position [m]
+pha.points=[0,  0, 20e-3, 1];    % point scatterer position [m]
 fig_handle=pha.plot();             
              
 %% Probe
@@ -62,25 +54,19 @@ pul.plot([],'2-way pulse');
 % takes the same sequence definition as the USTB beamformer. In UFF and
 % USTB a sequence is defined as a collection of *wave* structures. 
 % 
-% For our example here, we define a sequence of 128
-% waves each emanating from a single element on the probe aperture.
-% An appropriate apodization window is enforced through setting 
-% *apodization.window = uff.window.sta*. The *wave* structure too has a
-% *plot* method.
+% For our example here, we define a sequence of 31 diverging
+% waves. The *wave* structure too has a useful *plot* method.
 
-N=128;                      % number of waves
+N=31;                               % number of waves
+x0=linspace(-19.2e-3,19.2e-3,N);
+z0=20e-3;
 seq=uff.wave();
 for n=1:N 
     seq(n)=uff.wave();
     seq(n).probe=prb;
-    seq(n).wavefront = uff.wavefront.spherical;
-    seq(n).source.xyz=[prb.x(n) prb.y(n) prb.z(n)];
-    
-    seq(n).apodization=uff.apodization('window',uff.window.sta);
-    seq(n).apodization.origin=seq(n).source;
-    
+    seq(n).source.xyz=[x0(n) 0 z0];
     seq(n).sound_speed=pha.sound_speed;
-    
+
     % show source
     fig_handle=seq(n).source.plot(fig_handle);
 end
@@ -111,26 +97,31 @@ channel_data=sim.go();
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-2e-3,2e-3,200).','z_axis', linspace(39e-3,41e-3,100).');
+scan=uff.linear_scan('x_axis', linspace(-2e-3,2e-3,200).', 'z_axis', linspace(18e-3,22e-3,200).');
 scan.plot(fig_handle,'Scenario');    % show mesh
  
-%% Midprocess
+%% Midprocessor
 %
 % With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
+% ultrasound image. We now use a USTB structure *midprocess*, that takes an
 % *apodization* structure in addition to the *channel_data* and *scan*, and 
-% returns a *beamformed_data* structure.
+% returns a *beamformed_data* strcuture.
 
 mid=midprocess.das();
-mid.dimension = dimension.both();
+mid.dimension = dimension.both;
 mid.channel_data=channel_data;
 mid.scan=scan;
 
-mid.receive_apodization.window=uff.window.tukey50;
-mid.receive_apodization.f_number=1.7;
+F_number=1.7;
+mid.receive_apodization.window=uff.window.hanning;
+mid.receive_apodization.f_number=F_number;
+mid.receive_apodization.minimum_aperture = 3e-3;
 
-mid.transmit_apodization.window=uff.window.tukey50;
-mid.transmit_apodization.f_number=1.7;
+mid.transmit_apodization.window=uff.window.hanning;
+mid.transmit_apodization.f_number=F_number;
+mid.transmit_apodization.minimum_aperture = 3e-3;
 
 b_data=mid.go();
 b_data.plot();
+
+mid.transmit_apodization.plot()

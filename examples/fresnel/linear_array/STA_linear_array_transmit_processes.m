@@ -36,7 +36,7 @@ for n=1:N
     
     seq(n).apodization=uff.apodization();
     seq(n).apodization.window=uff.window.sta;
-    seq(n).apodization.origo=seq(n).source;
+    seq(n).apodization.origin=seq(n).source;
     
     seq(n).sound_speed=pha.sound_speed;
     
@@ -109,6 +109,7 @@ cf_data.plot([],cf.name);
 
 %% Camacho-Fritsch phase coherence factor
 pcf=postprocess.phase_coherence_factor();
+pcf.dimension = dimension.transmit;
 pcf.transmit_apodization=pipe.transmit_apodization;
 pcf.receive_apodization=pipe.receive_apodization;
 pcf.input=b_data;
