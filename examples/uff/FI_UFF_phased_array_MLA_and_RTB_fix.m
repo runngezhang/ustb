@@ -165,9 +165,9 @@ mid_RTB=midprocess.das();
 mid_RTB.channel_data=channel_data;
 mid_RTB.dimension = dimension.both();
 mid_RTB.scan=scan_MLA;
-mid_RTB.transmit_apodization.window = uff.window.sector_scan_rtb;
-%mid_RTB.transmit_apodization.f_number = 2;
-mid_RTB.transmit_apodization.probe = channel_data.probe;
+mid_RTB.transmit_apodization.window = uff.window.hamming;
+mid_RTB.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
+mid_RTB.transmit_apodization.f_number = 1.75;
 mid_RTB.receive_apodization.window = uff.window.tukey25;
 mid_RTB.receive_apodization.f_number = 1.7;
 
@@ -235,13 +235,15 @@ b_data_RTB_weighted.plot(11,'RTB with virtual source model weighted');
 % Notice that we once again have the artifact around focus
 
 %% RTB with Nguyen & Prager model
+clear mid_RTB_unified_fix;
 mid_RTB_unified_fix=midprocess.das();
 mid_RTB_unified_fix.channel_data=channel_data;
 mid_RTB_unified_fix.dimension = dimension.both();
 mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
 mid_RTB_unified_fix.scan=scan_MLA;
-mid_RTB_unified_fix.transmit_apodization.window = uff.window.sector_scan_rtb;
-mid_RTB_unified_fix.transmit_apodization.probe = channel_data.probe;
+mid_RTB_unified_fix.transmit_apodization.window = uff.window.hamming;
+mid_RTB_unified_fix.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
+mid_RTB_unified_fix.transmit_apodization.f_number = 1.75;
 mid_RTB_unified_fix.receive_apodization.window = uff.window.tukey25;
 mid_RTB_unified_fix.receive_apodization.f_number = 1.7;
 
@@ -257,15 +259,17 @@ b_data_RTB_unified_fix_weighted.plot(12,'RTB with Nguyen & Prager model');
 %%
 % Notice that the artifact around focus is removed
 
+%%
 %% RTB with hybrid PW model
 mid_RTB_PW_fix=midprocess.das();
 mid_RTB_PW_fix.channel_data=channel_data;
 mid_RTB_PW_fix.dimension = dimension.both();
 mid_RTB_PW_fix.transmit_delay_model = transmit_delay_model.hybrid;
-mid_RTB_PW_fix.pw_margin = 4/1000;
+mid_RTB_PW_fix.pw_margin = 1.5/1000;
 mid_RTB_PW_fix.scan=scan_MLA;
-mid_RTB_PW_fix.transmit_apodization.window = uff.window.sector_scan_rtb;
-mid_RTB_PW_fix.transmit_apodization.probe = channel_data.probe;
+mid_RTB_PW_fix.transmit_apodization.window = uff.window.hamming;
+mid_RTB_PW_fix.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
+mid_RTB_PW_fix.transmit_apodization.f_number = 1.7;
 mid_RTB_PW_fix.receive_apodization.window = uff.window.tukey25;
 mid_RTB_PW_fix.receive_apodization.f_number = 1.7;
 
@@ -274,8 +278,8 @@ b_data_RTB_PW_fix = mid_RTB_PW_fix.go();
 b_data_RTB_PW_fix_weighted = uff.beamformed_data(b_data_RTB_PW_fix);
 b_data_RTB_PW_fix_weighted.data = b_data_RTB_PW_fix_weighted.data.*weighting;
 
-b_data_RTB_PW_fix_weighted.plot(13,'RTB with hybrid PW model');
-
+%%
+b_data_RTB_PW_fix_weighted.plot(20,'RTB with hybrid PW model');
 %%
 % Notice that the artifact around focus is removed
 
