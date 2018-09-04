@@ -75,7 +75,8 @@ classdef das < midprocess
             if h.transmit_delay_model == transmit_delay_model.unified && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3) 
                 if isa(h.scan,'uff.sector_scan')
                     mask_apod = uff.apodization();
-                    mask_apod.window = uff.window.sector_scan_rtb;
+                    mask_apod.window = uff.window.boxcar;
+                    mask_apod.f_number = 4; %This should be set according to the actually transmitted f number
                     mask_apod.sequence = h.channel_data.sequence;
                     mask_apod.minimum_aperture = [0 0];
                     mask_apod.focus = h.scan;
