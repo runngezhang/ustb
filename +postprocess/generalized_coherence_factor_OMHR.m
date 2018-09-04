@@ -21,7 +21,7 @@ classdef generalized_coherence_factor_OMHR < postprocess
     methods (Access = public)
         function h=generalized_coherence_factor_OMHR()
             h.name='Generalized Coherence Factor MATLAB';
-            h.reference='';
+            h.reference={'Li, P. C., & Li, M. L. (2003). Adaptive imaging using the generalized coherence factor. IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 50(2), 128?141. https://doi.org/10.1109/TUFFC.2003.1182117'};
             h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Andreas Austeng <AndreasAusteng.ifi.uio.no'};
             h.version='v1.0.2';
         end

@@ -1,19 +1,11 @@
 classdef capon_minimum_variance < postprocess
-    %CAPON_MINIMUM_VARIANCE
+    %   CAPON_MINIMUM_VARIANCE
     %
     %             Beamform a ultrasound image using the Capon beamformer
     %
     %             This implementation is written with focus of
-    %             intuition, not speed.
+    %             intuition, not speed. Documentation to be written ;)
     %
-    %             @Input:
-    %                h.data_cube : RF-data [range,axial,elemt]
-    %                regCoef : Diagonal loading constant
-    %                L       : Subarray size
-    %                K       : Temporal averaging factor
-    %                doForwardBackward : Forward backward averaging
-    %                        (This is never used in this thesis)
-    %             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %
     %   $Last updated: 2017/05/02$
@@ -31,10 +23,10 @@ classdef capon_minimum_variance < postprocess
     %% Additional properties
     properties
         active_element_criterium=0.16;                % value to decide whether an element is used or not
-        L_elements
-        K_in_lambda
-        regCoef
-        doForwardBackward = 0;
+        L_elements                                    % subarray size
+        K_in_lambda                                   % temporal averaging factor
+        regCoef                                       % regularization factor
+        doForwardBackward = 0;                        % forward backward averaging
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
         receive_apodization                           % APODIZATION class
         transmit_apodization                          % APODIZATION class
