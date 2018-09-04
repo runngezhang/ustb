@@ -19,6 +19,5 @@ classdef window < int32
       tukey80(7)
       sta(7)
       scanline(8)
-      sector_scan_rtb(9)
    end
 end
