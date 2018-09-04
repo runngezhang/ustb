@@ -89,7 +89,7 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
 colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14)
 axis([-17 2 33 42]);
-saveas(f101,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_zoomed'],'eps2c')
+saveas(f101,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GLT_zoomed'],'eps2c')
 
 
 %% CF - Coherence Factor

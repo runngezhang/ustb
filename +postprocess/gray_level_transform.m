@@ -118,8 +118,18 @@ classdef gray_level_transform < postprocess
                 xlabel('Input signal [dB]');
                 ylabel('Output signal [dB]');
                 legend('location','nw','Uniform','p(b)','20log_{10}(v(b))');
-                saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_lin'],'eps2c')
-                saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GAMMA_theory_log'],'eps2c')
+                
+                f8899 = figure(8899);clf;
+                subplot(1,2,1);hold all;
+                plot(x_dB,x_dB,'k','LineWidth',2); hold on; grid on; axis equal tight;
+                plot(x_dB,x_dB_compressed,'b','LineWidth',2); hold on;
+                %title('Log space');
+                xlabel('Input signal [dB]');
+                ylabel('Output signal [dB]');
+                legend('location','nw','Uniform','p(B)');
+                saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_lin'],'eps2c')
+                saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log'],'eps2c')
+                saveas(f8899,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log_stripped'],'eps2c')
             end
             
             % update hash
