@@ -72,6 +72,7 @@ mid_RTB.transmit_apodization.window=uff.window.tukey50;
 mid_RTB.transmit_apodization.f_number = 3;
 mid_RTB.transmit_apodization.MLA = MLA;
 mid_RTB.transmit_apodization.MLA_overlap = MLA;
+mid_RTB.transmit_apodization.minimum_aperture = [3.0000e-03 3.0000e-03];
 
 mid_RTB.receive_apodization.window=uff.window.boxcar;
 mid_RTB.receive_apodization.f_number=1.7;
