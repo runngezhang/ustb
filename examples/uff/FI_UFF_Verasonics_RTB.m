@@ -40,14 +40,14 @@ content = uff.index([data_path filesep filename],'/',display);
 
 channel_data=uff.read_object([data_path filesep filename],'/channel_data');
 
-%%
+%%  
 %
 % And then do the normal routine of defining the scan,
 x_axis=zeros(channel_data.N_waves,1);
 for n=1:channel_data.N_waves
     x_axis(n)=channel_data.sequence(n).source.x;
 end
-z_axis=linspace(1e-3,55e-3,512).';
+z_axis=linspace(1e-3,62e-3,512*2).';
 scan=uff.linear_scan('x_axis',x_axis,'z_axis',z_axis);
 
 %%
@@ -60,7 +60,8 @@ mid.channel_data=channel_data;
 mid.scan=scan;
 
 mid.transmit_apodization.window=uff.window.scanline;
-mid.receive_apodization.window=uff.window.tukey25;
+
+mid.receive_apodization.window=uff.window.none;
 mid.receive_apodization.f_number=1.7;
 
 b_data=mid.go();
@@ -70,30 +71,41 @@ b_data=mid.go();
 % And finally display the image.
 b_data.plot([],'Beamformed image');
 
-%% Beamforming with MLA's
+
+%% Retrospective beamforming
 MLA = 4;
 
-scan_MLA=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),length(x_axis)*MLA)','z_axis',z_axis);
+scan_RTB = uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),length(x_axis)*MLA)','z_axis',z_axis);
 
-mid_MLA=midprocess.das();
-mid_MLA.dimension = dimension.both();
+mid_RTB=midprocess.das();
+mid_RTB.dimension = dimension.both();
 
-mid_MLA.channel_data=channel_data;
-mid_MLA.scan=scan_MLA;
-
-mid_MLA.transmit_apodization.window=uff.window.scanline;
+mid_RTB.channel_data=channel_data;
+mid_RTB.scan=scan_RTB;
 % We are using the hybrid transmit delay model. See the example script
 % under
 % /publications/IUS2018/Rindal_et_al_ASimpleArtifactFreeVirtualSourceModel/
 % Abstract_FI_UFF_Verasonics_RTB_delay_models.m
-mid_MLA.transmit_delay_model = transmit_delay_model.hybrid;
-mid_MLA.transmit_apodization.MLA = MLA;
-mid_MLA.transmit_apodization.MLA_overlap = 1;
+mid_RTB.transmit_delay_model = transmit_delay_model.hybrid;
+mid_RTB.transmit_apodization.window=uff.window.tukey25;
+mid_RTB.transmit_apodization.f_number = 2;
+mid_RTB.transmit_apodization.MLA = MLA;
+mid_RTB.transmit_apodization.MLA_overlap = MLA;
+mid_RTB.transmit_apodization.minimum_aperture = [3.0000e-03 3.0000e-03];
 
-mid_MLA.receive_apodization.window=uff.window.tukey25;
-mid_MLA.receive_apodization.f_number=1.7;
+mid_RTB.receive_apodization.window=uff.window.boxcar;
+mid_RTB.receive_apodization.f_number=1.7;
+b_data_RTB=mid_RTB.go();
 
-b_data_MLA=mid_MLA.go();
-b_data_MLA.plot([],'Beamformed image MLA');
+b_data_RTB.plot(767,'RTB image using virtual source model');
 
 
+%%
+tx_apod = mid_RTB.transmit_apodization.data;
+
+%%
+weighting = 1./sum(tx_apod,2);
+
+b_data_RTB_compensated = uff.beamformed_data(b_data_RTB);
+b_data_RTB_compensated.data = b_data_RTB.data .* weighting;
+b_data_RTB_compensated.plot([],'RTB image using virtual source model TX weighted');

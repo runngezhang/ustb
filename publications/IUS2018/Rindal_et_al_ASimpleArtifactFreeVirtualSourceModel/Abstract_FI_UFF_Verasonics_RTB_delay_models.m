@@ -62,21 +62,22 @@ scan_RTB=uff.linear_scan('x_axis',linspace(x_axis(1),x_axis(end),...
                                     length(x_axis)*MLA)','z_axis',z_axis);
 
 % beamform without any fix using conventional virtual source model
-mid_RTB=midprocess.das();
-mid_RTB.dimension = dimension.both();
+mid_RTB_spherical_model=midprocess.das();
+mid_RTB_spherical_model.dimension = dimension.both();
 
-mid_RTB.channel_data=channel_data;
-mid_RTB.scan=scan_RTB;
+mid_RTB_spherical_model.channel_data=channel_data;
+mid_RTB_spherical_model.scan=scan_RTB;
+mid_RTB_spherical_model.transmit_delay_model = transmit_delay_model.spherical;
 
-mid_RTB.transmit_apodization.window=uff.window.tukey50;
-mid_RTB.transmit_apodization.f_number = 3;
-mid_RTB.transmit_apodization.MLA = MLA;
-mid_RTB.transmit_apodization.MLA_overlap = MLA;
-mid_RTB.transmit_apodization.minimum_aperture = [3.0000e-03 3.0000e-03];
+mid_RTB_spherical_model.transmit_apodization.window=uff.window.tukey25;
+mid_RTB_spherical_model.transmit_apodization.f_number = 2;
+mid_RTB_spherical_model.transmit_apodization.MLA = MLA;
+mid_RTB_spherical_model.transmit_apodization.MLA_overlap = 1;
+mid_RTB_spherical_model.transmit_apodization.minimum_aperture = [3.000e-03 3.000e-03];
 
-mid_RTB.receive_apodization.window=uff.window.boxcar;
-mid_RTB.receive_apodization.f_number=1.7;
-b_data_RTB=mid_RTB.go();
+mid_RTB_spherical_model.receive_apodization.window=uff.window.boxcar;
+mid_RTB_spherical_model.receive_apodization.f_number=1.7;
+b_data_RTB=mid_RTB_spherical_model.go();
 
 b_data_RTB.plot(767,'RTB image using virtual source model');
 %%
@@ -84,43 +85,39 @@ b_data_RTB.plot(767,'RTB image using virtual source model');
 % get a more uniform image
 
 % Calculate the transmit apodzation used to compensate image
-tx_apod = mid_RTB.transmit_apodization.data;
+tx_apod = mid_RTB_spherical_model.transmit_apodization.data;
 
 b_data_RTB_weighted = uff.beamformed_data(b_data_RTB);
 b_data_RTB_weighted.data = b_data_RTB_weighted.data.*(1./sum(tx_apod,2));
 b_data_RTB_weighted.plot(10,'RTB image using virtual source model, TX weighted');
 
 %%
-% Notice the darker right side. Not sure why this occurs, it is not there
-% for conventional scanline beamforming, and not for MLA's. Could it be
-% that the elemets to the right of the probe are weaker? I'll investigate
-% this further...
-%
-% Also notice the line/articat along 29.6 mm, the transmit focus, which is 
+% Notice the line/articat along 29.6 mm, the transmit focus, which is 
 % the artifact we aimt get rid of :)
 
 %% RTB using Nguyen & Prager model
 % beamforming using the "unified pixelbased beamforming" model from 
 % Nguyen, N. Q., & Prager, R. W. (2016). High-Resolution Ultrasound Imaging 
 % With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
-mid_RTB_unified_fix =midprocess.das();
-mid_RTB_unified_fix.dimension = dimension.both();
+mid_RTB_unified_model =midprocess.das();
+mid_RTB_unified_model.dimension = dimension.both();
 
-mid_RTB_unified_fix.channel_data=channel_data;
-mid_RTB_unified_fix.scan=scan_RTB;
-mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
+mid_RTB_unified_model.channel_data=channel_data;
+mid_RTB_unified_model.scan=scan_RTB;
+mid_RTB_unified_model.transmit_delay_model = transmit_delay_model.unified;
 
-mid_RTB_unified_fix.transmit_apodization.window=uff.window.tukey50;
-mid_RTB_unified_fix.transmit_apodization.f_number = 3;
-mid_RTB_unified_fix.transmit_apodization.MLA = MLA;
-mid_RTB_unified_fix.transmit_apodization.MLA_overlap = 1;
+mid_RTB_unified_model.transmit_apodization.window=uff.window.tukey25;
+mid_RTB_unified_model.transmit_apodization.f_number = 2;
+mid_RTB_unified_model.transmit_apodization.MLA = MLA;
+mid_RTB_unified_model.transmit_apodization.MLA_overlap = 1;
+mid_RTB_unified_model.transmit_apodization.minimum_aperture = [3.000e-03 3.000e-03];
 
-mid_RTB_unified_fix.receive_apodization.window=uff.window.boxcar;
-mid_RTB_unified_fix.receive_apodization.f_number=1.7;
-b_data_RTB_unified_fix=mid_RTB_unified_fix.go();
+mid_RTB_unified_model.receive_apodization.window=uff.window.boxcar;
+mid_RTB_unified_model.receive_apodization.f_number=1.7;
+b_data_RTB_unified_fix=mid_RTB_unified_model.go();
 
 % Calculate the transmit apodzation used to compensate image
-tx_apod = mid_RTB_unified_fix.transmit_apodization.data;
+tx_apod = mid_RTB_unified_model.transmit_apodization.data;
 
 b_data_RTB_unified_fix_weighted = uff.beamformed_data(b_data_RTB_unified_fix);
 b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data...
@@ -131,26 +128,27 @@ b_data_RTB_unified_fix_weighted.plot(11,'RTB image Nguyen & Prager mode');
 % Their model sucessfully removes the artifact at focus (29.6 mm)!
 
 %% RTB using a simpler model assuming PW around focus
-mid_RTB_with_plane_fix=midprocess.das();
-mid_RTB_with_plane_fix.dimension = dimension.both();
-mid_RTB_with_plane_fix.transmit_delay_model = transmit_delay_model.hybrid;
+mid_RTB_with_plane_model=midprocess.das();
+mid_RTB_with_plane_model.dimension = dimension.both();
+mid_RTB_with_plane_model.transmit_delay_model = transmit_delay_model.hybrid;
 %Optionally set the margin of the region around focus to use PW tx delay
-mid_RTB_with_plane_fix.pw_margin = 1/1000; 
+mid_RTB_with_plane_model.pw_margin = 1/1000; 
 
-mid_RTB_with_plane_fix.channel_data=channel_data;
-mid_RTB_with_plane_fix.scan=scan_RTB;
+mid_RTB_with_plane_model.channel_data=channel_data;
+mid_RTB_with_plane_model.scan=scan_RTB;
 
-mid_RTB_with_plane_fix.transmit_apodization.window=uff.window.tukey50;
-mid_RTB_with_plane_fix.transmit_apodization.f_number = 3;
-mid_RTB_with_plane_fix.transmit_apodization.MLA = MLA;
-mid_RTB_with_plane_fix.transmit_apodization.MLA_overlap = 1;
+mid_RTB_with_plane_model.transmit_apodization.window=uff.window.tukey25;
+mid_RTB_with_plane_model.transmit_apodization.f_number = 2;
+mid_RTB_with_plane_model.transmit_apodization.MLA = MLA;
+mid_RTB_with_plane_model.transmit_apodization.MLA_overlap = 1;
+mid_RTB_with_plane_model.transmit_apodization.minimum_aperture = [3.000e-03 3.000e-03];
 
-mid_RTB_with_plane_fix.receive_apodization.window=uff.window.boxcar;
-mid_RTB_with_plane_fix.receive_apodization.f_number=1.7;
-b_data_RTB_with_plane_fix=mid_RTB_with_plane_fix.go();
+mid_RTB_with_plane_model.receive_apodization.window=uff.window.boxcar;
+mid_RTB_with_plane_model.receive_apodization.f_number=1.7;
+b_data_RTB_with_plane_fix=mid_RTB_with_plane_model.go();
 
 % Calculate the transmit apodzation used to compensate image
-tx_apod = mid_RTB_with_plane_fix.transmit_apodization.data;
+tx_apod = mid_RTB_with_plane_model.transmit_apodization.data;
 
 b_data_RTB_plane_fix_weighted = uff.beamformed_data(b_data_RTB_with_plane_fix);
 b_data_RTB_plane_fix_weighted.data = b_data_RTB_plane_fix_weighted.data...
@@ -166,11 +164,11 @@ b_data_RTB_plane_fix_weighted.plot(10,'RTB image with PW hybrid virtual source m
 % model sucessfully removes the artifact at focus.
 
 % We are plotting the TX delay used for the center transmit beam
-tx_delay_virtual_source = reshape(mid_RTB.transmit_delay,scan_RTB.N_z_axis,...
+tx_delay_virtual_source = reshape(mid_RTB_spherical_model.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_unified_fix = reshape(mid_RTB_unified_fix.transmit_delay,scan_RTB.N_z_axis,...
+tx_delay_unified_fix = reshape(mid_RTB_unified_model.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
-tx_delay_plane_fix = reshape(mid_RTB_with_plane_fix.transmit_delay,scan_RTB.N_z_axis,...
+tx_delay_plane_fix = reshape(mid_RTB_with_plane_model.transmit_delay,scan_RTB.N_z_axis,...
                                     scan_RTB.N_x_axis,channel_data.N_waves);
 
 h = figure(100);clf;
