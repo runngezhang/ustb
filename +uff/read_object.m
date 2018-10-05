@@ -133,6 +133,8 @@ else
                             object.('origo')=uff.read_object(filename,prop{m}.location,verbose);                        
                         elseif flag_v10X&&strcmp(class_name,'uff.apodization')&&strcmp(prop{m}.name,'scan')
                             object.('focus')=uff.read_object(filename,prop{m}.location,verbose);                        
+                        elseif strcmp(class_name,'uff.apodization')&&strcmp(prop{m}.name,'origo')
+                            object.('origin')=uff.read_object(filename,prop{m}.location,verbose);  
                         else
                             object.(prop{m}.name)=uff.read_object(filename,prop{m}.location,verbose);
                         end
