@@ -67,7 +67,7 @@ mid_MLA.dimension = dimension.both();
 mid_MLA.scan=scan_MLA;
 mid_MLA.transmit_apodization.window=uff.window.scanline;
 mid_MLA.transmit_apodization.MLA = MLA;
-mid_MLA.transmit_apodization.MLA_overlap = MLA;
+mid_MLA.transmit_apodization.MLA_overlap = 2;
 mid_MLA.receive_apodization.window=uff.window.tukey25;
 mid_MLA.receive_apodization.f_number = 1.7;
 
@@ -91,7 +91,7 @@ mid_MLA_unified_fix.transmit_delay_model = transmit_delay_model.unified;
 mid_MLA_unified_fix.scan=scan_MLA;
 mid_MLA_unified_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_unified_fix.transmit_apodization.MLA = MLA;
-mid_MLA_unified_fix.transmit_apodization.MLA_overlap = MLA;
+mid_MLA_unified_fix.transmit_apodization.MLA_overlap = 2;
 mid_MLA_unified_fix.receive_apodization.window=uff.window.tukey25;
 mid_MLA_unified_fix.receive_apodization.f_number = 1.7;
 
@@ -115,7 +115,7 @@ mid_MLA_plane_fix.pw_margin = 4/1000;
 mid_MLA_plane_fix.scan=scan_MLA;
 mid_MLA_plane_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_plane_fix.transmit_apodization.MLA = MLA;
-mid_MLA_plane_fix.transmit_apodization.MLA_overlap = MLA;
+mid_MLA_plane_fix.transmit_apodization.MLA_overlap = 2;
 mid_MLA_plane_fix.receive_apodization.window=uff.window.tukey25;
 mid_MLA_plane_fix.receive_apodization.f_number = 1.7;
 
@@ -167,6 +167,8 @@ mid_RTB.dimension = dimension.both();
 mid_RTB.scan=scan_MLA;
 mid_RTB.transmit_apodization.window = uff.window.hamming;
 mid_RTB.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
+mid_RTB.transmit_apodization.MLA = MLA;
+mid_RTB.transmit_apodization.MLA_overlap = 1;
 mid_RTB.transmit_apodization.f_number = 1.75;
 mid_RTB.receive_apodization.window = uff.window.tukey25;
 mid_RTB.receive_apodization.f_number = 1.7;
@@ -225,9 +227,18 @@ set(gca,'fontsize',14);
 set(gca,'YDir','reverse');
 axis('tight','equal');
 title('TX apod from sequence 51');
-
+%%
+weights = reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis);
+weights_mod = weights;
+weights_mod(weights>1) = 1;
+figure(90);
+subplot(211)
+imagesc(reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis))
+subplot(212);
+imagesc(weights_mod)
+%%
 b_data_RTB_weighted = uff.beamformed_data(b_data_RTB);
-b_data_RTB_weighted.data = b_data_RTB_weighted.data.*weighting;
+b_data_RTB_weighted.data = b_data_RTB_weighted.data.*weights_mod(:);
 
 b_data_RTB_weighted.plot(11,'RTB with virtual source model weighted');
 
@@ -242,6 +253,8 @@ mid_RTB_unified_fix.dimension = dimension.both();
 mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
 mid_RTB_unified_fix.scan=scan_MLA;
 mid_RTB_unified_fix.transmit_apodization.window = uff.window.hamming;
+mid_RTB_unified_fix.transmit_apodization.MLA = MLA;
+mid_RTB_unified_fix.transmit_apodization.MLA_overlap = 1;
 mid_RTB_unified_fix.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
 mid_RTB_unified_fix.transmit_apodization.f_number = 1.75;
 mid_RTB_unified_fix.receive_apodization.window = uff.window.tukey25;
@@ -249,8 +262,9 @@ mid_RTB_unified_fix.receive_apodization.f_number = 1.7;
 
 b_data_RTB_unified_fix = mid_RTB_unified_fix.go();
 
+%%
 b_data_RTB_unified_fix_weighted = uff.beamformed_data(b_data_RTB_unified_fix);
-b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data.*weighting;
+b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data.*weights_mod(:);
 
 %%
 % Plot the weighted image
@@ -268,6 +282,8 @@ mid_RTB_PW_fix.transmit_delay_model = transmit_delay_model.hybrid;
 mid_RTB_PW_fix.pw_margin = 1.5/1000;
 mid_RTB_PW_fix.scan=scan_MLA;
 mid_RTB_PW_fix.transmit_apodization.window = uff.window.hamming;
+mid_RTB_PW_fix.transmit_apodization.MLA = MLA;
+mid_RTB_PW_fix.transmit_apodization.MLA_overlap = 1;
 mid_RTB_PW_fix.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
 mid_RTB_PW_fix.transmit_apodization.f_number = 1.7;
 mid_RTB_PW_fix.receive_apodization.window = uff.window.tukey25;
