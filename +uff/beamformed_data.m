@@ -80,7 +80,7 @@ classdef beamformed_data < uff
             %   title           Figure title (default: none)
             %   dynamic_range   Displayed dynamic range (default: 60 dB)
             %   compression     String specifying compression type: 'log','none','sqrt' (default: 'log')
-            %   indeces         Pair of integers [nrx ntx] indicating receive and transmit events (default: [])
+            %   indeces         Tripler of integers [nrx ntx frame] indicating which receive and transmit and frame must be plotted (default: [])
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
                     (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'double'))
@@ -109,7 +109,7 @@ classdef beamformed_data < uff
             if nargin<6||isempty(indeces)
                 data=h.data;
             else
-                data=h.data(:,indeces(1),indeces(2),:);
+                data=h.data(:,indeces(1),indeces(2),indeces(3));
             end
             
             %Draw the image
