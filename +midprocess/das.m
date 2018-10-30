@@ -23,7 +23,7 @@ classdef das < midprocess
             h.name='USTB DAS General Beamformer';
             h.reference= 'www.ustb.no';
             h.implemented_by={'Stefano Fiorentini <stefano.fiorentini@ntnu.no>', 'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
-            h.version='v1.0.13';
+            h.version='v1.0.14';
         end
     end
     
@@ -356,6 +356,10 @@ classdef das < midprocess
                         if N_waves == 1 % Simple trick to avoid unnecessary computations in non-compounded datasets
                             apod_gpu  = bsxfun(@times,rx_apod_gpu,  tx_apod_gpu);
                             delay_gpu = bsxfun(@plus, rx_delay_gpu, tx_delay_gpu);
+                            % If IQ data, multiply apod_gpu by a phase correction factor
+                            if (abs(w0_gpu) > eps)
+                                apod_gpu = exp(1i.*w0_gpu*delay_gpu).*apod_gpu;
+                            end
                         end
                         
                         % workbar
@@ -383,11 +387,10 @@ classdef das < midprocess
                                 if (N_waves > 1)
                                     apod_gpu  = bsxfun(@times,rx_apod_gpu,tx_apod_gpu(:,n_wave));
                                     delay_gpu = bsxfun(@plus, rx_delay_gpu, tx_delay_gpu(:,n_wave));
-                                end
-                                
-                                % If IQ data, multiply apod_gpu by a phase correction factor
-                                if (abs(w0_gpu) > eps)
-                                    apod_gpu = exp(1i.*w0_gpu*delay_gpu).*apod_gpu;
+                                    % If IQ data, multiply apod_gpu by a phase correction factor
+                                    if (abs(w0_gpu) > eps)
+                                        apod_gpu = exp(1i.*w0_gpu*delay_gpu).*apod_gpu;
+                                    end
                                 end
                                 
                                 % Preallocate memory for pre-beamformed data
