@@ -147,8 +147,8 @@ classdef delay_multiply_and_sum < postprocess
             %%
             if isempty(h.filter_freqs)
                 [f0, bw] = tools.estimate_frequency(2*h.input(1).scan.z_axis/h.channel_data.sound_speed,data_cube);
-                f_start = 2*f0-f0;
-                f_stop = 2*f0+f0/2;
+                f_start = 1.5*f0; 
+                f_stop = 2.5*f0
                 f_transition = f0/4;
 
                 F = [f_start f_start+f_transition f_stop f_stop+f_transition];
@@ -202,7 +202,8 @@ classdef delay_multiply_and_sum < postprocess
             
             
             warning('If the result looks funky, you might need to tune the filter paramters of DMAS using the filter_freqs property. Use the plot to check that everything is OK.')
-            if 1 %Plot to check the filtering
+            plot_filtering = false;
+            if plot_filtering %Plot to check the filtering
                 %%
                 [freq_resp,f_ax]=freqz(b);
                 
