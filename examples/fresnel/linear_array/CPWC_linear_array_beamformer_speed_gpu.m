@@ -1,6 +1,5 @@
 %% CPWC simulation to compare speeds of the various USTB beamformers.
 %
-%% 
 % In this example, we conduct a simple simulation to compare the speeds 
 % achieved with USTB's:
 % 
@@ -14,8 +13,7 @@
 % simulator'> tutorial. Please feel free to refer back to that for more 
 % details.
 % 
-% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> and Arun Asokan 
-% Nair <anair8@jhu.edu> 16.05.2017_
+% _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no> 29.10.2018_
 
 clear all;
 close all;
@@ -127,11 +125,11 @@ pipe.scan=sca;
 
 pipe.receive_apodization.window=uff.window.tukey50;
 pipe.receive_apodization.f_number=1.0;
-pipe.receive_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.receive_apodization.origin=uff.point('xyz',[0 0 -Inf]);
 
 pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=1.0;
-pipe.transmit_apodization.origo=uff.point('xyz',[0 0 -Inf]);
+pipe.transmit_apodization.origin=uff.point('xyz',[0 0 -Inf]);
 
 %% 
 %
