@@ -43,11 +43,12 @@ classdef gray_level_transform < postprocess
                 return;
             end
             
+            %%
             % declare output structure
             output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             % linear space
-            x=logspace(-60/20,0,100);
+            x=logspace(-100/20,0,200);
             
             % dB space
             x_dB=20*log10(x);
@@ -58,7 +59,7 @@ classdef gray_level_transform < postprocess
             gamma = fit(x.',x_compressed.','cubicspline');
 
             
-            % Prøv : GLT( signal./ sqrt( |mean signal power at the top of the gradient| ) ) 
+            % Prï¿½v : GLT( signal./ sqrt( |mean signal power at the top of the gradient| ) ) 
             %%
 %             if h.is_exp
 %                 mask = h.scan.z > 40.5/1000 & h.scan.z < 48/1000 & h.scan.x > -12.5/1000 & h.scan.x < -12/1000;
@@ -99,6 +100,7 @@ classdef gray_level_transform < postprocess
             %%
    
             if h.plot_functions
+                %%
                 f8888 = figure(8888);clf;
                 subplot(1,2,2);
                 plot(x,x,'k','LineWidth',2); hold on; grid on; axis equal tight;
@@ -109,6 +111,7 @@ classdef gray_level_transform < postprocess
                 ylabel('Output signal');
                 legend('location','nw','Uniform','p(b) mapped to linear','v(b)');
                 
+                %%
                 f8889 = figure(8889);clf;
                 subplot(1,2,1);hold all;
                 plot(x_dB,x_dB,'k','LineWidth',2); hold on; grid on; axis equal tight;
@@ -127,6 +130,7 @@ classdef gray_level_transform < postprocess
                 xlabel('Input signal [dB]');
                 ylabel('Output signal [dB]');
                 legend('location','nw','Uniform','p(B)');
+                xlim([-60 0]);
                 saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_lin'],'eps2c')
                 saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log'],'eps2c')
                 saveas(f8899,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log_stripped'],'eps2c')

@@ -5,9 +5,14 @@ function [meanLines,x_axis] = getMeanLateralLines(sta_image,image,z_start,z_stop
 % Mask out the top gradient part of the image
 mask=reshape(sta_image.scan.z>z_start*10^-3&sta_image.scan.z<z_stop*10^-3,[length(sta_image.scan.z_axis) length(sta_image.scan.x_axis)])...
      &reshape(sta_image.scan.x>x_start*10^-3&sta_image.scan.x<x_stop*10^-3,[length(sta_image.scan.z_axis) length(sta_image.scan.x_axis)]);
-    
+
+ %%
 figure(1211);
-imagesc(sta_image.scan.x_axis*1e3,sta_image.scan.z_axis*1e3,mask.*image.all{1});
+imagesc(sta_image.scan.x_axis*1e3,sta_image.scan.z_axis*1e3,mask.*image.all{8});
+%%
+figure(1212);
+imagesc(mask.*image.all{8});
+%%
 
 % Find the x min and max index in the image from the gradient mask, top
 z_min_top = rem(min(find(mask==1)),length(sta_image.scan.z_axis));
