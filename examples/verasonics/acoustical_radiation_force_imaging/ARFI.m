@@ -14,10 +14,15 @@ clear all;
 
 %% UFF file for USTB
 
+% Uncomment the probe connected to your Verasonics
+%probe = 'L11-5';
+%probe = 'L11-4v';
+probe = 'L7-4';
+
 % Set of filename handling
 folderdata=['data/' datestr(now,'yyyymmdd')];
 mkdir(folderdata);            
-filedata=['SWE_L7_' datestr(now,'HHMMSS') '.uff'];
+filedata=['SWE_',probe(1:regexp(probe,'-')-1),'_', datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
 
 %% System parameters
@@ -48,9 +53,9 @@ Resource.Parameters.simulateMode = 0;
 %  Resource.Parameters.simulateMode = 2 stops sequence and processes RcvData continuously.
 
 % Specify Trans structure array.
-Trans.name = 'L7-4';
+Trans.name = probe;
 Trans.units = 'mm';
-Trans = computeTrans(Trans);  % L7-4 transducer is 'known' transducer so we can use computeTrans.
+Trans = computeTrans(Trans); 
 Trans.maxHighVoltage = maxVoltage;  % set maximum high voltage limit for pulser supply.
 
 %% Imaging parameters
