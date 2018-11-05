@@ -72,7 +72,7 @@ legend show
 %% All images 
 theory=linspace(0,-80,length(x_axis));
 for i = 1:length(regression_top)
-    figure; 
+    f10 = figure(10);clf; 
     plot(x_axis,max(regression_top{i})+theory,'k--'); hold on; grid on;
     plot(x_axis,meanLines.all{i},'linewidth',2);
     plot(x_axis,regression_top{i});
@@ -83,6 +83,7 @@ for i = 1:length(regression_top)
     title(image.tags{i});
     xlim([-20 20])
     ylim([-150 0])
+    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/curves_',image.tags{i}],'eps2c')
 end
 
 
