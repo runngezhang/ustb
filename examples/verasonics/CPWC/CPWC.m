@@ -21,7 +21,7 @@
 clear all; %close all;
 
 % Uncomment the probe connected to your Verasonics
-%probe = 'L11-5';
+%probe = 'L11-5v';
 %probe = 'L11-4v';
 probe = 'L7-4';
 
