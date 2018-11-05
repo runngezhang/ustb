@@ -21,6 +21,7 @@ compared to the previous version
 * v2.0: https://bitbucket.org/ustb/ustb/commits/tag/v2.0.1
 
 The main changes are:
+
 * updated the processing pipeline defining the pre, mid and postprocess objects 
 * the apodization object have been rewritten
 * a GPU implementation of the DAS beamformer have been added 
@@ -31,6 +32,7 @@ Unfortunately, we have not had the time or resources to write a full documentati
 
 ### How to contribute? ###
 First off all, please make your self familiar with the Gitflow workflow. See for example this tutorial: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow. According to the Gitflow workflow there are two types of contributions to the code a __hotifx__ and a __feature__.
+
 * __hotfix__: This is a change done on the main branch. Typically, an urgent bugfix often related to a reported issue: https://bitbucket.org/ustb/ustb/issues?status=new&status=open.
 * __feature__: This s a change done on the develop branch. Typically, a larger change to the code or added or improved functionality. 
 
