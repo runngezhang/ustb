@@ -40,7 +40,7 @@ To contribute to the project with your code you should do the following:
 
 * Step 1: Create your own fork of the project. 
 * Step 2: Create a hotfix branch from the main branch to fix an urgent bug, or a feature branch from the develop branch to add a feature.
-* Step 3: Create a pull request from your forked repository back to our repository and add @omrindal and @alfonsomolares as reviwers. 
+* Step 3: Create a pull request from your forked repository back to our repository and add @omrindal and @alfonsomolares as reviewers. 
 * Step 4: Once we have time to review your code and are happy with the changes we will merge your pull request into the USTB and you have sucessfully contributed!
 
 Once we are happy and confortable that the develop branch is stable and useful we will merge it into main and a new version will be released :D
