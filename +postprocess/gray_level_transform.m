@@ -59,7 +59,7 @@ classdef gray_level_transform < postprocess
             gamma = fit(x.',x_compressed.','cubicspline');
 
             
-            % Pr�v : GLT( signal./ sqrt( |mean signal power at the top of the gradient| ) ) 
+            % Prøv : GLT( signal./ sqrt( |mean signal power at the top of the gradient| ) ) 
             %%
 %             if h.is_exp
 %                 mask = h.scan.z > 40.5/1000 & h.scan.z < 48/1000 & h.scan.x > -12.5/1000 & h.scan.x < -12/1000;
@@ -79,6 +79,10 @@ classdef gray_level_transform < postprocess
                 end
             end
            
+            %% Get rid of "true zeros" that will cause -inf
+            
+            output.data(output.data==0) = eps;
+            
             
 %             %%
 %             h.input.data = h.input.data;
