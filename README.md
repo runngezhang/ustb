@@ -20,7 +20,7 @@ compared to the previous version
 
 * v2.0: https://bitbucket.org/ustb/ustb/commits/tag/v2.0.1
 
-The main changes are:
+the main changes are:
 
 * updated the processing pipeline defining the pre, mid and postprocess objects 
 * the apodization object have been rewritten
@@ -28,12 +28,12 @@ The main changes are:
 * several bugfixes and other improvements have been done as well.
 
 ### Documentation ###
-Unfortunately, we have not had the time or resources to write a full documentation of the USTB. However, there are plenty of well documented examples that will help you to get started and hopefully understand the code.
+Unfortunately, we have not had the time or resources to write a full documentation of the USTB. However, there are plenty of well documented examples that will help you to get started and hopefully understand the code. You find the examples under the /examples folder. 
 
 ### How to contribute? ###
-First off all, please make your self familiar with the Gitflow workflow. See for example this tutorial: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow. According to the Gitflow workflow there are two types of contributions to the code a __hotifx__ and a __feature__.
+First off all, please make your self familiar with the Gitflow workflow. See for example this tutorial: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow. According to the Gitflow workflow there are two types of contributions to the code a, __hotifx__ and a __feature__:
 
-* __hotfix__: This is a change done on the main branch. Typically, an urgent bugfix often related to a reported issue: https://bitbucket.org/ustb/ustb/issues?status=new&status=open.
+* __hotfix__: This is a change done on the main branch. Typically, an urgent bugfix often related to a reported issue: https://bitbucket.org/ustb/ustb/issues?status=new&status=open
 * __feature__: This s a change done on the develop branch. Typically, a larger change to the code or added or improved functionality. 
 
 To contribute to the project with your code you should do the following:
@@ -45,13 +45,16 @@ To contribute to the project with your code you should do the following:
 
 Once we are happy and confortable that the develop branch is stable and useful we will merge it into main and a new version will be released :D
 
+### Did you find a bug or have suggestions? ###
+Please use the issue tracker to report bugs and make suggestions: https://bitbucket.org/ustb/ustb/issues?status=new&status=open. All feedback is much appreciated. Don’t hesitate to contact us if you have any problems.
+
 ### Who do I talk to? ###
 
 The project administrators are:
 
 * Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>,
-* Ole Marius Hoel Rindal <omrindal@ifi.uio.no>
-* Olivier Bernard <olivier.bernard@insa-lyon.fr> 
+* Ole Marius Hoel Rindal <omrindal@ifi.uio.no>,
+* Olivier Bernard <olivier.bernard@insa-lyon.fr>.
  
 
 Collaborators:
