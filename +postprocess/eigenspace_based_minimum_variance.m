@@ -35,8 +35,6 @@ classdef eigenspace_based_minimum_variance < postprocess
         K_in_lambda
         regCoef
         doForwardBackward = 0;
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         dimension
         gamma = 0.5;
         channel_data                                  % Channel data 
