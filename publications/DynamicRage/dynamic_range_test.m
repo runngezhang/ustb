@@ -1,6 +1,7 @@
 clear all; close all;
 
-filename = 'FieldII_STAI_simulated_dynamic_range.uff';
+%filename = 'FieldII_STAI_simulated_dynamic_range.uff';
+filename = 'experimental_dynamic_range_phantom.uff';
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
@@ -57,6 +58,6 @@ b_data_mv.data = b_data_mv.data.*weights(:);
 b_data_mv.plot();
 %%
 
-tools.dynamic_range_test(channel_data,b_data_das);
-tools.dynamic_range_test(channel_data,b_data_cf);
-tools.dynamic_range_test(channel_data,b_data_mv);
+tools.dynamic_range_test(channel_data,b_data_das,'DAS');
+tools.dynamic_range_test(channel_data,b_data_cf,'CF');
+tools.dynamic_range_test(channel_data,b_data_mv,'MV');
