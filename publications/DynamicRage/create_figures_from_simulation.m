@@ -70,19 +70,23 @@ glt.a = 4.3750e-04;
 glt.b = -0.0062;
 glt.c = 0.0500;
 glt.d = 0;
-glt.plot_functions = 1;
+% glt.a = 1.8750e-04;
+% glt.b = -0.0062;
+% glt.c = 0.300;
+% glt.d = 0;
+% glt.plot_functions = 1;
 
 glt.input = b_data_das;
 glt.scan = b_data_das.scan;
 b_data_glt = glt.go();
 
+
 glt_img = b_data_glt.get_image('none').*weights;  % Compensation weighting
-glt_img = db(abs(glt_img./max(glt_img(:))));      % Normalize on max
+glt_img = db(abs(glt_img./max(glt_img(:)))+eps);      % Normalize on max
 f100 = figure(100);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
 colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14)
-%%
 saveas(f100,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GLT'],'eps2c')
 saveas(f100,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GLT'],'png')
 f101 = figure(101);clf;
@@ -211,18 +215,12 @@ image.all_signal{6} = double(b_data_gcf.get_image('none').*weights);
 image.all_signal{6} = (image.all_signal{6}./max(image.all_signal{6}(:)));
 image.tags{6} = 'GCF';
 image.all{7} = pcf_img;
+%image.all{7}(isinf(image.all{7})) = intmin;%nanmin(nanmin(image.all{7}));
 image.all{7}(695,320) = image.all{7}(694,320);
 image.all_signal{7} = double(b_data_pcf.get_image('none').*weights);
 image.all_signal{7} = (image.all_signal{7}./max(image.all_signal{7}(:)));
 image.all_signal{7}(695,320) = image.all_signal{7}(694,320);
 image.tags{7} = 'PCF';
-
-%%
-uA = unique(nonzeros(glt_img)); %does sorting and remove duplicates
-small2distinct = uA(2);
-
-glt_img(isinf(glt_img)) = small2distinct;
-
 image.all{8} = glt_img;
 image.all_signal{8} = double(b_data_glt.get_image('none').*weights);
 image.all_signal{8} = (image.all_signal{8}./max(image.all_signal{8}(:)));
@@ -237,23 +235,36 @@ subplot(212)
 imagesc(isinf(image.all{7}))
 
 %%
-[image_calibrated, correcting_coeff] = calibrateImage(b_data_das,image,47.5,52.5,-20,20,3)
+[image_calibrated, calibration_coeff] = calibrateImage(b_data_das,image,47.5,52.5,-20,20,3);
 
 %%
-for i = 1:length(image.all)
-    image_calibrated.all_signal_test{i} = 10.^(image_calibrated.all{i}./20);
-end
-
+dynamic_range = -60;
 %%
-figure(6666);clf;
+ figure(56566);
 for i = 1:length(image.all)
+    i
     subplot(3,8,i);
-    imagesc(image.all{i}-max(image.all{i}(:)));colormap gray;caxis([-60 0]);title(image_calibrated.tags{i});
+    imagesc(image.all{i});colormap gray;caxis([dynamic_range 0]);title(image.tags{i});
     subplot(3,8,8+i);
-    imagesc(image_calibrated.all{i}-max(image_calibrated.all{i}(:)));colormap gray;caxis([-60 0]);title([image_calibrated.tags{i},' calibrated']);
+    imagesc(image_calibrated.all{i});colormap gray;caxis([dynamic_range 0]);title(image_calibrated.tags{i});
     subplot(3,8,16+i);
-    imagesc(db(abs(image_calibrated.all_signal_test{i}./max(max(image_calibrated.all_signal_test{i})))));colormap gray;caxis([-60 0]);title([image_calibrated.tags{i},' signal calibrated']);
+    imagesc(db(image_calibrated.signal_all{i}));colormap gray;caxis([dynamic_range 0]);title(image_calibrated.tags{i});
+    
+    
 end
+%%
+dynamic_range = -70;
+for i = 1:length(image.all)
+    f10 = figure(10);clf;
+    imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,image_calibrated.all{i});
+    colormap gray;caxis([dynamic_range 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+    title(image_calibrated.tags{i});
+    set(gca,'FontSize',14)
+    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/',image.tags{i}],'eps2c')
+    axis([-17 2 33 42]);
+    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/',image.tags{i},'_zoomed'],'eps2c')
+end
+
 
 %%
 % Using "linspecer" colors
@@ -277,7 +288,7 @@ b_data_das_exp = b_data_das_exp.b_data_das;
 mask_lateral_exp=abs(b_data_das_exp.scan.x_axis)<12.05e-3;
 theory_lateral_exp=-40*(b_data_das_exp.scan.x_axis(mask_lateral_exp)+12.05e-3)/24.1e-3;
 
-%%
+
 [meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-10,10);
 mask_lateral=abs(b_data_das.scan.x_axis)<10e-3;
 theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
@@ -286,7 +297,7 @@ theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
 [meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,20,40,11,14);
 mask_axial= b_data_das.scan.z_axis<40e-3 & b_data_das.scan.z_axis>20e-3;
 theory_axial=-40*(b_data_das.scan.z_axis(mask_axial)-20e-3)/20e-3;
-%%
+
 for i = 1:length(image.all)
     f88 = figure(8888+i);clf;hold all;
     plot(theory_lateral,meanLinesLateral.all{i}-max(meanLinesLateral.all{i}),'LineStyle','-.','Linewidth',2,'DisplayName','Sim. lateral');
@@ -305,39 +316,6 @@ for i = 1:length(image.all)
     saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient/',image.tags{i}],'png')
 end
 
-
-%% Plot lateral gradient after calibration
-[meanLinesLateral_calib,x_axis] = getMeanLateralLines(b_data_das,image_calibrated,47.5,52.5,-10,10);
-mask_lateral=abs(b_data_das.scan.x_axis)<10e-3;
-theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
-
-[meanLines_axial_calib,z_axis] = getMeanAxialLines(b_data_das,image_calibrated,20,40,11,14);
-mask_axial= b_data_das.scan.z_axis<40e-3 & b_data_das.scan.z_axis>20e-3;
-theory_axial=-40*(b_data_das.scan.z_axis(mask_axial)-20e-3)/20e-3;
- f88 = figure(8878);clf;hold all;
-for i = 1:length(image.all)
-    subplot(1,8,i);hold all;
-    plot(theory_lateral,meanLinesLateral.all{i}-max(meanLinesLateral.all{i}),'LineStyle','-.','Linewidth',2,'DisplayName','Sim. lateral');
-    plot(theory_axial,meanLines_axial.all{i}-max(meanLines_axial.all{i}),'Linestyle','--','Linewidth',2,'DisplayName','Sim. axial');
-    plot(theory_lateral,meanLinesLateral_calib.all{i}-max(meanLinesLateral_calib.all{i}),'LineStyle','-.','Linewidth',2,'DisplayName','Sim. lateral calibrated');
-    plot(theory_axial,meanLines_axial_calib.all{i}-max(meanLines_axial_calib.all{i}),'Linestyle','--','Linewidth',2,'DisplayName','Sim. axial calibrated');
-    
-    %plot(theory_lateral_exp,meanLinesLateralExp.all{i}-max(meanLinesLateralExp.all{i}),'Linestyle',':','Linewidth',2,'DisplayName','Exp. lateral');
-    plot(theory_lateral,theory_lateral,'LineStyle','-','Linewidth',2,'Color','k','DisplayName','Theory');
-    set(gca, 'XDir','reverse');%title(image.tags{i});
-    axis image
-    legend('show','Location','sw');
-    ylim([-60 0])
-    xlim([-40 0])
-    grid on
-    xlabel('Theoretical [dB]');
-    ylabel('Output [dB]');
-    title(image.tags{i});
-    
-end
-
-saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient/','calibrated'],'eps2c')
-saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient/','calibrated'],'png')
 %% Plot the lateral line through the boxes
 [meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,b_data_das.scan.x(1)*10^3,b_data_das.scan.x(end)*10^3);
 theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-35 -100];
@@ -361,6 +339,30 @@ ylabel('Normalized amplitude [dB]');
 xlabel('x [mm]');
 
 saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/boxes'],'eps2c')
+
+%% Plot the lateral line through the boxes after calibration
+[meanLines,x_axis] = getMeanLateralLines(b_data_das,image_calibrated,35,40,b_data_das.scan.x(1)*10^3,b_data_das.scan.x(end)*10^3);
+theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-35 -100];
+x_axis_theoretical = linspace(-15,0,1536);
+
+f89 = figure(89);clf;hold all;
+subplot(211);hold on;
+plot(x_axis_theoretical,theoretical,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',[0 0 0]);
+plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
+plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
+plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
+plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
+plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(5,:));
+plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(6,:));
+plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(7,:));
+plot(x_axis,meanLines.all{8}-max(meanLines.all{8}),'Linewidth',2,'DisplayName',image.tags{8},'Color',colors(8,:));
+ylim([-80 0]);
+xlim([-17.5 1.5]);
+legend('Location','best'); grid on;
+ylabel('Normalized amplitude [dB]');
+xlabel('x [mm]');
+
+saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/boxes'],'eps2c')
 
 %% Measure contrast and plot together with the experimental
 [CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
@@ -389,37 +391,6 @@ grid on
 
 %%
 saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CR'],'eps2c')
-
-%% Investigate CR with calibrated values
-[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
-[CR_signal_sim_calib, CR_signal_dagger_calib, CR_image_sim_calib, CNR_signal_sim_calib, CNR_image_sim_calib] = measureContrast(b_data_das,image_calibrated,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated_calib']);
-
-
-f9 = figure;
-subplot(211);
-bar([10*log10(CR_signal_sim)' 10*log10(CR_signal_exp)'])
-set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
-set(gca,'XTickLabel',image.tags)
-ylabel('CR [dB]');
-x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
-text(x_pos,double(10*log10(CR_signal_sim(:))),num2str(round(10*log10(CR_signal_sim(:))),'%d'),...
-    'HorizontalAlignment','center',...
-    'VerticalAlignment','bottom',...
-    'FontSize',12)
-x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
-text(x_pos,double(10*log10(CR_signal_calib(:))),num2str(round(10*log10(CR_signal_calib(:))),'%d'),...
-    'HorizontalAlignment','center',...
-    'VerticalAlignment','bottom',...
-    'FontSize',12)
-set(gca,'Ydir','reverse')
-legend('Sim.','Sim. calibrated')
-grid on
-
-%%
-saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CR_calibrated'],'eps2c')
-
-
-
 %%
 f90 = figure;
 subplot(212);
@@ -487,6 +458,100 @@ grid on
 %%
 
 saveas(f78,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CNR_LC'],'eps2c')
+
+%% Calculate CR after calibration
+[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+[CR_signal_sim_calib, CR_signal_dagger_calib, CR_image_sim_calib, CNR_signal_sim_calib, CNR_image_sim_calib] = measureContrast(b_data_das,image_calibrated,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+
+f9 = figure;
+subplot(211);
+bar([10*log10(CR_signal_sim)' 10*log10(CR_signal_sim_calib)'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CR [dB]');
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(10*log10(CR_signal_sim(:))),num2str(round(10*log10(CR_signal_sim(:))),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(10*log10(CR_signal_sim_calib(:))),num2str(round(10*log10(CR_signal_sim_calib(:))),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+set(gca,'Ydir','reverse')
+legend('Sim.','Sim. calib')
+grid on
+
+%%
+saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/CR'],'eps2c')
+%%
+f90 = figure;
+subplot(212);
+bar([CR_image_sim' CR_image_sim_calib'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CR_{LC} [dB]');
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(CR_image_sim(:)),num2str(round(CR_image_sim(:)),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(CR_image_sim_calib(:)),num2str(round(CR_image_sim_calib(:)),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 125])
+legend('Sim.','Sim. calib')
+grid on
+%%
+saveas(f90,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/CR_LC_calib'],'eps2c')
+%%
+f77 = figure(77);clf;
+subplot(211);
+bar([CNR_signal_sim' CNR_signal_sim_calib'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR');
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_signal_sim(:)),num2str((CNR_signal_sim(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_signal_sim_calib(:)),num2str((CNR_signal_sim_calib(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 1.45])
+legend('Sim.','Sim. calib')
+grid on
+
+%%
+saveas(f77,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/CNR_calib'],'eps2c')
+%%
+f78 = figure(78);clf;
+subplot(212);
+bar([CNR_image_sim' CNR_image_sim_calib'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR_{LC}');
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_image_sim(:)),num2str((CNR_image_sim(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_image_sim_calib(:)),num2str((CNR_image_sim_calib(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+legend('Sim.','Sim. calib')
+grid on
+%%
+
+saveas(f78,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/CNR_LC'],'eps2c')
 
 %% Find the corrlation between dynamic range stretching and measured contrast as CR
 figure(77);clf;
