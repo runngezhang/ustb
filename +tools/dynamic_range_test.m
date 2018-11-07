@@ -76,8 +76,8 @@ for i = 1:do_axial
     subplot(sub_fig_setup(1),sub_fig_setup(2),sub_fig_index_2+i-1);
     hold all;
     plot(theory_line,theory_line,'LineWidth',2,'DisplayName','Theoretical');
-    plot(theory_line,mean_line-max(regression),'LineWidth',2,'DisplayName','Mean lateral line');
-    plot(theory_line,regression-max(regression),'LineWidth',2,'DisplayName','Estimated slope');
+    plot(theory_line,mean_line,'LineWidth',2,'DisplayName','Mean lateral line');
+    plot(theory_line,regression,'LineWidth',2,'DisplayName','Estimated slope');
     set(gca, 'XDir','reverse');xlabel('Input [dB]');ylabel('Output [dB]');
     title(sprintf('Theory: -1, estimated: -%.4f',regresion_coeff(1)));
     legend show;set(gca,'FontSize',15); axis tight;
