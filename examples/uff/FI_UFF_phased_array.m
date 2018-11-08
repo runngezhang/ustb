@@ -24,7 +24,7 @@ local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long.uff';
+filename='Verasonics_P2-4_parasternal_long_small.uff';
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
@@ -33,10 +33,6 @@ channel_data = uff.read_object([local_path, filename],'/channel_data');
 % Print info about the dataset. Remeber that if you want to use this dataset
 % you have to reference this article!
 channel_data.print_authorship
-
-%% Throw away most of the dataset to make the beamformign run faster. 
-% Comment out this line if you want to run it on all 50 frames
-channel_data.N_frames = 1;
 
 %% Do beamforming
 depth_axis=linspace(0e-3,110e-3,512).';
