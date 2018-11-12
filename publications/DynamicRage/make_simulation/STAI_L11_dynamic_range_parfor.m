@@ -113,7 +113,7 @@ xdc_center_focus(Rh,[0 0 0]);
 %% Speckle Phantom
 
 if full_simulation
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_2(650);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v3(650);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
