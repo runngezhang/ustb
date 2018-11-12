@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = false;
+full_simulation = true;
 
 
 
