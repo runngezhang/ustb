@@ -1,6 +1,7 @@
 function [transmit_delay_out] = calculate_unified_delay_model(transmit_delay_temp,mask,scan,source)
-    % Implementation of the transmit delay model introduced in  Nguyen, N. Q., & Prager, R. W. (2016).
-    % High-Resolution Ultrasound Imaging With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
+% Implementation of the transmit delay model introduced in  Nguyen, N. Q., & Prager, R. W. (2016).
+% High-Resolution Ultrasound Imaging With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
+
 try
     % Reshape the delays into the size of the scan
     if isa(scan,'uff.linear_scan')
@@ -16,7 +17,7 @@ try
     end
     % Mask out the valid delays within the "cone" in front of and after the transmit delay
     % The mask is calculated using the uff.apodization class before the TX delay loop.
-
+    
     masked_delays = mask.*tx_delay;
     
     % Interpolate the delays on the "edge" of the valid region

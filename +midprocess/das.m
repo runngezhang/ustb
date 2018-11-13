@@ -68,35 +68,6 @@ classdef das < midprocess
             receive_delay=single(sqrt(xm.^2+ym.^2+zm.^2)/h.channel_data.sound_speed);
             
             % calculate transmit delay
-            
-            % get an apodization mask only needed for
-            % transmit_delay_model.unified used for transmit delay when the
-            % source is within the imaging plane
-            if h.spherical_transmit_delay_model == spherical_transmit_delay_model.unified && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3) 
-                if isa(h.scan,'uff.sector_scan')
-                    mask_apod = uff.apodization();
-                    mask_apod.window = uff.window.boxcar;
-                    mask_apod.f_number = 4; %This should be set according to the actually transmitted f number
-                    mask_apod.sequence = h.channel_data.sequence;
-                    mask_apod.minimum_aperture = [0 0];
-                    mask_apod.focus = h.scan;
-                    mask_apod.probe = h.channel_data.probe;
-                    mask_all_waves = reshape(mask_apod.data,h.scan.N_depth_axis,h.scan.N_azimuth_axis,numel(h.channel_data.sequence));
-                elseif isa(h.scan,'uff.linear_scan')
-                    %%
-                    mask_apod = uff.apodization();
-                    mask_apod.window = uff.window.boxcar;
-                    mask_apod.f_number = 2; %This should be set according to the actually transmitted f number
-                    mask_apod.sequence = h.channel_data.sequence;
-                    mask_apod.minimum_aperture = [0 0];
-                    mask_apod.focus = h.scan;
-                    mask_apod.probe = h.channel_data.probe;
-                    mask_all_waves = reshape(mask_apod.data,h.scan.N_z_axis,h.scan.N_x_axis,numel(h.channel_data.sequence));
-                else
-                    error('Only linear scan and sector scan is supported for unified fix.');
-                end
-            end
-            
             transmit_delay=zeros(N_pixels,N_waves);
             for n_wave=1:numel(h.channel_data.sequence)
                 switch(h.channel_data.sequence(n_wave).wavefront)
@@ -122,8 +93,38 @@ classdef das < midprocess
                                         % Use conventional virtual source model
                                         transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
                                     case spherical_transmit_delay_model.unified
-                                        transmit_delay_temp = transmit_delay(:,n_wave);
+                                        if n_wave == 1
+                                            % get an apodization mask only needed for
+                                            % transmit_delay_model.unified used for transmit delay when the
+                                            % source is within the imaging plane
+                                            %    if h.spherical_transmit_delay_model == spherical_transmit_delay_model.unified && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3)
+                                            if isa(h.scan,'uff.sector_scan')
+                                                mask_apod = uff.apodization();
+                                                mask_apod.window = uff.window.boxcar;
+                                                mask_apod.f_number = 4; %This should be set according to the actually transmitted f number
+                                                mask_apod.sequence = h.channel_data.sequence;
+                                                mask_apod.minimum_aperture = [0 0];
+                                                mask_apod.focus = h.scan;
+                                                mask_apod.probe = h.channel_data.probe;
+                                                mask_all_waves = reshape(mask_apod.data,h.scan.N_depth_axis,h.scan.N_azimuth_axis,numel(h.channel_data.sequence));
+                                            elseif isa(h.scan,'uff.linear_scan')
+                                                %%
+                                                mask_apod = uff.apodization();
+                                                mask_apod.window = uff.window.boxcar;
+                                                mask_apod.f_number = 2; %This should be set according to the actually transmitted f number
+                                                mask_apod.sequence = h.channel_data.sequence;
+                                                mask_apod.minimum_aperture = [0 0];
+                                                mask_apod.focus = h.scan;
+                                                mask_apod.probe = h.channel_data.probe;
+                                                mask_all_waves = reshape(mask_apod.data,h.scan.N_z_axis,h.scan.N_x_axis,numel(h.channel_data.sequence));
+                                            else
+                                                error('Only linear scan and sector scan is supported for unified fix.');
+                                            end
+                                            %end
+                                        end
                                         mask = logical(mask_all_waves(:,:,n_wave));
+                                        transmit_delay_temp = transmit_delay(:,n_wave);
+                                        %mask = logical(mask_all_waves(:,:,n_wave));
                                         source = h.channel_data.sequence(n_wave).source;
                                         transmit_delay(:,n_wave) = tools.calculate_unified_delay_model(transmit_delay_temp,mask,h.scan,source);
                                     case spherical_transmit_delay_model.hybrid
