@@ -113,6 +113,7 @@ xdc_center_focus(Rh,[0 0 0]);
 %% Speckle Phantom
 
 if full_simulation
+    disp('Now Running full simulation!');
     [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v3(650);
 else
     %% Create axial gradient (ag)
@@ -226,8 +227,8 @@ channel_data.version = {'1.0.1'};
 % Finally, we can save the data into a UFF file.
 if full_simulation
     channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_alt.uff','b_data');
+    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp.uff','b_data');
 else
     channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
-    b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
+    b_data.write('./FieldII_STAI_axial_gradient_updated.uff','b_data');
 end
