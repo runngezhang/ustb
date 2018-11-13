@@ -1,99 +1,24 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration build-checksum="3193319444" file="E:\PROJECTS\ustb\USTB.prj" location="E:\PROJECTS\ustb" name="USTB" target="target.toolbox" target-name="Package Toolbox">
-    <param.appname>USTB</param.appname>
-    <param.authnamewatermark>The USTB team</param.authnamewatermark>
+  <configuration build-checksum="3584785850" file="E:\PROJECTS\ustb\USTB.prj" location="E:\PROJECTS\ustb" name="USTB" target="target.toolbox" target-name="Package Toolbox">
+    <param.appname>ustb</param.appname>
+    <param.authnamewatermark>The UltraSound ToolBox group</param.authnamewatermark>
     <param.email>contact@ustb.no</param.email>
-    <param.company>The USTB team</param.company>
-    <param.summary>A free, open source MATLAB toolbox for beamforming, processing, and visualization of ultrasonic signals.</param.summary>
-    <param.description>The aim of USTB is to facilitate the comparison between beamforming techniques and encourage the publication of datasets and algorithms. It is free, open source, and open to all contributors. USTB is a joint effort of the Norwegian University of Science and Technology, the University of Oslo, the University of Lyon, and John Hopkins University.</param.description>
+    <param.company>UiO, NTNU, CREATIS, JHU</param.company>
+    <param.summary>USTB: a toolbox for ultrasonic signal processing</param.summary>
+    <param.description>USTB is a free MATLAB toolbox for processing ultrasonic signals Its aim is to facilitate the comparison of imaging techniques and the dissemination of research results. USTB covers processing techniques for both tissue and flow visualization, as well as other image processing techniques.</param.description>
     <param.screenshot>\\home.ansatt.ntnu.no\alfonsom\My Documents\My Pictures\cubeUSTB_medium.png</param.screenshot>
-    <param.version>2.0.9</param.version>
-    <param.output>${PROJECT_ROOT}\USTB.mltbx</param.output>
-    <param.products.name>
-      <item>MATLAB</item>
-      <item>Signal Processing Toolbox</item>
-      <item>Image Processing Toolbox</item>
-      <item>Mapping Toolbox</item>
-      <item>MATLAB Compiler</item>
-      <item>Simulink Verification and Validation</item>
-      <item>Statistics Toolbox</item>
-      <item>Communications System Toolbox</item>
-      <item>Control System Toolbox</item>
-      <item>Partial Differential Equation Toolbox</item>
-    </param.products.name>
-    <param.products.id>
-      <item>1</item>
-      <item>8</item>
-      <item>17</item>
-      <item>11</item>
-      <item>28</item>
-      <item>93</item>
-      <item>19</item>
-      <item>36</item>
-      <item>3</item>
-      <item>31</item>
-    </param.products.id>
-    <param.products.version>
-      <item>9.3</item>
-      <item>7.5</item>
-      <item>10.1</item>
-      <item>4.0.2</item>
-      <item>6.5</item>
-      <item>3.8</item>
-      <item>9.1</item>
-      <item>5.7</item>
-      <item>10.3</item>
-      <item>2.5</item>
-    </param.products.version>
+    <param.version>2.4.2</param.version>
+    <param.output>${PROJECT_ROOT}\ustb.mltbx</param.output>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
     <param.platforms />
-    <param.guid>2056aa1a-d9d4-4b2e-89c1-e6d27ff78edf</param.guid>
-    <param.exclude.filters>% List files contained in your toolbox folder that you would like to exclude
-% from packaging.  Excludes should be listed relative to the toolbox folder.
-% Some examples of how to specify excludes are provided below:
-%
-% A single file in the toolbox folder:
-% .svn
-%
-% A single file in a subfolder of the toolbox folder:
-% example/.svn
-%
-% All files in a subfolder of the toolbox folder:
-% example/*
-%
-% All files of a certain name in all subfolders of the toolbox folder:
-% **/.svn
-%
-% All files matching a pattern in all subfolders of the toolbox folder:
-% **/*.bak
-%
-
-% git
-.git
-.gitignore
-README.md
-
-% data &amp; mex &amp; unit test
-data/*
-+mex/.mex
-@unit_test
-
-% data files
-*.mat
-*.h5
-*.uff
-
-% video
-*.avi
-*.wmv
-
-% images but we allow png for examples
-*.fig
-*.jpg
-*.bmp
-*.gif
-
-% the project file
-*.prj</param.exclude.filters>
+    <param.guid>3031614d-fa67-41fa-8301-faea1d207ec1</param.guid>
+    <param.exclude.filters>data/*
+.uff
+.mat
+.mltbx
+.prj</param.exclude.filters>
     <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;examples&gt;
    &lt;exampleCategory name="advanced_beamforming"&gt;
@@ -440,6 +365,18 @@ data/*
          &lt;file type="thumbnail"/&gt;
       &lt;/example&gt;
    &lt;/exampleCategory&gt;
+   &lt;exampleCategory name="Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS"&gt;
+      &lt;example name="FI_UFF_FIeldII_simulations_Fig2_and_Fig3" type="html"&gt;
+         &lt;file type="source"&gt;/publications/TUFFC/Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS/html/FI_UFF_FIeldII_simulations_Fig2_and_Fig3.html&lt;/file&gt;
+         &lt;file type="main"&gt;/publications/TUFFC/Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS/FI_UFF_FIeldII_simulations_Fig2_and_Fig3.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+      &lt;example name="FI_UFF_delay_multiply_and_sum_Fig5_and_Fig6" type="html"&gt;
+         &lt;file type="source"&gt;/publications/TUFFC/Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS/html/FI_UFF_delay_multiply_and_sum_Fig5_and_Fig6.html&lt;/file&gt;
+         &lt;file type="main"&gt;/publications/TUFFC/Prieur_et_al_Signal_coherence_and_image_amplitude_with_the_fDMAS/FI_UFF_delay_multiply_and_sum_Fig5_and_Fig6.m&lt;/file&gt;
+         &lt;file type="thumbnail"/&gt;
+      &lt;/example&gt;
+   &lt;/exampleCategory&gt;
    &lt;exampleCategory name="curvilinear_array"&gt;
       &lt;example name="DW_curvilinear_array" type="html"&gt;
          &lt;file type="source"&gt;/examples/fresnel/curvilinear_array/html/DW_curvilinear_array.html&lt;/file&gt;
@@ -476,17 +413,18 @@ data/*
     <param.registered.apps />
     <param.docs>${PROJECT_ROOT}\info.xml</param.docs>
     <param.getting.started.guide>${PROJECT_ROOT}\doc\GettingStarted.mlx</param.getting.started.guide>
-    <param.matlabpath.excludes>
-      <item>/C__/Program Files/MATLAB/R2017b/toolbox/matlab/demos</item>
-      <item>/E__/PROJECTS/fieldII</item>
-    </param.matlabpath.excludes>
+    <param.matlabpath.excludes />
     <param.javaclasspath.excludes />
     <unset>
       <param.output />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
       <param.platforms />
       <param.demosxml />
       <param.apps />
       <param.registered.apps />
+      <param.matlabpath.excludes />
       <param.javaclasspath.excludes />
     </unset>
     <fileset.rootdir>
@@ -499,8 +437,11 @@ data/*
       <file>${PROJECT_ROOT}\+preprocess</file>
       <file>${PROJECT_ROOT}\+tools</file>
       <file>${PROJECT_ROOT}\+uff</file>
+      <file>${PROJECT_ROOT}\.git</file>
+      <file>${PROJECT_ROOT}\.gitignore</file>
       <file>${PROJECT_ROOT}\@alpinion</file>
       <file>${PROJECT_ROOT}\@fresnel</file>
+      <file>${PROJECT_ROOT}\@unit_test</file>
       <file>${PROJECT_ROOT}\@verasonics</file>
       <file>${PROJECT_ROOT}\code.m</file>
       <file>${PROJECT_ROOT}\data</file>
@@ -508,7 +449,6 @@ data/*
       <file>${PROJECT_ROOT}\demos.xml</file>
       <file>${PROJECT_ROOT}\dimension.m</file>
       <file>${PROJECT_ROOT}\doc</file>
-      <file>${PROJECT_ROOT}\docs</file>
       <file>${PROJECT_ROOT}\examples</file>
       <file>${PROJECT_ROOT}\helpfiles</file>
       <file>${PROJECT_ROOT}\info.xml</file>
@@ -519,29 +459,17 @@ data/*
       <file>${PROJECT_ROOT}\preprocess.m</file>
       <file>${PROJECT_ROOT}\process.m</file>
       <file>${PROJECT_ROOT}\publications</file>
+      <file>${PROJECT_ROOT}\README.md</file>
       <file>${PROJECT_ROOT}\uff.m</file>
       <file>${PROJECT_ROOT}\ustb_path.m</file>
     </fileset.rootfiles>
-    <fileset.depfun.included>
+    <fileset.depfun.included />
+    <fileset.depfun.excluded>
       <file>${MATLAB_ROOT}\toolbox\matlab\demos\mri.mat</file>
-      <file>E:\PROJECTS\fieldII\calc_scat_multi.m</file>
-      <file>E:\PROJECTS\fieldII\field_init.m</file>
-      <file>E:\PROJECTS\fieldII\Mat_field.mexw64</file>
-      <file>E:\PROJECTS\fieldII\set_field.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_apodization.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_baffle.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_center_focus.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_excitation.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_focus.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_focus_times.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_impulse.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_linear_array.m</file>
-      <file>E:\PROJECTS\fieldII\xdc_times_focus.m</file>
-    </fileset.depfun.included>
-    <fileset.depfun.excluded />
+    </fileset.depfun.excluded>
     <fileset.package />
     <build-deliverables>
-      <file location="E:\PROJECTS\ustb" name="USTB.mltbx" optional="false">E:\PROJECTS\ustb\USTB.mltbx</file>
+      <file location="E:\PROJECTS\ustb" name="ustb.mltbx" optional="false">E:\PROJECTS\ustb\ustb.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
