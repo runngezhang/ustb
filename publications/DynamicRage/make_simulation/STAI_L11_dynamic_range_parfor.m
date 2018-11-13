@@ -226,8 +226,8 @@ channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp.uff','b_data');
+    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_2.uff','channel_data');
+    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_2.uff','b_data');
 else
     channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
     b_data.write('./FieldII_STAI_axial_gradient_updated.uff','b_data');
