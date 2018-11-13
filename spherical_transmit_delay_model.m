@@ -1,4 +1,4 @@
-classdef transmit_delay_model < int32
+classdef spherical_transmit_delay_model < int32
 %DIMENSION   Enumeration for transmit delay models for when the source is placed in front of the transducer. To see the options available write "tx_delay_model." and press <TAB>.
 %
 %   See also DAS and examples/uff/FI_UFF_phased_array_MLA_and_RTB_fix.m

@@ -67,7 +67,7 @@ mid_RTB_spherical_model.dimension = dimension.both();
 
 mid_RTB_spherical_model.channel_data=channel_data;
 mid_RTB_spherical_model.scan=scan_RTB;
-mid_RTB_spherical_model.transmit_delay_model = transmit_delay_model.spherical;
+mid_RTB_spherical_model.spherical_transmit_delay_model = spherical_transmit_delay_model.spherical;
 
 mid_RTB_spherical_model.transmit_apodization.window=uff.window.tukey25;
 mid_RTB_spherical_model.transmit_apodization.f_number = 2;
@@ -104,7 +104,7 @@ mid_RTB_unified_model.dimension = dimension.both();
 
 mid_RTB_unified_model.channel_data=channel_data;
 mid_RTB_unified_model.scan=scan_RTB;
-mid_RTB_unified_model.transmit_delay_model = transmit_delay_model.unified;
+mid_RTB_unified_model.spherical_transmit_delay_model = spherical_transmit_delay_model.unified;
 
 mid_RTB_unified_model.transmit_apodization.window=uff.window.tukey25;
 mid_RTB_unified_model.transmit_apodization.f_number = 2;
@@ -130,7 +130,7 @@ b_data_RTB_unified_fix_weighted.plot(11,'RTB image Nguyen & Prager mode');
 %% RTB using a simpler model assuming PW around focus
 mid_RTB_with_plane_model=midprocess.das();
 mid_RTB_with_plane_model.dimension = dimension.both();
-mid_RTB_with_plane_model.transmit_delay_model = transmit_delay_model.hybrid;
+mid_RTB_with_plane_model.spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;
 %Optionally set the margin of the region around focus to use PW tx delay
 mid_RTB_with_plane_model.pw_margin = 1/1000; 
 
