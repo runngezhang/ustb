@@ -14,7 +14,7 @@ classdef das < midprocess
         % spherical transmit delay model enumeration for deciding model when the source is in front of the transducer
         spherical_transmit_delay_model = spherical_transmit_delay_model.spherical;  
         pw_margin = 1/1000;                 % The margin of the area around focus in m for the spherical_transmit_delay_model.hybrid
-        transmit_delay                      % Variabl returning the calculated tx delay so that it can be plotted
+        transmit_delay                      % Variable returning the calculated tx delay so that it can be plotted
     end
     
     %% constructor
@@ -87,58 +87,45 @@ classdef das < midprocess
                                 switch h.spherical_transmit_delay_model
                                     % Pleas see the reference below for a documentation and definition of these three models and the differences.
                                     % Rindal, O. M. H., Rodriguez-Molares, A., & Austeng, A. (2018). A simple , artifact-free , virtual source model. 
-                                    % IEEE International Ultrasonics Symposium, IUS, 1–4.
-                                    
+                                    % IEEE International Ultrasonics Symposium, IUS, 1–4.        
                                     case spherical_transmit_delay_model.spherical
                                         % Use conventional virtual source model
                                         transmit_delay(:,n_wave)=transmit_delay(:,n_wave)+h.channel_data.sequence(n_wave).source.distance;
                                     case spherical_transmit_delay_model.unified
+                                        % Transmit delay model introduced in  Nguyen, N. Q., & Prager, R. W. (2016). High-Resolution Ultrasound 
+                                        % Imaging With Unified Pixel-Based Beamforming. IEEE Trans. Med. Imaging, 35(1), 98-108.
                                         if n_wave == 1
-                                            % get an apodization mask only needed for
-                                            % transmit_delay_model.unified used for transmit delay when the
-                                            % source is within the imaging plane
-                                            %    if h.spherical_transmit_delay_model == spherical_transmit_delay_model.unified && h.channel_data.sequence(1).wavefront == uff.wavefront.spherical && (h.channel_data.sequence(1).source.z>1e-3)
+                                            % Get an apodization mask to identify the four different regions of the transmit wave field
+                                            mask_apod = uff.apodization();
+                                            mask_apod.window = uff.window.boxcar;
+                                            mask_apod.sequence = h.channel_data.sequence;
+                                            mask_apod.minimum_aperture = [0 0];
+                                            mask_apod.focus = h.scan;
+                                            mask_apod.probe = h.channel_data.probe;
                                             if isa(h.scan,'uff.sector_scan')
-                                                mask_apod = uff.apodization();
-                                                mask_apod.window = uff.window.boxcar;
                                                 mask_apod.f_number = 4; %This should be set according to the actually transmitted f number
-                                                mask_apod.sequence = h.channel_data.sequence;
-                                                mask_apod.minimum_aperture = [0 0];
-                                                mask_apod.focus = h.scan;
-                                                mask_apod.probe = h.channel_data.probe;
                                                 mask_all_waves = reshape(mask_apod.data,h.scan.N_depth_axis,h.scan.N_azimuth_axis,numel(h.channel_data.sequence));
                                             elseif isa(h.scan,'uff.linear_scan')
-                                                %%
-                                                mask_apod = uff.apodization();
-                                                mask_apod.window = uff.window.boxcar;
                                                 mask_apod.f_number = 2; %This should be set according to the actually transmitted f number
-                                                mask_apod.sequence = h.channel_data.sequence;
-                                                mask_apod.minimum_aperture = [0 0];
-                                                mask_apod.focus = h.scan;
-                                                mask_apod.probe = h.channel_data.probe;
                                                 mask_all_waves = reshape(mask_apod.data,h.scan.N_z_axis,h.scan.N_x_axis,numel(h.channel_data.sequence));
                                             else
-                                                error('Only linear scan and sector scan is supported for unified fix.');
+                                                error('Only linear scan and sector scan in 2D is supported for the unified spherical transmit delay model.');
                                             end
-                                            %end
                                         end
-                                        mask = logical(mask_all_waves(:,:,n_wave));
-                                        transmit_delay_temp = transmit_delay(:,n_wave);
-                                        %mask = logical(mask_all_waves(:,:,n_wave));
-                                        source = h.channel_data.sequence(n_wave).source;
-                                        transmit_delay(:,n_wave) = tools.calculate_unified_delay_model(transmit_delay_temp,mask,h.scan,source);
+                                        transmit_delay(:,n_wave) = tools.calculate_unified_delay_model(transmit_delay(:,n_wave),logical(mask_all_waves(:,:,n_wave)),...
+                                                                            h.scan,h.channel_data.sequence(n_wave).source);
                                     case spherical_transmit_delay_model.hybrid
+                                        % Our hybrid model assume that the transmit wave propagates as a plane-wave in a small region h.pw_margin around the transmit focus
                                         % Calculate the "plane wave" in the transmit direction
                                         if isa(h.scan,'uff.linear_scan')
                                             plane_delay = (-1).^(h.scan.z<h.channel_data.sequence(n_wave).source.z).*sqrt((h.channel_data.sequence(n_wave).source.z-h.scan.z).^2) + h.channel_data.sequence(n_wave).source.distance;
                                         elseif isa(h.scan,'uff.sector_scan')
                                             plane_delay = h.scan.z*cos(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.x*sin(h.channel_data.sequence(n_wave).source.azimuth)*cos(h.channel_data.sequence(n_wave).source.elevation)+h.scan.y*sin(h.channel_data.sequence(n_wave).source.elevation);
                                         else
-                                            error('Only linear scan and sector scan in 2D is supported for virtual source fix');
+                                            error('Only linear scan and sector scan in 2D is supported for the hybrid spherical transmit delay model.');
                                         end
                                         
-                                        % Find region in front of and after the
-                                        % focus with margins given by h.margin_in_m
+                                        % Find region in front of and after the focus with margins given by h.margin_in_m
                                         z_mask = logical(h.scan.z < (h.channel_data.sequence(n_wave).source.z + h.pw_margin)) & logical(h.scan.z > (h.channel_data.sequence(n_wave).source.z - h.pw_margin));
                                         
                                         % Replace the region in the virtual source delay with the plane delay in
