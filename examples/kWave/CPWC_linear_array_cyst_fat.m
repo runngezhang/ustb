@@ -1,15 +1,14 @@
-%% 2D simulation of CPWC sequence with kWave
+% 2D simulation of linear array
 %
-% This example demonstrates the use of k-Wave for simulation of ultrasonic
-% imaging modalities and how to beamform it with USTB.
-%
+% This example demonstrates the use of k-Wave simulation of ultrasounic 
+% beams in a 2D domain and how it can interact with USTB structures.
 %
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-% Based on code by Bradley Treeby k-Wave Toolbox (http://www.k-wave.org) Copyright (C) 2009-2017 Bradley Treeby
+% Based on code by Bradley Treeby k-Wave Toolbox (http://www.k-wave.org) 
+% Copyright (C) 2009-2017 Bradley Treeby
 %
-% Last updated: 14.03.2018
-
+% Last updated: 30.10.2018
 
 clear all;
 close all;
@@ -23,7 +22,7 @@ cycles=2;       % number of cycles in pulse
 c0 = 1540;      % medium speed of sound [m/s]
 rho0 = 1020;    % medium density [kg/m3]
 F_number = 1.7; % F number for CPWC sequence (i.e. maximum angle)
-N=3;            % number of plane waves in CPWC sequence
+N=1;            % number of plane waves in CPWC sequence
 
 %% uff.probe
 %
@@ -32,7 +31,7 @@ N=3;            % number of plane waves in CPWC sequence
 prb=uff.linear_array();
 prb.N=128;                  % number of elements
 prb.pitch=300e-6;           % probe pitch in azimuth [m]
-prb.element_width=250e-6;   % element width [m]
+prb.element_width=300e-6;   % element width [m]
 prb.element_height=5000e-6; % element height [m]
 fig_handle = prb.plot([],'Linear array');
 
@@ -46,24 +45,25 @@ f_max = 1.2*f0;
 lambda_min = c0/f_max;
 
 % mesh resolution, choose one
-% critical => 50 sec per wave
-%dx=min([prb.pitch/2 lambda_min/2]);                     % 2 elements per pitch and wavelength
-% coarse => 6 min per wave
-dx=min([prb.pitch/3 lambda_min/3]);                      % 3 elements per pitch and wavelength
-% normal => 56 min per wave
-%dx=min([prb.pitch/6 lambda_min/6]);                     % 6 elements per pitch and wavelength
-% fine => 8 hours 45 min per wave
-%dx=min([prb.pitch/12 lambda_min/12]);                   % 12 elements per pitch and wavelength
+mesh_resolution='element2'; 
+switch mesh_resolution
+    case 'element2' % around 50 sec per wave
+        dx=prb.pitch/2;                                         % 2 elements per pitch 
+    case 'element4' % around 6min sec per wave
+        dx=prb.pitch/4;                                         % 2 elements per pitch 
+    otherwise
+        error('Not a valid option');
+end
 
 % mesh size
-grid_width=40e-3;
-grid_depth=40e-3;
 PML_size = 20;                                          % size of the PML in grid points
-Nx=2.^(round(log(grid_width/dx)/log(2)))-2*PML_size;
-Nz=2.^(round(log(grid_depth/dx)/log(2)))-2*PML_size;
-scan=uff.linear_scan('x_axis', linspace(-grid_width/2,grid_width/2,Nx).', 'z_axis', linspace(0,grid_depth,Nz).');
+Nx=round(40e-3/dx); Nx=Nx+mod(Nx,2);
+Nz=round(40e-3/dx); Nz=Nz+mod(Nz,2);
+grid_width=Nx*dx;
+grid_depth=Nz*dx;
+domain=uff.linear_scan('x_axis', linspace(-grid_width/2,grid_width/2,Nx).', 'z_axis', linspace(0,grid_depth,Nz).');
 
-kgrid = kWaveGrid(scan.N_z_axis, scan.z_step, scan.N_x_axis, scan.x_step);
+kgrid = kWaveGrid(domain.N_z_axis, domain.z_step, domain.N_x_axis, domain.x_step);
 
 %% Propagation medium
 %
@@ -72,15 +72,29 @@ kgrid = kWaveGrid(scan.N_z_axis, scan.z_step, scan.N_x_axis, scan.x_step);
 % center of the domain.
 
 % transparent background
-medium.sound_speed = c0*ones(scan.N_z_axis, scan.N_x_axis);   % sound speed [m/s]
-medium.density = rho0.*ones(scan.N_z_axis, scan.N_x_axis);      % density [kg/m3]
+medium.sound_speed = c0*ones(domain.N_z_axis, domain.N_x_axis);   % sound speed [m/s]
+medium.density = rho0.*ones(domain.N_z_axis, domain.N_x_axis);      % density [kg/m3]
 
-% include hyperechoic cyst
+% include fat layer
+fat_std = 3/100;
+cn=abs(domain.z-(10e-3 + 0.025e-3*sin(2*pi*domain.x/5e-3)))<0.5e-3;
+medium.sound_speed(cn) = random('normal',1450,1450*fat_std,size(medium.sound_speed(cn)));       % sound speed [m/s]
+medium.density(cn) = random('normal',950,950*fat_std,size(medium.density(cn)));               % density [kg/m3]
+
+% include cyst
 cyst_std = 3/100;
 cx=0; cz=20e-3; cr = 5e-3;
-cn=sqrt((scan.x-cx).^2+(scan.z-cz).^2)<cr;
+cn=sqrt((domain.x-cx).^2+(domain.z-cz).^2)<cr;
 medium.sound_speed(cn) = random('normal',1540,1540*cyst_std,size(medium.sound_speed(cn)));       % sound speed [m/s]
 medium.density(cn) = random('normal',1020,1020*cyst_std,size(medium.density(cn)));               % density [kg/m3]
+
+% include point
+if true
+    cx=0; cz=20e-3; cr = 0.06125e-3;
+    cn=sqrt((domain.x-cx).^2+(domain.z-cz).^2)<cr;
+    medium.sound_speed(cn) = 1450;       % sound speed [m/s]
+    medium.density(cn) = 1020;           % density [kg/m3]
+end
 
 % attenuation
 medium.alpha_coeff = 0.3;  % [dB/(MHz^y cm)]
@@ -89,12 +103,12 @@ medium.alpha_power = 1.5;
 % show physical map: speed of sound and density
 figure;
 subplot(1,2,1);
-imagesc(scan.x_axis*1e3,scan.z_axis*1e3,medium.sound_speed); colormap gray; colorbar; axis equal tight;
+imagesc(domain.x_axis*1e3,domain.z_axis*1e3,medium.sound_speed); colormap gray; colorbar; axis equal tight;
 xlabel('x [mm]');
 ylabel('z [mm]');
 title('c_0 [m/s]');
 subplot(1,2,2);
-imagesc(scan.x_axis*1e3,scan.z_axis*1e3,medium.density); colormap gray; colorbar; axis equal tight;
+imagesc(domain.x_axis*1e3,domain.z_axis*1e3,medium.density); colormap gray; colorbar; axis equal tight;
 xlabel('x [mm]');
 ylabel('z [mm]');
 title('\rho [kg/m^3]');
@@ -104,15 +118,14 @@ title('\rho [kg/m^3]');
 % We define the time vector depending on the CFL number, the size of the
 % domain and the mean speed of sound.
 
-t_end=3*grid_depth/mean(medium.sound_speed(:));
 cfl=0.3;
+t_end=2*sqrt(grid_depth.^2+grid_depth.^2)/mean(medium.sound_speed(:));
 kgrid.makeTime(medium.sound_speed,cfl,t_end);
 
 %% Sequence
 %
 % We define a sequence of plane-waves
-
-alpha_max=1/2/F_number;
+alpha_max=1/2/F_number;                         % maximum angle span [rad]
 if N>1
     angles=linspace(-alpha_max,alpha_max,N);    % angle vector [rad]
 else
@@ -141,13 +154,13 @@ element_sensor_index = {};
 n=1;
 for m=1:prb.N_elements
     plot((prb.x(m)+[-prb.width(m)/2 prb.width(m)/2])*1e3,[0 0],'k+-'); hold on; grid on;
-    source_pixels{m}=find(abs(scan.x-prb.x(m))<prb.width(m)/2 & abs(scan.y-prb.y(m))<prb.height(m) & abs(scan.z-prb.z(m))<=scan.z_step/2);
+    source_pixels{m}=find(abs(domain.x-prb.x(m))<prb.width(m)/2 & abs(domain.y-prb.y(m))<prb.height(m) & abs(domain.z-prb.z(m))<=domain.z_step/2);
     element_sensor_index{m} = n:n+numel(source_pixels{m})-1;
     n=n+numel(source_pixels{m});
 end
 
 % sensor mask
-sensor.mask = zeros(scan.N_z_axis, scan.N_x_axis);
+sensor.mask = zeros(domain.N_z_axis, domain.N_x_axis);
 for m=1:prb.N_elements
     sensor.mask(source_pixels{m}) = sensor.mask(source_pixels{m}) + 1;
 end
@@ -156,7 +169,7 @@ end
 source.u_mask=sensor.mask;
 
 figure;
-h=pcolor(scan.x_axis,scan.z_axis,source.u_mask); axis equal tight;
+h=pcolor(domain.x_axis,domain.z_axis,source.u_mask); axis equal tight;
 title('Source/Sensor mask')
 set(h,'edgecolor','none');
 set(gca,'YDir','reverse');
@@ -225,12 +238,12 @@ channel_data.data(isnan(channel_data.data))=0;
 % To beamform we define a new (coarser) uff.linear_scan. We also define the
 % processing pipeline and launch the beamformer
 
-scan=uff.linear_scan('x_axis',linspace(scan.x_axis(1),scan.x_axis(end),512).',...
-    'z_axis',linspace(scan.z_axis(1),scan.z_axis(end),512).');
+domain=uff.linear_scan('x_axis',linspace(domain.x_axis(1),domain.x_axis(end),512).',...
+    'z_axis',linspace(domain.z_axis(1),domain.z_axis(end),512).');
 
 pipe = pipeline();
 pipe.channel_data = channel_data;
-pipe.scan = scan;
+pipe.scan = domain;
 
 pipe.receive_apodization.window = uff.window.hanning;
 pipe.receive_apodization.f_number = F_number;
@@ -240,15 +253,3 @@ b.dimension = dimension.both;
 
 das = pipe.go({midprocess.das b});
 das.plot([],'DAS'); hold on;
-
-%% Coherence Factor
-%
-% As an example, we change the pipeline and produce a CF-based image
-m = midprocess.das();
-m.dimension = dimension.transmit;
-
-b=postprocess.coherence_factor();
-b.dimension = dimension.receive;
-
-cf = pipe.go({m b});
-cf.plot([],'Mallart-Fink CF'); hold on;

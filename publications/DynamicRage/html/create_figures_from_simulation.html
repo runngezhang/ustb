@@ -1,0 +1,1029 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Create the figures from the simulated dynamic range phantom</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-06-06"><meta name="DC.source" content="create_figures_from_simulation.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Create the figures from the simulated dynamic range phantom</h1><!--introduction--><p>For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., &amp; Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.</p><p>NB! You need to run the create_figures_from_experimental.m first since we are using the stored experimental gradient values and contrast values to plot both the simulated and the experimental in the same plot.</p><p>Author: Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> 05.06.18</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load the data from the uff file</a></li><li><a href="#2">Print authorship and citation details for the dataset</a></li><li><a href="#3">DAS - Delay-And-Sum</a></li><li><a href="#4">GLT - Gray Level Transform</a></li><li><a href="#5">CF - Coherence Factor</a></li><li><a href="#6">PCF - Phase Coherence Factor</a></li><li><a href="#7">GCF - Generalized Coherence Factor</a></li><li><a href="#8">MV - Capon's Minimum Variance</a></li><li><a href="#9">F-DMAS - Filtered-Delay-Multiply-and-Sum</a></li><li><a href="#10">EBMV - Eigenspace Based Minimum Variance</a></li><li><a href="#11">Putting the dB images and the signal in a cell array</a></li><li><a href="#13">Plot the lateral and axial gradient together with the experimental lateral gradient</a></li><li><a href="#14">Plot the lateral line through the boxes</a></li><li><a href="#15">Measure contrast and plot together with the experimental</a></li><li><a href="#23">Find the corrlation between dynamic range stretching and measured contrast as CR</a></li><li><a href="#24">Create correlation plot for the simulated data</a></li><li><a href="#25">Create correlation plot for the experimental data</a></li></ul></div><h2 id="1">Load the data from the uff file</h2><pre class="codeinput">clear <span class="string">all</span>;
+close <span class="string">all</span>;
+
+filename = [data_path,filesep,<span class="string">'FieldII_STAI_simulated_dynamic_range.uff'</span>];
+
+channel_data = uff.channel_data();
+channel_data.read(filename,<span class="string">'/channel_data'</span>);
+
+b_data_das = uff.beamformed_data();
+b_data_cf = uff.beamformed_data();
+b_data_pcf = uff.beamformed_data();
+b_data_gcf = uff.beamformed_data();
+b_data_mv = uff.beamformed_data();
+b_data_ebmv = uff.beamformed_data();
+b_data_dmas = uff.beamformed_data();
+b_data_weights = uff.beamformed_data();
+
+b_data_das.read(filename,<span class="string">'/b_data_das'</span>);
+b_data_cf.read(filename,<span class="string">'/b_data_cf'</span>);
+b_data_pcf.read(filename,<span class="string">'/b_data_pcf'</span>);
+b_data_gcf.read(filename,<span class="string">'/b_data_gcf'</span>);
+b_data_mv.read(filename,<span class="string">'/b_data_mv'</span>);
+b_data_ebmv.read(filename,<span class="string">'/b_data_ebmv'</span>);
+b_data_dmas.read(filename,<span class="string">'/b_data_dmas'</span>);
+b_data_weights.read(filename,<span class="string">'/b_data_weights'</span>);
+
+weights = b_data_weights.get_image(<span class="string">'none'</span>);
+</pre><pre class="codeoutput">UFF: reading channel_data [uff.channel_data]
+UFF: reading sequence [uff.wave] [====================] 100%
+UFF: reading b_data_das [uff.beamformed_data]
+UFF: reading b_data_cf [uff.beamformed_data]
+UFF: reading b_data_pcf [uff.beamformed_data]
+UFF: reading b_data_gcf [uff.beamformed_data]
+UFF: reading b_data_mv [uff.beamformed_data]
+UFF: reading b_data_ebmv [uff.beamformed_data]
+UFF: reading b_data_dmas [uff.beamformed_data]
+UFF: reading b_data_weights [uff.beamformed_data]
+</pre><h2 id="2">Print authorship and citation details for the dataset</h2><pre class="codeinput">channel_data.print_authorship
+</pre><pre class="codeoutput">Name: 		 Simulated dynamic range phantom. Created with  
+		 Field II. See the reference for details 
+Reference: 	 Rindal, O. M. H., Austeng, A., Fatemi, A., &amp;  
+		 Rodriguez-Molares, A. (2018). The effect of  
+		 dynamic range transformations in the estimation  
+		 of contrast. Submitted to IEEE Transactions on  
+		 Ultrasonics, Ferroelectrics, and Frequency  
+		 Control. 
+Author(s): 	 Ole Marius Hoel Rindal &lt;omrindal@ifi.uio.no 
+		 Alfonso Rodriguez-Molares &lt;alfonso.r.molares@ntnu.no&gt; 
+Version: 	 1.0.1 
+</pre><h2 id="3">DAS - Delay-And-Sum</h2><p>Create the individual images and the zoomed images on the boxes</p><pre class="codeinput">mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/'</span>])
+
+
+das_img = b_data_das.get_image(<span class="string">'none'</span>).*weights;  <span class="comment">% Compensation weighting</span>
+das_img = db(abs(das_img./max(das_img(:))));      <span class="comment">% Normalize on max</span>
+f1 = figure(1);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f1,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DAS'</span>],<span class="string">'eps2c'</span>)
+saveas(f1,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DAS'</span>],<span class="string">'png'</span>)
+f2 = figure(2);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f2,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DAS_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><pre class="codeoutput">Warning:
+Directory
+already
+exists. 
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_01.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_02.png" alt=""> <h2 id="4">GLT - Gray Level Transform</h2><pre class="codeinput">clear <span class="string">glt</span>;
+glt = postprocess.gray_level_transform();
+glt.a = 4.3750e-04;
+glt.b = -0.0062;
+glt.c = 0.0500;
+glt.d = 0;
+glt.plot_functions = 1;
+
+glt.input = b_data_das;
+glt.scan = b_data_das.scan;
+b_data_glt = glt.go();
+
+glt_img = b_data_glt.get_image(<span class="string">'none'</span>).*weights;  <span class="comment">% Compensation weighting</span>
+glt_img = db(abs(glt_img./max(glt_img(:))));      <span class="comment">% Normalize on max</span>
+f100 = figure(100);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f100,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/GLT'</span>],<span class="string">'eps2c'</span>)
+saveas(f100,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/GLT'</span>],<span class="string">'png'</span>)
+f101 = figure(101);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f101,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DAS_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_03.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_04.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_05.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_06.png" alt=""> <h2 id="5">CF - Coherence Factor</h2><pre class="codeinput">cf_img = b_data_cf.get_image(<span class="string">'none'</span>).*weights;
+cf_img = db(abs(cf_img./max(cf_img(:))));                 <span class="comment">% Normalize on max</span>
+f2 = figure(2);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,cf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f2,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CF'</span>],<span class="string">'eps2c'</span>)
+f22 = figure(22);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,cf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f22,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CF_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_07.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_08.png" alt=""> <h2 id="6">PCF - Phase Coherence Factor</h2><pre class="codeinput">pcf_img = b_data_pcf.get_image(<span class="string">'none'</span>).*weights;
+pcf_img = db(abs(pcf_img./max(pcf_img(:))));
+f3 = figure(3);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,pcf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f3,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/PCF'</span>],<span class="string">'eps2c'</span>)
+f33 = figure(33);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,pcf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f33,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/PCF_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_09.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_10.png" alt=""> <h2 id="7">GCF - Generalized Coherence Factor</h2><pre class="codeinput">gcf_img = b_data_gcf.get_image(<span class="string">'none'</span>).*weights;
+gcf_img = db(abs(gcf_img./max(gcf_img(:))));
+f4 = figure(4);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gcf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f4,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/GCF'</span>],<span class="string">'eps2c'</span>)
+f44 = figure(44);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gcf_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f44,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/GCF_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_11.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_12.png" alt=""> <h2 id="8">MV - Capon's Minimum Variance</h2><pre class="codeinput">mv_img = b_data_mv.get_image(<span class="string">'none'</span>).*weights;
+mv_img = db(abs(mv_img./max(mv_img(:))));
+f6 = figure(6);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,mv_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f6,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/MV'</span>],<span class="string">'eps2c'</span>)
+f66 = figure(66);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,mv_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f66,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/MV_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_13.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_14.png" alt=""> <h2 id="9">F-DMAS - Filtered-Delay-Multiply-and-Sum</h2><pre class="codeinput">dmas_img = b_data_dmas.get_image(<span class="string">'none'</span>).*weights;
+dmas_img = db(abs(dmas_img./max(dmas_img(:))));
+f7 = figure(7);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f7,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DMAS'</span>],<span class="string">'eps2c'</span>)
+f77 = figure(77);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f77,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DMAS_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_15.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_16.png" alt=""> <h2 id="10">EBMV - Eigenspace Based Minimum Variance</h2><pre class="codeinput">ebmv_img = b_data_ebmv.get_image(<span class="string">'none'</span>).*weights;
+ebmv_img = db(abs(ebmv_img./max(ebmv_img(:))));
+f8 = figure(8);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+saveas(f8,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/EBMV'</span>],<span class="string">'eps2c'</span>)
+f88 = figure(88);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
+colormap <span class="string">gray</span>;caxis([-60 0]);axis <span class="string">image</span>;xlabel(<span class="string">'x [mm]'</span>);ylabel(<span class="string">'z [mm]'</span>);
+set(gca,<span class="string">'FontSize'</span>,14)
+axis([-17 2 33 42]);
+saveas(f88,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/EBMV_zoomed'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_17.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_18.png" alt=""> <h2 id="11">Putting the dB images and the signal in a cell array</h2><pre class="codeinput">addpath([ustb_path,<span class="string">'/publications/DynamicRage/functions'</span>]);
+image.all{1} = das_img;
+image.all_signal{1} = double(b_data_das.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{1} = (image.all_signal{1}./max(image.all_signal{1}(:)));
+image.tags{1} = <span class="string">'DAS'</span>;
+image.all{2} = mv_img;
+image.all_signal{2} = double(b_data_mv.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{2} = (image.all_signal{2}./max(image.all_signal{2}(:)));
+image.tags{2} = <span class="string">'MV'</span>;
+image.all{3} = ebmv_img;
+image.all_signal{3} = double(b_data_ebmv.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{3} = (image.all_signal{3}./max(image.all_signal{3}(:)));
+image.tags{3} = <span class="string">'EBMV'</span>;
+image.all{4} = dmas_img;
+image.all_signal{4} = double(b_data_dmas.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{4} = (image.all_signal{4}./max(image.all_signal{4}(:)));
+image.tags{4} = <span class="string">'F-DMAS'</span>;
+image.all{5} = cf_img;
+image.all_signal{5} = double(b_data_cf.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{5} = (image.all_signal{5}./max(image.all_signal{5}(:)));
+image.tags{5} = <span class="string">'CF'</span>;
+image.all{6} = gcf_img;
+image.all_signal{6} = double(b_data_gcf.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{6} = (image.all_signal{6}./max(image.all_signal{6}(:)));
+image.tags{6} = <span class="string">'GCF'</span>;
+image.all{7} = pcf_img;
+image.all{7}(695,320) = image.all{7}(694,320);
+image.all_signal{7} = double(b_data_pcf.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{7} = (image.all_signal{7}./max(image.all_signal{7}(:)));
+image.all_signal{7}(695,320) = image.all_signal{7}(694,320);
+image.tags{7} = <span class="string">'PCF'</span>;
+image.all{8} = glt_img;
+image.all_signal{8} = double(b_data_glt.get_image(<span class="string">'none'</span>).*weights);
+image.all_signal{8} = (image.all_signal{8}./max(image.all_signal{8}(:)));
+image.tags{8} = <span class="string">'GLT'</span>;
+</pre><p>Using "linspecer" colors</p><pre class="codeinput">colors=    [0.9047    0.1918    0.1988; <span class="keyword">...</span>
+            0.2941    0.5447    0.7494; <span class="keyword">...</span>
+            0.3718    0.7176    0.3612; <span class="keyword">...</span>
+            1.0000    0.5482    0.1000; <span class="keyword">...</span>
+            0.8650    0.8110    0.4330; <span class="keyword">...</span>
+            0.6859    0.4035    0.2412; <span class="keyword">...</span>
+            0.9718    0.5553    0.7741; <span class="keyword">...</span>
+            0.6400    0.6400    0.6400];
+</pre><h2 id="13">Plot the lateral and axial gradient together with the experimental lateral gradient</h2><pre class="codeinput">image_experimental = load(<span class="string">'Experimental.mat'</span>,<span class="string">'image'</span>);
+image_experimental = image_experimental.image;
+b_data_das_exp = load(<span class="string">'Experimental.mat'</span>,<span class="string">'b_data_das'</span>);
+b_data_das_exp = b_data_das_exp.b_data_das;
+
+[meanLinesLateralExp,~] = getMeanLateralLines(b_data_das_exp,image_experimental,39,48.5,-12.05,12.05);
+
+mask_lateral_exp=abs(b_data_das_exp.scan.x_axis)&lt;12.05e-3;
+theory_lateral_exp=-40*(b_data_das_exp.scan.x_axis(mask_lateral_exp)+12.05e-3)/24.1e-3;
+
+
+[meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-10,10);
+mask_lateral=abs(b_data_das.scan.x_axis)&lt;10e-3;
+theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
+
+
+[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,20,40,11,14);
+mask_axial= b_data_das.scan.z_axis&lt;40e-3 &amp; b_data_das.scan.z_axis&gt;20e-3;
+theory_axial=-40*(b_data_das.scan.z_axis(mask_axial)-20e-3)/20e-3;
+
+<span class="keyword">for</span> i = 1:length(image.all)
+    f88 = figure(8888+i);clf;hold <span class="string">all</span>;
+    plot(theory_lateral,meanLinesLateral.all{i}-max(meanLinesLateral.all{i}),<span class="string">'LineStyle'</span>,<span class="string">'-.'</span>,<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,<span class="string">'Sim. lateral'</span>);
+    plot(theory_axial,meanLines_axial.all{i}-max(meanLines_axial.all{i}),<span class="string">'Linestyle'</span>,<span class="string">'--'</span>,<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,<span class="string">'Sim. axial'</span>);
+    plot(theory_lateral_exp,meanLinesLateralExp.all{i}-max(meanLinesLateralExp.all{i}),<span class="string">'Linestyle'</span>,<span class="string">':'</span>,<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,<span class="string">'Exp. lateral'</span>);
+    plot(theory_lateral,theory_lateral,<span class="string">'LineStyle'</span>,<span class="string">'-'</span>,<span class="string">'Linewidth'</span>,2,<span class="string">'Color'</span>,<span class="string">'k'</span>,<span class="string">'DisplayName'</span>,<span class="string">'Theory'</span>);
+    set(gca, <span class="string">'XDir'</span>,<span class="string">'reverse'</span>);<span class="comment">%title(image.tags{i});</span>
+    axis <span class="string">image</span>
+    legend(<span class="string">'show'</span>,<span class="string">'Location'</span>,<span class="string">'sw'</span>);
+    ylim([-60 0])
+    xlim([-40 0])
+    grid <span class="string">on</span>
+    xlabel(<span class="string">'Theoretical [dB]'</span>);
+    ylabel(<span class="string">'Output [dB]'</span>);
+    saveas(f88,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/gradient/'</span>,image.tags{i}],<span class="string">'eps2c'</span>)
+    saveas(f88,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/gradient/'</span>,image.tags{i}],<span class="string">'png'</span>)
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_19.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_20.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_21.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_22.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_23.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_24.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_25.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_26.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_27.png" alt=""> <h2 id="14">Plot the lateral line through the boxes</h2><pre class="codeinput">[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,b_data_das.scan.x(1)*10^3,b_data_das.scan.x(end)*10^3);
+theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-35 -100];
+x_axis_theoretical = linspace(-15,0,1536);
+
+f89 = figure(89);clf;hold <span class="string">all</span>;
+subplot(211);hold <span class="string">on</span>;
+plot(x_axis_theoretical,theoretical,<span class="string">'LineStyle'</span>,<span class="string">'-.'</span>,<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,<span class="string">'Theoretical'</span>,<span class="string">'Color'</span>,[0 0 0]);
+plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{1},<span class="string">'Color'</span>,colors(1,:));
+plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{2},<span class="string">'Color'</span>,colors(2,:));
+plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{3},<span class="string">'Color'</span>,colors(3,:));
+plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{4},<span class="string">'Color'</span>,colors(4,:));
+plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{5},<span class="string">'Color'</span>,colors(5,:));
+plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{6},<span class="string">'Color'</span>,colors(6,:));
+plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{7},<span class="string">'Color'</span>,colors(7,:));
+plot(x_axis,meanLines.all{8}-max(meanLines.all{8}),<span class="string">'Linewidth'</span>,2,<span class="string">'DisplayName'</span>,image.tags{8},<span class="string">'Color'</span>,colors(8,:));
+ylim([-80 0]);
+xlim([-17.5 1.5]);
+legend(<span class="string">'Location'</span>,<span class="string">'best'</span>); grid <span class="string">on</span>;
+ylabel(<span class="string">'Normalized amplitude [dB]'</span>);
+xlabel(<span class="string">'x [mm]'</span>);
+
+saveas(f89,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/boxes'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_28.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_29.png" alt=""> <h2 id="15">Measure contrast and plot together with the experimental</h2><pre class="codeinput">[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/DAS_cyst_indicated'</span>]);
+
+load(<span class="string">'Experimental.mat'</span>,<span class="string">'CR_signal_exp'</span>,<span class="string">'CNR_signal_exp'</span>,<span class="string">'CR_image_exp'</span>,<span class="string">'CNR_image_exp'</span>);
+
+f9 = figure;
+subplot(211);
+bar([10*log10(CR_signal_sim)' 10*log10(CR_signal_exp)'])
+set(gca,<span class="string">'XTick'</span>,linspace(1,length(image.tags),length(image.tags)))
+set(gca,<span class="string">'XTickLabel'</span>,image.tags)
+ylabel(<span class="string">'CR [dB]'</span>);
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(10*log10(CR_signal_sim(:))),num2str(round(10*log10(CR_signal_sim(:))),<span class="string">'%d'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(10*log10(CR_signal_exp(:))),num2str(round(10*log10(CR_signal_exp(:))),<span class="string">'%d'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+set(gca,<span class="string">'Ydir'</span>,<span class="string">'reverse'</span>)
+legend(<span class="string">'Sim.'</span>,<span class="string">'Exp.'</span>)
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_30.png" alt=""> <img vspace="5" hspace="5" src="create_figures_from_simulation_31.png" alt=""> <pre class="codeinput">saveas(f9,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CR'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_32.png" alt=""> <pre class="codeinput">f90 = figure;
+subplot(212);
+bar([CR_image_sim' CR_image_exp'])
+set(gca,<span class="string">'XTick'</span>,linspace(1,length(image.tags),length(image.tags)))
+set(gca,<span class="string">'XTickLabel'</span>,image.tags)
+ylabel(<span class="string">'CR_{LC} [dB]'</span>);
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(CR_image_sim(:)),num2str(round(CR_image_sim(:)),<span class="string">'%d'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(CR_image_exp(:)),num2str(round(CR_image_exp(:)),<span class="string">'%d'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+ylim([0 125])
+legend(<span class="string">'Sim.'</span>,<span class="string">'Exp.'</span>)
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_33.png" alt=""> <pre class="codeinput">saveas(f90,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CR_LC'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_34.png" alt=""> <pre class="codeinput">f77 = figure(77);clf;
+subplot(211);
+bar([CNR_signal_sim' CNR_signal_exp'])
+set(gca,<span class="string">'XTick'</span>,linspace(1,length(image.tags),length(image.tags)))
+set(gca,<span class="string">'XTickLabel'</span>,image.tags)
+ylabel(<span class="string">'CNR'</span>);
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_signal_sim(:)),num2str((CNR_signal_sim(:)),<span class="string">'%.2f'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_signal_exp(:)),num2str((CNR_signal_exp(:)),<span class="string">'%.2f'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+ylim([0 1.45])
+legend(<span class="string">'Sim.'</span>,<span class="string">'Exp.'</span>)
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_35.png" alt=""> <pre class="codeinput">saveas(f77,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CNR'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_36.png" alt=""> <pre class="codeinput">f78 = figure(78);clf;
+subplot(212);
+bar([CNR_image_sim' CNR_image_exp'])
+set(gca,<span class="string">'XTick'</span>,linspace(1,length(image.tags),length(image.tags)))
+set(gca,<span class="string">'XTickLabel'</span>,image.tags)
+ylabel(<span class="string">'CNR_{LC}'</span>);
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_image_sim(:)),num2str((CNR_image_sim(:)),<span class="string">'%.2f'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_image_exp(:)),num2str((CNR_image_exp(:)),<span class="string">'%.2f'</span>),<span class="keyword">...</span>
+    <span class="string">'HorizontalAlignment'</span>,<span class="string">'center'</span>,<span class="keyword">...</span>
+    <span class="string">'VerticalAlignment'</span>,<span class="string">'bottom'</span>,<span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,12)
+legend(<span class="string">'Sim.'</span>,<span class="string">'Exp.'</span>)
+grid <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_37.png" alt=""> <pre class="codeinput">saveas(f78,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/CNR_LC'</span>],<span class="string">'eps2c'</span>)
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_38.png" alt=""> <h2 id="23">Find the corrlation between dynamic range stretching and measured contrast as CR</h2><pre class="codeinput">figure(77);clf;
+<span class="keyword">for</span> i = 1:length(image.all)
+    simulated_lateral = meanLinesLateral.all{i}-max(meanLinesLateral.all{i});
+    experimental_lateral = meanLinesLateralExp.all{i}-max(meanLinesLateralExp.all{i});
+
+    <span class="comment">% Remove any NAN's (we have one for PCF)</span>
+    experimental_lateral = experimental_lateral(find(~isinf(experimental_lateral)));
+    theory_lateral_exp_temp = theory_lateral_exp(find(~isinf(experimental_lateral)));
+
+    <span class="comment">% Do a polynomial fit to get an estimate of the gradient</span>
+    [sim_poly_fit,S_sim,mu_sim] = polyfit(theory_lateral, simulated_lateral',3);
+    [exp_poly_fit,S_exp,mu_exp] = polyfit(theory_lateral_exp_temp, experimental_lateral',3);
+
+
+    x = -40; <span class="comment">%Calculate devation for -40 dB</span>
+    y_sim(i) = polyval(sim_poly_fit,x,S_sim,mu_sim)-x;
+    y_exp(i) = polyval(exp_poly_fit,x,S_exp,mu_exp)-x;
+
+    <span class="comment">% Calculate difference in CR value compared to DAS</span>
+    diff_CR_vs_das_sim(i) = CR_image_sim(i) - CR_image_sim(1);
+    diff_CR_vs_das_exp(i) = CR_image_exp(i) - CR_image_exp(1);
+
+    x_vector = linspace(0,-40,length(simulated_lateral));
+    <span class="comment">%Plot the fitted polynomial to see the match</span>
+    figure(77);hold <span class="string">all</span>;
+    subplot(211);hold <span class="string">all</span>;
+    plot(simulated_lateral,<span class="string">'DisplayName'</span>,[image.tags{i}, <span class="string">' Sim. gradient'</span>],<span class="string">'Color'</span>,colors(i,:));
+    plot(polyval(sim_poly_fit,theory_lateral,S_sim,mu_sim),<span class="string">'DisplayName'</span>,[image.tags{i},<span class="string">' fitted polynomial'</span>],<span class="string">'Color'</span>,colors(i,:));
+    title(<span class="string">'Simulated'</span>);
+    subplot(212);hold <span class="string">all</span>;
+    plot(experimental_lateral,<span class="string">'DisplayName'</span>,[image.tags{i},<span class="string">' Exp. gradient'</span>],<span class="string">'Color'</span>,colors(i,:));
+    plot(polyval(exp_poly_fit,theory_lateral_exp_temp,S_exp,mu_exp),<span class="string">'DisplayName'</span>,[image.tags{i}, <span class="string">' fitted polynomial'</span>],<span class="string">'Color'</span>,colors(i,:));
+    title(<span class="string">'Experimental'</span>);
+<span class="keyword">end</span>
+set(gcf,<span class="string">'Position'</span>,[179 113 782 549]);
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_39.png" alt=""> <h2 id="24">Create correlation plot for the simulated data</h2><pre class="codeinput">mdl_sim = fitlm(diff_CR_vs_das_sim,y_sim);
+mdl_exp = fitlm(diff_CR_vs_das_exp,y_exp);
+
+rsquared_ord_sim = mdl_sim.Rsquared.Ordinary
+rsquared_adj_sim = mdl_sim.Rsquared.Adjusted
+
+f111 = figure(111);clf;hold <span class="string">all</span>;
+linespes = <span class="string">'+ox*sd&lt;&gt;'</span>;
+<span class="keyword">for</span> i = 1:length(image.all)
+    plot(diff_CR_vs_das_sim(i),y_sim(i),linespes(i),<span class="string">'Color'</span>,colors(i,:),<span class="string">'MarkerSize'</span>,10);
+<span class="keyword">end</span>
+mdl_sim.plot
+hline = findobj(gcf, <span class="string">'type'</span>, <span class="string">'line'</span>);
+set(hline,<span class="string">'LineWidth'</span>,3)
+set(hline(3),<span class="string">'Color'</span>,[0 0 0]);
+set(hline(3),<span class="string">'DisplayName'</span>,<span class="string">'Fitted line'</span>);
+title(<span class="string">''</span>);
+xlabel(<span class="string">'CR diff. from DAS'</span>);xlim([-5 75]);
+ylabel(<span class="string">'Deviation at -40 dB'</span>);ylim([-85 5]);
+text(40,0,sprintf(<span class="string">'R-Squared: %.2f'</span>,rsquared_ord_sim),<span class="string">'FontSize'</span>,18);
+text(40,-5,sprintf(<span class="string">'R-Squared adj: %.2f'</span>,rsquared_adj_sim),<span class="string">'FontSize'</span>,18);
+set(gca,<span class="string">'FontSize'</span>,14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, <span class="string">'Type'</span>, <span class="string">'Legend'</span>);
+hLegend.String;
+legend <span class="string">show</span>;
+legend([image.tags hLegend.String],<span class="string">'Location'</span>,<span class="string">'sw'</span>);
+
+saveas(f111,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/simulation/correlation_sim'</span>],<span class="string">'eps2c'</span>);
+</pre><pre class="codeoutput">
+rsquared_ord_sim =
+
+    0.8971
+
+
+rsquared_adj_sim =
+
+    0.8799
+
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_40.png" alt=""> <h2 id="25">Create correlation plot for the experimental data</h2><pre class="codeinput">rsquared_ord_exp = mdl_exp.Rsquared.Ordinary
+rsquared_adj_exp = mdl_exp.Rsquared.Adjusted
+
+f112 = figure(112);clf;hold <span class="string">all</span>;
+linespes = <span class="string">'+ox*sd&lt;&gt;'</span>;
+<span class="keyword">for</span> i = 1:length(image.all)
+    plot(diff_CR_vs_das_exp(i),y_exp(i),linespes(i),<span class="string">'Color'</span>,colors(i,:),<span class="string">'MarkerSize'</span>,10);
+<span class="keyword">end</span>
+mdl_exp.plot
+hline = findobj(gcf, <span class="string">'type'</span>, <span class="string">'line'</span>);
+set(hline,<span class="string">'LineWidth'</span>,3);
+set(hline(3),<span class="string">'Color'</span>,[0 0 0]);
+set(hline(3),<span class="string">'DisplayName'</span>,<span class="string">'Fitted line'</span>);
+title(<span class="string">''</span>)
+xlabel(<span class="string">'CR diff. from DAS'</span>);xlim([-5 75]);
+ylabel(<span class="string">'Deviation at -40 dB'</span>);ylim([-50 5]);
+text(40,0,sprintf(<span class="string">'R-Squared: %.2f'</span>,rsquared_ord_exp),<span class="string">'FontSize'</span>,18);
+text(40,-3,sprintf(<span class="string">'R-Squared adj: %.2f'</span>,rsquared_adj_exp),<span class="string">'FontSize'</span>,18);
+set(gca,<span class="string">'FontSize'</span>,14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, <span class="string">'Type'</span>, <span class="string">'Legend'</span>);
+legend <span class="string">show</span>
+legend([image.tags hLegend.String],<span class="string">'Location'</span>,<span class="string">'sw'</span>);
+
+saveas(f112,[ustb_path,filesep,<span class="string">'publications/DynamicRage/figures/experimental/correlation_exp'</span>],<span class="string">'eps2c'</span>);
+</pre><pre class="codeoutput">
+rsquared_ord_exp =
+
+    0.9678
+
+
+rsquared_adj_exp =
+
+    0.9624
+
+</pre><img vspace="5" hspace="5" src="create_figures_from_simulation_41.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Create the figures from the simulated dynamic range phantom
+% For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., 
+% & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations
+% in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
+% Ferroelectrics, and Frequency Control.
+%
+% NB! You need to run the create_figures_from_experimental.m first since we
+% are using the stored experimental gradient values and contrast values to
+% plot both the simulated and the experimental in the same plot.
+%
+% Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
+
+%% Load the data from the uff file
+clear all;
+close all;
+
+filename = [data_path,filesep,'FieldII_STAI_simulated_dynamic_range.uff'];
+
+channel_data = uff.channel_data();
+channel_data.read(filename,'/channel_data');
+
+b_data_das = uff.beamformed_data();
+b_data_cf = uff.beamformed_data();
+b_data_pcf = uff.beamformed_data();
+b_data_gcf = uff.beamformed_data();
+b_data_mv = uff.beamformed_data();
+b_data_ebmv = uff.beamformed_data();
+b_data_dmas = uff.beamformed_data();
+b_data_weights = uff.beamformed_data();
+
+b_data_das.read(filename,'/b_data_das');
+b_data_cf.read(filename,'/b_data_cf');
+b_data_pcf.read(filename,'/b_data_pcf');
+b_data_gcf.read(filename,'/b_data_gcf');
+b_data_mv.read(filename,'/b_data_mv');
+b_data_ebmv.read(filename,'/b_data_ebmv');
+b_data_dmas.read(filename,'/b_data_dmas');
+b_data_weights.read(filename,'/b_data_weights');
+
+weights = b_data_weights.get_image('none');
+
+%% Print authorship and citation details for the dataset
+channel_data.print_authorship
+
+
+%% DAS - Delay-And-Sum
+% Create the individual images and the zoomed images on the boxes
+mkdir([ustb_path,filesep,'publications/DynamicRage/figures/simulation/'])
+
+
+das_img = b_data_das.get_image('none').*weights;  % Compensation weighting
+das_img = db(abs(das_img./max(das_img(:))));      % Normalize on max
+f1 = figure(1);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS'],'eps2c')
+saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS'],'png')
+f2 = figure(2);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f2,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_zoomed'],'eps2c')
+
+%% GLT - Gray Level Transform
+clear glt;
+glt = postprocess.gray_level_transform();
+glt.a = 4.3750e-04;
+glt.b = -0.0062;
+glt.c = 0.0500;
+glt.d = 0;
+glt.plot_functions = 1;
+
+glt.input = b_data_das;
+glt.scan = b_data_das.scan;
+b_data_glt = glt.go();
+
+glt_img = b_data_glt.get_image('none').*weights;  % Compensation weighting
+glt_img = db(abs(glt_img./max(glt_img(:))));      % Normalize on max
+f100 = figure(100);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f100,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GLT'],'eps2c')
+saveas(f100,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GLT'],'png')
+f101 = figure(101);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,glt_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f101,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_zoomed'],'eps2c')
+
+
+%% CF - Coherence Factor
+cf_img = b_data_cf.get_image('none').*weights;
+cf_img = db(abs(cf_img./max(cf_img(:))));                 % Normalize on max
+f2 = figure(2);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,cf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f2,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CF'],'eps2c')
+f22 = figure(22);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,cf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f22,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CF_zoomed'],'eps2c')
+
+%% PCF - Phase Coherence Factor
+pcf_img = b_data_pcf.get_image('none').*weights;
+pcf_img = db(abs(pcf_img./max(pcf_img(:))));
+f3 = figure(3);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,pcf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f3,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/PCF'],'eps2c')
+f33 = figure(33);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,pcf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f33,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/PCF_zoomed'],'eps2c')
+
+%% GCF - Generalized Coherence Factor
+gcf_img = b_data_gcf.get_image('none').*weights;
+gcf_img = db(abs(gcf_img./max(gcf_img(:))));
+f4 = figure(4);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gcf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f4,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GCF'],'eps2c')
+f44 = figure(44);
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,gcf_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f44,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/GCF_zoomed'],'eps2c')
+
+%% MV - Capon's Minimum Variance
+mv_img = b_data_mv.get_image('none').*weights;
+mv_img = db(abs(mv_img./max(mv_img(:))));
+f6 = figure(6);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,mv_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f6,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/MV'],'eps2c')
+f66 = figure(66);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,mv_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f66,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/MV_zoomed'],'eps2c')
+
+%% F-DMAS - Filtered-Delay-Multiply-and-Sum
+dmas_img = b_data_dmas.get_image('none').*weights;
+dmas_img = db(abs(dmas_img./max(dmas_img(:))));
+f7 = figure(7);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f7,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DMAS'],'eps2c')
+f77 = figure(77);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f77,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DMAS_zoomed'],'eps2c')
+
+%% EBMV - Eigenspace Based Minimum Variance
+ebmv_img = b_data_ebmv.get_image('none').*weights;
+ebmv_img = db(abs(ebmv_img./max(ebmv_img(:))));
+f8 = figure(8);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+saveas(f8,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/EBMV'],'eps2c')
+f88 = figure(88);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
+colormap gray;caxis([-60 0]);axis image;xlabel('x [mm]');ylabel('z [mm]');
+set(gca,'FontSize',14)
+axis([-17 2 33 42]);
+saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/EBMV_zoomed'],'eps2c')
+
+
+%% Putting the dB images and the signal in a cell array
+addpath([ustb_path,'/publications/DynamicRage/functions']);
+image.all{1} = das_img;
+image.all_signal{1} = double(b_data_das.get_image('none').*weights);
+image.all_signal{1} = (image.all_signal{1}./max(image.all_signal{1}(:)));
+image.tags{1} = 'DAS';
+image.all{2} = mv_img;
+image.all_signal{2} = double(b_data_mv.get_image('none').*weights);
+image.all_signal{2} = (image.all_signal{2}./max(image.all_signal{2}(:)));
+image.tags{2} = 'MV';
+image.all{3} = ebmv_img;
+image.all_signal{3} = double(b_data_ebmv.get_image('none').*weights);
+image.all_signal{3} = (image.all_signal{3}./max(image.all_signal{3}(:)));
+image.tags{3} = 'EBMV';
+image.all{4} = dmas_img;
+image.all_signal{4} = double(b_data_dmas.get_image('none').*weights);
+image.all_signal{4} = (image.all_signal{4}./max(image.all_signal{4}(:)));
+image.tags{4} = 'F-DMAS';
+image.all{5} = cf_img;
+image.all_signal{5} = double(b_data_cf.get_image('none').*weights);
+image.all_signal{5} = (image.all_signal{5}./max(image.all_signal{5}(:)));
+image.tags{5} = 'CF';
+image.all{6} = gcf_img;
+image.all_signal{6} = double(b_data_gcf.get_image('none').*weights);
+image.all_signal{6} = (image.all_signal{6}./max(image.all_signal{6}(:)));
+image.tags{6} = 'GCF';
+image.all{7} = pcf_img;
+image.all{7}(695,320) = image.all{7}(694,320);
+image.all_signal{7} = double(b_data_pcf.get_image('none').*weights);
+image.all_signal{7} = (image.all_signal{7}./max(image.all_signal{7}(:)));
+image.all_signal{7}(695,320) = image.all_signal{7}(694,320);
+image.tags{7} = 'PCF';
+image.all{8} = glt_img;
+image.all_signal{8} = double(b_data_glt.get_image('none').*weights);
+image.all_signal{8} = (image.all_signal{8}./max(image.all_signal{8}(:)));
+image.tags{8} = 'GLT';
+
+%%
+% Using "linspecer" colors
+colors=    [0.9047    0.1918    0.1988; ...
+            0.2941    0.5447    0.7494; ...
+            0.3718    0.7176    0.3612; ...
+            1.0000    0.5482    0.1000; ...
+            0.8650    0.8110    0.4330; ...
+            0.6859    0.4035    0.2412; ...
+            0.9718    0.5553    0.7741; ...
+            0.6400    0.6400    0.6400];
+        
+%% Plot the lateral and axial gradient together with the experimental lateral gradient
+image_experimental = load('Experimental.mat','image');
+image_experimental = image_experimental.image;
+b_data_das_exp = load('Experimental.mat','b_data_das'); 
+b_data_das_exp = b_data_das_exp.b_data_das;
+
+[meanLinesLateralExp,~] = getMeanLateralLines(b_data_das_exp,image_experimental,39,48.5,-12.05,12.05);
+
+mask_lateral_exp=abs(b_data_das_exp.scan.x_axis)<12.05e-3;
+theory_lateral_exp=-40*(b_data_das_exp.scan.x_axis(mask_lateral_exp)+12.05e-3)/24.1e-3;
+
+
+[meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,47.5,52.5,-10,10);
+mask_lateral=abs(b_data_das.scan.x_axis)<10e-3;
+theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+10e-3)/20e-3;
+
+
+[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,20,40,11,14);
+mask_axial= b_data_das.scan.z_axis<40e-3 & b_data_das.scan.z_axis>20e-3;
+theory_axial=-40*(b_data_das.scan.z_axis(mask_axial)-20e-3)/20e-3;
+
+for i = 1:length(image.all)
+    f88 = figure(8888+i);clf;hold all;
+    plot(theory_lateral,meanLinesLateral.all{i}-max(meanLinesLateral.all{i}),'LineStyle','-.','Linewidth',2,'DisplayName','Sim. lateral');
+    plot(theory_axial,meanLines_axial.all{i}-max(meanLines_axial.all{i}),'Linestyle','REPLACE_WITH_DASH_DASH','Linewidth',2,'DisplayName','Sim. axial');
+    plot(theory_lateral_exp,meanLinesLateralExp.all{i}-max(meanLinesLateralExp.all{i}),'Linestyle',':','Linewidth',2,'DisplayName','Exp. lateral');
+    plot(theory_lateral,theory_lateral,'LineStyle','-','Linewidth',2,'Color','k','DisplayName','Theory');
+    set(gca, 'XDir','reverse');%title(image.tags{i});
+    axis image
+    legend('show','Location','sw');
+    ylim([-60 0])
+    xlim([-40 0])
+    grid on
+    xlabel('Theoretical [dB]');
+    ylabel('Output [dB]');
+    saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient/',image.tags{i}],'eps2c')
+    saveas(f88,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/gradient/',image.tags{i}],'png')
+end
+
+%% Plot the lateral line through the boxes
+[meanLines,x_axis] = getMeanLateralLines(b_data_das,image,35,40,b_data_das.scan.x(1)*10^3,b_data_das.scan.x(end)*10^3);
+theoretical = [-100 ones(1,255)*0 ones(1,255)*-10 -100 ones(1,256)*-100 ones(1,256)*-100 -100 ones(1,255)*0 ones(1,255)*-35 -100];
+x_axis_theoretical = linspace(-15,0,1536);
+
+f89 = figure(89);clf;hold all;
+subplot(211);hold on;
+plot(x_axis_theoretical,theoretical,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',[0 0 0]);
+plot(x_axis,meanLines.all{1}-max(meanLines.all{1}),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
+plot(x_axis,meanLines.all{2}-max(meanLines.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
+plot(x_axis,meanLines.all{3}-max(meanLines.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
+plot(x_axis,meanLines.all{4}-max(meanLines.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
+plot(x_axis,meanLines.all{5}-max(meanLines.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(5,:));
+plot(x_axis,meanLines.all{6}-max(meanLines.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(6,:));
+plot(x_axis,meanLines.all{7}-max(meanLines.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(7,:));
+plot(x_axis,meanLines.all{8}-max(meanLines.all{8}),'Linewidth',2,'DisplayName',image.tags{8},'Color',colors(8,:));
+ylim([-80 0]);
+xlim([-17.5 1.5]);
+legend('Location','best'); grid on;
+ylabel('Normalized amplitude [dB]');
+xlabel('x [mm]');
+
+saveas(f89,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/boxes'],'eps2c')
+
+%% Measure contrast and plot together with the experimental
+[CR_signal_sim, CR_signal_dagger, CR_image_sim, CNR_signal_sim, CNR_image_sim] = measureContrast(b_data_das,image,-7.5,25,3,4.5,7.5,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/DAS_cyst_indicated']);
+
+load('Experimental.mat','CR_signal_exp','CNR_signal_exp','CR_image_exp','CNR_image_exp');
+
+f9 = figure;
+subplot(211);
+bar([10*log10(CR_signal_sim)' 10*log10(CR_signal_exp)'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CR [dB]');
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(10*log10(CR_signal_sim(:))),num2str(round(10*log10(CR_signal_sim(:))),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(10*log10(CR_signal_exp(:))),num2str(round(10*log10(CR_signal_exp(:))),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+set(gca,'Ydir','reverse')
+legend('Sim.','Exp.')
+grid on
+
+%%
+saveas(f9,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CR'],'eps2c')
+%%
+f90 = figure;
+subplot(212);
+bar([CR_image_sim' CR_image_exp'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CR_{LC} [dB]');
+x_pos = [0.8 1.8 2.8 3.8 4.8 5.8 6.8 7.8];
+text(x_pos,double(CR_image_sim(:)),num2str(round(CR_image_sim(:)),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.2 2.2 3.2 4.2 5.2 6.2 7.2 8.2];
+text(x_pos,double(CR_image_exp(:)),num2str(round(CR_image_exp(:)),'%d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 125])
+legend('Sim.','Exp.')
+grid on
+%%
+saveas(f90,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CR_LC'],'eps2c')
+%%
+f77 = figure(77);clf;
+subplot(211);
+bar([CNR_signal_sim' CNR_signal_exp'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR');
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_signal_sim(:)),num2str((CNR_signal_sim(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_signal_exp(:)),num2str((CNR_signal_exp(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 1.45])
+legend('Sim.','Exp.')
+grid on
+
+%%
+saveas(f77,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CNR'],'eps2c')
+%%
+f78 = figure(78);clf;
+subplot(212);
+bar([CNR_image_sim' CNR_image_exp'])
+set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
+set(gca,'XTickLabel',image.tags)
+ylabel('CNR_{LC}');
+x_pos = [0.75 1.75 2.75 3.75 4.75 5.75 6.75 7.75];
+text(x_pos,double(CNR_image_sim(:)),num2str((CNR_image_sim(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+x_pos = [1.25 2.25 3.25 4.25 5.25 6.25 7.25 8.25];
+text(x_pos,double(CNR_image_exp(:)),num2str((CNR_image_exp(:)),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+legend('Sim.','Exp.')
+grid on
+%%
+
+saveas(f78,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/CNR_LC'],'eps2c')
+
+%% Find the corrlation between dynamic range stretching and measured contrast as CR
+figure(77);clf;
+for i = 1:length(image.all)    
+    simulated_lateral = meanLinesLateral.all{i}-max(meanLinesLateral.all{i});
+    experimental_lateral = meanLinesLateralExp.all{i}-max(meanLinesLateralExp.all{i});
+    
+    % Remove any NAN's (we have one for PCF)
+    experimental_lateral = experimental_lateral(find(~isinf(experimental_lateral)));
+    theory_lateral_exp_temp = theory_lateral_exp(find(~isinf(experimental_lateral))); 
+    
+    % Do a polynomial fit to get an estimate of the gradient
+    [sim_poly_fit,S_sim,mu_sim] = polyfit(theory_lateral, simulated_lateral',3);
+    [exp_poly_fit,S_exp,mu_exp] = polyfit(theory_lateral_exp_temp, experimental_lateral',3);
+   
+    
+    x = -40; %Calculate devation for -40 dB
+    y_sim(i) = polyval(sim_poly_fit,x,S_sim,mu_sim)-x;
+    y_exp(i) = polyval(exp_poly_fit,x,S_exp,mu_exp)-x;
+        
+    % Calculate difference in CR value compared to DAS
+    diff_CR_vs_das_sim(i) = CR_image_sim(i) - CR_image_sim(1);
+    diff_CR_vs_das_exp(i) = CR_image_exp(i) - CR_image_exp(1);
+    
+    x_vector = linspace(0,-40,length(simulated_lateral));
+    %Plot the fitted polynomial to see the match
+    figure(77);hold all;
+    subplot(211);hold all;
+    plot(simulated_lateral,'DisplayName',[image.tags{i}, ' Sim. gradient'],'Color',colors(i,:));
+    plot(polyval(sim_poly_fit,theory_lateral,S_sim,mu_sim),'DisplayName',[image.tags{i},' fitted polynomial'],'Color',colors(i,:));
+    title('Simulated');
+    subplot(212);hold all;
+    plot(experimental_lateral,'DisplayName',[image.tags{i},' Exp. gradient'],'Color',colors(i,:));
+    plot(polyval(exp_poly_fit,theory_lateral_exp_temp,S_exp,mu_exp),'DisplayName',[image.tags{i}, ' fitted polynomial'],'Color',colors(i,:));
+    title('Experimental');
+end
+set(gcf,'Position',[179 113 782 549]);
+
+%% Create correlation plot for the simulated data
+mdl_sim = fitlm(diff_CR_vs_das_sim,y_sim);
+mdl_exp = fitlm(diff_CR_vs_das_exp,y_exp);
+
+rsquared_ord_sim = mdl_sim.Rsquared.Ordinary
+rsquared_adj_sim = mdl_sim.Rsquared.Adjusted
+
+f111 = figure(111);clf;hold all;
+linespes = '+ox*sd<>';
+for i = 1:length(image.all)
+    plot(diff_CR_vs_das_sim(i),y_sim(i),linespes(i),'Color',colors(i,:),'MarkerSize',10);
+end
+mdl_sim.plot
+hline = findobj(gcf, 'type', 'line');
+set(hline,'LineWidth',3)
+set(hline(3),'Color',[0 0 0]);
+set(hline(3),'DisplayName','Fitted line');
+title('');
+xlabel('CR diff. from DAS');xlim([-5 75]);
+ylabel('Deviation at -40 dB');ylim([-85 5]);
+text(40,0,sprintf('R-Squared: %.2f',rsquared_ord_sim),'FontSize',18);
+text(40,-5,sprintf('R-Squared adj: %.2f',rsquared_adj_sim),'FontSize',18);
+set(gca,'FontSize',14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, 'Type', 'Legend');
+hLegend.String;
+legend show;
+legend([image.tags hLegend.String],'Location','sw');
+
+saveas(f111,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/correlation_sim'],'eps2c');
+
+%% Create correlation plot for the experimental data
+rsquared_ord_exp = mdl_exp.Rsquared.Ordinary
+rsquared_adj_exp = mdl_exp.Rsquared.Adjusted
+
+f112 = figure(112);clf;hold all;
+linespes = '+ox*sd<>';
+for i = 1:length(image.all)
+    plot(diff_CR_vs_das_exp(i),y_exp(i),linespes(i),'Color',colors(i,:),'MarkerSize',10);
+end
+mdl_exp.plot
+hline = findobj(gcf, 'type', 'line');
+set(hline,'LineWidth',3);
+set(hline(3),'Color',[0 0 0]);
+set(hline(3),'DisplayName','Fitted line');
+title('')
+xlabel('CR diff. from DAS');xlim([-5 75]);
+ylabel('Deviation at -40 dB');ylim([-50 5]);
+text(40,0,sprintf('R-Squared: %.2f',rsquared_ord_exp),'FontSize',18);
+text(40,-3,sprintf('R-Squared adj: %.2f',rsquared_adj_exp),'FontSize',18);
+set(gca,'FontSize',14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, 'Type', 'Legend');
+legend show
+legend([image.tags hLegend.String],'Location','sw');
+
+saveas(f112,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/correlation_exp'],'eps2c');
+##### SOURCE END #####
+--></body></html>
