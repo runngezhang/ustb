@@ -12,7 +12,7 @@ classdef das < midprocess
         dimension = dimension.receive;      % dimension enumeration class that specifies whether the process will run only on transmit, receive, both, or none.
         code = code.mex;                    % code enumeration class that specifies the code to be run (code.matlab, code.mex)
         % spherical transmit delay model enumeration for deciding model when the source is in front of the transducer
-        spherical_transmit_delay_model = spherical_transmit_delay_model.spherical;  
+        spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;  
         pw_margin = 1/1000;                 % The margin of the area around focus in m for the spherical_transmit_delay_model.hybrid
         transmit_delay                      % Variable returning the calculated tx delay so that it can be plotted
     end
