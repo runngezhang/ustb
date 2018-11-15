@@ -64,6 +64,8 @@ scan_MLA=uff.sector_scan('azimuth_axis',...
 mid_MLA=midprocess.das();
 mid_MLA.channel_data=channel_data;
 mid_MLA.dimension = dimension.both();
+%By setting this we use the conventional model
+mid_MLA.spherical_transmit_delay_model = spherical_transmit_delay_model.spherical;  
 mid_MLA.scan=scan_MLA;
 mid_MLA.transmit_apodization.window=uff.window.scanline;
 mid_MLA.transmit_apodization.MLA = MLA;
@@ -87,7 +89,7 @@ mid_MLA_unified_fix=midprocess.das();
 mid_MLA_unified_fix.channel_data=channel_data;
 mid_MLA_unified_fix.dimension = dimension.both();
 %By setting this we use the Prager & Nguyen model
-mid_MLA_unified_fix.transmit_delay_model = transmit_delay_model.unified;  
+mid_MLA_unified_fix.spherical_transmit_delay_model = spherical_transmit_delay_model.unified;  
 mid_MLA_unified_fix.scan=scan_MLA;
 mid_MLA_unified_fix.transmit_apodization.window=uff.window.scanline;
 mid_MLA_unified_fix.transmit_apodization.MLA = MLA;
@@ -110,7 +112,7 @@ mid_MLA_plane_fix=midprocess.das();
 mid_MLA_plane_fix.channel_data=channel_data;
 mid_MLA_plane_fix.dimension = dimension.both();
 %By setting this we use the simple PW model
-mid_MLA_plane_fix.transmit_delay_model = transmit_delay_model.hybrid;  
+mid_MLA_plane_fix.spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;  
 mid_MLA_plane_fix.pw_margin = 4/1000;
 mid_MLA_plane_fix.scan=scan_MLA;
 mid_MLA_plane_fix.transmit_apodization.window=uff.window.scanline;
@@ -164,6 +166,8 @@ clear mid_RTB;
 mid_RTB=midprocess.das();
 mid_RTB.channel_data=channel_data;
 mid_RTB.dimension = dimension.both();
+%By setting this we use the conventional model
+mid_RTB.spherical_transmit_delay_model = spherical_transmit_delay_model.spherical;  
 mid_RTB.scan=scan_MLA;
 mid_RTB.transmit_apodization.window = uff.window.hamming;
 mid_RTB.transmit_apodization.minimum_aperture = [3.07000e-03 3.07000e-03];
@@ -216,29 +220,9 @@ title('TX apod from sequence 64 zoomed');
 % Calculate weights based on the transmit apod
 weighting = 1./sum(tx_apod,2);
 
-
-figure(89);
-pcolor(x_matrix*1e3,z_matrix*1e3,...
-       reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
-xlabel('x [mm]');
-ylabel('z [mm]');
-shading('flat');
-set(gca,'fontsize',14);
-set(gca,'YDir','reverse');
-axis('tight','equal');
-title('TX apod from sequence 51');
-%%
-weights = reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis);
-weights_mod = weights;
-weights_mod(weights>1) = 1;
-figure(90);
-subplot(211)
-imagesc(reshape(weighting,scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis))
-subplot(212);
-imagesc(weights_mod)
 %%
 b_data_RTB_weighted = uff.beamformed_data(b_data_RTB);
-b_data_RTB_weighted.data = b_data_RTB_weighted.data.*weights_mod(:);
+b_data_RTB_weighted.data = b_data_RTB_weighted.data.*weighting(:);
 
 b_data_RTB_weighted.plot(11,'RTB with virtual source model weighted');
 
@@ -250,7 +234,7 @@ clear mid_RTB_unified_fix;
 mid_RTB_unified_fix=midprocess.das();
 mid_RTB_unified_fix.channel_data=channel_data;
 mid_RTB_unified_fix.dimension = dimension.both();
-mid_RTB_unified_fix.transmit_delay_model = transmit_delay_model.unified;
+mid_RTB_unified_fix.spherical_transmit_delay_model = spherical_transmit_delay_model.unified;
 mid_RTB_unified_fix.scan=scan_MLA;
 mid_RTB_unified_fix.transmit_apodization.window = uff.window.hamming;
 mid_RTB_unified_fix.transmit_apodization.MLA = MLA;
@@ -263,8 +247,11 @@ mid_RTB_unified_fix.receive_apodization.f_number = 1.7;
 b_data_RTB_unified_fix = mid_RTB_unified_fix.go();
 
 %%
+figure;imagesc(reshape(mid_RTB_unified_fix.transmit_delay(:,64),scan_MLA.N_depth_axis,scan_MLA.N_azimuth_axis));
+
+%%
 b_data_RTB_unified_fix_weighted = uff.beamformed_data(b_data_RTB_unified_fix);
-b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data.*weights_mod(:);
+b_data_RTB_unified_fix_weighted.data = b_data_RTB_unified_fix_weighted.data.*weighting(:);
 
 %%
 % Plot the weighted image
@@ -278,7 +265,7 @@ b_data_RTB_unified_fix_weighted.plot(12,'RTB with Nguyen & Prager model');
 mid_RTB_PW_fix=midprocess.das();
 mid_RTB_PW_fix.channel_data=channel_data;
 mid_RTB_PW_fix.dimension = dimension.both();
-mid_RTB_PW_fix.transmit_delay_model = transmit_delay_model.hybrid;
+mid_RTB_PW_fix.spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;
 mid_RTB_PW_fix.pw_margin = 1.5/1000;
 mid_RTB_PW_fix.scan=scan_MLA;
 mid_RTB_PW_fix.transmit_apodization.window = uff.window.hamming;

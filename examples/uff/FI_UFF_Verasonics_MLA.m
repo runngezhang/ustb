@@ -82,11 +82,10 @@ mid_MLA.channel_data=channel_data;
 mid_MLA.scan=scan_MLA;
 
 mid_MLA.transmit_apodization.window=uff.window.scanline;
-% We are using the hybrid transmit delay model. See the example script
-% under
-% /publications/IUS2018/Rindal_et_al_ASimpleArtifactFreeVirtualSourceModel/
-% Abstract_FI_UFF_Verasonics_RTB_delay_models.m
-mid_MLA.transmit_delay_model = transmit_delay_model.hybrid;
+% We are using the hybrid transmit delay model. See the reference below:
+% Rindal, O. M. H., Rodriguez-Molares, A., & Austeng, A. (2018). A simple , artifact-free , virtual source model. 
+% IEEE International Ultrasonics Symposium, IUS, 1–4.  
+mid_MLA.spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;
 mid_MLA.transmit_apodization.MLA = MLA;
 mid_MLA.transmit_apodization.MLA_overlap = 1;
 

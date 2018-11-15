@@ -82,11 +82,10 @@ mid_RTB.dimension = dimension.both();
 
 mid_RTB.channel_data=channel_data;
 mid_RTB.scan=scan_RTB;
-% We are using the hybrid transmit delay model. See the example script
-% under
-% /publications/IUS2018/Rindal_et_al_ASimpleArtifactFreeVirtualSourceModel/
-% Abstract_FI_UFF_Verasonics_RTB_delay_models.m
-mid_RTB.transmit_delay_model = transmit_delay_model.hybrid;
+% We are using the hybrid transmit delay model. See the reference below:
+% Rindal, O. M. H., Rodriguez-Molares, A., & Austeng, A. (2018). A simple , artifact-free , virtual source model. 
+% IEEE International Ultrasonics Symposium, IUS, 1–4. 
+mid_RTB.spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;
 mid_RTB.transmit_apodization.window=uff.window.tukey25;
 mid_RTB.transmit_apodization.f_number = 2;
 mid_RTB.transmit_apodization.MLA = MLA;
