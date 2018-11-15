@@ -144,9 +144,10 @@ classdef verasonics < handle
             else
                 D = D - D(Indices(1));
             end
-            %figure(101);
-            %plot(D); hold on;
-            %plot(h.TX(n_tx).Delay*h.lambda)
+            
+            %figure(101);clf;
+            %plot(D,'b'); hold on;
+            %plot(h.TX(n_tx).Delay*h.lambda,'r')
             
             trans_delays = D;
         end

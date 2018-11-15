@@ -71,7 +71,7 @@ classdef beamformed_data < uff
     
     %% display methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces)
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces,frame_idex)
             %PLOT Plots beamformed data
             %
             % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
@@ -80,6 +80,7 @@ classdef beamformed_data < uff
             %   title           Figure title (default: none)
             %   dynamic_range   Displayed dynamic range (default: 60 dB)
             %   compression     String specifying compression type: 'log','none','sqrt' (default: 'log')
+            %   indeces         Pair of integers [nrx ntx] indicating receive and transmit events (default: [])
             %   indeces         Tripler of integers [nrx ntx frame] indicating which receive and transmit and frame must be plotted (default: [])
             
             if (nargin>1 && ~isempty(figure_handle_in) && isa(figure_handle_in,'matlab.ui.Figure')) || ...
@@ -111,13 +112,18 @@ classdef beamformed_data < uff
             else
                 data=h.data(:,indeces(1),indeces(2),indeces(3));
             end
+            if nargin<7||isempty(frame_idex)
+                data=h.data;
+            else
+                data=h.data(:,:,:,frame_idex);
+            end
             
             %Draw the image
             h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data);
             
             % If more than one frame, add the GUI buttons
             [Npixels Nrx Ntx Nframes]=size(data);
-            if Nrx*Ntx*Nframes > 1 
+            if Nrx*Ntx*Nframes > 1
                 set(h.figure_handle, 'Position', [100, 100, 600, 700]);
                 h.current_frame = 1;
                 h.add_buttons(h.figure_handle);

@@ -181,7 +181,7 @@ classdef apodization < uff
                     % TUKEY80
                 case uff.window.tukey80
                     roll=0.80;
-                    data=h.tukey_ang(ratio_theta,roll).*h.tukey_ang(ratio_phi,roll);
+                    data=h.tukey(ratio_theta,roll).*h.tukey(ratio_phi,roll);
                 otherwise
                     error('Unknown apodization type!');
             end
