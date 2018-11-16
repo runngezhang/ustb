@@ -76,7 +76,8 @@ sca_points(1,:) =[-5.5e-3,  0, 7e-3];    % point scatterer position [m]
 %sca_points(2,:) =[-7.5e-3,  0, 20e-3];    %Pont in speckle
 sca_points(2,:) =[-5.5e-3,  0, 35e-3];    % point scatterer position [m]
 
-amp_points = max([amp_lg(:); amp_hc(:); amp_ag(:)]).*ones(size(sca_points,1),1);
+%amp_points = max([amp_lg(:); amp_hc(:); amp_ag(:)]).*ones(size(sca_points,1),1);
+amp_points = 10^(5/20).*ones(size(sca_points,1),1);
 %amp_points(2) = amp_points(3)*1.2;
 %%
 

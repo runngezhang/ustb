@@ -111,10 +111,18 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
+% Calculate scatterers per resolution cell
+sca_per_res_cell=20;
+D = N_elements*probe.pitch
+z_min=5e-3;
+F_number=z_min/D % This is the F-number that we have to use to get expected sca resolution for depths greater than 5mm
+cell_area=(1.206*lambda*F_number)*(pulse_duration*lambda); % resolution cell area
+sca_per_mm2=ceil(sca_per_res_cell/(cell_area/1e-6))
 
+%%
 if full_simulation
     disp('Now Running full simulation!');
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v4(10);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v4(650);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
