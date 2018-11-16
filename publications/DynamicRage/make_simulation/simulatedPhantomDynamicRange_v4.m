@@ -1,4 +1,4 @@
-function [sca_tot,amp_tot] = simulatedPhantomDynamicRange_v3(sca_per_mm2)
+function [sca_tot,amp_tot] = simulatedPhantomDynamicRange_v4(sca_per_mm2)
 
 %% Create lateral gradient (lg)
 x_min_lg = -20/1000;
@@ -11,8 +11,8 @@ dB_mm_lg = 1.66;
 [sca_lg,amp_lg] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_lg,x_max_lg,z_min_lg,z_max_lg,Intensity_lg,dB_mm_lg);
 
 %% Create axial gradient (ag)
-x_min_ag = 10/1000;
-x_max_ag = 20/1000;
+x_min_ag = 14/1000;
+x_max_ag = 19/1000;
 z_min_ag = 9/1000;
 z_max_ag = 39/1000;
 Intensity_ag = 0;
