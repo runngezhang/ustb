@@ -113,7 +113,7 @@ xdc_center_focus(Rh,[0 0 0]);
 %% Speckle Phantom
 % Calculate scatterers per resolution cell
 sca_per_res_cell=20;
-D = N_elements*probe.pitch
+D = probe.N*probe.pitch
 z_min=5e-3;
 F_number=z_min/D % This is the F-number that we have to use to get expected sca resolution for depths greater than 5mm
 cell_area=(1.206*lambda*F_number)*(pulse_duration*lambda); % resolution cell area
