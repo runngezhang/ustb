@@ -114,7 +114,7 @@ xdc_center_focus(Rh,[0 0 0]);
 
 if full_simulation
     disp('Now Running full simulation!');
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v4(100);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v4(10);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
