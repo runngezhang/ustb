@@ -6,7 +6,7 @@ x_max_lg = 20/1000;
 z_min_lg = 39/1000;
 z_max_lg = 49/1000;
 Intensity_lg = 0;
-dB_mm_lg = 1.66;
+dB_mm_lg = 2;%1.66;
 
 [sca_lg,amp_lg] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_lg,x_max_lg,z_min_lg,z_max_lg,Intensity_lg,dB_mm_lg);
 
@@ -16,7 +16,7 @@ x_max_ag = 19/1000;
 z_min_ag = 9/1000;
 z_max_ag = 39/1000;
 Intensity_ag = 0;
-dB_mm_ag = 1.66;
+dB_mm_ag = 2;%1.66;
 
 [sca_ag,amp_ag] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
 
