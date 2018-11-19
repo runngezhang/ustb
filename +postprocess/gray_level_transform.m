@@ -48,7 +48,7 @@ classdef gray_level_transform < postprocess
             output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
             % linear space
-            x=logspace(-100/20,0,200);
+            x=logspace(-200/20,0,400);
             
             % dB space
             x_dB=20*log10(x);
@@ -134,7 +134,7 @@ classdef gray_level_transform < postprocess
                 xlabel('Input signal [dB]');
                 ylabel('Output signal [dB]');
                 legend('location','nw','Uniform','p(B)');
-                xlim([-60 0]);
+                xlim([-100 0]);
                 saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_lin'],'eps2c')
                 saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log'],'eps2c')
                 saveas(f8899,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log_stripped'],'eps2c')
