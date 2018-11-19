@@ -54,20 +54,20 @@ z_max_left_l = 32.5/1000;
 Intensity_left_l = 0;
 
 [sca_left_l,amp_left_l] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_left_l,x_max_left_l,z_min_left_l,z_max_left_l,Intensity_left_l,0);
-x_min_left_r = -12.5/1000 + diff;;
-x_max_left_r = -10/1000 + diff;;
+x_min_left_r = -12.5/1000 + diff;
+x_max_left_r = -10/1000 + diff;
 Intensity_left_r = -10;
 [sca_left_r,amp_left_r] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_left_r,x_max_left_r,z_min_left_l,z_max_left_l,Intensity_left_r,0);
 
 x_min_right_l = -5/1000 + diff;
-x_max_right_l = -2.5/1000 + diff;;
+x_max_right_l = -2.5/1000 + diff;
 z_min_right_l = 27.5/1000;
 z_max_right_l = 32.5/1000;
 Intensity_right_l = 0;
 
 [sca_right_l,amp_right_l] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_right_l,x_max_right_l,z_min_right_l,z_max_right_l,Intensity_right_l,0);
-x_min_right_r = -2.5/1000 + diff;;
-x_max_right_r = 0/1000 + diff;;
+x_min_right_r = -2.5/1000 + diff;
+x_max_right_r = 0/1000 + diff;
 Intensity_right_r = -35;
 [sca_right_r,amp_right_r] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_right_r,x_max_right_r,z_min_right_l,z_max_right_l,Intensity_right_r,0)
 

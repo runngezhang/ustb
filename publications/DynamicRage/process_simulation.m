@@ -1,6 +1,7 @@
 clear all; close all;
 
-filename = 'FieldII_STAI_simulated_dynamic_range.uff';
+%filename = 'FieldII_STAI_simulated_dynamic_range.uff';
+filename = 'FieldII_STAI_dynamic_range_similar_to_exp_v4.uff';
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
@@ -11,9 +12,9 @@ channel_data.read([data_path,filesep,filename],'/channel_data');
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(8e-3,55e-3,2048).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(6e-3,52.5e-3,2048).');
 
-%scan=uff.linear_scan('x_axis',linspace(-19e-3,19e-3,256).', 'z_axis', linspace(10e-3,55e-3,256).');
+%scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(5e-3,55e-3,2048).');
 %scan=uff.linear_scan('x_axis',linspace(-12.5e-3,-2.5e-3,50).', 'z_axis', linspace(43e-3,46e-3,200).');
 %%
 % demod = preprocess.demodulation;
@@ -48,9 +49,19 @@ b_data_weights.data = weights(:);
 b_data_tx.data = b_data_tx.data + randn(size(b_data_tx.data))*eps;
 
 %% DELAY AND SUM
+% das = midprocess.das();
+% das.channel_data=channel_data;
+% das.scan=scan;
+% das.dimension = dimension.both();
+% das.receive_apodization.window=uff.window.hamming;
+% das.receive_apodization.f_number=1.75;
+% das.transmit_apodization.window=uff.window.hamming;
+% das.transmit_apodization.f_number=1.75;
+
 das=postprocess.coherent_compounding();
 das.input = b_data_tx;
 b_data_das = das.go();
+%%
 das_img = b_data_das.get_image('none').*weights;  % Compensation weighting
 das_img = db(abs(das_img./max(das_img(:))));                 % Normalize on max
 f1 = figure(1);clf;

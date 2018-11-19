@@ -5,14 +5,6 @@ function [image_corrected, correcting_coeff] = calibrateImage(sta_image,image,z_
 [meanLines,x_axis] = getMeanLateralLines(sta_image,image,z_start,z_stop,x_start,x_stop);
 
 for i = 1:length(image.all)
-    if sum(isinf(meanLines.all{7})) > 2
-        error('We have more than 1 inf value in the mean lateral line');
-    else 
-        meanLines.all{7}(1012) = meanLines.all{7}(1013);
-    end
-end
-
-for i = 1:length(image.all)
     regresion_coeff{i} = polyfit(x_axis,meanLines.all{i},3);
     regression_top{i} = polyval(regresion_coeff{i},x_axis);
 end
@@ -83,7 +75,7 @@ for i = 1:length(regression_top)
     title(image.tags{i});
     xlim([-20 20])
     ylim([-150 0])
-    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation/calibrated/curves_',image.tags{i}],'eps2c')
+    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation_v2/calibrated/curves_',image.tags{i}],'eps2c')
 end
 
 

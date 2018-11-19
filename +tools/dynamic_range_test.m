@@ -1,19 +1,35 @@
-function [filtered_p,h,w] = dynamic_range_test(channel_data,b_data,title_txt)
+function [diff] = dynamic_range_test(channel_data,b_data,title_txt)
 
 if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
     z_start = 47.5;
     z_stop = 52.5;
+    x_start = -12.5;
+    x_stop = 12.5;
+    gradient = -2;% db/mm
+    do_axial = 2; %If we want to estimate the axial as well, run this twice.
+    sub_fig_setup = [1 3];
+ %   theory_lateral = -40*(b_data.scan.x_axis(mask_lateral)+10e-3)/20e-3;
+elseif strcmp(channel_data.name,'New Simulated dynamic range phantom. Created with Field II. See the reference for details')
+    z_start = 40;
+    z_stop = 48.5;
+    x_start = -12.05;
+    x_stop = 12.05;
+    gradient = -1.66;% db/mm
+    do_axial = 2; %If we want to estimate the axial as well, run this twice.
+    sub_fig_setup = [1 3];
+elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created with Field II. See the reference for details')
+    z_start = 40;
+    z_stop = 48.5;
     x_start = -15;
     x_stop = 15;
     gradient = -2;% db/mm
     do_axial = 2; %If we want to estimate the axial as well, run this twice.
     sub_fig_setup = [1 3];
- %   theory_lateral = -40*(b_data.scan.x_axis(mask_lateral)+10e-3)/20e-3;
 elseif strcmp(channel_data.name,'Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details')
     z_start = 40;
     z_stop = 48.5;
-    x_start = -12.50;
-    x_stop = 12.50;
+    x_start = -15;
+    x_stop = 15;
     gradient = -1.66;% db/mm
     do_axial = 1;
     sub_fig_setup = [1 2];
@@ -80,20 +96,33 @@ for i = 1:do_axial
     plot(theory_line,regression,'LineWidth',2,'DisplayName','Estimated slope');
     set(gca, 'XDir','reverse');xlabel('Input [dB]');ylabel('Output [dB]');
     title(sprintf('Theory: -1, estimated: -%.4f',regresion_coeff(1)));
-    legend show;set(gca,'FontSize',15); axis tight;
+    legend show;set(gca,'FontSize',15); ylim([-80 0]);
     
     v= max(abs(theory_line));
-      rectangle('Position',[-v -v v v],...
+      rectangle('Position',[-v -80 v 80],...
          'LineWidth',4,'LineStyle','-','EdgeColor',c)
-      axis([-v 0 -v 0])
+    xlim([-v 0]);
+    %axis([-v 0 -v 0])
     
-    diff = abs(1-regresion_coeff(1))*100
+    diff(i) = abs(1-regresion_coeff(1))*100;
     
     if(do_axial == 2)
-        z_start = 12.5;
-        z_stop = 40;
-        x_start = 10.5;
-        x_stop = 14.5;
+        if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
+            z_start = 12.5;
+            z_stop = 40;
+            x_start = 10.5;
+            x_stop = 14.5;
+        elseif strcmp(channel_data.name,'New Simulated dynamic range phantom. Created with Field II. See the reference for details')
+            z_start = 10;
+            z_stop = 40;
+            x_start = 10.5;
+            x_stop = 19;
+        elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created with Field II. See the reference for details')
+            z_start = 13;
+            z_stop = 37;
+            x_start = 15;
+            x_stop = 18.5;
+        end
     end
     
 %     annotation('textbox', [0 0.5 1 0.1], ...
