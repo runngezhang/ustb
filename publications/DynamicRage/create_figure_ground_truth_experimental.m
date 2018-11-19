@@ -10,7 +10,7 @@ mask_x_speckle = logical(b_data_t.scan.x_axis > -15.5e-3) & logical(b_data_t.sca
 mask_z_speckle = logical(b_data_t.scan.z_axis > 9e-3) & logical(b_data_t.scan.z_axis < 26e-3);
 
 mask_x_gradient= logical(b_data_t.scan.x_axis > -20e-3) & logical(b_data_t.scan.x_axis < 20e-3);
-mask_z_gradient = logical(b_data_t.scan.z_axis > 40e-3) & logical(b_data_t.scan.z_axis < 50e-3);
+mask_z_gradient = logical(b_data_t.scan.z_axis > 39e-3) & logical(b_data_t.scan.z_axis < 49e-3);
 
 db_fall_per_mm = 1.66;
 theory_gradient_amp= -(40*db_fall_per_mm)*(b_data_t.scan.x_axis(mask_x_gradient)+20e-3)/40e-3;
@@ -83,4 +83,4 @@ viscircles(axi,[xc_nonecho,zc_nonecho],r_nonecho,'EdgeColor','r','EnhanceVisibil
 viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_inner,'EdgeColor','b','EnhanceVisibility',0);
 viscircles(axi,[xc_nonecho,zc_nonecho],r_speckle_outer,'EdgeColor','b','EnhanceVisibility',0);
 
-saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/theoretical'],'eps2c')
+%saveas(f1,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/theoretical'],'eps2c')
