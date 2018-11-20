@@ -122,7 +122,7 @@ sca_per_mm2=ceil(sca_per_res_cell/(cell_area/1e-6))
 %%
 if full_simulation
     disp('Now Running full simulation!');
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v4(650);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(50);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
@@ -227,15 +227,15 @@ pipe.scan=scan;
 % Delay and sum on receive, then coherent compounding
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
-channel_data.name = {'Simulated dynamic range phantom. Created with Field II. See the reference for details'};
+channel_data.name = {'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details'};
 channel_data.author = {'Ole Marius Hoel Rindal <omrindal@ifi.uio.no','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
 channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
 channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v4.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v4.uff','b_data');
+    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5.uff','channel_data');
+    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5.uff','b_data');
 else
     channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
     b_data.write('./FieldII_STAI_axial_gradient_updated.uff','b_data');
