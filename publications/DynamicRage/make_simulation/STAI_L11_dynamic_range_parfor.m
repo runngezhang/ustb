@@ -122,7 +122,7 @@ sca_per_mm2=ceil(sca_per_res_cell/(cell_area/1e-6))
 %%
 if full_simulation
     disp('Now Running full simulation!');
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(50);
+    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(650);
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
