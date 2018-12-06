@@ -85,7 +85,7 @@ classdef das < midprocess
                                 transmit_delay(:,n_wave)=transmit_delay(:,n_wave)-h.channel_data.sequence(n_wave).source.distance;
                             else % if virtual source in front of transducer
                                 switch h.spherical_transmit_delay_model
-                                    % Pleas see the reference below for a documentation and definition of these three models and the differences.
+                                    % Please see the reference below for a documentation and definition of these three models and the differences.
                                     % Rindal, O. M. H., Rodriguez-Molares, A., & Austeng, A. (2018). A simple , artifact-free , virtual source model. 
                                     % IEEE International Ultrasonics Symposium, IUS, 1–4.        
                                     case spherical_transmit_delay_model.spherical
