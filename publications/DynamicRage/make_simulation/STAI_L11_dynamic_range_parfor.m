@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = true;
+full_simulation = false;
 
 
 
@@ -126,14 +126,16 @@ if full_simulation
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
-    x_min_ag = 10/1000;
-    x_max_ag = 15/1000;
-    z_min_ag = 10/1000;
-    z_max_ag = 45/1000;
-    Intensity_ag = 0;
-    dB_mm_ag = 2;
     
-    [point_position,point_amplitudes] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
+    x_min_ag = 14/1000;
+    x_max_ag = 19/1000;
+    z_min_ag = 9/1000;
+    z_max_ag = 39/1000;
+    Intensity_ag = 0;
+    dB_mm_ag = 1.8;%1.66;
+
+    [sca_ag,amp_ag] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
+    
 end
 
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
@@ -234,9 +236,9 @@ channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5.uff','b_data');
+    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5_2.uff','channel_data');
+    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5_2.uff','b_data');
 else
-    channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
-    b_data.write('./FieldII_STAI_axial_gradient_updated.uff','b_data');
+    channel_data.write('./FieldII_STAI_axial_gradient.uff','channel_data');
+    b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
 end
