@@ -134,7 +134,7 @@ else
     Intensity_ag = 0;
     dB_mm_ag = 1.8;%1.66;
 
-    [sca_ag,amp_ag] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
+    [point_position,point_amplitudes] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
     
 end
 
