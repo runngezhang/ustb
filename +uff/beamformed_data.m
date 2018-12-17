@@ -71,7 +71,7 @@ classdef beamformed_data < uff
     
     %% display methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces,frame_idex)
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces,frame_idex,spatial_units)
             %PLOT Plots beamformed data
             %
             % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
@@ -117,9 +117,12 @@ classdef beamformed_data < uff
             else
                 data=h.data(:,:,:,frame_idex);
             end
+            if nargin<8||isempty(spatial_units)
+                spatial_units='mm';
+            end
             
             %Draw the image
-            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data);
+            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data,spatial_units);
             
             % If more than one frame, add the GUI buttons
             [Npixels Nrx Ntx Nframes]=size(data);
@@ -134,7 +137,7 @@ classdef beamformed_data < uff
             figure_handle = h.figure_handle;
         end
         
-        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data)
+        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data,spatial_units)
             
             [Npixels Nrx Ntx Nframes]=size(data);
             
@@ -159,19 +162,30 @@ classdef beamformed_data < uff
                     min_value=min(envelope(:));
             end
             
+            switch(spatial_units)
+                case 'm'
+                    scale_factor=1;
+                case 'mm'
+                    scale_factor=1e3;
+                case 'cm'
+                    scale_factor=1e2;
+                case 'km'
+                    scale_factor=1e-3;                    
+            end
+            
             switch class(h.scan)
                 case 'uff.linear_scan'
                     x_matrix=reshape(h.scan.x,[h.scan(1).N_z_axis h.scan(1).N_x_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan(1).N_z_axis h.scan(1).N_x_axis ]);
                     h.all_images = reshape(envelope,[h.scan.N_z_axis h.scan.N_x_axis Nrx*Ntx*Nframes]);
-                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
+                    h.image_handle = pcolor(axis_handle,x_matrix*scale_factor,z_matrix*scale_factor,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
                     axis(axis_handle,'tight','equal');
                     colorbar(axis_handle);
                     colormap(axis_handle,'gray');
-                    xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
+                    xlabel(axis_handle,['x[' spatial_units ']']); ylabel(axis_handle,['z[' spatial_units ']']);
                     caxis(axis_handle,[min_value max_value]);
                     title(axis_handle,in_title);
                     drawnow;
@@ -181,14 +195,14 @@ classdef beamformed_data < uff
                     [az,el] = view();
                     if (el==90)
                         % plot in 2D
-                        h.image_handle = pcolor(axis_handle,radial_matrix*1e3,axial_matrix*1e3,h.all_images(:,:,1));
+                        h.image_handle = pcolor(axis_handle,radial_matrix*scale_factor,axial_matrix*scale_factor,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         set(axis_handle,'YDir','reverse');
                         axis(axis_handle,'tight','equal');
                         colorbar(axis_handle);
                         colormap(axis_handle,'gray');
-                        xlabel(axis_handle,'radial[mm]'); ylabel(axis_handle,'axial[mm]');
+                        xlabel(axis_handle,['radial[' spatial_units ']']); ylabel(axis_handle,['axial[' spatial_units ']']);
                         caxis(axis_handle,[min_value max_value]);
                         title(axis_handle,in_title);
                     else
@@ -197,16 +211,16 @@ classdef beamformed_data < uff
                         y_matrix=reshape(h.scan.y,[h.scan(1).N_axial_axis h.scan(1).N_radial_axis]);
                         z_matrix=reshape(h.scan.z,[h.scan(1).N_axial_axis h.scan(1).N_radial_axis]);
                         surface(axis_handle);
-                        surface(x_matrix*1e3,y_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
+                        surface(x_matrix*scale_factor,y_matrix*scale_factor,z_matrix*scale_factor,h.all_images(:,:,1));
                         shading(axis_handle,'flat');
                         set(axis_handle,'fontsize',14);
                         %set(axis_handle,'YDir','reverse');
                         axis(axis_handle,'tight','equal');
                         colorbar(axis_handle);
                         colormap(axis_handle,'gray');
-                        xlabel(axis_handle,'x[mm]');
-                        ylabel(axis_handle,'y[mm]');
-                        zlabel(axis_handle,'z[mm]');
+                        xlabel(axis_handle,['x[' spatial_units ']']);
+                        ylabel(axis_handle,['y[' spatial_units ']']);
+                        zlabel(axis_handle,['z[' spatial_units ']']);
                         caxis(axis_handle,[min_value max_value]);
                         title(axis_handle,in_title);
                     end
@@ -215,14 +229,15 @@ classdef beamformed_data < uff
                     x_matrix=reshape(h.scan.x,[h.scan(1).N_depth_axis h.scan(1).N_azimuth_axis]);
                     z_matrix=reshape(h.scan.z,[h.scan(1).N_depth_axis h.scan(1).N_azimuth_axis ]);
                     h.all_images = reshape(envelope,[h.scan.N_depth_axis h.scan.N_azimuth_axis Nrx*Ntx*Nframes]);
-                    h.image_handle = pcolor(axis_handle,x_matrix*1e3,z_matrix*1e3,h.all_images(:,:,1));
+                    h.image_handle = pcolor(axis_handle,x_matrix*scale_factor,z_matrix*scale_factor,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
                     axis(axis_handle,'tight','equal');
                     colorbar(axis_handle);
                     colormap(axis_handle,'gray');
-                    xlabel(axis_handle,'x[mm]'); ylabel(axis_handle,'z[mm]');
+                    xlabel(axis_handle,['x[' spatial_units ']']); 
+                    ylabel(axis_handle,['z[' spatial_units ']']);
                     caxis(axis_handle,[min_value max_value]);
                     title(axis_handle,in_title);
                     drawnow;
