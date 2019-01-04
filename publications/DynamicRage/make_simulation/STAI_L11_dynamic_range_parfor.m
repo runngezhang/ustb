@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = false;
+full_simulation = true;
 
 
 
@@ -122,7 +122,9 @@ sca_per_mm2=ceil(sca_per_res_cell/(cell_area/1e-6))
 %%
 if full_simulation
     disp('Now Running full simulation!');
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(650);
+    %[point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(650);
+    [point_position, point_amplitudes] = simulatedGradientFullFieldOfView(100);
+    
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
@@ -236,9 +238,9 @@ channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5_2.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_similar_to_exp_v5_2.uff','b_data');
+    channel_data.write('./FieldII_STAI_gradient_full_field_100.uff','channel_data');
+    b_data.write('./FieldII_STAI_gradient_full_field_100.uff','b_data');
 else
-    channel_data.write('./FieldII_STAI_axial_gradient.uff','channel_data');
-    b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
+    channel_data.write('./FieldII_STAI_axial_gradient_v2.uff','channel_data');
+    b_data.write('./FieldII_STAI_axial_gradient_v2.uff','b_data');
 end
