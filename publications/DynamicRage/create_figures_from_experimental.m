@@ -9,7 +9,7 @@
 clear all;
 close all;
 %% Load the data
-filename = [data_path,filesep,'experimental_dynamic_range_phantom.uff'];
+filename = [data_path,filesep,'phantom_2dB.uff'];
 
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
@@ -29,6 +29,7 @@ b_data_gcf.read(filename,'/b_data_gcf');
 b_data_mv.read(filename,'/b_data_mv');
 b_data_ebmv.read(filename,'/b_data_ebmv');
 b_data_dmas.read(filename,'/b_data_dmas');
+
 
 %% Print authorship and citation details for the dataset
 channel_data.print_authorship
@@ -101,16 +102,37 @@ set(gca,'FontSize',14);
 saveas(f6,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/EBMV'],'eps2c')
 
 %% GLT
-glt = postprocess.gray_level_transform();
-glt.a = 4.3750e-04;
-glt.b = -0.0062;
-glt.c = 0.0500;
-glt.d = 0;
-glt.plot_functions = 1;
+% glt = postprocess.gray_level_transform();
+% glt.a = 4.3750e-04;
+% glt.b = -0.0062;
+% glt.c = 0.0500;
+% glt.d = 0;
+% glt.plot_functions = 1;
+% 
+% glt.input = b_data_das;
+% glt.scan = b_data_das.scan;
+glt_s = postprocess.scurve_gray_level_transform();
+% 
+% glt_s.a = 0.08;
+% glt_s.b = -35;
+% glt_s.c = 0.008;
 
-glt.input = b_data_das;
-glt.scan = b_data_das.scan;
-b_data_glt = glt.go();
+% glt_s.a = 0.08;
+% glt_s.b = -35;
+% glt_s.c = 0.008;
+
+glt_s.a = 0.12;
+glt_s.b = -40;
+glt_s.c = 0.008;
+
+% glt_s.a = 0.15;
+% glt_s.b = -32.5;
+% glt_s.c = 0.01;
+
+glt_s.plot_functions = 1;
+glt_s.input = b_data_das;
+glt_s.scan = b_data_das.scan;
+b_data_glt = glt_s.go();
 
 glt_img = b_data_glt.get_image('none');
 glt_img = db(abs(glt_img./max(glt_img(:))));
@@ -175,9 +197,12 @@ colors=    [0.9047    0.1918    0.1988; ...
 %  create_figures_from_simulation.m script. We are just saving these values
 %  for now.
 
-[meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,39,48.5,-12.5,12.5);
-mask_lateral=abs(b_data_das.scan.x_axis)<12.5e-3;
-theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+12.5e-3)/25e-3;
+[meanLinesLateral,x_axis] = getMeanLateralLines(b_data_das,image,39,48.5,-14,14);
+mask_lateral=abs(b_data_das.scan.x_axis)<14e-3;
+
+%theory_lateral=-40*(b_data_das.scan.x_axis(mask_lateral)+12.5e-3)/25e-3;
+
+theory_lateral = (-1.8*(b_data_das.scan.x_axis(mask_lateral)+14*10^-3))*10^3;
 
 mkdir([ustb_path,filesep,'publications/DynamicRage/figures/experimental/gradient/'])
 
@@ -258,5 +283,113 @@ text(x_pos,double(CNR_image_exp(:)),num2str((CNR_image_exp(:)),'%.2f'),...
 
 saveas(f77,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/CNR'],'eps2c')
 
+                    
+                    
+                    %%
+                    
+
+diff{1} = tools.dynamic_range_test(channel_data,b_data_das,'DAS')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','DAS_exp'],'eps2c')
+diff{2} = tools.dynamic_range_test(channel_data,b_data_mv,'MV')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','MV'],'eps2c')
+diff{3} = tools.dynamic_range_test(channel_data,b_data_ebmv,'EBMV')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','EBMV'],'eps2c')
+diff{4} = tools.dynamic_range_test(channel_data,b_data_dmas,'F-DMAS')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','F-DMAS'],'eps2c')
+diff{5} = tools.dynamic_range_test(channel_data,b_data_cf,'CF')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','CF'],'eps2c')
+diff{6} = tools.dynamic_range_test(channel_data,b_data_gcf,'GCF')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','GCF'],'eps2c')
+diff{7} = tools.dynamic_range_test(channel_data,b_data_pcf,'PCF')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','PCF'],'eps2c')
+diff{8} = tools.dynamic_range_test(channel_data,b_data_glt,'GLT')
+set(gcf,'Position',[360 354 680 344])
+saveas(gcf,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/dynamic_range_test/','GLT'],'eps2c')
+
+%%
+for i = 1:length(image.tags)
+    diff_avrg_exp(i) = mean(diff{i});
+    %diff_lateral(i) = diff{i}(1);
+    %diff_axial(i) = diff{i}(2);
+    diff_CR_vs_das_sim(i) = CR_image_exp(i) - CR_image_exp(1);
+    %diff_CR_signal_vs_das_sim(i) = CR_signal_sim(i) - CR_signal_sim(1);
+end
+
+%%
+cr_percentage = (((CR_image_exp - CR_image_exp(1))/CR_image_exp(1)))*100;
+cr_percentage = (CR_image_exp - CR_image_exp(1));
+CR_selected = cr_percentage;
+
+%%
+lmd_sim_slope = fitlm(CR_selected(1:8),diff_avrg_exp(1:8))
+
+lmd_sim_slope.Rsquared.Ordinary
+lmd_sim_slope.Rsquared.Adjusted
+
+f113 = figure(114);clf;hold all;
+linespes = '+ox*sd<>';
+for i = 1:length(image.all)
+    plot(CR_selected(i),diff_avrg_exp(i),linespes(i),'Color',colors(i,:),'MarkerSize',10);
+end
+lmd_sim_slope.plot
+hline = findobj(gcf, 'type', 'line');
+set(hline,'LineWidth',3);
+set(hline(3),'Color',[0 0 0]);
+set(hline(3),'DisplayName','Fitted line');
+title('')
+xlabel('CR_{LC} improve cmp. DAS [%]');%xlim([-5 75]);
+ylabel('Slope diff [in %]');%ylim([-50 5]);
+text(80,10,sprintf('R-Squared: %.2f',lmd_sim_slope.Rsquared.Ordinary),'FontSize',18);
+text(80,0,sprintf('R-Squared adj: %.2f',lmd_sim_slope.Rsquared.Adjusted),'FontSize',18);
+set(gca,'FontSize',14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, 'Type', 'Legend');
+legend show
+legend([{image.tags{1:8}} hLegend.String],'Location','nw');
+figure;
+lmd_sim_slope.plot();
+
+saveas(f113,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/correlation_experimental'],'eps2c')
+%%
+lmd_sim_slope = fitlm(CR_selected(1:7),diff_avrg_exp(1:7))
+
+lmd_sim_slope.Rsquared.Ordinary
+lmd_sim_slope.Rsquared.Adjusted
+
+f113 = figure(114);clf;hold all;
+linespes = '+ox*sd<>';
+for i = 1:length(image.all)-1
+    plot(CR_selected(i),diff_avrg_exp(i),linespes(i),'Color',colors(i,:),'MarkerSize',10);
+end
+lmd_sim_slope.plot
+hline = findobj(gcf, 'type', 'line');
+set(hline,'LineWidth',3);
+set(hline(3),'Color',[0 0 0]);
+set(hline(3),'DisplayName','Fitted line');
+title('')
+xlabel('CR_{LC} improve compared to DAS [dB]','Interpreter', 'tex');%xlim([-5 75]);
+ylabel('DRT value');%ylim([-50 5]);
+text(20,1.1,sprintf('R-Squared: %.2f',lmd_sim_slope.Rsquared.Ordinary),'FontSize',18);
+text(20,1,sprintf('R-Squared adj: %.2f',lmd_sim_slope.Rsquared.Adjusted),'FontSize',18);
+set(gca,'FontSize',14);
+delete(hline(4));
+legend();
+hLegend = findobj(gcf, 'Type', 'Legend');
+legend show
+legend([{image.tags{1:7}} hLegend.String],'Location','nw');
+
+
+saveas(f113,[ustb_path,filesep,'publications/DynamicRage/figures/experimental/correlation_experimental_withouth_GLT'],'eps2c')
+
+%%
+
 save('Experimental.mat','b_data_das','image','CR_signal_exp', ...
-                        'CR_image_exp', 'CNR_signal_exp', 'CNR_image_exp');
+                        'CR_image_exp', 'CNR_signal_exp', 'CNR_image_exp','diff_avrg_exp');

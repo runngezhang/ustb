@@ -14,7 +14,7 @@
 clear all;
 close all;
 
-filename = [data_path,filesep,'FieldII_STAI_simulated_dynamic_range.uff'];
+filename = [data_path,filesep,'FieldII_STAI_simulated_dynamic_range_v5.uff'];
 
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data');

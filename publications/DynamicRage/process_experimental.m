@@ -2,13 +2,41 @@ clear all;
 close all;
 
 %%
-filename = [data_path,filesep,'experimental_dynamic_range_phantom.uff'];
+%filename = 'phantom_2dB.uff';
+filename = [data_path,filesep,'phantom_1d8dB.uff'];
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
 
 
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).','z_axis',linspace(8e-3,52e-3,2048).')
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).','z_axis',linspace(6e-3,52.5e-3,2048).')
 
+%if strcmp(filename,'phantom_2dB.uff')
+    channel_data.data(:,:,1) = 0;
+    [f, F] = tools.power_spectrum(channel_data.data,channel_data.sampling_frequency);
+    
+    figure(777);
+    subplot(2,1,1);
+    plot(f,db(F));
+    
+    % interpolation_factor = 2;
+    %
+    % channel_data.data = interpft(double(channel_data.data),length(channel_data.data)*interpolation_factor);
+    % channel_data.sampling_frequency = channel_data.sampling_frequency*2;
+    
+    freq_lim = [1e6 1.5e6];
+    data_filtered = tools.high_pass(channel_data.data, channel_data.sampling_frequency,freq_lim);
+    channel_data.data = data_filtered;
+    
+    [f, F] = tools.power_spectrum(channel_data.data,channel_data.sampling_frequency);
+    
+    subplot(2,1,1);hold on;
+    plot(f,db(F),'r');
+    title('After filtering and interpolation');
+    
+    
+    channel_data.name = {['Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details']};
+    channel_data.sound_speed = 1470;
+%%
 %% Beamformer
 %
 % With *channel_data* and a *scan* we have all we need to produce an
@@ -146,7 +174,7 @@ colormap gray;caxis([-60 0]);axis image;title('EBMV');xlabel('x [mm]');ylabel('z
 set(gca,'FontSize',14);
 
 %%
-channel_data.name = {'Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details'};
+channel_data.name = {'v2 Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details'};
 channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ali Fatemi <ali.fatemi@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
 channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
 channel_data.version = {'1.0.1'};

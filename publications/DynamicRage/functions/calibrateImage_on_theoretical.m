@@ -1,4 +1,4 @@
-function [image_corrected, correcting_coeff] = calibrateImage(sta_image,image,z_start,z_stop,x_start,x_stop,order,gradient,colors)
+function [image_corrected, correcting_coeff] = calibrateImage_on_theoretical(sta_image,image,z_start,z_stop,x_start,x_stop,order,gradient,colors)
 %CALIBRATEIMAGE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,7 +12,7 @@ for i = 1:length(image.all)
 end
 
 for i = 1:length(image.all)
-    correcting_coeff{i} = polyfit(regression_top{i},regression_top{1},order);
+    correcting_coeff{i} = polyfit(regression_top{i},max(regression_top{i})+theory,order);
 end
 
 if order == 3

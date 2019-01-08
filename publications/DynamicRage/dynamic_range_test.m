@@ -1,12 +1,12 @@
 clear all; close all;
 
 %filename = 'FieldII_STAI_simulated_dynamic_range.uff';
-filename = 'experimental_dynamic_range_phantom.uff';
+filename = 'FieldII_STAI_gradient_full_field_100.uff';
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
 %% Scan
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(10e-3,55e-3,256).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(5e-3,50e-3,256).');
 
 %% Beamformer
 

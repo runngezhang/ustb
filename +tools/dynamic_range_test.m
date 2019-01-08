@@ -1,4 +1,4 @@
-function [diff] = dynamic_range_test(channel_data,b_data,title_txt)
+function [diff,diff_2] = dynamic_range_test(channel_data,b_data,title_txt)
 
 if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
     z_start = 47.5;
@@ -25,12 +25,20 @@ elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created
     gradient = -2;% db/mm
     do_axial = 2; %If we want to estimate the axial as well, run this twice.
     sub_fig_setup = [1 3];
-elseif strcmp(channel_data.name,'Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details')
+elseif strcmp(channel_data.name,'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details')
     z_start = 40;
     z_stop = 48.5;
-    x_start = -15;
-    x_stop = 15;
-    gradient = -1.66;% db/mm
+    x_start = -14;
+    x_stop = 14;
+    gradient = -1.8;% db/mm
+    do_axial = 2; %If we want to estimate the axial as well, run this twice.
+    sub_fig_setup = [1 3];
+elseif strcmp(channel_data.name,'v2 Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details')
+    z_start = 40;
+    z_stop = 48.5;
+    x_start = -14;
+    x_stop = 14;
+    gradient = -1.8%1.66;% db/mm
     do_axial = 1;
     sub_fig_setup = [1 2];
 else
@@ -92,10 +100,12 @@ for i = 1:do_axial
     subplot(sub_fig_setup(1),sub_fig_setup(2),sub_fig_index_2+i-1);
     hold all;
     plot(theory_line,theory_line,'LineWidth',2,'DisplayName','Theoretical');
-    plot(theory_line,mean_line,'LineWidth',2,'DisplayName','Mean lateral line');
+    plot(theory_line,mean_line,'LineWidth',2,'DisplayName','Mean response');
     plot(theory_line,regression,'LineWidth',2,'DisplayName','Estimated slope');
     set(gca, 'XDir','reverse');xlabel('Input [dB]');ylabel('Output [dB]');
-    title(sprintf('Theory: -1, estimated: -%.4f',regresion_coeff(1)));
+    %title(sprintf('Theory (gradient %.1f): -1, estimated: -%.4f',gradient,regresion_coeff(1)));
+    text(-5,-55,sprintf('Theory: 1'),'FontSize',18);
+    text(-5,-60,sprintf('Estimated: %.2f',regresion_coeff(1)),'FontSize',18);
     legend show;set(gca,'FontSize',15); ylim([-80 0]);
     
     v= max(abs(theory_line));
@@ -104,7 +114,8 @@ for i = 1:do_axial
     xlim([-v 0]);
     %axis([-v 0 -v 0])
     
-    diff(i) = abs(1-regresion_coeff(1))*100;
+    diff(i) = regresion_coeff(1)./1
+    text(-5,-65,sprintf('DRT: %.2f',(diff(i))),'FontSize',18);
     
     if(do_axial == 2)
         if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
@@ -120,6 +131,11 @@ for i = 1:do_axial
         elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created with Field II. See the reference for details')
             z_start = 13;
             z_stop = 37;
+            x_start = 15;
+            x_stop = 18.5;
+        elseif  strcmp(channel_data.name,'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details')
+            z_start = 9;
+            z_stop = 39;
             x_start = 15;
             x_stop = 18.5;
         end

@@ -1,7 +1,7 @@
 clear all; close all;
 
 %filename = [data_path,filesep,'FieldII_STAI_dynamic_range_more_scatteres.uff'];
-filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_axial_gradient_updated.uff';
+filename = [data_path,filesep,'FieldII_STAI_axial_gradient_v2.uff'];
 
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data');
@@ -12,7 +12,7 @@ channel_data.read(filename,'/channel_data');
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).', 'z_axis', linspace(8e-3,55e-3,512).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).', 'z_axis', linspace(8e-3,55e-3,2048).');
 
 %% Beamformer
 %
@@ -54,11 +54,7 @@ imagesc(weights)
 
 b_data_tx.data = b_data_tx.data + randn(size(b_data_tx.data))*eps;
 
-%%
 
-figure;hold all;
-%plot(data_test(:,64));
-plot(real(b_data_tx.data(:,64)));
 %% DELAY AND SUM
 das=postprocess.coherent_compounding();
 das.input = b_data_tx;

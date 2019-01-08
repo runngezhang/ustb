@@ -1,10 +1,103 @@
 clear all; close all;
 
 %filename = 'FieldII_STAI_simulated_dynamic_range.uff';
-filename = 'FieldII_STAI_dynamic_range_similar_to_exp_v4.uff';
+filename = 'FieldII_STAI_dynamic_range_similar_to_exp_v5_2.uff';
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
+
+filename = [filename,'_noise'];
+%%
+% fs=250;
+% n=0:1/fs:4; 
+% interference=sin(2*pi*(50)*n); % interference signal
+% random_noise=rand(size(n)); %  random noise signal
+% noise_signal=interference+random_noise;% determinning the tottal noisy signal that will be added later
+% signal= cos(2*pi*(50)*n); % Definning signal of interest 
+% signal_power=sum(abs(signal.^2)) ; %u sing parseval's theorem
+% current_noisy_signal_power=sum(abs(noise_signal.^2)); % using parseval's theorem
+% pn=signal_power/(10^(2/10)); % required SNR =2dB
+% new_noisy_signal=(noise_signal./sqrt(current_noisy_signal_power)).*sqrt(pn); % normalizing the noisy signal to get unity power then multiplying it by the new power to achieve the required SNR
+% new_noisy_signal_power=sum(abs(new_noisy_signal.^2));
+% SNR=10*log10(signal_power/new_noisy_signal_power)
+% 
+% figure(88);clf;hold all;
+% plot(interference);
+% plot(new_noisy_signal,'r')
+%%
+% pipe.channel_data=anechoic;
+% b_data = pipe.go({ das });
+% p=squeeze(b_data.data(mask_o,1,1,:));
+% mu=mean(p.*conj(p),1);
+% MU=mean(mu);
+% anechoic.data=anechoic.data./sqrt(MU);
+
+%% generate band-pass normalized uncorrelated gaussian noise
+noise=uff.channel_data(channel_data);
+noise.data=random('normal',0,1,size(noise.data))+1i*random('normal',0,1,size(noise.data));
+
+X=abs(fft(channel_data.data,[],1));
+X=mean(X(:,:),2);
+
+% getting the same bandwidth 
+noise.data=ifft(bsxfun(@times,fft(noise.data,[],1),X));
+%%
+% beamform and normalize for fixed number of channels
+p=squeeze(noise.data(:,1,1,:));
+mu=mean(p.*conj(p),1);
+MU_NOISE=mean(mu);
+noise.data=noise.data./sqrt(MU_NOISE);
+
+%% mix
+SNR=60;
+snr=10.^(SNR/20);
+
+data_with_noise=uff.channel_data(channel_data);
+for n=1:channel_data.N_frames
+    data_with_noise.data(:,:,:,n)=snr*channel_data.data(:,:,:,n) + noise.data(:,:,:,n); 
+end
+
+
+%%
+channel_data.plot
+data_with_noise.plot
+signal_power=sum(abs(data_with_noise.data(:).^2))
+noise_signal_power=sum(abs(noise.data(:).^2))
+
+SNR=10*log10(signal_power/noise_signal_power)
+
+
+channel_data = data_with_noise;
+% %%
+
+% data_with_noise=uff.channel_data(channel_data);
+% for i=1:channel_data.N_waves
+%     i
+%     data_with_noise.data(:,:,i) = awgn(channel_data.data(:,:,i),5,'measured');
+% end
+% %%
+% channel_data.plot
+% data_with_noise.plot
+% 
+% %%
+% [f, F] = tools.power_spectrum2(noise.data,noise.sampling_frequency);
+% [f_signal, F_noise] = tools.power_spectrum2(channel_data.data,channel_data.sampling_frequency);
+% 
+% %%
+% figure;
+% subplot(211)
+% plot(f,db(F))
+% subplot(212)
+% plot(f_signal,db(F_noise))
+% %%
+% %out = awgn(channel_data.data(:,1,1),10)
+% 
+% signal_power = mean(abs(channel_data.data(:,1,1).^2))
+% pn=signal_power/(10^(0.5/10))
+% figure(77);clf;hold all;
+% plot(channel_data.data(:,1,1))
+% plot(randn(size(channel_data.data(:,1,1)))*pn,'r')
+%channel_data.data
 %% Scan
 %
 % The scan area is defines as a collection of pixels spanning our region of
@@ -12,9 +105,9 @@ channel_data.read([data_path,filesep,filename],'/channel_data');
 % which is defined with two components: the lateral range and the
 % depth range. *scan* too has a useful *plot* method it can call.
 
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(6e-3,52.5e-3,2048).');
+%scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).', 'z_axis', linspace(6e-3,52.5e-3,2048).');
 
-%scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(5e-3,55e-3,2048).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(6e-3,52.5e-3,2048).');
 %scan=uff.linear_scan('x_axis',linspace(-12.5e-3,-2.5e-3,50).', 'z_axis', linspace(43e-3,46e-3,200).');
 %%
 % demod = preprocess.demodulation;
@@ -66,7 +159,7 @@ das_img = b_data_das.get_image('none').*weights;  % Compensation weighting
 das_img = db(abs(das_img./max(das_img(:))));                 % Normalize on max
 f1 = figure(1);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,das_img);
-colormap gray;caxis([-120 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
+colormap gray;caxis([-60 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
 
 %%
 cf = postprocess.coherence_factor();
@@ -144,7 +237,7 @@ f5 = figure(7);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,mv_img);
 colormap gray;caxis([-60 0]);axis image;colorbar;title('MV');xlabel('x [mm]');ylabel('z [mm]');
 
-%% EIGENSPACE BASED MINIMUM VARIANCE
+% EIGENSPACE BASED MINIMUM VARIANCE
 ebmv=postprocess.eigenspace_based_minimum_variance();
 ebmv.dimension = dimension.receive;
 ebmv.input = b_data_tx;
@@ -164,7 +257,7 @@ f6 = figure(8);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
 colormap gray;caxis([-60 0]);axis image;colorbar;title('EBMV');xlabel('x [mm]');ylabel('z [mm]');
 
-%% Process DMAS
+% Process DMAS
 dmas=postprocess.delay_multiply_and_sum();
 dmas.dimension = dimension.receive;
 dmas.transmit_apodization = mid.transmit_apodization;
