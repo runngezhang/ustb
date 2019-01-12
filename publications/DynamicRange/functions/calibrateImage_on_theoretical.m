@@ -7,12 +7,14 @@ function [image_corrected, correcting_coeff] = calibrateImage_on_theoretical(sta
 theory = linspace(0,-abs(x_start-x_stop)*gradient,length(x_axis));
 
 for i = 1:length(image.all)
-    regresion_coeff{i} = polyfit(x_axis,meanLines.all{i},3);
+    regresion_coeff{i} = polyfit(x_axis,meanLines.all{i},order);
     regression_top{i} = polyval(regresion_coeff{i},x_axis);
 end
 
 for i = 1:length(image.all)
+    warning off
     correcting_coeff{i} = polyfit(regression_top{i},max(regression_top{i})+theory,order);
+    warning on
 end
 
 if order == 3
@@ -25,19 +27,14 @@ elseif order == 2
     for i = 1:length(image.all)
         image_corrected.all{i} = image.all{i}.^2*correcting_coeff{i}(1) + image.all{i}*correcting_coeff{i}(2) + correcting_coeff{i}(3);
         image_corrected.all_signal{i} = 10.^(image_corrected.all{i}./20);
-        %image_corrected.all{i}(image.all{i}<-80) = -80;
     end
     
 elseif order == 4
     for i = 1:length(image.all)
         image_corrected.all{i} = image.all{i}.^4*correcting_coeff{i}(1) + image.all{i}.^3*correcting_coeff{i}(2) + image.all{i}.^2*correcting_coeff{i}(3) + image.all{i}*correcting_coeff{i}(4)+ correcting_coeff{i}(5);
         image_corrected.all_signal{i} = 10.^(image_corrected.all{i}./20);
-        %image_corrected.all{i}(image.all{i}<-100) = -100;
-        %image_corrected.all{i} = image_corrected.all{i}-max(image_corrected.all{i}(:));
     end
 end
-
-
 
 image_corrected.tags = image.tags;
 
@@ -76,7 +73,6 @@ for i = 1:length(regression_top)
     title(image.tags{i});
     xlim([-20 20])
     ylim([-150 0])
-    saveas(f10,[ustb_path,filesep,'publications/DynamicRage/figures/simulation_v2/calibrated/curves_',image.tags{i}],'eps2c')
 end
 
 
