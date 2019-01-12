@@ -38,7 +38,7 @@ elseif strcmp(channel_data.name,'v2 Experimental dynamic range phantom. Recorded
     z_stop = 48.5;
     x_start = -14;
     x_stop = 14;
-    gradient = -1.8%1.66;% db/mm
+    gradient = -1.8;
     do_axial = 1;
     sub_fig_setup = [1 2];
 else
@@ -64,16 +64,10 @@ for i = 1:do_axial
     mean_line = mean_line-max(mean_line(:)); %Normalize to have the gradient start at 0
     
     if i == 1 %Then we are estimating the lateral
-        %regresion_coeff = polyfit(b_data.scan.x_axis(x_min:x_max)*10^3,lateral_line',1);
-        %regression = polyval(regresion_coeff,b_data.scan.x_axis(x_min:x_max)*10^3);
         theory_line = (gradient*(b_data.scan.x_axis(x_min:x_max)-x_start*10^-3))*10^3;
-
-        
         sub_fig_index_1 = [1];
         sub_fig_index_2 = [2];
     else % we are estimating the axial
-        %regresion_coeff = polyfit(b_data.scan.z_axis(z_min:z_max)*10^3,mean_line,1);
-        %regression = polyval(regresion_coeff,b_data.scan.z_axis(z_min:z_max)*10^3);
         theory_line = (gradient*(b_data.scan.z_axis(z_min:z_max)-z_start*10^-3))*10^3;
         sub_fig_index_1 = [1];
         sub_fig_index_2 = [2];
@@ -112,9 +106,8 @@ for i = 1:do_axial
       rectangle('Position',[-v -80 v 80],...
          'LineWidth',4,'LineStyle','-','EdgeColor',c)
     xlim([-v 0]);
-    %axis([-v 0 -v 0])
     
-    diff(i) = regresion_coeff(1)./1
+    diff(i) = regresion_coeff(1)./1;
     text(-5,-65,sprintf('DRT: %.2f',(diff(i))),'FontSize',18);
     
     if(do_axial == 2)
@@ -140,13 +133,6 @@ for i = 1:do_axial
             x_stop = 18.5;
         end
     end
-    
-%     annotation('textbox', [0 0.5 1 0.1], ...
-%     'String', 'hello, title', ...
-%     'EdgeColor', 'none', ...
-%     'HorizontalAlignment', 'center',...
-%     'TextSize',20)
-    
 end
 
 end
