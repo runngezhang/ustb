@@ -50,21 +50,16 @@ classdef scurve_gray_level_transform < postprocess
             
             % dB space
             x_dB=20*log10(x);
-            
-
 
             x_dB_compressed = 1./(1+exp(-h.a.*(x_dB-h.b)));
             x_dB_compressed = (x_dB_compressed-max(x_dB_compressed))./h.c;
             
             %%
             
-            
             % find the cublic spline that approximate the compressed values
             x_compressed=10.^(x_dB_compressed/20);
             gamma = fit(x.',x_compressed.','cubicspline');
 
-
-            
             %%
             signal = abs(h.input.data);
             max_value = max(signal(:));
@@ -81,24 +76,6 @@ classdef scurve_gray_level_transform < postprocess
             
             output.data(output.data==0) = eps;
             
-            
-%             %%
-%             h.input.data = h.input.data;
-%             img = h.input.get_image('none');
-%             img_db = db(abs(img./max_value));
-%             figure;
-%             imagesc(img_db);colormap gray;
-%             colorbar;caxis([-60 max(img_db(:))]);
-%             
-%             img = h.input.get_image();
-%             img_vect = img(:);
-%             value_at = mean(img_vect(mask))
-%             
-%             figure;
-%             subplot(211)
-%             imagesc(reshape(img(:).*mask,2048,1024));;caxis([-60 0]);colorbar
-%             subplot(212)
-%             imagesc(reshape(img(:),2048,1024));caxis([-60 0]);colorbar
             %%
    
             if h.plot_functions
@@ -133,9 +110,9 @@ classdef scurve_gray_level_transform < postprocess
                 ylabel('Output signal [dB]');
                 legend('location','nw','Uniform','p(B)');
                 xlim([-80 0]);
-                saveas(f8888,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_lin'],'eps2c')
-                saveas(f8889,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log'],'eps2c')
-                saveas(f8899,[ustb_path,filesep,'publications/DynamicRage/figures/GLT_theory_log_stripped'],'eps2c')
+                saveas(f8888,[ustb_path,filesep,'publications/DynamicRange/figures/GLT_theory_lin'],'eps2c')
+                saveas(f8889,[ustb_path,filesep,'publications/DynamicRange/figures/GLT_theory_log'],'eps2c')
+                saveas(f8899,[ustb_path,filesep,'publications/DynamicRange/figures/GLT_theory_log_stripped'],'eps2c')
             end
             
             % update hash
