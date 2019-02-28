@@ -378,6 +378,10 @@ classdef apodization < uff
             % minimum aperture
             z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
             z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+
+            % maximum aperture
+            z_dist(z_dist>=0 & z_dist>h.maximum_aperture(1)/h.f_number(1)) = h.maximum_aperture(1)/h.f_number(1);
+            z_dist(z_dist<0 & z_dist<-h.maximum_aperture(1)/h.f_number(1)) = -h.maximum_aperture(1)/h.f_number(1);
             
             % azimuth and elevation tangents, including tilting overwrite
             tan_theta = x_dist./z_dist;
@@ -425,6 +429,10 @@ classdef apodization < uff
                         % minimum aperture
                         z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
                         z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+
+                        % maximum aperture
+                        z_dist(z_dist>=0 & z_dist>h.maximum_aperture(1)/h.f_number(1)) = h.maximum_aperture(1)/h.f_number(1);
+                        z_dist(z_dist<0 & z_dist<-h.maximum_aperture(1)/h.f_number(1)) = -h.maximum_aperture(1)/h.f_number(1);
                         
                         % compute tangents & distance
                         tan_theta(:,n) = x_dist./z_dist;
@@ -444,6 +452,10 @@ classdef apodization < uff
                         % minimum aperture
                         z_dist(z_dist>=0 & z_dist<h.minimum_aperture(1)/h.f_number(1)) = h.minimum_aperture(1)/h.f_number(1);
                         z_dist(z_dist<0 & z_dist>-h.minimum_aperture(1)/h.f_number(1)) = -h.minimum_aperture(1)/h.f_number(1);
+
+                        % maximum aperture
+                        z_dist(z_dist>=0 & z_dist>h.maximum_aperture(1)/h.f_number(1)) = h.maximum_aperture(1)/h.f_number(1);
+                        z_dist(z_dist<0 & z_dist<-h.maximum_aperture(1)/h.f_number(1)) = -h.maximum_aperture(1)/h.f_number(1);
                         
                         % compute tangents & distance
                         tan_theta(:,n) = x_dist./z_dist;
