@@ -138,21 +138,21 @@ colormap gray;caxis([-60 0]);axis image;colorbar;title('MV');xlabel('x [mm]');yl
 
 
 %% Process DMAS
-% dmas=postprocess.delay_multiply_and_sum();
-% dmas.dimension = dimension.receive;
-% dmas.transmit_apodization = mid.transmit_apodization;
-% dmas.receive_apodization = mid.receive_apodization;
-% dmas.input = b_data_tx;
-% dmas.channel_data = channel_data;
-% b_data_dmas = dmas.go();
-% b_data_dmas.plot(6,['DMAS'])
-% 
-% %%
-% dmas_img = b_data_dmas.get_image('none').*weights;
-% dmas_img = db(abs(dmas_img./max(dmas_img(:))));
-% f7 = figure(7);clf;
-% imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
-% colormap gray;caxis([-60 0]);axis image;colorbar;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
+dmas=postprocess.delay_multiply_and_sum();
+dmas.dimension = dimension.receive;
+dmas.transmit_apodization = mid.transmit_apodization;
+dmas.receive_apodization = mid.receive_apodization;
+dmas.input = b_data_tx;
+dmas.channel_data = channel_data;
+b_data_dmas = dmas.go();
+b_data_dmas.plot(6,['DMAS'])
+
+%%
+dmas_img = b_data_dmas.get_image('none').*weights;
+dmas_img = db(abs(dmas_img./max(dmas_img(:))));
+f7 = figure(7);clf;
+imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,dmas_img);
+colormap gray;caxis([-60 0]);axis image;colorbar;title('DMAS');xlabel('x [mm]');ylabel('z [mm]');
 
 
 %% EIGENSPACE BASED MINIMUM VARIANCE
