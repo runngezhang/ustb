@@ -14,6 +14,12 @@ close all;
 filename = [data_path,filesep,'experimental_STAI_dynamic_range.uff'];
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 %% Scan
 %scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).','z_axis',linspace(6e-3,52.5e-3,2048).');

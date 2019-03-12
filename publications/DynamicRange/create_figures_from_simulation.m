@@ -1,6 +1,6 @@
 %% Create the figures from the simulated dynamic range phantom
 % For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., 
-% & Rodriguez-Molares, A. (2018). The effect of dynamic range alterations
+% & Rodriguez-Molares, A. (2019). The effect of dynamic range alterations
 % in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
 % Ferroelectrics, and Frequency Control.
 %
@@ -9,16 +9,22 @@
 % plot both the simulated and the experimental in the same plot.
 %
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
-% updated for revised version of manuscript 08.01.19
+% updated for revised version of manuscript 07.03.19
 %% Load the data from the uff file
 clear all;
 close all;
 addpath([ustb_path,filesep,'publications',filesep,'DynamicRange',filesep,'functions',filesep])
 
-filename = [data_path,filesep,'FieldII_STAI_dynamic_range.uff'];
+filename = 'FieldII_STAI_dynamic_range.uff';
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 channel_data = uff.channel_data();
-channel_data.read(filename,'/channel_data');
+channel_data.read([data_path,filesep,filename],'/channel_data');
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -29,22 +35,22 @@ b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 b_data_weights = uff.beamformed_data();
 
-b_data_das.read(filename,'/b_data_das');
-b_data_cf.read(filename,'/b_data_cf');
-b_data_pcf.read(filename,'/b_data_pcf');
-b_data_gcf.read(filename,'/b_data_gcf');
-b_data_mv.read(filename,'/b_data_mv');
-b_data_ebmv.read(filename,'/b_data_ebmv');
-b_data_dmas.read(filename,'/b_data_dmas');
-b_data_weights.read(filename,'/b_data_weights');
+b_data_das.read([data_path,filesep,filename],'/b_data_das');
+b_data_cf.read([data_path,filesep,filename],'/b_data_cf');
+b_data_pcf.read([data_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.read([data_path,filesep,filename],'/b_data_gcf');
+b_data_mv.read([data_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.read([data_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.read([data_path,filesep,filename],'/b_data_dmas');
+b_data_weights.read([data_path,filesep,filename],'/b_data_weights');
 
 weights = b_data_weights.get_image('none');
 
-
-mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/'])
+mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/gradient/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/calibrated/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/dynamic_range_test/']);
+
 %% Print authorship and citation details for the dataset
 channel_data.print_authorship
 
@@ -196,7 +202,6 @@ set(gca,'FontSize',14)
 axis([-15 3 27 33]);
 saveas(f88,[ustb_path,filesep,'publications/DynamicRange/figures/simulation/EBMV_zoomed'],'eps2c')
 
-
 %% Putting the dB images and the signal in a cell array
 addpath([ustb_path,'/publications/DynamicRange/functions']);
 image.all{1} = das_img;
@@ -242,9 +247,6 @@ colors=    [0.9047    0.1918    0.1988; ...
             0.6859    0.4035    0.2412; ...
             0.9718    0.5553    0.7741; ...
             0.6400    0.6400    0.6400];
-        
-
-
 
 %% Plot the lateral and axial gradient together with the experimental lateral gradient
 image_experimental = load([ustb_path,'/publications/DynamicRange/','Experimental.mat'],'image');

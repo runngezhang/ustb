@@ -10,6 +10,12 @@
 clear all; close all;
 
 filename = 'FieldII_STAI_dynamic_range.uff';
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
@@ -34,8 +40,8 @@ mid.transmit_apodization.f_number=1.75;
 
 b_data_tx = mid.go();
 
-%% Calculate weights to get uniform FOV. See example
-% http://www.ustb.no/examples/uniform-fov-in-field-ii-simulations/
+%% Calculate weights to get uniform FOV. 
+% See example at http://www.ustb.no/examples/uniform-fov-in-field-ii-simulations/
 [weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
 
 %% Put the weights in a b_data struct to be able to save them later

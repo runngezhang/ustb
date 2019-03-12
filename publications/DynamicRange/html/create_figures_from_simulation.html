@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Create the figures from the simulated dynamic range phantom</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-01-12"><meta name="DC.source" content="create_figures_from_simulation.m"><style type="text/css">
+      --><title>Create the figures from the simulated dynamic range phantom</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-03-12"><meta name="DC.source" content="create_figures_from_simulation.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,14 +66,20 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Create the figures from the simulated dynamic range phantom</h1><!--introduction--><p>For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., &amp; Rodriguez-Molares, A. (2018). The effect of dynamic range alterations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.</p><p>NB! You need to run the create_figures_from_experimental.m first since we are using the stored experimental gradient values and contrast values to plot both the simulated and the experimental in the same plot.</p><p>Author: Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> 05.06.18 updated for revised version of manuscript 08.01.19</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load the data from the uff file</a></li><li><a href="#2">Print authorship and citation details for the dataset</a></li><li><a href="#3">DAS - Delay-And-Sum</a></li><li><a href="#4">GLT - Gray Level Transform</a></li><li><a href="#5">CF - Coherence Factor</a></li><li><a href="#6">PCF - Phase Coherence Factor</a></li><li><a href="#7">GCF - Generalized Coherence Factor</a></li><li><a href="#8">MV - Capon's Minimum Variance</a></li><li><a href="#9">F-DMAS - Filtered-Delay-Multiply-and-Sum</a></li><li><a href="#10">EBMV - Eigenspace Based Minimum Variance</a></li><li><a href="#11">Putting the dB images and the signal in a cell array</a></li><li><a href="#12">Plot the lateral and axial gradient together with the experimental lateral gradient</a></li><li><a href="#13">Plot the lateral line through the boxes</a></li><li><a href="#15">Calibrate images</a></li><li><a href="#16">Plot the lateral line through the boxes after calibration</a></li><li><a href="#18">Measure contrast and plot together with the experimental</a></li><li><a href="#27">Run Dynamic Range Test</a></li></ul></div><h2 id="1">Load the data from the uff file</h2><pre class="codeinput">clear <span class="string">all</span>;
+  </style></head><body><div class="content"><h1>Create the figures from the simulated dynamic range phantom</h1><!--introduction--><p>For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., &amp; Rodriguez-Molares, A. (2019). The effect of dynamic range alterations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.</p><p>NB! You need to run the create_figures_from_experimental.m first since we are using the stored experimental gradient values and contrast values to plot both the simulated and the experimental in the same plot.</p><p>Author: Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> 05.06.18 updated for revised version of manuscript 07.03.19</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load the data from the uff file</a></li><li><a href="#2">Print authorship and citation details for the dataset</a></li><li><a href="#3">DAS - Delay-And-Sum</a></li><li><a href="#4">GLT - Gray Level Transform</a></li><li><a href="#5">CF - Coherence Factor</a></li><li><a href="#6">PCF - Phase Coherence Factor</a></li><li><a href="#7">GCF - Generalized Coherence Factor</a></li><li><a href="#8">MV - Capon's Minimum Variance</a></li><li><a href="#9">F-DMAS - Filtered-Delay-Multiply-and-Sum</a></li><li><a href="#10">EBMV - Eigenspace Based Minimum Variance</a></li><li><a href="#11">Putting the dB images and the signal in a cell array</a></li><li><a href="#12">Plot the lateral and axial gradient together with the experimental lateral gradient</a></li><li><a href="#13">Plot the lateral line through the boxes</a></li><li><a href="#15">Calibrate images</a></li><li><a href="#16">Plot the lateral line through the boxes after calibration</a></li><li><a href="#18">Measure contrast and plot together with the experimental</a></li><li><a href="#27">Run Dynamic Range Test</a></li></ul></div><h2 id="1">Load the data from the uff file</h2><pre class="codeinput">clear <span class="string">all</span>;
 close <span class="string">all</span>;
 addpath([ustb_path,filesep,<span class="string">'publications'</span>,filesep,<span class="string">'DynamicRange'</span>,filesep,<span class="string">'functions'</span>,filesep])
 
-filename = [data_path,filesep,<span class="string">'FieldII_STAI_dynamic_range.uff'</span>];
+filename = <span class="string">'FieldII_STAI_dynamic_range.uff'</span>;
+url=<span class="string">'http://ustb.no/datasets/'</span>;      <span class="comment">% if not found downloaded from here</span>
+
+<span class="comment">% checks if the data is in your data path, and downloads it otherwise.</span>
+<span class="comment">% The defaults data path is under USTB's folder, but you can change this</span>
+<span class="comment">% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');</span>
+tools.download(filename, url, data_path);
 
 channel_data = uff.channel_data();
-channel_data.read(filename,<span class="string">'/channel_data'</span>);
+channel_data.read([data_path,filesep,filename],<span class="string">'/channel_data'</span>);
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -84,19 +90,18 @@ b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 b_data_weights = uff.beamformed_data();
 
-b_data_das.read(filename,<span class="string">'/b_data_das'</span>);
-b_data_cf.read(filename,<span class="string">'/b_data_cf'</span>);
-b_data_pcf.read(filename,<span class="string">'/b_data_pcf'</span>);
-b_data_gcf.read(filename,<span class="string">'/b_data_gcf'</span>);
-b_data_mv.read(filename,<span class="string">'/b_data_mv'</span>);
-b_data_ebmv.read(filename,<span class="string">'/b_data_ebmv'</span>);
-b_data_dmas.read(filename,<span class="string">'/b_data_dmas'</span>);
-b_data_weights.read(filename,<span class="string">'/b_data_weights'</span>);
+b_data_das.read([data_path,filesep,filename],<span class="string">'/b_data_das'</span>);
+b_data_cf.read([data_path,filesep,filename],<span class="string">'/b_data_cf'</span>);
+b_data_pcf.read([data_path,filesep,filename],<span class="string">'/b_data_pcf'</span>);
+b_data_gcf.read([data_path,filesep,filename],<span class="string">'/b_data_gcf'</span>);
+b_data_mv.read([data_path,filesep,filename],<span class="string">'/b_data_mv'</span>);
+b_data_ebmv.read([data_path,filesep,filename],<span class="string">'/b_data_ebmv'</span>);
+b_data_dmas.read([data_path,filesep,filename],<span class="string">'/b_data_dmas'</span>);
+b_data_weights.read([data_path,filesep,filename],<span class="string">'/b_data_weights'</span>);
 
 weights = b_data_weights.get_image(<span class="string">'none'</span>);
 
-
-mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRange/figures/simulation/'</span>])
+mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRange/figures/simulation/'</span>]);
 mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRange/figures/simulation/gradient/'</span>]);
 mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRange/figures/simulation/calibrated/'</span>]);
 mkdir([ustb_path,filesep,<span class="string">'publications/DynamicRange/figures/simulation/dynamic_range_test/'</span>]);
@@ -655,7 +660,7 @@ saveas(f10,[ustb_path,filesep,<span class="string">'publications/DynamicRange/fi
 ##### SOURCE BEGIN #####
 %% Create the figures from the simulated dynamic range phantom
 % For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., 
-% & Rodriguez-Molares, A. (2018). The effect of dynamic range alterations
+% & Rodriguez-Molares, A. (2019). The effect of dynamic range alterations
 % in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
 % Ferroelectrics, and Frequency Control.
 %
@@ -664,16 +669,22 @@ saveas(f10,[ustb_path,filesep,<span class="string">'publications/DynamicRange/fi
 % plot both the simulated and the experimental in the same plot.
 %
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
-% updated for revised version of manuscript 08.01.19
+% updated for revised version of manuscript 07.03.19
 %% Load the data from the uff file
 clear all;
 close all;
 addpath([ustb_path,filesep,'publications',filesep,'DynamicRange',filesep,'functions',filesep])
 
-filename = [data_path,filesep,'FieldII_STAI_dynamic_range.uff'];
+filename = 'FieldII_STAI_dynamic_range.uff';
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 channel_data = uff.channel_data();
-channel_data.read(filename,'/channel_data');
+channel_data.read([data_path,filesep,filename],'/channel_data');
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -684,22 +695,22 @@ b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 b_data_weights = uff.beamformed_data();
 
-b_data_das.read(filename,'/b_data_das');
-b_data_cf.read(filename,'/b_data_cf');
-b_data_pcf.read(filename,'/b_data_pcf');
-b_data_gcf.read(filename,'/b_data_gcf');
-b_data_mv.read(filename,'/b_data_mv');
-b_data_ebmv.read(filename,'/b_data_ebmv');
-b_data_dmas.read(filename,'/b_data_dmas');
-b_data_weights.read(filename,'/b_data_weights');
+b_data_das.read([data_path,filesep,filename],'/b_data_das');
+b_data_cf.read([data_path,filesep,filename],'/b_data_cf');
+b_data_pcf.read([data_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.read([data_path,filesep,filename],'/b_data_gcf');
+b_data_mv.read([data_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.read([data_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.read([data_path,filesep,filename],'/b_data_dmas');
+b_data_weights.read([data_path,filesep,filename],'/b_data_weights');
 
 weights = b_data_weights.get_image('none');
 
-
-mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/'])
+mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/gradient/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/calibrated/']);
 mkdir([ustb_path,filesep,'publications/DynamicRange/figures/simulation/dynamic_range_test/']);
+
 %% Print authorship and citation details for the dataset
 channel_data.print_authorship
 
@@ -851,7 +862,6 @@ set(gca,'FontSize',14)
 axis([-15 3 27 33]);
 saveas(f88,[ustb_path,filesep,'publications/DynamicRange/figures/simulation/EBMV_zoomed'],'eps2c')
 
-
 %% Putting the dB images and the signal in a cell array
 addpath([ustb_path,'/publications/DynamicRange/functions']);
 image.all{1} = das_img;
@@ -897,9 +907,6 @@ colors=    [0.9047    0.1918    0.1988; ...
             0.6859    0.4035    0.2412; ...
             0.9718    0.5553    0.7741; ...
             0.6400    0.6400    0.6400];
-        
-
-
 
 %% Plot the lateral and axial gradient together with the experimental lateral gradient
 image_experimental = load([ustb_path,'/publications/DynamicRange/','Experimental.mat'],'image');

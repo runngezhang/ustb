@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>create_figures_from_experimental</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-01-08"><meta name="DC.source" content="create_figures_from_experimental.m"><style type="text/css">
+      --><title>create_figures_from_experimental</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-03-12"><meta name="DC.source" content="create_figures_from_experimental.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,13 +66,61 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Create the figures from the experimental dynamic range phantom</a></li><li><a href="#2">Load the data</a></li><li><a href="#3">Print authorship and citation details for the dataset</a></li><li><a href="#4">Display and save the images from all beamformers under study</a></li><li><a href="#5">DAS</a></li><li><a href="#6">CF</a></li><li><a href="#7">PCF</a></li><li><a href="#8">GCF</a></li><li><a href="#9">MV</a></li><li><a href="#10">F-DMAS</a></li><li><a href="#11">EBMV</a></li><li><a href="#12">GLT</a></li><li><a href="#13">Put the images in a cell array.</a></li><li><a href="#14">Add the path to the functions used in the evaluation</a></li><li><a href="#15">Plot lateral graident in db vs. db plot.</a></li><li><a href="#16">Measure contrast</a></li><li><a href="#17">Run the Dynamic Range Test (DRT)</a></li><li><a href="#19">Plotting correlation plot between CR improvement and DRT with all 8 beamforming (including GLT)</a></li><li><a href="#20">Plotting correlation plot between CR improvement and DRT with all 7 methods (excluding GLT)</a></li><li><a href="#21">Save the data to a file to read parts of the results to be plotted with the simulated data</a></li></ul></div><h2 id="1">Create the figures from the experimental dynamic range phantom</h2><p>For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., &amp; Rodriguez-Molares, A. (2018). The effect of dynamic range alterations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.</p><p>Author: Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> 05.06.18 updated for revised version of manuscript 08.01.19</p><pre class="codeinput">clear <span class="string">all</span>;
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Create the figures from the experimental dynamic range phantom</a></li><li><a href="#2">Load the data</a></li><li><a href="#3">Print authorship and citation details for the dataset</a></li><li><a href="#4">Display and save the images from all beamformers under study</a></li><li><a href="#5">DAS</a></li><li><a href="#6">CF</a></li><li><a href="#7">PCF</a></li><li><a href="#8">GCF</a></li><li><a href="#9">MV</a></li><li><a href="#10">F-DMAS</a></li><li><a href="#11">EBMV</a></li><li><a href="#12">GLT</a></li><li><a href="#13">Put the images in a cell array.</a></li><li><a href="#14">Add the path to the functions used in the evaluation</a></li><li><a href="#15">Plot lateral graident in db vs. db plot.</a></li><li><a href="#16">Measure contrast</a></li><li><a href="#17">Run the Dynamic Range Test (DRT)</a></li><li><a href="#19">Plotting correlation plot between CR improvement and DRT with all 8 beamforming (including GLT)</a></li><li><a href="#20">Plotting correlation plot between CR improvement and DRT with all 7 methods (excluding GLT)</a></li><li><a href="#21">Save the data to a file to read parts of the results to be plotted with the simulated data</a></li></ul></div><h2 id="1">Create the figures from the experimental dynamic range phantom</h2><p>For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., &amp; Rodriguez-Molares, A. (2018). The effect of dynamic range alterations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.</p><p>Author: Ole Marius Hoel Rindal <a href="olemarius@olemarius.net">olemarius@olemarius.net</a> 05.06.18 updated for revised version of manuscript 12.03.19</p><pre class="codeinput">clear <span class="string">all</span>;
 close <span class="string">all</span>;
 addpath([ustb_path,filesep,<span class="string">'publications'</span>,filesep,<span class="string">'DynamicRange'</span>,filesep,<span class="string">'functions'</span>,filesep])
-</pre><h2 id="2">Load the data</h2><pre class="codeinput">filename = [data_path,filesep,<span class="string">'experimental_STAI_dynamic_range.uff'</span>];
+</pre><pre class="codeoutput">Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/private/evalmxdom.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/mdbpublish.m' could
+not be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/publish.p' could not
+be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Users/omrindal/Development/USTB_dynamic_range_revision_final/publications/DynamicRange/create_figures_from_experimental.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/private/evalmxdom.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/mdbpublish.m' could
+not be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/publish.p' could not
+be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Users/omrindal/Development/USTB_dynamic_range_revision_final/publications/DynamicRange/create_figures_from_experimental.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/private/evalmxdom.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/mdbpublish.m' could
+not be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Applications/MATLAB_R2018a.app/toolbox/matlab/codetools/publish.p' could not
+be cleared because it contains MATLAB code that is currently executing. 
+Warning: The file
+'/Users/omrindal/Development/USTB_dynamic_range_revision_final/publications/DynamicRange/create_figures_from_experimental.m'
+could not be cleared because it contains MATLAB code that is currently
+executing. 
+</pre><h2 id="2">Load the data</h2><pre class="codeinput">filename = <span class="string">'experimental_STAI_dynamic_range.uff'</span>;
+url=<span class="string">'http://ustb.no/datasets/'</span>;      <span class="comment">% if not found downloaded from here</span>
+
+<span class="comment">% checks if the data is in your data path, and downloads it otherwise.</span>
+<span class="comment">% The defaults data path is under USTB's folder, but you can change this</span>
+<span class="comment">% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');</span>
+tools.download(filename, url, data_path);
 
 channel_data = uff.channel_data();
-channel_data.read(filename,<span class="string">'/channel_data'</span>)
+channel_data.read([data_path,filesep,filename],<span class="string">'/channel_data'</span>)
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -82,13 +130,13 @@ b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 
-b_data_das.read(filename,<span class="string">'/b_data_das'</span>);
-b_data_cf.read(filename,<span class="string">'/b_data_cf'</span>);
-b_data_pcf.read(filename,<span class="string">'/b_data_pcf'</span>);
-b_data_gcf.read(filename,<span class="string">'/b_data_gcf'</span>);
-b_data_mv.read(filename,<span class="string">'/b_data_mv'</span>);
-b_data_ebmv.read(filename,<span class="string">'/b_data_ebmv'</span>);
-b_data_dmas.read(filename,<span class="string">'/b_data_dmas'</span>);
+b_data_das.read([data_path,filesep,filename],<span class="string">'/b_data_das'</span>);
+b_data_cf.read([data_path,filesep,filename],<span class="string">'/b_data_cf'</span>);
+b_data_pcf.read([data_path,filesep,filename],<span class="string">'/b_data_pcf'</span>);
+b_data_gcf.read([data_path,filesep,filename],<span class="string">'/b_data_gcf'</span>);
+b_data_mv.read([data_path,filesep,filename],<span class="string">'/b_data_mv'</span>);
+b_data_ebmv.read([data_path,filesep,filename],<span class="string">'/b_data_ebmv'</span>);
+b_data_dmas.read([data_path,filesep,filename],<span class="string">'/b_data_dmas'</span>);
 </pre><pre class="codeoutput">UFF: reading channel_data [uff.channel_data]
 UFF: reading sequence [uff.wave] [====================] 100%
 UFF: reading /b_data_das [uff.beamformed_data]
@@ -458,16 +506,22 @@ ans =
 % Ferroelectrics, and Frequency Control.
 %
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
-% updated for revised version of manuscript 08.01.19
+% updated for revised version of manuscript 12.03.19
 
 clear all;
 close all;
 addpath([ustb_path,filesep,'publications',filesep,'DynamicRange',filesep,'functions',filesep])
 %% Load the data
-filename = [data_path,filesep,'experimental_STAI_dynamic_range.uff'];
+filename = 'experimental_STAI_dynamic_range.uff';
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 channel_data = uff.channel_data();
-channel_data.read(filename,'/channel_data')
+channel_data.read([data_path,filesep,filename],'/channel_data')
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -477,13 +531,13 @@ b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 
-b_data_das.read(filename,'/b_data_das');
-b_data_cf.read(filename,'/b_data_cf');
-b_data_pcf.read(filename,'/b_data_pcf');
-b_data_gcf.read(filename,'/b_data_gcf');
-b_data_mv.read(filename,'/b_data_mv');
-b_data_ebmv.read(filename,'/b_data_ebmv');
-b_data_dmas.read(filename,'/b_data_dmas');
+b_data_das.read([data_path,filesep,filename],'/b_data_das');
+b_data_cf.read([data_path,filesep,filename],'/b_data_cf');
+b_data_pcf.read([data_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.read([data_path,filesep,filename],'/b_data_gcf');
+b_data_mv.read([data_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.read([data_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.read([data_path,filesep,filename],'/b_data_dmas');
 
 
 %% Print authorship and citation details for the dataset

@@ -5,16 +5,22 @@
 % Ferroelectrics, and Frequency Control.
 %
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
-% updated for revised version of manuscript 08.01.19
+% updated for revised version of manuscript 12.03.19
 
 clear all;
 close all;
 addpath([ustb_path,filesep,'publications',filesep,'DynamicRange',filesep,'functions',filesep])
 %% Load the data
-filename = [data_path,filesep,'experimental_STAI_dynamic_range.uff'];
+filename = 'experimental_STAI_dynamic_range.uff';
+url='http://ustb.no/datasets/';      % if not found downloaded from here
+
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
 channel_data = uff.channel_data();
-channel_data.read(filename,'/channel_data')
+channel_data.read([data_path,filesep,filename],'/channel_data')
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -24,13 +30,13 @@ b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 
-b_data_das.read(filename,'/b_data_das');
-b_data_cf.read(filename,'/b_data_cf');
-b_data_pcf.read(filename,'/b_data_pcf');
-b_data_gcf.read(filename,'/b_data_gcf');
-b_data_mv.read(filename,'/b_data_mv');
-b_data_ebmv.read(filename,'/b_data_ebmv');
-b_data_dmas.read(filename,'/b_data_dmas');
+b_data_das.read([data_path,filesep,filename],'/b_data_das');
+b_data_cf.read([data_path,filesep,filename],'/b_data_cf');
+b_data_pcf.read([data_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.read([data_path,filesep,filename],'/b_data_gcf');
+b_data_mv.read([data_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.read([data_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.read([data_path,filesep,filename],'/b_data_dmas');
 
 
 %% Print authorship and citation details for the dataset

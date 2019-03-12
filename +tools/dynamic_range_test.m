@@ -1,31 +1,37 @@
-function [diff,diff_2] = dynamic_range_test(channel_data,b_data,title_txt)
+function [drt] = dynamic_range_test(channel_data,b_data,title_txt)
+%% The Dynamic Range Test
+% The dynamic range test (DRT) was introduced in Rindal, O. M. H., Austeng, A., Fatemi, A., 
+% & Rodriguez-Molares, A. (2019). The effect of dynamic range alterations
+% in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
+% Ferroelectrics, and Frequency Control. We encourage you to use it, and
+% provide here the data sets and code to run it. You have to reference the
+% publication above when using the test.
+% This script runs the DRT on the DAS (delay-and-sum), CF (coherence
+% factor) and MV (minimum variance) beamformer.
+%
+% Defining the DRT:
+% To investigate wether a beamforming method is alternating the dynamic
+% range, we have introduced a dynamic range test.
+% This test uses the gradients  in  the  simulated  or the  experimental dataset.
+% The dynamic range test (DRT) is defined as
+%                   DRT=∆/∆_0
+% where ∆ denotes the gradient of a given beamforming method, estimated via
+% linear regression, and ∆_0 denotes the theoretical gradient, as fixed in
+% the simulated and experimental data. DRT measures  how  many  dB  the  
+% output  dynamic  range  deviate sfrom the theoretical, for each dB of the
+% input dynamic range. 
+% 
+% For the simulated dataset we have both an axial and a lateral gradient  
+% and the DRT  can  be  estimated  for  both.  For  simplicity, the reported DRT 
+% value will be the average of the DRT in theaxial  and  lateral  direction.  
+% For  the  experimental  dataset  DRT is estimated in the lateral gradient.
+%
+% @input channel_data : channel data object 
+%        b_data       : beamformed data object with the image created by
+%                       the beamformer under test
+%        title_txt    : title to be used in the plot
 
-if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
-    z_start = 47.5;
-    z_stop = 52.5;
-    x_start = -12.5;
-    x_stop = 12.5;
-    gradient = -2;% db/mm
-    do_axial = 2; %If we want to estimate the axial as well, run this twice.
-    sub_fig_setup = [1 3];
- %   theory_lateral = -40*(b_data.scan.x_axis(mask_lateral)+10e-3)/20e-3;
-elseif strcmp(channel_data.name,'New Simulated dynamic range phantom. Created with Field II. See the reference for details')
-    z_start = 40;
-    z_stop = 48.5;
-    x_start = -12.05;
-    x_stop = 12.05;
-    gradient = -1.66;% db/mm
-    do_axial = 2; %If we want to estimate the axial as well, run this twice.
-    sub_fig_setup = [1 3];
-elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created with Field II. See the reference for details')
-    z_start = 40;
-    z_stop = 48.5;
-    x_start = -15;
-    x_stop = 15;
-    gradient = -2;% db/mm
-    do_axial = 2; %If we want to estimate the axial as well, run this twice.
-    sub_fig_setup = [1 3];
-elseif strcmp(channel_data.name,'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details')
+if strcmp(channel_data.name,'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details')
     z_start = 40;
     z_stop = 48.5;
     x_start = -14;
@@ -45,8 +51,9 @@ else
     error('The dynamic range test is only defined for the simulated dynamic range phantom, and the experimental one. See the example.');
 end
 
-figure(); hold all;
+f = figure(); hold all;
 for i = 1:do_axial
+    % Mask out the gradients
     % Mask out the top gradient part of the image
     mask=reshape(b_data.scan.z>z_start*10^-3&b_data.scan.z<z_stop*10^-3,[length(b_data.scan.z_axis) length(b_data.scan.x_axis)])...
         &reshape(b_data.scan.x>x_start*10^-3&b_data.scan.x<x_stop*10^-3,[length(b_data.scan.z_axis) length(b_data.scan.x_axis)]);
@@ -73,9 +80,11 @@ for i = 1:do_axial
         sub_fig_index_2 = [2];
     end
     
+    %Estimate the gradient using linear regression
     regresion_coeff = polyfit(theory_line,mean_line(:),1);
     regression = polyval(regresion_coeff,theory_line);
     
+    % Do spme plotting
     if i == 1
         subplot(sub_fig_setup(1),sub_fig_setup(2),sub_fig_index_1); hold all;
         imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3,b_data.get_image());
@@ -97,7 +106,7 @@ for i = 1:do_axial
     plot(theory_line,mean_line,'LineWidth',2,'DisplayName','Mean response');
     plot(theory_line,regression,'LineWidth',2,'DisplayName','Estimated slope');
     set(gca, 'XDir','reverse');xlabel('Input [dB]');ylabel('Output [dB]');
-    %title(sprintf('Theory (gradient %.1f): -1, estimated: -%.4f',gradient,regresion_coeff(1)));
+    
     text(-5,-55,sprintf('Theory: 1'),'FontSize',18);
     text(-5,-60,sprintf('Estimated: %.2f',regresion_coeff(1)),'FontSize',18);
     legend show;set(gca,'FontSize',15); ylim([-80 0]);
@@ -107,31 +116,20 @@ for i = 1:do_axial
          'LineWidth',4,'LineStyle','-','EdgeColor',c)
     xlim([-v 0]);
     
-    diff(i) = regresion_coeff(1)./1;
-    text(-5,-65,sprintf('DRT: %.2f',(diff(i))),'FontSize',18);
+    %Calculate the DRT value according to the definition in equation (31)
+    drt(i) = regresion_coeff(1)./1;
+    text(-5,-65,sprintf('DRT: %.2f',(drt(i))),'FontSize',18);
     
+    % If we do the axial gradient as well (for the simulation) we redefine
+    % the position of the gradient variables
     if(do_axial == 2)
-        if strcmp(channel_data.name,'Simulated dynamic range phantom. Created with Field II. See the reference for details')
-            z_start = 12.5;
-            z_stop = 40;
-            x_start = 10.5;
-            x_stop = 14.5;
-        elseif strcmp(channel_data.name,'New Simulated dynamic range phantom. Created with Field II. See the reference for details')
-            z_start = 10;
-            z_stop = 40;
-            x_start = 10.5;
-            x_stop = 19;
-        elseif strcmp(channel_data.name,'v4 New Simulated dynamic range phantom. Created with Field II. See the reference for details')
-            z_start = 13;
-            z_stop = 37;
-            x_start = 15;
-            x_stop = 18.5;
-        elseif  strcmp(channel_data.name,'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details')
-            z_start = 9;
-            z_stop = 39;
-            x_start = 15;
-            x_stop = 18.5;
-        end
+        z_start = 9;
+        z_stop = 39;
+        x_start = 15;
+        x_stop = 18.5;
+        set(f,'Position',[125 273 926 331]);
+    else
+        set(f,'Position',[382 286 702 334]);
     end
 end
 
