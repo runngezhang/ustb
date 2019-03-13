@@ -33,8 +33,6 @@ classdef generalized_coherence_factor_OMHR < postprocess
         channel_data                                  % Need the probe 
         GCF                                           % BEAMFORMED_DATA class with the computed phase coherent factor
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
     end
     
     methods
