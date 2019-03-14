@@ -43,7 +43,9 @@ channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
 
 %% Delay the data
-% Define the scan (notice less pixels than in the paper to speed it up)
+% Define the scan (notice less pixels than in the paper to speed it up), 
+% this actually degrades the quality of the MV image since to few lateral
+% pixels causes some signal cancelling. But I guess it's a fair tradeoff :)
 scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).', 'z_axis', linspace(5e-3,50e-3,256).');
 
 mid = midprocess.das();
@@ -59,8 +61,11 @@ b_data_tx = mid.go();
 %%
 % Calculate weights to get uniform FOV. 
 % See example at http://www.ustb.no/examples/uniform-fov-in-field-ii-simulations/
-[weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
-
+if strcmp(filename,'FieldII_STAI_dynamic_range.uff')
+    [weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
+else
+    weights = 1;
+end
 %% DELAY AND SUM
 das=postprocess.coherent_compounding();
 das.input = b_data_tx;
