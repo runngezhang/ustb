@@ -151,29 +151,153 @@ b_dmas = dmas.go();
 [C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_dmas, mask_o, mask_i, 'DMAS');
 
 
-%% SLSC
+%% SLSC using M elements (hacking the SLSC postprocess)
 
 % important that we use only M elements, centered around the abscissa of the pixel. 
 % Changing that will alter the SNR ratio.
 das.dimension = dimension.transmit;
-pipe.transmit_apodization.window = uff.window.none;
-pipe.receive_apodization.window = uff.window.none;
 b_data_tx = pipe.go({das});
 
 %%
-
+% Set up the SLSC postprocess
 slsc = postprocess.short_lag_spatial_coherence();
 slsc.receive_apodization = das.receive_apodization;
 slsc.dimension = dimension.receive;
 slsc.channel_data = mix;
-slsc.maxM = 10;
+slsc.maxM = 30;
 slsc.input = b_data_tx;
 slsc.K_in_lambda = 1;
-slsc_data = slsc.go();
-%%
-% evaluate contrast
-[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, slsc_data, mask_o, mask_i, 'SLSC');
 
-%%
-slsc_data.plot([],['SLSC'],[0 1],'none');
+% Pick out the M channels that contains data, thus only the M elemetns
+% centered around the abscissa of the pixel. This is taken care of by the
+% apodization so we can just pick up the element signals that are larger than 0.
+
+% Do you want to normalize the SLSC values??
+normalize_slsc = 1;
+
+% Data buffers
+aux_data_N1 = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
+aux_data_N5 = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
+aux_data_N10 = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
+aux_data_N20 = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
+aux_data_N30 = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
+data_cube_M_elements = complex(zeros(b_data_tx.scan.N_z_axis,b_data_tx.scan.N_x_axis,M,1));
+for f = 1:mix.N_frames
+    f
+    % Reshape the beamformed data as a cube (Z,X,Elements)
+    data_cube = reshape(b_data_tx.data(:,:,1,f),sca.N_z_axis,sca.N_x_axis,mix.N_channels);
+    for x = 1: b_data_tx.scan.N_x_axis
+        sum_over_z = abs(sum(squeeze(data_cube(:,x,:)),1));
+        elements_with_data = sum_over_z>0;
+        data_cube_M_elements(:,x,:) = data_cube(:,x,elements_with_data);
+    end
+    
+    % Call the actual implementation of the SLSC calculations, but using
+    % the cube which has only M elements
+    [image,slsc_values] = slsc.short_lag_spatial_coherence_implementation(data_cube_M_elements);
+    image(image<0) = 0; % Set negative coherence values to zero
+    
+    % Now, I'm gonna summarize for N = 1,5,10,20 and 30 first lags
+    slsc_img_N_1 = squeeze(sum(slsc_values(:,1,:),2));
+    if normalize_slsc
+        slsc_img_N_1 = slsc_img_N_1./max(slsc_img_N_1(:));
+        slsc_img_N_1(slsc_img_N_1 < 0 ) = 0;
+    end
+    
+    slsc_img_N_5 = squeeze(sum(slsc_values(:,1:5,:),2));
+    if normalize_slsc
+        slsc_img_N_5 = slsc_img_N_5./max(slsc_img_N_5(:));
+        slsc_img_N_5(slsc_img_N_5 < 0 ) = 0;
+    end
+    
+    slsc_img_N_10 = squeeze(sum(slsc_values(:,1:10,:),2));
+    if normalize_slsc
+        slsc_img_N_10 = slsc_img_N_10./max(slsc_img_N_10(:));
+        slsc_img_N_10(slsc_img_N_10 < 0 ) = 0;
+    end
+    
+    slsc_img_N_20 = squeeze(sum(slsc_values(:,1:20,:),2));
+    if normalize_slsc
+        slsc_img_N_20 = slsc_img_N_20./max(slsc_img_N_20(:));
+        slsc_img_N_20(slsc_img_N_20 < 0 ) = 0;
+    end
+    
+    slsc_img_N_30 = squeeze(sum(slsc_values(:,1:30,:),2));
+    if normalize_slsc
+        slsc_img_N_30 = slsc_img_N_30./max(slsc_img_N_30(:));
+        slsc_img_N_30(slsc_img_N_30 < 0 ) = 0;
+    end
+    
+    aux_data_N1(:,1,1,f) = slsc_img_N_1(:);
+    aux_data_N5(:,1,1,f) = slsc_img_N_5(:);
+    aux_data_N10(:,1,1,f) = slsc_img_N_10(:);
+    aux_data_N20(:,1,1,f) = slsc_img_N_20(:);
+    aux_data_N30(:,1,1,f) = slsc_img_N_30(:);
+end
+
+% Put the resulting SLSC images in a beamformed data
+b_slsc_M_N1 = uff.beamformed_data();
+b_slsc_M_N1.scan = sca;
+b_slsc_M_N1.data = aux_data_N1;
+
+b_slsc_M_N5 = uff.beamformed_data();
+b_slsc_M_N5.scan = sca;
+b_slsc_M_N5.data = aux_data_N5;
+
+b_slsc_M_N10 = uff.beamformed_data();
+b_slsc_M_N10.scan = sca;
+b_slsc_M_N10.data = aux_data_N10;
+
+b_slsc_M_N20 = uff.beamformed_data();
+b_slsc_M_N20.scan = sca;
+b_slsc_M_N20.data = aux_data_N20;
+
+b_slsc_M_N30 = uff.beamformed_data();
+b_slsc_M_N30.scan = sca;
+b_slsc_M_N30.data = aux_data_N30;
+
+
+[C_N1, CNR_N1, Pmax_N1, GCNR_N1]=contrast(M, channel_SNR, b_slsc_M_N1, mask_o, mask_i, 'SLSC M = 55 N=1');
+[C_N5, CNR_N5, Pmax_N5, GCNR_N5]=contrast(M, channel_SNR, b_slsc_M_N5, mask_o, mask_i, 'SLSC M = 55 N=5');
+[C_N10, CNR_N10, Pmax_N10, GCNR_N10]=contrast(M, channel_SNR, b_slsc_M_N10, mask_o, mask_i, 'SLSC M = 55 N=10');
+[C_N20, CNR_N20, Pmax_N20, GCNR_N20]=contrast(M, channel_SNR, b_slsc_M_N20, mask_o, mask_i, 'SLSC M = 55 N=20');
+[C_N30, CNR_N30, Pmax_N30, GCNR_N30, AUC, nunu, GCNR0, C0]=contrast(M, channel_SNR, b_slsc_M_N30, mask_o, mask_i, 'SLSC M = 55 N=30');
+
+%% Plotting all the SLSC values in one plot for comparison
+figure(123);
+subplot(1,2,1+normalize_slsc)
+plot(10*log10(channel_SNR),GCNR_N1,'MarkerSize',7,'DisplayName','N = 1'); hold on;
+plot(10*log10(channel_SNR),GCNR_N5,'MarkerSize',7,'DisplayName','N = 5'); hold on;
+plot(10*log10(channel_SNR),GCNR_N10,'MarkerSize',7,'DisplayName','N = 10'); hold on;
+plot(10*log10(channel_SNR),GCNR_N20,'MarkerSize',7,'DisplayName','N = 20'); hold on;
+plot(10*log10(channel_SNR),GCNR_N30,'MarkerSize',7,'DisplayName','N = 30'); hold on;
+plot(10*log10(nunu),GCNR0(C0(nunu)),'r--','linewidth',2,'DisplayName','Eq.(34)'); hold on; grid on; axis tight square;
+set(gca,'FontSize', 12);
+ylim([0 1])
+xlabel('10 log_{10} \nu_S/\nu_N');
+ylabel('GCNR');
+legend('show','Location','SouthEast')
+title(['SLSC M=55 ','normalized = ',num2str(normalize_slsc)]);
+set(gca,'FontSize', 14);
+
+
+
+%% SLSC with full aperture
+das.dimension = dimension.transmit;
+pipe.transmit_apodization.window = uff.window.none;
+pipe.receive_apodization.window = uff.window.none;
+
+% Set up the SLSC postprocess
+slsc = postprocess.short_lag_spatial_coherence();
+slsc.receive_apodization = pipe.receive_apodization;
+slsc.dimension = dimension.receive;
+slsc.channel_data = mix;
+slsc.maxM = 20;
+slsc.K_in_lambda = 1;
+
+b_slsc = pipe.go({das slsc});
+
+%% evaluate contrast
+[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_slsc, mask_o, mask_i, 'SLSC (N=20) full aperture');
+
 
