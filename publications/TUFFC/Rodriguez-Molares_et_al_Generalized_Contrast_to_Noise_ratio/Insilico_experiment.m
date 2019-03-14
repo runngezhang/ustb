@@ -155,6 +155,25 @@ b_dmas = dmas.go();
 
 % important that we use only M elements, centered around the abscissa of the pixel. 
 % Changing that will alter the SNR ratio.
+das.dimension = dimension.transmit;
+pipe.transmit_apodization.window = uff.window.none;
+pipe.receive_apodization.window = uff.window.none;
+b_data_tx = pipe.go({das});
 
+%%
 
+slsc = postprocess.short_lag_spatial_coherence();
+slsc.receive_apodization = das.receive_apodization;
+slsc.dimension = dimension.receive;
+slsc.channel_data = mix;
+slsc.maxM = 10;
+slsc.input = b_data_tx;
+slsc.K_in_lambda = 1;
+slsc_data = slsc.go();
+%%
+% evaluate contrast
+[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, slsc_data, mask_o, mask_i, 'SLSC');
+
+%%
+slsc_data.plot([],['SLSC'],[0 1],'none');
 
