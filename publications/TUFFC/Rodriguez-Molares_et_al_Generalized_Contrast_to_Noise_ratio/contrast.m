@@ -1,4 +1,4 @@
-function [CE, CNRE, MSR, GCNR, AUC]=contrast(M, SNR, b_data, mask_o, mask_i, my_title)
+function [CE, CNRE, MSR, GCNR, AUC, nunu, GCNR0, C0]=contrast(M, SNR, b_data, mask_o, mask_i, my_title,fgr_handls)
 
 CE=[];
 CNRE=[];
@@ -80,8 +80,8 @@ CNR0 = @(c) abs(c -1)./sqrt(c.^2+1);
 pmax = @(c) 0.5+ 0.5*( c.^-(c./(c-1)) - c.^(-1./(c-1)));
 GCNR0 = @(c) c.^-(c./(c-1)) - c.^(-1./(c-1));
 
+
 %% C
-figure;
 plot(10*log10(SNR),10*log10(CE),'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
 plot(10*log10(nunu),10*log10(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
 set(gca,'FontSize', 12);
