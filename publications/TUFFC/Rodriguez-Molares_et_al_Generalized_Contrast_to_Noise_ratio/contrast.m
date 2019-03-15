@@ -1,4 +1,4 @@
-function [CE, CNRE, MSR, GCNR, AUC, nunu, GCNR0, C0]=contrast(M, SNR, b_data, mask_o, mask_i, my_title,fgr_handls)
+function [CE, CNRE, MSR, GCNR, AUC, nunu, GCNR0, C0]=contrast(M, SNR, b_data, mask_o, mask_i, my_title)
 
 CE=[];
 CNRE=[];
@@ -12,13 +12,23 @@ for n=1:b_data.N_frames
     img=abs(reshape(b_data.data(:,1,1,n),[b_data.scan.N_z_axis b_data.scan.N_x_axis]));
     
     if n==20
-        figure;
-        imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
-        caxis(20*log10(prctile(img(:),99)) + [-60 0] )
-        set(gca,'FontSize', 14);
-        xlabel('x[mm]');
-        ylabel('z[mm]');
-        title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
+        if strcmp(my_title,'SLSC')
+            figure;
+            imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, img); colormap gray; axis equal tight; colorbar;
+            caxis([0 0.95])
+            set(gca,'FontSize', 14);
+            xlabel('x[mm]');
+            ylabel('z[mm]');
+            title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
+        else
+            figure;
+            imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
+            caxis(20*log10(prctile(img(:),99)) + [-60 0] )
+            set(gca,'FontSize', 14);
+            xlabel('x[mm]');
+            ylabel('z[mm]');
+            title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
+        end
     end
    
     %% clasic
@@ -82,6 +92,7 @@ GCNR0 = @(c) c.^-(c./(c-1)) - c.^(-1./(c-1));
 
 
 %% C
+figure
 plot(10*log10(SNR),10*log10(CE),'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
 plot(10*log10(nunu),10*log10(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
 set(gca,'FontSize', 12);
