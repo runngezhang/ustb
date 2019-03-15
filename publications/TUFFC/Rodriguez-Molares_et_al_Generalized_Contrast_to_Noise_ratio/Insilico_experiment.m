@@ -174,9 +174,6 @@ Q = slsc.maxM./M
 % centered around the abscissa of the pixel. This is taken care of by the
 % apodization so we can just pick up the element signals that are larger than 0.
 
-% Do you want to normalize the SLSC values??
-normalize_slsc = 1;
-
 % Data buffers
 aux_data = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
 aux_data_clamped = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
@@ -197,6 +194,7 @@ for f = 1:mix.N_frames
     image(image<0) = 0; % Set negative coherence values to zero
     
     slsc_img = squeeze(sum(slsc_values(:,:,:),2));
+    slsc_img = slsc_img./max(slsc_img(:)); %According to previous publications
     
     % Make one clamped version
     slsc_img_clamped = slsc_img;
@@ -210,17 +208,18 @@ for f = 1:mix.N_frames
 end
 
 % Put the resulting SLSC images in a beamformed data
-b_slsc_M = uff.beamformed_data();
-b_slsc_M.scan = sca;
-b_slsc_M.data = aux_data;
+b_slsc_M_shifted = uff.beamformed_data();
+b_slsc_M_shifted.scan = sca;
+b_slsc_M_shifted.data = aux_data;
 
 b_slsc_M_clamped = uff.beamformed_data();
 b_slsc_M_clamped.scan = sca;
 b_slsc_M_clamped.data = aux_data_clamped;
 
 %%
-[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC M = 55 clamped');
-[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_slsc_M, mask_o, mask_i, 'SLSC M = 55 shifted');
+[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_slsc_M_shifted, mask_o, mask_i, 'SLSC');
+[C, CNR, Pmax, GCNR]=contrast(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC');
+
 %% Plotting all the SLSC values in one plot for comparison
 figure(123);
 subplot(1,2,1+normalize_slsc)
