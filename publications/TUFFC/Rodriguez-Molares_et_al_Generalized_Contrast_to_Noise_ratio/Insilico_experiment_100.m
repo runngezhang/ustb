@@ -240,4 +240,20 @@ for n=1:10
     str = str + sprintf("%0.4f $\\pm$ %0.4f \\\\ ",GCNR_slsc(1,n),GCNR_slsc(2,n));   
 end
 
-str
+%% GCNR difference
+% (GCNR_cf(1,:)-GCNR_das(1,:))*100
+% sqrt(GCNR_cf(2,:).^2+GCNR_das(2,:).^2)*100
+% 
+% (GCNR_gcf(1,:)-GCNR_das(1,:))*100
+% sqrt(GCNR_gcf(2,:).^2+GCNR_das(2,:).^2)*100
+% 
+% (GCNR_pcf(1,:)-GCNR_das(1,:))*100
+% sqrt(GCNR_pcf(2,:).^2+GCNR_das(2,:).^2)*100
+% 
+% (GCNR_dmas(1,:)-GCNR_das(1,:))*100
+% sqrt(GCNR_dmas(2,:).^2+GCNR_das(2,:).^2)*100
+% 
+% (GCNR_slsc(1,:)-GCNR_das(1,:))*100
+% sqrt(GCNR_slsc(2,:).^2+GCNR_das(2,:).^2)*100
+
+

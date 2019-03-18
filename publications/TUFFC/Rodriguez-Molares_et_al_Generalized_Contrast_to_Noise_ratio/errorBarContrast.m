@@ -12,7 +12,7 @@ for n=1:b_data.N_frames
     
     img=abs(reshape(b_data.data(:,1,1,n),[b_data.scan.N_z_axis b_data.scan.N_x_axis]));
     
-    if n==b_data.N_frames
+    if n==100%ismember(n,1:10:100)
         figure;
         imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
         caxis(20*log10(prctile(img(:),99)) + [-60 0] )
@@ -37,16 +37,17 @@ for n=1:b_data.N_frames
     [pdf_i]=hist(img(mask_i),x);      
     [pdf_o]=hist(img(mask_o),x);
 
-%     if n==14
+%     if n==71
 %         figure;
 %         plot(x,pdf_i./sum(pdf_i),'r-', 'linewidth',2); hold on; grid on;
 %         plot(x,pdf_o./sum(pdf_o),'b-', 'linewidth',2); 
-%         hh=area(x,min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]));
+%         hh=area(x,min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]), 'LineStyle','none');
 %         hh.FaceColor = [0.6 0.6 0.6];
 %         xlabel('||s||');
 %         ylabel('Probability');
-%         set(gca,'FontSize', 14);
 %         legend('p_i','p_o','OVL');
+%         title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
+%         set(gca,'FontSize', 14);
 %     end
     
     OVL(n)=sum(min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]));
