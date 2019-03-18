@@ -103,7 +103,7 @@ figure;
 plot(10*log10(nunu),10*log10(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
 errorbar(SNRdB,C_(1,:),C_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', 'b'); 
 set(gca,'FontSize', 12);
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('C');
 legend('Field II','Eq.(25)','Location','SouthWest')
 title(my_title);
@@ -115,7 +115,7 @@ plot(10*log10(nunu),CNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis 
 errorbar(SNRdB,CNR_(1,:),CNR_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', 'b'); 
 set(gca,'FontSize', 12);
 ylim([0 max([max(CNRE) 1])])
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('CNR');
 legend('Field II','Eq.(26)','Location','SouthEast')
 title(my_title);
@@ -153,7 +153,7 @@ plot(10*log10(nunu),GCNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis
 errorbar(SNRdB,GCNR_(1,:),GCNR_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', 'b'); 
 set(gca,'FontSize', 12);
 ylim([0 1])
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('GCNR');
 legend('Field II','Eq.(34)','Location','SouthEast')
 title(my_title);
