@@ -3,43 +3,28 @@ close all;
 
 %% Download data
 url='https://nyhirse.medisin.ntnu.no/ustb/data/gcnr/';   % if not found data will be downloaded from here
-filename='insilico_100.uff';
+filename='invitro_24.uff';
 tools.download(filename, url, data_path);   
 
 %% Load data
 mix = uff.channel_data();
 mix.read([data_path filesep filename],'/mix');
-channel_SNR = h5read([data_path filesep filename],'/channel_SNR');;
-channel_SNR = reshape(channel_SNR,[10 10]);
 
-%% Scan
-sca=uff.linear_scan('x_axis',linspace(-6e-3,6e-3,256).','z_axis', linspace(14e-3,26e-3,2.5*256).');
+bu_data = mix.data;
+
+%% tgc
+figure;
+plot(mix.time,p(mix.time)); hold on;
+
+mix.data = bsxfun(@times, double(bu_data), 1./p(mix.time).^2);
+
 
 %% Regions
+sca=uff.linear_scan('x_axis',[linspace(-11e-3,-5e-3,256).'; linspace(4e-3,11e-3,256).'],...
+                    'z_axis', linspace(1e-3,40e-3,2.5*256).');
 
-% cyst geometry -> this should go in the uff
-x0=0e-3;                
-z0=20e-3; 
-r=3e-3;                 
-
-% stand off distance <- based on aperture size
-M = 55;                             % aperture size
-aperture = M * mix.probe.pitch;     % active aperture
-F = z0 / aperture;                  % F-number
-r_off = round(1.2 * mix.lambda * F, 5); % stand-off distance (rounded to 0.01 mm) 
-
-% boundaries
-ri=r-r_off;
-ro=r+r_off;
-rO=sqrt(ri^2+ro^2);
-Ai=pi*ri^2;
-Ao=pi*rO^2-pi*ro^2;
-d=sqrt((sca.x-x0).^2+(sca.z-z0).^2);
-
-% masks
-mask_i=d<ri;
-mask_o=(d>ro)&(d<rO);
-
+sca=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).','z_axis', linspace(0e-3,40e-3,256).');                
+                
 %% Prepare beamforming
 pipe=pipeline();
 pipe.scan=sca;
@@ -56,15 +41,37 @@ pipe.receive_apodization.minimum_aperture = M*mix.probe.pitch;
 pipe.receive_apodization.maximum_aperture = M*mix.probe.pitch;
 
 das=midprocess.das();
+das.dimension = dimension.both;
+b_das = pipe.go({ das });
+b_das.plot() 
+
+intensity=mean(10.^(b_das.get_image/20),2)
+t = 2*sca.z_axis/mix.sound_speed;
+
+options = fitoptions('Method','SmoothingSpline','SmoothingParam',1-1e-15);
+p=fit(t,intensity,'smoothingspline', options)
+
+
+figure;
+plot(t,intensity); hold on;
+plot(t,p(t),'r--'); 
+
+figure;
+plot(t,intensity./p(t)); hold on;
+plot(t,0.*t+1,'r--')
+
+
 
 %% DAS
 
-% beamform
-das.dimension = dimension.both;
-b_das = pipe.go({ das });
-
 % evaluate contrast
 [C, CNR, Pmax, GCNR_das]=errorBarContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
+
+% hold on;
+% tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+% tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
+% tools.plot_circle(x0*1e3,z0*1e3,rO*1e3,'g--');
+
 
 %% S-DAS
 

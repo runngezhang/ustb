@@ -1,9 +1,11 @@
 clear all;
 close all;
 
+M = 45;                             % aperture size
+
 %% Download data
 url='https://nyhirse.medisin.ntnu.no/ustb/data/gcnr/';   % if not found data will be downloaded from here
-filename='insilico_100.uff';
+filename='insilico_side_100_M45.uff';
 tools.download(filename, url, data_path);   
 
 %% Load data
@@ -12,33 +14,44 @@ mix.read([data_path filesep filename],'/mix');
 channel_SNR = h5read([data_path filesep filename],'/channel_SNR');;
 channel_SNR = reshape(channel_SNR,[10 10]);
 
-%% Scan
-sca=uff.linear_scan('x_axis',linspace(-6e-3,6e-3,256).','z_axis', linspace(14e-3,26e-3,2.5*256).');
+%% hack it for images
+%channel_SNR=channel_SNR(1:10:end)  
+%mix.data = mix.data(:,:,:,1:10:end) 
 
 %% Regions
 
 % cyst geometry -> this should go in the uff
-x0=0e-3;                
+x0=-3e-3;                
 z0=20e-3; 
 r=3e-3;                 
 
+sca=uff.linear_scan('x_axis', linspace(-7e-3,7e-3,256).','z_axis', linspace(16e-3,24e-3,2.5*256).');
+
 % stand off distance <- based on aperture size
-M = 55;                             % aperture size
 aperture = M * mix.probe.pitch;     % active aperture
 F = z0 / aperture;                  % F-number
 r_off = round(1.2 * mix.lambda * F, 5); % stand-off distance (rounded to 0.01 mm) 
-
+r_off = 0.6e-3;
 % boundaries
 ri=r-r_off;
 ro=r+r_off;
 rO=sqrt(ri^2+ro^2);
 Ai=pi*ri^2;
-Ao=pi*rO^2-pi*ro^2;
 d=sqrt((sca.x-x0).^2+(sca.z-z0).^2);
+l=sqrt(Ai);
 
 % masks
 mask_i=d<ri;
-mask_o=(d>ro)&(d<rO);
+mask_o= ((sca.x>(-x0-l/2)).*(sca.x<(-x0+l/2)).*(sca.z>(z0-l/2)).*(sca.z<(z0+l/2)))>0;
+
+sum(mask_i)
+sum(mask_o)
+
+figure;
+subplot(2,1,1)
+imagesc(sca.x_axis*1e3, sca.z_axis*1e3, reshape(mask_i,[sca.N_z_axis sca.N_x_axis] )); axis equal;
+subplot(2,1,2)
+imagesc(sca.x_axis*1e3, sca.z_axis*1e3, reshape(mask_o,[sca.N_z_axis sca.N_x_axis] )); axis equal;
 
 %% Prepare beamforming
 pipe=pipeline();
@@ -62,9 +75,21 @@ das=midprocess.das();
 % beamform
 das.dimension = dimension.both;
 b_das = pipe.go({ das });
+b_das.plot(); hold on;
+tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+plot(1e3*(-x0+[-l/2 l/2 l/2 -l/2 -l/2]),...
+     1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
+     'b-','Linewidth',2);
+
 
 % evaluate contrast
 [C, CNR, Pmax, GCNR_das]=errorBarContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
+
+% hold on;
+% tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+% tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
+% tools.plot_circle(x0*1e3,z0*1e3,rO*1e3,'g--');
+
 
 %% S-DAS
 
@@ -139,20 +164,6 @@ gcf_anechoic = gcf.go();
 % evaluate contrast
 [C, CNR, Pmax, GCNR_gcf]=errorBarContrast(M, channel_SNR, gcf.GCF, mask_o, mask_i, 'GCF');
 
-%% DMAS
-
-% process DMAS
-dmas=postprocess.delay_multiply_and_sum();
-dmas.dimension = dimension.receive;
-dmas.transmit_apodization = pipe.transmit_apodization;
-dmas.receive_apodization = pipe.receive_apodization;
-dmas.input = b_transmit;
-dmas.channel_data = mix;
-b_dmas = dmas.go();
-
-% evaluate contrast
-[C, CNR, Pmax, GCNR_dmas]=errorBarContrast(M, channel_SNR, b_dmas, mask_o, mask_i, 'DMAS');
-
 %% SLSC 
 
 % important that we use only M elements, centered around the abscissa of the pixel. 
@@ -217,6 +228,21 @@ b_slsc_M_clamped.data = aux_data_clamped;
 
 % contrast
 [C, CNR, Pmax, GCNR_slsc]=errorBarContrast(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC');
+
+%% DMAS
+
+% process DMAS
+dmas=postprocess.delay_multiply_and_sum();
+dmas.dimension = dimension.receive;
+dmas.transmit_apodization = pipe.transmit_apodization;
+dmas.receive_apodization = pipe.receive_apodization;
+dmas.input = b_transmit;
+dmas.channel_data = mix;
+b_dmas = dmas.go();
+
+% evaluate contrast
+[C, CNR, Pmax, GCNR_dmas]=errorBarContrast(M, channel_SNR, b_dmas, mask_o, mask_i, 'DMAS');
+
 
 %% write Latex table
 str = '';

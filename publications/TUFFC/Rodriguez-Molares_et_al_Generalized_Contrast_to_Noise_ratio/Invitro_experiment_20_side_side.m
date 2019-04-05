@@ -1,44 +1,50 @@
 clear all;
 close all;
 
+M = 45;
+
 %% Download data
 url='https://nyhirse.medisin.ntnu.no/ustb/data/gcnr/';   % if not found data will be downloaded from here
-filename='insilico_100.uff';
+filename='invitro_20.uff';
 tools.download(filename, url, data_path);   
 
 %% Load data
 mix = uff.channel_data();
 mix.read([data_path filesep filename],'/mix');
 channel_SNR = h5read([data_path filesep filename],'/channel_SNR');;
-channel_SNR = reshape(channel_SNR,[10 10]);
-
-%% Scan
-sca=uff.linear_scan('x_axis',linspace(-6e-3,6e-3,256).','z_axis', linspace(14e-3,26e-3,2.5*256).');
+channel_SNR = reshape(channel_SNR,[4 5]);
 
 %% Regions
 
 % cyst geometry -> this should go in the uff
-x0=0e-3;                
-z0=20e-3; 
+x0=-0.2118e-3;                
+z0=15.62e-3; 
 r=3e-3;                 
 
+sca=uff.linear_scan('x_axis', x0 + linspace(-4e-3,9e-3,256).','z_axis', z0 + linspace(-4e-3,4e-3,2.5*256).');
+
 % stand off distance <- based on aperture size
-M = 55;                             % aperture size
-aperture = M * mix.probe.pitch;     % active aperture
-F = z0 / aperture;                  % F-number
-r_off = round(1.2 * mix.lambda * F, 5); % stand-off distance (rounded to 0.01 mm) 
+r_off = 0.5e-3;                     % overwrite to handle larger pulse duration
 
 % boundaries
 ri=r-r_off;
-ro=r+r_off;
-rO=sqrt(ri^2+ro^2);
 Ai=pi*ri^2;
-Ao=pi*rO^2-pi*ro^2;
 d=sqrt((sca.x-x0).^2+(sca.z-z0).^2);
+l=sqrt(Ai);
+skip=6e-3;
 
 % masks
 mask_i=d<ri;
-mask_o=(d>ro)&(d<rO);
+mask_o= ((sca.x>(x0+skip-l/2)).*(sca.x<(x0+skip+l/2)).*(sca.z>(z0-l/2)).*(sca.z<(z0+l/2)))>0;
+
+sum(mask_i)
+sum(mask_o)
+
+figure;
+subplot(2,1,1)
+imagesc(sca.x_axis*1e3, sca.z_axis*1e3, reshape(mask_i,[sca.N_z_axis sca.N_x_axis] )); axis equal;
+subplot(2,1,2)
+imagesc(sca.x_axis*1e3, sca.z_axis*1e3, reshape(mask_o,[sca.N_z_axis sca.N_x_axis] )); axis equal;
 
 %% Prepare beamforming
 pipe=pipeline();
@@ -56,15 +62,40 @@ pipe.receive_apodization.minimum_aperture = M*mix.probe.pitch;
 pipe.receive_apodization.maximum_aperture = M*mix.probe.pitch;
 
 das=midprocess.das();
-
-%% DAS
-
-% beamform
 das.dimension = dimension.both;
 b_das = pipe.go({ das });
+b_das.plot(); hold on;
+tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
+     1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
+     'g--','Linewidth',2);
+
+% %% Estimate SNR
+% muo = squeeze(mean(abs(b_das.data(mask_o>0,:,:,:)).^2,1));
+% sigmao = squeeze(std(abs(b_das.data(mask_o>0,:,:,:)).^2,1));
+% mui = squeeze(mean(abs(b_das.data(mask_i>0,:,:,:)).^2,1));
+% sigmai = squeeze(std(abs(b_das.data(mask_i>0,:,:,:)).^2,1));
+% 
+% figure;
+% plot(10*log10(mui),'r.-'); hold on;
+% plot(10*log10(muo),'b.-'); 
+% legend('inside','outside');
+% 
+% figure;
+% plot(10*log10(muo./mui),'r.-'); hold on;
+% 
+% channel_SNR=(3./reshape(mui./muo,[4 5])-3)/2/M
+ 
+%% DAS
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_das]=errorBarContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
+[C, CNR, Pmax, GCNR_das]=meanContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
+
+% hold on;
+% tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+% tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
+% tools.plot_circle(x0*1e3,z0*1e3,rO*1e3,'g--');
+
 
 %% S-DAS
 
@@ -91,7 +122,7 @@ b_sdas.data = 20*log10(abs(b_das.data)./max(abs(b_das.data)));
 b_sdas.data = 10.^(reshape(f(b_sdas.data),size(b_sdas.data))/20);
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_sdas]=errorBarContrast(M, channel_SNR, b_sdas, mask_o, mask_i, 'S-DAS');
+[C, CNR, Pmax, GCNR_sdas]=meanContrast(M, channel_SNR, b_sdas, mask_o, mask_i, 'S-DAS');
 
 %% beamforming on transmit
 das.dimension = dimension.transmit;
@@ -108,7 +139,7 @@ cf.input = b_transmit;
 cf_anechoic = cf.go();
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_cf]=errorBarContrast(M, channel_SNR, cf.CF, mask_o, mask_i, 'CF');
+[C, CNR, Pmax, GCNR_cf]=meanContrast(M, channel_SNR, cf.CF, mask_o, mask_i, 'CF');
 
 %% PCF
 
@@ -123,7 +154,7 @@ pcf.input = b_transmit;
 pcf_anechoic = pcf.go();
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_pcf]=errorBarContrast(M, channel_SNR, pcf.FCC, mask_o, mask_i, 'PCF');
+[C, CNR, Pmax, GCNR_pcf]=meanContrast(M, channel_SNR, pcf.FCC, mask_o, mask_i, 'PCF');
 
 %% GCF
 
@@ -137,7 +168,7 @@ gcf.input = b_transmit;
 gcf_anechoic = gcf.go();
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_gcf]=errorBarContrast(M, channel_SNR, gcf.GCF, mask_o, mask_i, 'GCF');
+[C, CNR, Pmax, GCNR_gcf]=meanContrast(M, channel_SNR, gcf.GCF, mask_o, mask_i, 'GCF');
 
 %% DMAS
 
@@ -151,7 +182,7 @@ dmas.channel_data = mix;
 b_dmas = dmas.go();
 
 % evaluate contrast
-[C, CNR, Pmax, GCNR_dmas]=errorBarContrast(M, channel_SNR, b_dmas, mask_o, mask_i, 'DMAS');
+[C, CNR, Pmax, GCNR_dmas]=meanContrast(M, channel_SNR, b_dmas, mask_o, mask_i, 'DMAS');
 
 %% SLSC 
 
@@ -216,43 +247,38 @@ b_slsc_M_clamped.scan = sca;
 b_slsc_M_clamped.data = aux_data_clamped;
 
 % contrast
-[C, CNR, Pmax, GCNR_slsc]=errorBarContrast(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC');
+[C, CNR, Pmax, GCNR_slsc]=meanContrast(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC');
 
 %% write Latex table
 str = '';
-for n=1:10
+for n=5:-1:1
     % SNR
-    str = str + sprintf("%0.0f & ",10*log10(channel_SNR(1,n)));
+    str = str + sprintf("%0.1f & ",10*log10(channel_SNR(1,n)));
     % DAS
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_das(1,n),GCNR_das(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_das(1,n));
     % S-DAS
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_sdas(1,n),GCNR_sdas(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_sdas(1,n));
     % CF
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_cf(1,n),GCNR_cf(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_cf(1,n));
     % PCF
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_pcf(1,n),GCNR_pcf(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_pcf(1,n));
     % GCF
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_gcf(1,n),GCNR_gcf(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_gcf(1,n));
     % DMAS
-    str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_dmas(1,n),GCNR_dmas(2,n));
+    str = str + sprintf("%0.4f & ",GCNR_dmas(1,n));
     % SLSC
-    str = str + sprintf("%0.4f $\\pm$ %0.4f \\\\ ",GCNR_slsc(1,n),GCNR_slsc(2,n));   
+    str = str + sprintf("%0.4f \\\\ ",GCNR_slsc(1,n));   
 end
 
 %% GCNR difference
-% (GCNR_cf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_cf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_gcf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_gcf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_pcf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_pcf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_dmas(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_dmas(2,:).^2+GCNR_das(2,:).^2)*100
-% 
+(GCNR_cf(1,:)-GCNR_das(1,:))*100
+
+(GCNR_gcf(1,:)-GCNR_das(1,:))*100
+
+(GCNR_pcf(1,:)-GCNR_das(1,:))*100
+
+(GCNR_dmas(1,:)-GCNR_das(1,:))*100
+
 (GCNR_slsc(1,:)-GCNR_das(1,:))*100
-sqrt(GCNR_slsc(2,:).^2+GCNR_das(2,:).^2)*100
 
 

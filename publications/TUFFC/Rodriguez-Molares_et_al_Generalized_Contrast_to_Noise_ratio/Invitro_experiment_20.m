@@ -3,30 +3,30 @@ close all;
 
 %% Download data
 url='https://nyhirse.medisin.ntnu.no/ustb/data/gcnr/';   % if not found data will be downloaded from here
-filename='insilico_100.uff';
+filename='invitro_20.uff';
 tools.download(filename, url, data_path);   
 
 %% Load data
 mix = uff.channel_data();
 mix.read([data_path filesep filename],'/mix');
 channel_SNR = h5read([data_path filesep filename],'/channel_SNR');;
-channel_SNR = reshape(channel_SNR,[10 10]);
-
-%% Scan
-sca=uff.linear_scan('x_axis',linspace(-6e-3,6e-3,256).','z_axis', linspace(14e-3,26e-3,2.5*256).');
+channel_SNR = reshape(channel_SNR,[4 5]);
 
 %% Regions
 
 % cyst geometry -> this should go in the uff
-x0=0e-3;                
-z0=20e-3; 
+x0=-0.2118e-3;                
+z0=15.62e-3; 
 r=3e-3;                 
+
+sca=uff.linear_scan('x_axis',linspace(-6e-3+x0,6e-3+x0,256).','z_axis', linspace(-6e-3+z0,6e-3+z0,2.5*256).');
 
 % stand off distance <- based on aperture size
 M = 55;                             % aperture size
 aperture = M * mix.probe.pitch;     % active aperture
 F = z0 / aperture;                  % F-number
 r_off = round(1.2 * mix.lambda * F, 5); % stand-off distance (rounded to 0.01 mm) 
+r_off = 0.5e-3;                     % overwrite to handle larger pulse duration
 
 % boundaries
 ri=r-r_off;
@@ -56,15 +56,19 @@ pipe.receive_apodization.minimum_aperture = M*mix.probe.pitch;
 pipe.receive_apodization.maximum_aperture = M*mix.probe.pitch;
 
 das=midprocess.das();
-
-%% DAS
-
-% beamform
 das.dimension = dimension.both;
 b_das = pipe.go({ das });
 
+%% DAS
+
 % evaluate contrast
 [C, CNR, Pmax, GCNR_das]=errorBarContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
+
+% hold on;
+% tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+% tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
+% tools.plot_circle(x0*1e3,z0*1e3,rO*1e3,'g--');
+
 
 %% S-DAS
 
@@ -220,9 +224,9 @@ b_slsc_M_clamped.data = aux_data_clamped;
 
 %% write Latex table
 str = '';
-for n=1:10
+for n=5:-1:1
     % SNR
-    str = str + sprintf("%0.0f & ",10*log10(channel_SNR(1,n)));
+    str = str + sprintf("%0.1f & ",10*log10(channel_SNR(1,n)));
     % DAS
     str = str + sprintf("%0.4f $\\pm$ %0.4f & ",GCNR_das(1,n),GCNR_das(2,n));
     % S-DAS
@@ -240,18 +244,18 @@ for n=1:10
 end
 
 %% GCNR difference
-% (GCNR_cf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_cf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_gcf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_gcf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_pcf(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_pcf(2,:).^2+GCNR_das(2,:).^2)*100
-% 
-% (GCNR_dmas(1,:)-GCNR_das(1,:))*100
-% sqrt(GCNR_dmas(2,:).^2+GCNR_das(2,:).^2)*100
-% 
+(GCNR_cf(1,:)-GCNR_das(1,:))*100
+sqrt(GCNR_cf(2,:).^2+GCNR_das(2,:).^2)*100
+
+(GCNR_gcf(1,:)-GCNR_das(1,:))*100
+sqrt(GCNR_gcf(2,:).^2+GCNR_das(2,:).^2)*100
+
+(GCNR_pcf(1,:)-GCNR_das(1,:))*100
+sqrt(GCNR_pcf(2,:).^2+GCNR_das(2,:).^2)*100
+
+(GCNR_dmas(1,:)-GCNR_das(1,:))*100
+sqrt(GCNR_dmas(2,:).^2+GCNR_das(2,:).^2)*100
+
 (GCNR_slsc(1,:)-GCNR_das(1,:))*100
 sqrt(GCNR_slsc(2,:).^2+GCNR_das(2,:).^2)*100
 

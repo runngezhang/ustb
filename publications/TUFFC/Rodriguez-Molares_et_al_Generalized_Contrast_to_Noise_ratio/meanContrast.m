@@ -1,6 +1,4 @@
-function [C_, CNR_, MSR_, GCNR_, AUC_, nunu, GCNR0, C0]=errorBarContrast(M, SNR, b_data, mask_o, mask_i, my_title,fgr_handls)
-
-matlab_blue = [0 0.4470 0.7410];
+function [C_, CNR_, MSR_, GCNR_, AUC_, nunu, GCNR0, C0]=meanContrast(M, SNR, b_data, mask_o, mask_i, my_title,fgr_handls)
 
 CE=[];
 CNRE=[];
@@ -14,7 +12,7 @@ for n=1:b_data.N_frames
     
     img=abs(reshape(b_data.data(:,1,1,n),[b_data.scan.N_z_axis b_data.scan.N_x_axis]));
     
-    if n==b_data.N_frames%ismember(n,1:10:100)
+    if n==1%ismember(n,1:10:100)
         figure;
         imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
         caxis(20*log10(prctile(img(:),99)) + [-60 0] )
@@ -103,9 +101,10 @@ GCNR0 = @(c) c.^-(c./(c-1)) - c.^(-1./(c-1));
 
 
 %% C
+matlab_blue = [0 0.4470 0.7410];
 figure;
 plot(10*log10(nunu),10*log10(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
-errorbar(SNRdB,C_(1,:),C_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
+plot(SNRdB,C_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
 xlabel('SNR_1 [dB]');
 ylabel('C');
@@ -116,7 +115,7 @@ set(gca,'FontSize', 14);
 %% CNR
 figure;
 plot(10*log10(nunu),CNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
-errorbar(SNRdB,CNR_(1,:),CNR_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
+plot(SNRdB,CNR_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
 ylim([0 max([max(CNRE) 1])])
 xlabel('SNR_1 [dB]');
@@ -154,7 +153,7 @@ set(gca,'FontSize', 14);
 %% GCNR
 figure;
 plot(10*log10(nunu),GCNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
-errorbar(SNRdB,GCNR_(1,:),GCNR_(2,:) ,'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
+plot(SNRdB,GCNR_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
 ylim([0 1])
 xlabel('SNR_1 [dB]');
