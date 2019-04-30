@@ -70,21 +70,6 @@ plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
      1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
      'g--','Linewidth',2);
 
-% %% Estimate SNR
-% muo = squeeze(mean(abs(b_das.data(mask_o>0,:,:,:)).^2,1));
-% sigmao = squeeze(std(abs(b_das.data(mask_o>0,:,:,:)).^2,1));
-% mui = squeeze(mean(abs(b_das.data(mask_i>0,:,:,:)).^2,1));
-% sigmai = squeeze(std(abs(b_das.data(mask_i>0,:,:,:)).^2,1));
-% 
-% figure;
-% plot(10*log10(mui),'r.-'); hold on;
-% plot(10*log10(muo),'b.-'); 
-% legend('inside','outside');
-% 
-% figure;
-% plot(10*log10(muo./mui),'r.-'); hold on;
-% 
-% channel_SNR=(3./reshape(mui./muo,[4 5])-3)/2/M
  
 %% DAS
 
@@ -95,7 +80,6 @@ plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
 % tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
 % tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
 % tools.plot_circle(x0*1e3,z0*1e3,rO*1e3,'g--');
-
 
 %% S-DAS
 
@@ -271,14 +255,25 @@ for n=5:-1:1
 end
 
 %% GCNR difference
-(GCNR_cf(1,:)-GCNR_das(1,:))*100
+[aa ind]=max(abs(GCNR_cf(1,:)-GCNR_das(1,:)));
+aa=GCNR_cf(1,ind)-GCNR_das(1,ind);
+fprintf('Maximum deviation CF at %0.1f dB: %0.2f\n',10*log10(channel_SNR(1,ind)),aa) 
 
-(GCNR_gcf(1,:)-GCNR_das(1,:))*100
+[aa ind]=max(abs(GCNR_gcf(1,:)-GCNR_das(1,:)));
+aa=GCNR_gcf(1,ind)-GCNR_das(1,ind);
+fprintf('Maximum deviation GCF at %0.1f dB: %0.2f\n',10*log10(channel_SNR(1,ind)),aa) 
 
-(GCNR_pcf(1,:)-GCNR_das(1,:))*100
+[aa ind]=max(abs(GCNR_pcf(1,:)-GCNR_das(1,:)));
+aa=GCNR_pcf(1,ind)-GCNR_das(1,ind);
+fprintf('Maximum deviation PCF at %0.1f dB: %0.2f\n',10*log10(channel_SNR(1,ind)),aa) 
 
-(GCNR_dmas(1,:)-GCNR_das(1,:))*100
+[aa ind]=max(abs(GCNR_dmas(1,:)-GCNR_das(1,:)));
+aa=GCNR_dmas(1,ind)-GCNR_das(1,ind);
+fprintf('Maximum deviation DMAS at %0.1f dB: %0.2f\n',10*log10(channel_SNR(1,ind)),aa) 
 
-(GCNR_slsc(1,:)-GCNR_das(1,:))*100
+[aa ind]=max(abs(GCNR_slsc(1,:)-GCNR_das(1,:)));
+aa=GCNR_slsc(1,ind)-GCNR_das(1,ind);
+fprintf('Maximum deviation SLSC at %0.1f dB: %0.2f\n',10*log10(channel_SNR(1,ind)),aa) 
+
 
 
