@@ -1,20 +1,31 @@
+%% Process the experimental data
+% For the publication Rindal, O. M. H., Austeng, A., Fatemi, A., 
+% & Rodriguez-Molares, A. (2019). The effect of dynamic range alterations
+% in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics,
+% Ferroelectrics, and Frequency Control.
+%
+% Author: Ole Marius Hoel Rindal <olemarius@olemarius.net> 05.06.18
+% updated for revised version of manuscript 07.03.19
+
 clear all;
 close all;
 
 %%
-filename = [data_path,filesep,'experimental_dynamic_range_phantom.uff'];
+filename = [data_path,filesep,'experimental_STAI_dynamic_range.uff'];
 channel_data = uff.channel_data();
 channel_data.read(filename,'/channel_data')
+url='http://ustb.no/datasets/';      % if not found downloaded from here
 
+% checks if the data is in your data path, and downloads it otherwise.
+% The defaults data path is under USTB's folder, but you can change this
+% by setting an environment variable with setenv(DATA_PATH,'the_path_you_want_to_use');
+tools.download(filename, url, data_path);   
 
-scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).','z_axis',linspace(8e-3,52e-3,2048).')
+%% Scan
+%scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,1024).','z_axis',linspace(6e-3,52.5e-3,2048).');
+scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,256).','z_axis',linspace(6e-3,52.5e-3,2048).');
 
 %% Beamformer
-%
-% With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *beamformer*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
-
 mid = midprocess.das();
 mid.channel_data=channel_data;
 mid.scan=scan;
@@ -26,19 +37,17 @@ mid.receive_apodization.f_number=1.75;
 mid.transmit_apodization.window=uff.window.boxcar;
 mid.transmit_apodization.f_number=1.75;
 
+b_data_tx = mid.go();
 
-%%
+%% Calculate weights to get uniform FOV. See example
+% http://www.ustb.no/examples/uniform-fov-in-field-ii-simulations/
 [weights,array_gain_compensation,geo_spreading_compensation] = ...
                                            tools.uniform_fov_weighting(mid);
-%% 
+                
+%% Put the weights in a b_data struct to be able to save them later
 b_data_weights = uff.beamformed_data();                                       
 b_data_weights.scan = scan;
 b_data_weights.data = weights(:);
-%%
-
-% Delay and sum on receive, then coherent compounding
-b_data_tx = mid.go();
-
 
 %% DELAY AND SUM
 das=postprocess.coherent_compounding();
@@ -49,7 +58,7 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_das.get_i
 colormap gray;caxis([-60 0]);axis image;title('DAS');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%%
+%% COHERENCE FACTOR
 cf = postprocess.coherence_factor();
 cf.dimension = dimension.receive;
 cf.receive_apodization = mid.receive_apodization;
@@ -61,7 +70,7 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_cf.get_im
 colormap gray;caxis([-60 0]);axis image;title('CF');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%%
+%% PHASE COHERENCE FACTOR
 pcf = postprocess.phase_coherence_factor();
 pcf.dimension = dimension.receive;
 pcf.receive_apodization = mid.receive_apodization;
@@ -73,7 +82,7 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_pcf.get_i
 colormap gray;caxis([-60 0]);axis image;title('PCF');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%%
+%% GENERALIZED COHERENCE FACTOR
 gcf=postprocess.generalized_coherence_factor_OMHR();
 gcf.dimension = dimension.receive;
 gcf.transmit_apodization = mid.transmit_apodization;
@@ -87,7 +96,7 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_gcf.get_i
 colormap gray;caxis([-60 0]);axis image;title('GCF');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%%
+%% MINIMUM VARIANCE
 mv = postprocess.capon_minimum_variance();
 mv.dimension = dimension.receive;
 mv.transmit_apodization = mid.transmit_apodization;
@@ -99,13 +108,13 @@ mv.K_in_lambda = 1.5;
 mv.L_elements = channel_data.probe.N/2;
 mv.regCoef = 1/100;
 b_data_mv = mv.go();
-%%
+
 f5 = figure(6);clf;
 imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,b_data_mv.get_image);
 colormap gray;caxis([-60 0]);axis image;title('MV');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%% Process DMAS
+%% Filtered Delay Multiply And SUM
 dmas=postprocess.delay_multiply_and_sum();
 dmas.dimension = dimension.receive;
 dmas.transmit_apodization = mid.transmit_apodization;
@@ -115,7 +124,6 @@ dmas.channel_data = channel_data;
 b_data_dmas = dmas.go();
 b_data_dmas.plot(6,['DMAS'])
 
-%%
 dmas_img = b_data_dmas.get_image('none');
 dmas_img = db(abs(dmas_img./max(dmas_img(:))));
 f7 = figure(7);clf;
@@ -145,21 +153,11 @@ imagesc(b_data_das.scan.x_axis*1000,b_data_das.scan.z_axis*1000,ebmv_img);
 colormap gray;caxis([-60 0]);axis image;title('EBMV');xlabel('x [mm]');ylabel('z [mm]');
 set(gca,'FontSize',14);
 
-%%
-channel_data.name = {'Experimental dynamic range phantom. Recorded on a Verasonics Vantage 256 with a L11 probe. See the reference for details'};
-channel_data.author = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>','Ali Fatemi <ali.fatemi@ntnu.no>','Ole Marius Hoel Rindal <omrindal@ifi.uio.no'};
-channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
-channel_data.version = {'1.0.1'};
-
-channel_data.print_authorship
-
-channel_data.write(filename,'channel_data');
-%%
-
-b_data_das.write(filename,'/b_data_das');
-b_data_cf.write(filename,'/b_data_cf');
-b_data_pcf.write(filename,'/b_data_pcf');
-b_data_gcf.write(filename,'/b_data_gcf');
-b_data_mv.write(filename,'/b_data_mv');
-b_data_ebmv.write(filename,'/b_data_ebmv');
-b_data_dmas.write(filename,'/b_data_dmas');
+%% Save data
+b_data_das.write([data_path,filesep,filename],'/b_data_das');
+b_data_cf.write([data_path,filesep,filename],'/b_data_cf');
+b_data_pcf.write([data_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.write([data_path,filesep,filename],'/b_data_gcf');
+b_data_mv.write([data_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.write([data_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.write([data_path,filesep,filename],'/b_data_dmas');

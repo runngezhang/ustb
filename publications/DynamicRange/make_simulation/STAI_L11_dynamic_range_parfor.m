@@ -11,7 +11,7 @@
 % details.
 %
 % _by Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>, Ole Marius Hoel
-% Rindal <olemarius@olemarius.net> and Arun Asokan Nair <anair8@jhu.edu> 09.05.2017_
+% Rindal <olemarius@olemarius.net> 
 
 %% Clear old workspace and close old plots
 
@@ -20,7 +20,7 @@ close all;
 
 % We have to options, the full simulation, and only the axial gradient.
 % Set this variable to true, if you want to run the full, else to false
-full_simulation = false;
+full_simulation = true;
 
 
 
@@ -111,20 +111,33 @@ xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
 
 %% Speckle Phantom
+% Calculate scatterers per resolution cell
+sca_per_res_cell=20;
+D = probe.N*probe.pitch
+z_min=5e-3;
+F_number=z_min/D % This is the F-number that we have to use to get expected sca resolution for depths greater than 5mm
+cell_area=(1.206*lambda*F_number)*(pulse_duration*lambda); % resolution cell area
+sca_per_mm2=ceil(sca_per_res_cell/(cell_area/1e-6))
 
+%%
 if full_simulation
-    [point_position, point_amplitudes] = simulatedPhantomDynamicRange_2(650);
+    disp('Now Running full simulation!');
+    %[point_position, point_amplitudes] = simulatedPhantomDynamicRange_v5(650);
+    [point_position, point_amplitudes] = simulatedGradientFullFieldOfView(100);
+    
 else
     %% Create axial gradient (ag)
     sca_per_mm2 = 650;
-    x_min_ag = 10/1000;
-    x_max_ag = 15/1000;
-    z_min_ag = 10/1000;
-    z_max_ag = 45/1000;
-    Intensity_ag = 0;
-    dB_mm_ag = 2;
     
+    x_min_ag = 14/1000;
+    x_max_ag = 19/1000;
+    z_min_ag = 9/1000;
+    z_max_ag = 39/1000;
+    Intensity_ag = 0;
+    dB_mm_ag = 1.8;%1.66;
+
     [point_position,point_amplitudes] = simulatedPhantomGradientBlock(sca_per_mm2,x_min_ag,x_max_ag,z_min_ag,z_max_ag,Intensity_ag,[0 dB_mm_ag]);
+    
 end
 
 cropat=round(2*60e-3/c0/dt);    % maximum time sample, samples after this will be dumped
@@ -218,16 +231,16 @@ pipe.scan=scan;
 % Delay and sum on receive, then coherent compounding
 b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
 
-channel_data.name = {'Simulated dynamic range phantom. Created with Field II. See the reference for details'};
+channel_data.name = {'v5 Simulated dynamic range phantom. Created with Field II. See the reference for details'};
 channel_data.author = {'Ole Marius Hoel Rindal <omrindal@ifi.uio.no','Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
 channel_data.reference = {'Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2018). The effect of dynamic range transformations in the estimation of contrast. Submitted to IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control.'};
 channel_data.version = {'1.0.1'};
 
 % Finally, we can save the data into a UFF file.
 if full_simulation
-    channel_data.write('./FieldII_STAI_dynamic_range_alt_2.uff','channel_data');
-    b_data.write('./FieldII_STAI_dynamic_range_alt.uff','b_data');
+    channel_data.write('./FieldII_STAI_gradient_full_field_100.uff','channel_data');
+    b_data.write('./FieldII_STAI_gradient_full_field_100.uff','b_data');
 else
-    channel_data.write('./FieldII_STAI_axial_gradient_updated.uff','channel_data');
-    b_data.write('./FieldII_STAI_axial_gradient.uff','b_data');
+    channel_data.write('./FieldII_STAI_axial_gradient_v2.uff','channel_data');
+    b_data.write('./FieldII_STAI_axial_gradient_v2.uff','b_data');
 end

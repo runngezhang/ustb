@@ -4,8 +4,8 @@ close all;
 %filename = [data_path,filesep,'FieldII_STAI_dynamic_range_more_scatteres_old.uff'];
 %filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_dynamic_range_more_scatteres.uff';
 
-filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_axial_gradient.uff';
-
+%filename = '/Users/omrindal/Development/USTB_dynamic_range/data/FieldII_STAI_axial_gradient.uff';
+filename = [data_path,filesep,'FieldII_STAI_axial_gradient_v2.uff'];
 
 b_data_tx = uff.beamformed_data();
 b_data_das = uff.beamformed_data();
@@ -63,45 +63,57 @@ addpath functions/
 
 image.all{1} = das_img;
 image.tags{1} = 'DAS';
-image.all{5} = mv_img;
-image.tags{5} = 'MV';
-image.all{6} = ebmv_img;
-image.tags{6} = 'EBMV';
-image.all{2} = cf_img;
-image.tags{2} = 'CF';
+image.all{2} = mv_img;
+image.tags{2} = 'MV';
+image.all{3} = ebmv_img;
+image.tags{3} = 'EBMV';
+image.all{4} = dmas_img;
+image.tags{4} = 'F-DMAS';
+image.all{5} = cf_img;
+image.tags{5} = 'CF';
+image.all{6} = gcf_img;
+image.tags{6} = 'GCF';
 image.all{7} = pcf_img;
 image.tags{7} = 'PCF';
-image.all{3} = gcf_img;
-image.tags{3} = 'GCF';
-image.all{4} = dmas_img;
-image.tags{4} = 'DMAS';
+
+
 
 %%
-load colorbrewer.mat
-colors = colorbrewer.qual.Dark2{8}./255;
+colors=    [0.9047    0.1918    0.1988; ...
+            0.2941    0.5447    0.7494; ...
+            0.3718    0.7176    0.3612; ...
+            1.0000    0.5482    0.1000; ...
+            0.8650    0.8110    0.4330; ...
+            0.6859    0.4035    0.2412; ...
+            0.9718    0.5553    0.7741; ...
+            0.6400    0.6400    0.6400];
+        
+gradient = -1.8;
 
-[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,12.5,42.5,11,14);
-
-mask= b_data_tx.scan.z_axis<42.5e-3 & b_data_tx.scan.z_axis>12.5e-3;
-theory=-60*(b_data_tx.scan.z_axis(mask)-12.5e-3)/30e-3;
+[meanLines_axial,z_axis] = getMeanAxialLines(b_data_das,image,10,38,15,18.5);
+mask_axial= b_data_das.scan.z_axis<38e-3 & b_data_das.scan.z_axis>10e-3;
+theory_axial = (gradient*(b_data_das.scan.z_axis(mask_axial)-10e-3))*10^3;
 
 f33 = figure(33);clf; hold all;
 subplot(211);hold all;
-plot(b_data_tx.scan.z_axis(mask)*10^3,theory,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',[0 0 0]);
-plot(z_axis,meanLines_axial.all{1}-max(meanLines_axial.all{1}),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
-plot(z_axis,meanLines_axial.all{2}-max(meanLines_axial.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
-plot(z_axis,meanLines_axial.all{3}-max(meanLines_axial.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
-plot(z_axis,meanLines_axial.all{4}-max(meanLines_axial.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
-plot(z_axis,meanLines_axial.all{5}-max(meanLines_axial.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(5,:));
-plot(z_axis,meanLines_axial.all{6}-max(meanLines_axial.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(6,:));
-plot(z_axis,meanLines_axial.all{7}-max(meanLines_axial.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(7,:));
-
+plot(theory_axial,theory_axial,'LineStyle','-.','Linewidth',2,'DisplayName','Theoretical','Color',[0 0 0]);
+plot(theory_axial,meanLines_axial.all{1}+abs(max(meanLines_axial.all{1})),'Linewidth',2,'DisplayName',image.tags{1},'Color',colors(1,:));
+plot(theory_axial,meanLines_axial.all{2}-max(meanLines_axial.all{2}),'Linewidth',2,'DisplayName',image.tags{2},'Color',colors(2,:));
+plot(theory_axial,meanLines_axial.all{3}-max(meanLines_axial.all{3}),'Linewidth',2,'DisplayName',image.tags{3},'Color',colors(3,:));
+plot(theory_axial,meanLines_axial.all{4}-max(meanLines_axial.all{4}),'Linewidth',2,'DisplayName',image.tags{4},'Color',colors(4,:));
+plot(theory_axial,meanLines_axial.all{5}-max(meanLines_axial.all{5}),'Linewidth',2,'DisplayName',image.tags{5},'Color',colors(5,:));
+plot(theory_axial,meanLines_axial.all{6}-max(meanLines_axial.all{6}),'Linewidth',2,'DisplayName',image.tags{6},'Color',colors(6,:));
+plot(theory_axial,meanLines_axial.all{7}-max(meanLines_axial.all{7}),'Linewidth',2,'DisplayName',image.tags{7},'Color',colors(7,:));
+set(gca, 'XDir','reverse');
 ylim([-100 0]);
-xlim([12.5 42.5]);
+xlim([-50 0])
+%xlim([9 39]);
 legend('Location','sw'); grid on;
-ylabel('Normalized amplitude [dB]');
-xlabel('z [mm]');
+ylabel('Normalized output [dB]');
+xlabel('Input [dB]');
 set(gca,'FontSize',12)
+
+%%
 saveas(f33,[ustb_path,filesep,'publications/DynamicRage/figures/simulation_axial_gradient_only/axial_gradient'],'eps2c')
 
 %%

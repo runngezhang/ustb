@@ -28,8 +28,6 @@ classdef capon_minimum_variance < postprocess
         regCoef                                       % regularization factor
         doForwardBackward = 0;                        % forward backward averaging
         dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
-        receive_apodization                           % APODIZATION class
-        transmit_apodization                          % APODIZATION class
         channel_data                                  % Channel data 
         scan
     end
