@@ -544,7 +544,7 @@ set(hline,'LineWidth',3);
 set(hline(3),'Color',[0 0 0]);
 set(hline(3),'DisplayName','Fitted line');
 title('')
-xlabel('CR_{LC} improve compared to DAS [dB]','Interpreter', 'tex');
+xlabel('CR_{LC} improvement compared to DAS [dB]','Interpreter', 'tex');
 ylabel('DRT value');
 text(40,1,sprintf('R-Squared: %.2f',lmd_sim_slope.Rsquared.Ordinary),'FontSize',18);
 text(40,0.9,sprintf('R-Squared adj: %.2f',lmd_sim_slope.Rsquared.Adjusted),'FontSize',18);
@@ -566,7 +566,7 @@ bar([DRT_value' DRT_value_exp'])
 set(gca,'XTick',linspace(1,length(image.tags),length(image.tags)))
 set(gca,'XTickLabel',image.tags)
 ylabel('DRT value');
-legend('Location','nw','sim.','exp.')
+legend('Location','nw','Sim.','Exp.')
 x_pos = [0.75 1.25 1.75 2.25 2.75 3.25 3.75 4.25 4.75 5.25 5.75 6.25 6.75 7.25 7.75 8.25];
 DRT_value_all = [];
 for i = 1:length(DRT_value_exp) 
