@@ -1,34 +1,25 @@
-function [CE, CNRE, MSR, GCNR, AUC, nunu, GCNR0, C0]=contrast(M, SNR, b_data, mask_o, mask_i, my_title)
+function [C_, CNR_, MSR_, GCNR_, AUC_, nunu, GCNR0, C0]=meanContrast(M, SNR, b_data, mask_o, mask_i, my_title,fgr_handls)
 
 CE=[];
 CNRE=[];
 MSR=[];
 GCNR=[];
 AUC=[];
+
 for n=1:b_data.N_frames
     Pf=[];
     Pd=[];
     
     img=abs(reshape(b_data.data(:,1,1,n),[b_data.scan.N_z_axis b_data.scan.N_x_axis]));
     
-    if n==20
-        if strcmp(my_title,'SLSC')
-            figure;
-            imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, img); colormap gray; axis equal tight; colorbar;
-            caxis([0 0.95])
-            set(gca,'FontSize', 14);
-            xlabel('x[mm]');
-            ylabel('z[mm]');
-            title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
-        else
-            figure;
-            imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
-            caxis(20*log10(prctile(img(:),99)) + [-60 0] )
-            set(gca,'FontSize', 14);
-            xlabel('x[mm]');
-            ylabel('z[mm]');
-            title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
-        end
+    if n==1%ismember(n,1:10:100)
+        figure;
+        imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img)); colormap gray; axis equal tight; colorbar;
+        caxis(20*log10(prctile(img(:),99)) + [-60 0] )
+        set(gca,'FontSize', 14);
+        xlabel('x[mm]');
+        ylabel('z[mm]');
+        title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
     end
    
     %% clasic
@@ -46,16 +37,17 @@ for n=1:b_data.N_frames
     [pdf_i]=hist(img(mask_i),x);      
     [pdf_o]=hist(img(mask_o),x);
 
-%     if n==14
+%     if n==71
 %         figure;
 %         plot(x,pdf_i./sum(pdf_i),'r-', 'linewidth',2); hold on; grid on;
 %         plot(x,pdf_o./sum(pdf_o),'b-', 'linewidth',2); 
-%         hh=area(x,min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]));
+%         hh=area(x,min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]), 'LineStyle','none');
 %         hh.FaceColor = [0.6 0.6 0.6];
 %         xlabel('||s||');
 %         ylabel('Probability');
-%         set(gca,'FontSize', 14);
 %         legend('p_i','p_o','OVL');
+%         title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
+%         set(gca,'FontSize', 14);
 %     end
     
     OVL(n)=sum(min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]));
@@ -63,26 +55,43 @@ for n=1:b_data.N_frames
     GCNR(n)= 1 - OVL(n);
 
     %% area under curve
+    Pd=cumsum(pdf_i)./sum(pdf_i); % oposite because the cysts is black
+    Pf=cumsum(pdf_o)./sum(pdf_o);
     
-    Pd=1-cumsum(pdf_i)./sum(pdf_i);
-    Pf=1-cumsum(pdf_o)./sum(pdf_o);
-    
-%     % ROC
-%     figure(1);
-%     plot(Pf,Pd,'b.-','linewidth',2); hold on; grid on; axis equal;
-%     xlabel('P_{F}');
-%     ylabel('P_{D}');
-%     set(gca,'FontSize', 14);
-%     xlim([0 1])
-%     ylim([0 1])
+    % ROC
+%     if(n==90)
+%         figure(1);
+%         plot(Pf,Pd,'b.-','linewidth',2); hold on; grid on; axis equal;
+%         xlabel('P_{F}');
+%         ylabel('P_{D}');
+%         set(gca,'FontSize', 14);
+%         xlim([0 1])
+%         ylim([0 1])
+%     end
     
     % PS
     AUC(n)=sum(Pd(1:end-1).*abs(diff(Pf)));
     
 end
 
+CEm = 10*log10(reshape(CE,size(SNR)));
+C_ = [mean(CEm,1); std(CEm,1)];
+
+CNREm = reshape(CNRE,size(SNR));
+CNR_ = [mean(CNREm,1); std(CNREm,1)];
+
+MSRm = reshape(MSR,size(SNR));
+MSR_ = [mean(MSRm,1); std(MSRm,1)];
+
+GCNRm = reshape(GCNR,size(SNR));
+GCNR_ = [mean(GCNRm,1); std(GCNRm,1)];
+
+AUCm = reshape(AUC,size(SNR));
+AUC_ = [mean(AUCm,1); std(AUCm,1)];
+
+
 %% theory
-SNRdB=10*log10(SNR);
+SNRdB=10*log10(SNR(1,:));
 nunu = 10.^(linspace(min(SNRdB),max(SNRdB),100)/10);
 
 C0 = @(snr) 3./(2*M*snr+3);
@@ -92,26 +101,26 @@ GCNR0 = @(c) c.^-(c./(c-1)) - c.^(-1./(c-1));
 
 
 %% C
-figure
-plot(10*log10(SNR),10*log10(CE),'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
+matlab_blue = [0 0.4470 0.7410];
+figure;
 plot(10*log10(nunu),10*log10(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
+plot(SNRdB,C_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
-%ylim([0 max([max(CNRE) 1])])
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('C');
-legend('Field II','Eq.(25)','Location','SouthWest')
+legend('Eq.(25)','Field II','Location','SouthWest')
 title(my_title);
 set(gca,'FontSize', 14);
 
 %% CNR
 figure;
-plot(10*log10(SNR),CNRE,'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
 plot(10*log10(nunu),CNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
+plot(SNRdB,CNR_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
 ylim([0 max([max(CNRE) 1])])
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('CNR');
-legend('Field II','Eq.(26)','Location','SouthEast')
+legend('Eq.(26)','Field II','Location','SouthEast')
 title(my_title);
 set(gca,'FontSize', 14);
 
@@ -143,27 +152,27 @@ set(gca,'FontSize', 14);
 
 %% GCNR
 figure;
-plot(10*log10(SNR),GCNR,'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
 plot(10*log10(nunu),GCNR0(C0(nunu)),'r--','linewidth',2); hold on; grid on; axis tight square;
+plot(SNRdB,GCNR_(1,:),'o','linewidth',2, 'MarkerFaceColor', matlab_blue); 
 set(gca,'FontSize', 12);
 ylim([0 1])
-xlabel('10 log_{10} \nu_S/\nu_N');
+xlabel('SNR_1 [dB]');
 ylabel('GCNR');
-legend('Field II','Eq.(34)','Location','SouthEast')
+legend('Eq.(34)','Field II','Location','SouthEast')
 title(my_title);
 set(gca,'FontSize', 14);
 
 %% Area under curve
 % figure;
-% plot(10*log10(SNR),1-AUC,'bo','MarkerSize',7, 'MarkerFaceColor', 'b'); hold on;
-% plot(10*log10(nunu),Pmax,'r--','linewidth',2); hold on; grid on; axis tight square;
+% errorbar(SNRdB,AUC_(1,:),AUC_(2,:) ,'bo','linewidth',2, 'MarkerFaceColor', 'b'); hold on; grid on; axis tight square;
+% errorbar(SNRdB,MSR_(1,:),MSR_(2,:) ,'ro','linewidth',2, 'MarkerFaceColor', 'r');
+% plot(10*log10(nunu),pmax(C0(nunu)),'k--','linewidth',2); hold on; grid on; axis tight square;
 % set(gca,'FontSize', 12);
 % ylim([0.5 1])
-% xlabel('10 log_{10} \nu_S/\nu_N');
-% ylabel('Area under curve');
-% legend('Field II','Eq.(33)','Location','SouthEast')
+% xlabel('SNR_1 [dB]');
 % title(my_title);
 % set(gca,'FontSize', 14);
+% legend('Area under ROC','1-OVL/2','P_{max} theory','Location','SouthEast');
 
 % %% Variation
 % deviation = (GCNR-GCNR0(C0(SNR)))*100;

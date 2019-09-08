@@ -347,7 +347,7 @@ set(hline,'LineWidth',3);
 set(hline(3),'Color',[0 0 0]);
 set(hline(3),'DisplayName','Fitted line');
 title('')
-xlabel('CR_{LC} improve compared to DAS [dB]','Interpreter', 'tex');
+xlabel('CR_{LC} improvement compared to DAS [dB]','Interpreter', 'tex');
 ylabel('DRT value');%ylim([-50 5]);
 text(20,1.1,sprintf('R-Squared: %.2f',lmd_sim_slope.Rsquared.Ordinary),'FontSize',18);
 text(20,1,sprintf('R-Squared adj: %.2f',lmd_sim_slope.Rsquared.Adjusted),'FontSize',18);
