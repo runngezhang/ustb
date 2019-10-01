@@ -56,7 +56,7 @@ classdef non_local_means_filtering < postprocess
             end
             V_all = zeros(size(D_all));
             
-            for i = 1:size(D_all,3)
+            for i = 1:size(D_all,4)
                 disp([num2str(i),'/20'])
                 D = D_all(:,:,i);
                 [Ns, Nl] = size(D);
@@ -126,7 +126,7 @@ classdef non_local_means_filtering < postprocess
             
             h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
-            h.output.data = reshape(V_all,h.input.scan.N_x_axis*h.input.scan.N_z_axis,1,1,size(D_all,3));
+            h.output.data = reshape(V_all,h.input.scan.N_x_axis*h.input.scan.N_z_axis,1,1,size(D_all,4));
             
             % pass reference
             output = h.output;
