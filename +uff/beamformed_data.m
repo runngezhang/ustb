@@ -393,7 +393,7 @@ classdef beamformed_data < uff
              FileName = uiputfile('movie.mp4','Save movie loop as');
              vidObj = VideoWriter(FileName,'MPEG-4');
              vidObj.Quality = 100;
-             vidObj.FrameRate = 25;
+             vidObj.FrameRate = 5;
              open(vidObj);
              for i = 1:size(h.all_images,3)
                  
