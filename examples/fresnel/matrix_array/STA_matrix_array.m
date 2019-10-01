@@ -134,11 +134,9 @@ pipe.scan=sca;
 
 pipe.receive_apodization.window=uff.window.tukey50;
 pipe.receive_apodization.f_number=F_number;
-pipe.receive_apodization.origin.distance=Inf;
 
 pipe.transmit_apodization.window=uff.window.tukey50;
 pipe.transmit_apodization.f_number=F_number;
-pipe.transmit_apodization.origin.distance=Inf;
 
 %% 
 %
