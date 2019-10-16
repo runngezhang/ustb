@@ -2,10 +2,10 @@ clear all;
 close all;
 
 %% Download data
-url='https://nyhirse.medisin.ntnu.no/ustb/data/gcnr/';   % if not found data will be downloaded from here
+url='https://www.ustb.no/datasets/';   % if not found data will be downloaded from here
 
-%filename='L7_FI_carotid_cross_1.uff';
-filename='L7_FI_carotid_cross_2.uff';
+filename='L7_FI_carotid_cross_1.uff';
+%filename='L7_FI_carotid_cross_2.uff';
 tools.download(filename, url, data_path);   
 
 %% Load data
@@ -15,7 +15,7 @@ channel_data.read([data_path filesep filename],'/channel_data');
 channel_data.data = channel_data.data(:,:,:,2)
 %% Create Linear Scan 
 MLA = 4;
-z_axis = linspace(2e-3,35e-3,1500).';
+z_axis = linspace(8e-3,21e-3,512).';
 x_axis = linspace(channel_data.sequence(1).source.x,channel_data.sequence(end).source.x,channel_data.N_waves.*MLA); %zeros(channel_data.N_waves.*MLA,1); 
 %for n=1:channel_data.N_waves.*MLA
 %    x_axis(n)=channel_data.sequence(n).source.x;
@@ -95,6 +95,7 @@ b_das = pipe.go({ das });
 %%
 f = figure();
 b_das.plot(f,'DAS',60); hold on;
+xlim([-5 10]);ylim([10 19]);
 tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
 plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
      1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
@@ -103,8 +104,9 @@ saveas(f,[save_path,'_DAS'],'eps2c')
 %% DAS
 
 % evaluate contrast
-GCNR_das = inVivoGCNR(b_das, mask_o, mask_i, 'DAS')
-title(gca,['DAS GCNR = ',num2str(GCNR_das,'%0.3f')]);
+tags{1} = 'DAS';
+[GCNR(1) C(1) CNR(1)] = inVivoGCNR(b_das, mask_o, mask_i, 'DAS')
+title(gca,['DAS GCNR = ',num2str(GCNR(1),'%0.3f')]);
 
 %% S-DAS
 
@@ -136,9 +138,11 @@ b_sdas.data = 10.^(reshape(f(b_sdas.data),size(b_sdas.data))/20);
 % evaluate contrast
 f = figure();
 b_sdas.plot(f,'S-DAS',60);
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_S_DAS'],'eps2c')
-GCNR_sdas = inVivoGCNR(b_sdas, mask_o, mask_i, 'S-DAS')
-title(gca,['SDAS GCNR = ',num2str(GCNR_sdas,'%0.3f')]);
+tags{2} = 'S-DAS';
+[GCNR(2) C(2) CNR(2)]  = inVivoGCNR(b_sdas, mask_o, mask_i, 'S-DAS')
+title(gca,['SDAS GCNR = ',num2str(GCNR(2),'%0.3f')]);
 
 %% beamforming on transmit
 das.dimension = dimension.transmit;
@@ -155,10 +159,12 @@ cf_in_vivo = cf.go();
 
 %%
 f = figure()
-cf_in_vivo.plot(f,'CF',80);
+cf_in_vivo.plot(f,'CF',60);
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_CF'],'eps2c')
-GCNR_CF = inVivoGCNR(cf_in_vivo, mask_o, mask_i, 'CF')
-title(gca,['CF GCNR = ',num2str(GCNR_CF)]);
+tags{3} = 'CF';
+[GCNR(3) C(3) CNR(3)] = inVivoGCNR(cf_in_vivo, mask_o, mask_i, 'CF')
+title(gca,['CF GCNR = ',num2str(GCNR(3))]);
 
 %% PCF
 
@@ -174,10 +180,12 @@ pcf_in_vivo = pcf.go();
 
 %%
 f = figure();
-pcf_in_vivo.plot(f,'PCF',80)
+pcf_in_vivo.plot(f,'PCF',60)
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_PCF'],'eps2c')
-GCNR_PCF = inVivoGCNR(pcf_in_vivo, mask_o, mask_i, 'PCF')
-title(gca,['PCF GCNR = ',num2str(GCNR_PCF)]);
+tags{4} = 'PCF';
+[GCNR(4) C(4) CNR(4)] = inVivoGCNR(pcf_in_vivo, mask_o, mask_i, 'PCF')
+title(gca,['PCF GCNR = ',num2str(GCNR(4))]);
 
 %% GCF
 % beamform
@@ -190,10 +198,12 @@ gcf.input = b_transmit;
 gcf_in_vivo = gcf.go();
 %%
 f = figure();
-gcf_in_vivo.plot(f,'GCF',80) 
+gcf_in_vivo.plot(f,'GCF',60) 
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_GCF'],'eps2c')
-GCNR_GCF = inVivoGCNR(gcf_in_vivo, mask_o, mask_i, 'GCF')
-title(gca,['GCF GCNR = ',num2str(GCNR_GCF)]);
+tags{5} = 'GCNR'
+[GCNR(5) C(5) CNR(5)] = inVivoGCNR(gcf_in_vivo, mask_o, mask_i, 'GCF')
+title(gca,['GCF GCNR = ',num2str(GCNR(5))]);
 
 %% DMAS
 % process DMAS
@@ -202,15 +212,18 @@ dmas.dimension = dimension.receive;
 dmas.transmit_apodization = pipe.transmit_apodization;
 dmas.receive_apodization = pipe.receive_apodization;
 dmas.input = b_transmit;
+dmas.filter_freqs = [0.7058-0.3    0.8235-0.3    1.1764    1.2940]*10^7;
 dmas.channel_data = channel_data;
 dmas_in_vivo = dmas.go();
 %%
 f = figure();
 dmas_in_vivo.plot(f,['DMAS'],60);
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_DMAS'],'eps2c')
 %%
-GCNR_DMAS = inVivoGCNR(dmas_in_vivo, mask_o, mask_i, 'DMAS')
-title(gca,['DMASGCNR = ',num2str(GCNR_DMAS)]);
+tags{6} = 'DMAS'
+[GCNR(6) C(6) CNR(6)] = inVivoGCNR(dmas_in_vivo, mask_o, mask_i, 'DMAS')
+title(gca,['DMASGCNR = ',num2str(GCNR(6))]);
 
 %% SLSC 
 
@@ -239,6 +252,7 @@ slsc_in_vivo.data(slsc_in_vivo.data < 0) = 0;
 %%
 f = figure();
 slsc_in_vivo.plot(f,'SLSC');hold on;
+xlim([-5 10]);ylim([10 19]);
 saveas(f,[save_path,'_SLSC'],'eps2c')
 %caxis([0 0.1])
 %tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
@@ -246,15 +260,22 @@ saveas(f,[save_path,'_SLSC'],'eps2c')
 %     1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
 %     'g--','Linewidth',2);
 %%
-GCNR_SLSC = inVivoGCNR(slsc_in_vivo, mask_o, mask_i, 'SLSC')
-title(gca,['SLSC GCNR = ',num2str(GCNR_SLSC)]);
+tags{7} = 'SLSC';
+[GCNR(7) C(7) CNR(7)] = inVivoGCNR(slsc_in_vivo, mask_o, mask_i, 'SLSC')
+title(gca,['SLSC GCNR = ',num2str( CNR(7))]);
 
 %%
 f = figure()
 subplot(2,1,1);
-bar([GCNR_das GCNR_sdas GCNR_CF GCNR_GCF GCNR_PCF GCNR_DMAS GCNR_SLSC])
+bar([GCNR])
 ylabel('GCNR');
 xticks(1:7)
-xticklabels({'DAS' 'S-DAS' 'CF' 'GCF' 'PCF' 'DMAS' 'SLSC'})
+xticklabels(tags)
 set(gca,'FontSize',15)
 saveas(f,[save_path,'_GCNR'],'eps2c')
+save([save_path,'contrast_values.mat'],'tags','GCNR','C','CNR')
+
+tags
+GCNR
+10*log10(C)
+CNR

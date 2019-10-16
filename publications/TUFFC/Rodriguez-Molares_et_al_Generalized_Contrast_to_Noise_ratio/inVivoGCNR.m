@@ -1,4 +1,4 @@
-function [GCNR] = inVivoGCNR(b_data, mask_o, mask_i,my_title)
+function [GCNR CE CNRE] = inVivoGCNR(b_data, mask_o, mask_i,my_title)
 
 CE=[];
 CNRE=[];
@@ -28,7 +28,7 @@ AUC=[];
     v_i=var(img(mask_i).^2);
     v_o=var(img(mask_o).^2);
     
-    CE =mu_i./mu_o;
+    CE = mu_i./mu_o;
     CNRE = abs(mu_i-mu_o)/sqrt(v_i+v_o);
 
     %% Pmax
