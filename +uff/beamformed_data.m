@@ -145,7 +145,9 @@ classdef beamformed_data < uff
             end
             
             set(h.figure_handle,'Color',background_color);
-            h.figure_handle.InvertHardcopy = 'off'; %To be able to save background color
+            if isa(h.figure_handle,'matlab.ui.Figure')
+                h.figure_handle.InvertHardcopy = 'off'; %To be able to save background color
+            end
             figure_handle = h.figure_handle;
         end
         
