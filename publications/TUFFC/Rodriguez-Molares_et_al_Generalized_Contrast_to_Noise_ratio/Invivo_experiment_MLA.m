@@ -118,10 +118,10 @@ xlim([x_start_img*10^3 x_stop_img*10^3]);ylim([z_start_img*10^3 z_stop_img*10^3 
 tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
 plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
      1e3*(z0+skip_z+[-l/2 -l/2 l/2 l/2 -l/2]),...
-     'g--','Linewidth',2);
+     'b-','Linewidth',3);
 saveas(f,[save_path,'_DAS'],'eps2c')
 % DAS
-
+%%
 % evaluate contrast
 tags{1} = 'DAS';
 [GCNR(1) C(1) CNR(1)] = inVivoGCNR(b_das, mask_o, mask_i, 'DAS')
@@ -331,11 +331,65 @@ saveas(f,[save_path,'_SLSC'],'eps2c')
 %%
 f = figure()
 subplot(2,1,1);
-bar([GCNR])
+yyaxis left
+bar([GCNR' CNR'])
+ylabel('(g)CNR')
+yyaxis right
+bar(-[10*log10(C)])
+%set('Ydir','reverse');
 ylabel('GCNR');
 xticks(1:7)
 xticklabels(tags)
 set(gca,'FontSize',15)
+%x_pos = [1 2 3 4 5 6 7];
+%text(x_pos,double((GCNR(:))),num2str(GCNR(:),'%.2f'),...
+   % 'HorizontalAlignment','center',...
+   % 'VerticalAlignment','bottom',...
+   % 'FontSize',12)
+%ylim([0 1.2])
+
+%%
+f = figure()
+subplot(3,1,1);
+bar([GCNR'])
+ylabel('gCNR');
+set(gca,'FontSize',15)
+xticks(1:7)
+xticklabels(tags)
+x_pos = [1 2 3 4 5 6 7];
+text(x_pos,double((GCNR(:))),num2str(GCNR(:),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 1.2])
+
+subplot(3,1,2);
+bar(CNR)
+ylabel('CNR');
+set(gca,'FontSize',15)
+xticks(1:7)
+xticklabels(tags)
+text(x_pos,double((CNR(:))),num2str(CNR(:),'%.2f'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([0 1.8])
+
+subplot(3,1,3);
+bar(10*log10(C))
+ylabel('C [dB]');
+set(gca,'Ydir','reverse');
+xticks(1:7)
+xticklabels(tags)
+set(gca,'FontSize',15)
+text(x_pos,double((10*log10(C(:)))),num2str(round(10*log10(C(:))),'%.d'),...
+    'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom',...
+    'FontSize',12)
+ylim([-45 0])
+saveas(f,[save_path,'_all_metrics'],'eps2c')
+%%
+
 saveas(f,[save_path,'_GCNR'],'eps2c')
 save([save_path,'contrast_values_subject_2.mat'],'tags','GCNR','C','CNR')
 
