@@ -223,7 +223,7 @@ das = sum(delayed_channel_data,3);
 
 cf = abs(sum(delayed_channel_data,3)).^2./(probe.N * sum(abs(delayed_channel_data).^2,3));
 
-
+%%
 figure();clf;
 subplot(121)
 imagesc((abs(das./max(das))));caxis([0 1])
@@ -231,3 +231,37 @@ title('DAS linear scale');
 subplot(122)
 imagesc(cf);caxis([0 1])
 title('CF linear scale');
+
+%%
+coherent = abs(sum(delayed_channel_data,3)).^2;
+incoherent = sum(abs(delayed_channel_data).^2,3);
+
+cf = coherent./(probe.N * incoherent);
+subplot(224)
+imagesc(incoherent./max(incoherent(:)));caxis([0 1]),colorbar
+title('Incoherent image');
+ 
+%% Ny celle 
+figure()
+subplot(121)
+wImg = 20*log10(coherent);
+wImgNormFactor = max(wImg(:));
+imagesc(wImg(:,:)-wImgNormFactor); colormap(gray(256)); caxis([-55 0]); colorbar;
+subplot(122)
+wImg = 20*log10(incoherent);
+wImgNormFactor = max(wImg(:));
+imagesc(wImg(:,:)-wImgNormFactor); colormap(gray(256)); caxis([-55 0]); colorbar;
+
+%Creating new objects copying info from b_data_das
+b_data_coherent = uff.beamformed_data(b_data_das);
+b_data_incoherent = uff.beamformed_data(b_data_das);
+
+b_data_coherent.data = coherent(:);
+b_data_incoherent.data = incoherent(:);
+
+b_data_coherent.plot([],'Coherent');
+b_data_incoherent.plot([],'Incoherent');
+
+figure
+b_data_coherent.plot(subplot(121),'Coherent');
+b_data_incoherent.plot(subplot(122),'Incoherent');
