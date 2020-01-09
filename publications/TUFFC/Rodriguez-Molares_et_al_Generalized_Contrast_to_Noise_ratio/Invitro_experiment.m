@@ -64,18 +64,26 @@ pipe.receive_apodization.maximum_aperture = M*mix.probe.pitch;
 das=midprocess.das();
 das.dimension = dimension.both;
 b_das = pipe.go({ das });
+
+%%
 b_das.plot(); hold on;
 tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
 plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
      1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
-     'g--','Linewidth',2);
+     'b-','Linewidth',3);
 
  
 %% DAS
 
 % evaluate contrast
 [C, CNR, Pmax, GCNR_das]=meanContrast(M, channel_SNR, b_das, mask_o, mask_i, 'DAS');
-
+%%
+f = figure(11);hold all;
+tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
+plot(1e3*(x0+skip+[-l/2 l/2 l/2 -l/2 -l/2]),...
+     1e3*(z0+[-l/2 -l/2 l/2 l/2 -l/2]),...
+     'b-','Linewidth',3);
+saveas(f,'Figures/invitro_das_regions.eps','eps2c')
 % hold on;
 % tools.plot_circle(x0*1e3,z0*1e3,ri*1e3,'r-');
 % tools.plot_circle(x0*1e3,z0*1e3,ro*1e3,'g--');
