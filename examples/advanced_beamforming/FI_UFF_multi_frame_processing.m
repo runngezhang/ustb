@@ -1,3 +1,5 @@
+% Script demonstrating a strategy to reduce the memory during multi frame
+% processing
 
 clear all;close all;
 url='http://ustb.no/datasets/';      % if not found downloaded from here
@@ -64,8 +66,8 @@ for c = 1:floor(channel_data.N_frames/frames_per_process)
         das_data_all = uff.beamformed_data(das_data);
         cf_data_all = uff.beamformed_data(cf_data);
     else
-        das_data_all.data = cat(4,das_data_all.data,das_data_all.data);
-        cf_data_all.data = cat(4,cf_data_all.data,cf_data_all.data);
+        das_data_all.data = cat(4,das_data_all.data,das_data.data);
+        cf_data_all.data = cat(4,cf_data_all.data,cf_data.data);
     end
 end
 
