@@ -64,8 +64,8 @@ for c = 1:floor(channel_data.N_frames/frames_per_process)
         das_data_all = uff.beamformed_data(das_data);
         cf_data_all = uff.beamformed_data(cf_data);
     else
-        das_data_all.data = cat(4,das_data_all.data,das_data.data);
-        cf_data_all.data = cat(4,cf_data_all.data,cf_data.data);
+        das_data_all.data = cat(4,das_data_all.data,das_data_all.data);
+        cf_data_all.data = cat(4,cf_data_all.data,cf_data_all.data);
     end
 end
 
