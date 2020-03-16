@@ -2,21 +2,22 @@
 %
 % This example shows how to load the data from a Field II simulation into 
 % USTB objects, and then beamformt it with the USTB routines. 
-% This example uses the L11-4v 128 element Verasonics Transducer
+% This example uses the P4-2v 64 element Verasonics Transducer
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% This example is imaging with focused transmit waves (Focused Imaging-FI),
-% and is compared to the Fresnel simulation.
+% This example is imaging with focused transmit waves (Focused Imaging-FI).
+% The example also demonstates calculation of the coherence factor and some
+% functionality to plot the images using built in USTB routines, MATLAB
+% commands and some details on scan conversion.
+% 
 %
-% authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
-%           Ole Marius Hoel Rindal <olemarius@olemarius.net>
-%           Fabrice Prieur <fabrice@ifi.uio.no>
+% authors:  Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%           Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %
-% Last updated: 12.11.2017
+% Last updated: 15.01.2020
 
 clear all;
 close all;
-
 
 %% basic constants
 
@@ -30,23 +31,23 @@ set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
 
-%% transducer definition P4-2v Verasonics 128-element linear array transducer
+%% transducer definition P4-2v Verasonics 64-element phased
 % 
 % Our next step is to define the ultrasound transducer array we are using.
 % For this experiment, we shall use the L11-4v 128 element Verasonics
 % Transducer and set our parameters to match it.
 probe = uff.linear_array();
-f0=2.56e6;          % Transducer center frequency [Hz]
-bw=0.67;            % probe bandwidth [1]
-lambda=c0/f0;       % Wavelength [m]
-probe.element_height=5e-3;        % Height of element [m]
-probe.pitch =0.300e-3;     % pitch [m]
-kerf=0.050e-3;      % gap between elements [m]
+f0=2.56e6;                              % Transducer center frequency [Hz]
+bw=0.67;                                % probe bandwidth [1]
+lambda=c0/f0;                           % Wavelength [m]
+probe.element_height=5e-3;              % Height of element [m]
+probe.pitch =0.300e-3;                  % pitch [m]
+kerf=0.050e-3;                          % gap between elements [m]
 probe.element_width=probe.pitch-kerf;   % Width of element [m]
-lens_el=60e-3;      % position of the elevation focus
-probe.N=64;      % Number of elements
-pulse_duration=2.5; % pulse duration [cycles]
-z_focus =60/1000;          %  Transmit focus
+lens_el=60e-3;                          % position of the elevation focus
+probe.N=64;                             % Number of elements
+pulse_duration=2.5;                     % pulse duration [cycles]
+z_focus =60/1000;                       % Transmit focus
 
 %% pulse definition
 pulse = uff.pulse();
@@ -59,13 +60,13 @@ impulse_response = impulse_response-mean(impulse_response); % To get rid of DC
 te = (-pulse_duration/2/f0): dt : (pulse_duration/2/f0);
 excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
-two_way_ir = conv(one_way_ir,impulse_response);
-lag = length(two_way_ir)/2+1;   
+two_way_ir = conv(one_way_ir,impulse_response);  
+[~, lag] = max(abs(hilbert(two_way_ir)))
 
 % show the pulse to check that the lag estimation is on place (and that the pulse is symmetric)
 figure;
-plot((0:(length(two_way_ir)-1))*dt -lag*dt,two_way_ir); hold on; grid on; axis tight
-plot((0:(length(two_way_ir)-1))*dt -lag*dt,abs(hilbert(two_way_ir)),'r')
+plot((1:(length(two_way_ir)))*dt -lag*dt,two_way_ir); hold on; grid on; axis tight
+plot((1:(length(two_way_ir)))*dt -lag*dt,abs(hilbert(two_way_ir)),'r')
 plot([0 0],[min(two_way_ir) max(two_way_ir)],'g');
 legend('2-ways pulse','Envelope','Estimated lag');
 title('2-ways impulse response Field II');
@@ -110,10 +111,12 @@ cropat=round(1.1*2*sqrt((max(phantom_positions(:,1))-min(probe.x))^2+max(phantom
 data=zeros(cropat,probe.N,no_transmits);    % impulse response channel data
 
 %% Compute STA signals
-disp('Field II: Computing FI dataset');
-
+fprintf('Field II: Computing FI dataset \n \n');
+disp('~')
 for n=1:no_transmits
-    fprintf('Simulating transmit %d / %d\n',n,no_transmits);    
+    s = sprintf('\nSimulating transmit %d / %d',n,no_transmits);
+    b = repmat('\b', [1, length(s)]);
+    fprintf(1, [b, s]);
     % Define Th and Rh in loop to be able to do parfor
     %field_init(0);
     %Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
@@ -166,10 +169,10 @@ channel_data.initial_time = 0;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
-channel_data.data = data./max(data(:)) + 1000*eps;
+channel_data.data = data./max(data(:)) + 1000*eps*randn(size(data));
 clear data
 
-%% Create Linear Scan
+%% Create Sector Scan
 z_axis = linspace(0,100e-3,200).';
 x_axis = zeros(channel_data.N_waves,1); 
 for n=1:channel_data.N_waves
@@ -198,13 +201,13 @@ mid.transmit_apodization.window=uff.window.scanline;
 b_data_delayed = mid.go();
 
 %% Do coherent compounding to get DAS image
-das = postprocess.coherent_compounding()
+das = postprocess.coherent_compounding();
 das.input = b_data_delayed;
 b_data_das = das.go();
 b_data_das.plot([],'DAS');
 
 %% Calculate the coherence factor
-cf = postprocess.coherence_factor()
+cf = postprocess.coherence_factor();
 cf.dimension = dimension.receive();
 cf.input = b_data_delayed;
 b_data_weighted_cf = cf.go();
@@ -218,12 +221,11 @@ caxis([0 1])
 %% Get the delayed channel data as a matrix
 delayed_channel_data = reshape(b_data_delayed.data,scan.N_depth_axis,scan.N_azimuth_axis,probe.N_elements);
 
-
 das = sum(delayed_channel_data,3);
 
 cf = abs(sum(delayed_channel_data,3)).^2./(probe.N * sum(abs(delayed_channel_data).^2,3));
 
-%%
+%% Plot images in beamspace
 figure();clf;
 subplot(121)
 imagesc((abs(das./max(das))));caxis([0 1])
@@ -232,7 +234,7 @@ subplot(122)
 imagesc(cf);caxis([0 1])
 title('CF linear scale');
 
-%%
+%% "Manual" implementation of the coherence factor creating a coherent and an incoherent image
 coherent = abs(sum(delayed_channel_data,3)).^2;
 incoherent = sum(abs(delayed_channel_data).^2,3);
 
@@ -241,7 +243,9 @@ subplot(224)
 imagesc(incoherent./max(incoherent(:)));caxis([0 1]),colorbar
 title('Incoherent image');
  
-%% Ny celle 
+%% New code cell demonstrating some plotting functionalities
+
+% Plotting using matlab functions
 figure()
 subplot(121)
 wImg = 20*log10(coherent);
@@ -256,12 +260,15 @@ imagesc(wImg(:,:)-wImgNormFactor); colormap(gray(256)); caxis([-55 0]); colorbar
 b_data_coherent = uff.beamformed_data(b_data_das);
 b_data_incoherent = uff.beamformed_data(b_data_das);
 
+% Overwriting data with coherent and incoherent images
 b_data_coherent.data = coherent(:);
 b_data_incoherent.data = incoherent(:);
 
+% Plotting using built in USTB functions
 b_data_coherent.plot([],'Coherent');
 b_data_incoherent.plot([],'Incoherent');
 
+% Plotting using built in USTB functions in same figure
 figure
 b_data_coherent.plot(subplot(121),'Coherent');
 b_data_incoherent.plot(subplot(122),'Incoherent');
