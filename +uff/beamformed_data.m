@@ -416,8 +416,8 @@ classdef beamformed_data < uff
         end
         
          function save_movie_loop(h,var1,var2,var3)
-             FileName = uiputfile('movie.mp4','Save movie loop as');
-             vidObj = VideoWriter(FileName,'MPEG-4');
+             [FileName,path] = uiputfile('movie.mp4','Save movie loop as');
+             vidObj = VideoWriter([path,filesep,FileName],'MPEG-4');
              vidObj.Quality = 100;
              vidObj.FrameRate = 25;
              open(vidObj);

@@ -44,8 +44,9 @@ classdef pulse < uff
                 LineStyle = '-';
             end
             
+
             plot(axis_handle,t0*1e6,h.signal(t0), 'LineStyle', LineStyle); grid on; axis tight;
-            xlabel('time [mus]');
+            xlabel('time [\mu{}s]','Interpreter','tex');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
             
