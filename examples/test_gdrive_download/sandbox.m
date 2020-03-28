@@ -31,7 +31,7 @@ if response.StatusCode == 200
         % prompt the warning download message. Therefore, we have already
         % downloaded the file. We just need to save it.
         
-        fid = fopen(fullfile(ustb_path, name), 'w');
+        fid = fopen(fullfile(data_path, name), 'w');
         fwrite(fid, response.Body.Data);
         fclose(fid);
         
@@ -61,7 +61,7 @@ if response.StatusCode == 200
         
         % We prepare a http FileConsumer object to take care of writing the 
         % file on disk
-        consumer = matlab.net.http.io.FileConsumer(fullfile(ustb_path, name));
+        consumer = matlab.net.http.io.FileConsumer(fullfile(data_path, name));
         
         % We send the second GET request and start the file download
         response = send(request, strcat(url, '/uc', '?', 'export=download', ...
