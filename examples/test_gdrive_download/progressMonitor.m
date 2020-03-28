@@ -13,8 +13,10 @@ classdef progressMonitor < matlab.net.http.ProgressMonitor
         end
         
         % function that is called once transfer is complete or halted
-        function done(~)
-            fprintf(1, '...done!\n');
+        function done(obj)
+            if obj.InUse
+                fprintf(1, '...done!\n');
+            end
         end
     end
     
@@ -34,15 +36,15 @@ classdef progressMonitor < matlab.net.http.ProgressMonitor
         function fprintf(obj)
             if  obj.Direction == matlab.net.http.MessageType.Response
                 if isempty(obj.Max)
-                    msg = sprintf('Downloaded %.1f MB', double(obj.Value)/1e6);
+                    msg = sprintf('Downloaded %d MB', obj.Value/1e6);
                 else
-                    msg = sprintf('Downloaded %.1f / %.1f MB', double(obj.Value)/1e6, double(obj.Max)/1e6);
+                    msg = sprintf('Downloaded %d / %d MB', obj.Value/1e6, obj.Max/1e6);
                 end
             else
                 if isempty(obj.Max)
-                    msg = sprintf('Sent %.1f MB', double(obj.Value)/1e6);
+                    msg = sprintf('Sent %d MB', obj.Value/1e6);
                 else
-                    msg = sprintf('Sent %.1f / %.1f MB', double(obj.Value)/1e6, double(obj.Max)/1e6);
+                    msg = sprintf('Sent %d / %d MB', obj.Value/1e6, obj.Max/1e6);
                 end
             end
             
