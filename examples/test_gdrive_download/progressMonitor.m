@@ -6,14 +6,16 @@ classdef progressMonitor < matlab.net.http.ProgressMonitor
     end
     
     methods
-        % class constructor
+        % Class constructor
         function obj = progressMonitor
             obj.Interval = 1;
             obj.clearMsg = '';
         end
         
-        % function that is called once transfer is complete or halted
+        % Function that is called once transfer is complete or halted
         function done(obj)
+            
+            % This checks avoids the completion message to be shown twice
             if obj.InUse
                 fprintf(1, '...done!\n');
             end
@@ -38,13 +40,15 @@ classdef progressMonitor < matlab.net.http.ProgressMonitor
                 if isempty(obj.Max)
                     msg = sprintf('Downloaded %d MB', obj.Value/1e6);
                 else
-                    msg = sprintf('Downloaded %d / %d MB', obj.Value/1e6, obj.Max/1e6);
+                    msg = sprintf('Downloaded %d / %d MB', ...
+                        obj.Value/1e6, obj.Max/1e6);
                 end
             else
                 if isempty(obj.Max)
                     msg = sprintf('Sent %d MB', obj.Value/1e6);
                 else
-                    msg = sprintf('Sent %d / %d MB', obj.Value/1e6, obj.Max/1e6);
+                    msg = sprintf('Sent %d / %d MB', ...
+                        obj.Value/1e6, obj.Max/1e6);
                 end
             end
             
