@@ -2,7 +2,7 @@ clear all
 close all
 clc
 
-file_idx = 1;   % 1. large file. requires download confirmation
+file_idx = 2;   % 1. large file. requires download confirmation
                 % 2. small file. does not require download confirmation
 
 switch file_idx
