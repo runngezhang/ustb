@@ -136,7 +136,7 @@ classdef short_lag_spatial_coherence < postprocess
         function [SLSC_img,slsc_values] = short_lag_spatial_coherence_implementation(h,data_cube)
             %% Calculate the Normalized Spatial Coherence across the receive aperture
             temp_find_idx = squeeze(sum(real(data_cube),1));
-            slsc_values = zeros(size(data_cube,1),h.maxM,size(data_cube,3));
+            slsc_values = zeros(size(data_cube,1),h.maxM,size(data_cube,2));
             
             for xs = 1:size(data_cube,2)
                 idx = abs(temp_find_idx(xs,:))>0;  
