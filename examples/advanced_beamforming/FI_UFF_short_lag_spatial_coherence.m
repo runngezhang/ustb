@@ -150,7 +150,7 @@ url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long.uff';
+filename='Verasonics_P2-4_parasternal_long_subject_1.uff';
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
