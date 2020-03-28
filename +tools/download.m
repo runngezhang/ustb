@@ -1,91 +1,80 @@
-function download(filename, url, local_path)
+function download(file, url)
 %DOWNLOAD Downloads a file from an URL to a local path (if needed)
 %
-% Note: Uses `websave`, which available since Matlab 2014. 
-%      For older versions, it requires 'curl' installed.
-%      See `https://curl.haxx.se/download.html` for Windows
+% NOTE: compatible with
 
-    if not(exist(local_path, 'dir')),
-        mkdir(local_path)
+[path, name, ext] = fileparts(file);
+
+% Check that the file has not been downloaded previously
+if not(exist(file,  'file'))
+    fprintf(1, 'Downloading %s%s\nfrom %s\nto %s\n', name, ext, url, path)
+    
+    % Create folder if it does not exist
+    if ~exist(path, 'dir')
+        mkdir(path)
     end
     
-    % Make sure that local path ends with file separator
-    if ~isempty(local_path) && local_path(end) ~= filesep,
-        local_path = [local_path, filesep];
-    end
+    % Prepare a HTTP option object were we specify to use a custom progress
+    % monitor, which updates the user on the amount of downloaded data
+    opts = matlab.net.http.HTTPOptions('ProgressMonitorFcn', ...
+        @tools.progressMonitor, 'UseProgressMonitor',true);
     
-    if url(end) ~= '/',
-        url = [url, '/'];
-    end
-
-    fullpath = [local_path, filename];
-    fullurl  = [url,        filename];
+    % We send a first GET request
+    response = send(matlab.net.http.RequestMessage(), url, opts);
     
-    if not(exist(fullpath,  'file')),
-        disp(['Downloading ', filename, ' from ', url, ' to ', local_path]);
-        disp('This may take a while.');
-
-        if exist('websave')
-            outfilename = websave(fullpath, fullurl);
+    % First, we check that the response from the server was OK
+    if response.StatusCode == 200
+        
+        % If the content of the first response is of type 'application-
+        % octet-stream' or is not specified, it means that we have already
+        % downloaded the file in the first request. NOTE: the order in
+        % which the two clauses are checked is important
+        if isempty(response.Body.ContentType) || ...
+                strcmp(response.Body.ContentType.Type, 'application')
             
-        elseif find_curl(),
-            success = download_with_curl(fullurl, local_path, filename);
-            if not(success)
-                error(['Could not download ', fullurl, ' to ', fullpath]);
+            % We just need to save the file
+            fid = fopen(file, 'w');
+            fwrite(fid, response.Body.Data);
+            fclose(fid);
+            
+        % If the content of the first response is of type 'text-html', it
+        % means that the file was large enough to prompt the warning
+        % download message. Therefore, we need to send a confirm request to
+        % start the download
+        elseif strcmp(response.Body.ContentType.Type, 'text')        
+            
+            % First, we prepare a second GET request, which will start the file
+            % download
+            request = matlab.net.http.RequestMessage();
+            
+            % Then we extract the cookies from the response
+            setCookie = response.getFields('Set-Cookie');
+            cookieInfo = setCookie.convert();
+            
+            % We look for the cookie whose field starts with "download warning"
+            for cookie = [cookieInfo.Cookie]
+                
+                if startsWith(cookie.Name, 'download_warning')
+                    
+                    key = cookie.Value;
+                    request = addFields(request, 'Cookie', ...
+                        matlab.net.http.Cookie(cookie.Name, cookie.Value));
+                end
             end
-        else
-            error('Cannot download data. Install "curl" and try again.');
             
+            % We send the second GET request and start the file download
+            response = send(request, strcat(url, '&confirm=', key), opts);
+            
+            % We save the file
+            fid = fopen(file, 'w');
+            fwrite(fid, response.Body.Data);
+            fclose(fid);
+        else
+            error('Unknown content type!');
         end
-    end
-    
-end
-
-function [found, curl_cmd] = find_curl()
-%Find the executable "CURL" which can be used to download data
-%
-%OUTPUT
-%  found - True/False - found or not the command
-%  curl_cmd - Path to the first found curl executable
-%
-    curl_cmd = '';
-    
-    if ispc
-        [res, curl_cmd] = system('where curl');
-
-        found = (res == 0);
-        if not(found); return; end;
         
-        ind = find(curl_cmd == 10, 1);
-        if ~isempty(ind); curl_cmd = curl_cmd(1:ind - 1); end;
-
-    elseif isunix
-        [res, curl_path] = system('which curl');
-        
-        found = (res == 0);
-        if not(found); return; end;
-
-        ind = find(curl_path == 10, 1);
-        if ~isempty(ind); curl_cmd = curl_path(1:ind - 1); end;
     else
-        error('Unsupported OS')
+        error('The HTTP request failed with error %d', response.StatusCode);
     end
-    return
 end
-
-function success = download_with_curl(fullurl, outdir, outfile)
-% Download using the curl_command
-    [found, curl_cmd] = find_curl();
-    
-    if not(found)
-        error('Cannot download using "curl"');
-    end
-    
-    curdir = pwd();
-    cd(outdir)
-
-    cmd = [curl_cmd, ' -O ', fullurl, ' -o ', outfile];
-    res = system(cmd);
-    cd (curdir);
-    success = (res == 0);
 end
