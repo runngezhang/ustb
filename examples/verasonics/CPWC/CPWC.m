@@ -1,13 +1,9 @@
-%% Adquire and record a CPWC dataset with L7-4 probe
+%% Adquire and record a CPWC dataset
 
 % date:     18.05.2017
 % authors:  Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
 %           Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %
-% History:  Slight modification from the original STAI_L11.m script to fit
-% the L7-4 probe we have at UiO.
-%           Modified to use the generalized beamformer USTB.
-%           Added writing to UFF file.
 %% Read me
 % To run you should be in the Verasonics folder and activate it. For
 % instance by:
@@ -24,6 +20,12 @@
 
 clear all; %close all;
 
+% Uncomment the probe connected to your Verasonics
+%probe = 'L11-5v';
+%probe = 'L11-4v';
+probe = 'L7-4';
+
+%%
 % Check that user is standing in a Verasonics Vantage folder
 s = strsplit(pwd,filesep);
 assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not been detected. Please check that you have installed the Verasonics Software Release 3.0.7 (or later) and that you are standing in an activated Verasonics Vantage folder. For licensing check http://downloads.verasonics.com');
@@ -32,7 +34,7 @@ assert(isempty(findstr(s{end},'Vantage'))==0,'The Verasonics Software has not be
 filename='a.mat';
 folderdata=['data/' datestr(now,'yyyymmdd')];
 mkdir(folderdata);            
-filedata=['L7_CPWC_' datestr(now,'HHMMSS') '.uff'];
+filedata=[probe(1:regexp(probe,'-')-1),'_CPWC_' datestr(now,'HHMMSS') '.uff'];
 uff_filename=[folderdata '/' filedata];
 
 % scan area in live view
@@ -41,7 +43,7 @@ pixels=[256 256];
 
 %% SI units
 c0=1540;                % reference speed of sound [m/s]
-f0=5.2e6;               % central frequency [Hz]
+f0=5.1e6;               % central frequency [Hz]
 
 ex_cycles = 2.5;        % number of cycles of the excitation signal (NOT half-cycles)
 ex_power = 0.67;        % signal duty cycle [0, 1] that relates to the amount of power delivered to the element  
@@ -72,17 +74,17 @@ end
 Resource.Parameters.numTransmit = 128;    % number of transmit channels.
 Resource.Parameters.numRcvChannels = 128; % number of receive channels.
 Resource.Parameters.speedOfSound = c0;    % set speed of sound in m/sec before calling computeTrans
-Resource.Parameters.simulateMode = 0;     % 0 means no simulation, if hardware is present.
+Resource.Parameters.simulateMode = 1;     % 0 means no simulation, if hardware is present.
 
 %% Specify Trans structure array.
-Trans.name = 'L7-4';
+Trans.name = probe;
 Trans.units = 'mm'; % Explicit declaration avoids warning message when selected by default
 Trans.frequency = f0/1e6;   % The center frequency for the A/D 4xFc sampling.
 % note nominal center frequency in computeTrans is 7.813 MHz
-Trans = computeTrans(Trans);  % L12-3v transducer is 'known' transducer so we can use computeTrans.
+Trans = computeTrans(Trans);  % The transducer is 'known' transducer so we can use computeTrans.
 
 %% Specify SFormat structure array.
-SFormat.transducer = 'L7-4';   % 192 element linear array with 0.96 lambda spacing
+SFormat.transducer = probe';   % 192 element linear array with 0.96 lambda spacing
 SFormat.scanFormat = 'RLIN';     % rectangular linear array scan
 SFormat.radius = 0;              % ROC for curved lin. or dist. to virt. apex
 SFormat.theta = 0;
@@ -119,7 +121,7 @@ Resource.ImageBuffer(1).datatype = 'double';
 Resource.ImageBuffer(1).rowsPerFrame = 1024;
 Resource.ImageBuffer(1).colsPerFrame = PData.Size(2);
 Resource.ImageBuffer(1).numFrames = no_frames;         % image buffer 
-Resource.DisplayWindow(1).Title = 'L7-4 CPWC';
+Resource.DisplayWindow(1).Title = [probe,' CPWC'];
 Resource.DisplayWindow(1).AxesUnits = 'mm';
 Resource.DisplayWindow(1).pdelta = PData.pdeltaX;
 Resource.DisplayWindow(1).Position = [250,250, ...    % upper left corner position
@@ -336,7 +338,6 @@ b_data=pipe.go({midprocess.das postprocess.coherent_compounding});
 
 % show
 b_data.plot();
-
 
 %% write channel_data to file the filname that was created in the beginning of this script
 answer = questdlg('Do you want to save this dataset?');
