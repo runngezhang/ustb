@@ -5,8 +5,9 @@ function download(file, url, local_path)
 [path, name, ext] = fileparts(file);
 
 if nargin == 3 % Added three arguments for backwards compability
-    path = local_path;
-    url = [url,'/',file];
+    path = [local_path,filesep]; % The third argument used to be the path
+    url = [url,'/',file]; % The URL now needs to include the file name
+    file = fullfile(path,file,ext); % The file need to have the full path to be saved correctly later
 end
 
 % Check that the file has not been downloaded previously
