@@ -1,8 +1,13 @@
-function download(file, url)
+function download(file, url, local_path)
 %   DOWNLOAD Checks if the specified file is missing and downlods it from the 
 %   specified url. Requires MATLAB 2014b or above
-    
+
 [path, name, ext] = fileparts(file);
+
+if nargin == 3 % Added three arguments for backwards compability
+    path = local_path;
+    url = [url,'/',file];
+end
 
 % Check that the file has not been downloaded previously
 if ~exist(file,  'file')
