@@ -1,12 +1,11 @@
 function download(file, url)
-%DOWNLOAD Downloads a file from an URL to a local path (if needed)
-%
-% NOTE: compatible with
-
+%   DOWNLOAD Checks if the specified file is missing and downlods it from the 
+%   specified url. Requires MATLAB 2014b or above
+    
 [path, name, ext] = fileparts(file);
 
 % Check that the file has not been downloaded previously
-if not(exist(file,  'file'))
+if ~exist(file,  'file')
     fprintf(1, 'Downloading %s%s\nfrom %s\nto %s\n', name, ext, url, path)
     
     % Create folder if it does not exist
@@ -15,7 +14,7 @@ if not(exist(file,  'file'))
     end
     
     % Prepare a HTTP option object were we specify to use a custom progress
-    % monitor, which updates the user on the amount of downloaded data
+    % monitor, which informs the user about the amount of downloaded data
     opts = matlab.net.http.HTTPOptions('ProgressMonitorFcn', ...
         @tools.progressMonitor, 'UseProgressMonitor',true);
     
@@ -38,9 +37,9 @@ if not(exist(file,  'file'))
             fclose(fid);
             
         % If the content of the first response is of type 'text-html', it
-        % means that the file was large enough to prompt the warning
-        % download message. Therefore, we need to send a confirm request to
-        % start the download
+        % means that the file was large enough to trigger the warning
+        % download message in Google drive. Therefore, we need to send a 
+        % confirm request to begin the download
         elseif strcmp(response.Body.ContentType.Type, 'text')        
             
             % First, we prepare a second GET request, which will start the file
@@ -62,7 +61,7 @@ if not(exist(file,  'file'))
                 end
             end
             
-            % We send the second GET request and start the file download
+            % We send the second GET request and begin the file download
             response = send(request, strcat(url, '&confirm=', key), opts);
             
             % We save the file
