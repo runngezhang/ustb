@@ -67,7 +67,6 @@ mid.receive_apodization.window=uff.window.none;
 % This will result in a beamformed_data object with the delayed and not
 % summed channel data.
 b_data = mid.go();
-b_data.plot()
 
 %% Create the Delay-And-Sum image
 % If we want the DAS image, we can simply sum them.
@@ -122,7 +121,7 @@ z_speckle = 327
 x_speckle = 100
 
 figure(2);clf;hold all;
-plot(squeeze(slsc.slsc_values(372,99,:)),'r','LineWidth',2,'DisplayName',...
+plot(squeeze(slsc.slsc_values(372,50,:)),'r','LineWidth',2,'DisplayName',...
     sprintf('Point target at x = %.2f, z = %.2f ',slsc_data.scan.x_axis(99)*1000,...
     slsc_data.scan.z_axis(372)*1000))
 plot(ones(1,64),'r*','DisplayName','Theoretical point target')
@@ -150,7 +149,7 @@ url='http://ustb.no/datasets/';      % if not found downloaded from here
 local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long.uff';
+filename='Verasonics_P2-4_parasternal_long_subject_1.uff';
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
