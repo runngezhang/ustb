@@ -1,5 +1,5 @@
 function download(file, url, local_path)
-%DOWNLOAD download dataset from URL.
+%DOWNLOAD download a dataset from specified URL.
 %   download(FILE, URL) checks if the specified file is missing and 
 %   downlods it from URL. The input argument FILE is a string that contains
 %   the absolute path to the file.
