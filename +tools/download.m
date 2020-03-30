@@ -3,6 +3,11 @@ function download(file, url, local_path)
 %   download(FILE, URL) checks if the specified file is missing and 
 %   downlods it from URL. The input argument FILE is a string that contains
 %   the absolute path to the file.
+% 
+%   This function supports downloading large files from Google drive.
+%   In order to download a dataset from Google drive, URL must be provided as
+%   URL = https://drive.google.com/uc?export=download&id=ID' where ID is
+%   the file id
 %
 %   Example:
 %       url = 'http://ustb.no/datasets/ARFI_dataset.uff';
