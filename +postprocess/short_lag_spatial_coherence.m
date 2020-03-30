@@ -142,7 +142,7 @@ classdef short_lag_spatial_coherence < postprocess
                 idx = abs(temp_find_idx(xs,:))>0;  
                 f_i = sum(idx);
                 lag = h.makelagmat(1,f_i,h.maxM);
-                cc2 =  mex.slsc_mex(squeeze(real(data_cube(:,xs,idx))),lag,h.K_samples,1);
+                [~, cc2] =  evalc('mex.slsc_mex(squeeze(real(data_cube(:,xs,idx))),lag,h.K_samples,1);');
                 cc2(isnan(cc2)) = 0;
                 slsc_values(:,1:size(cc2,2),xs)=cc2;
             end
