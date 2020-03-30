@@ -1,13 +1,23 @@
 function download(file, url, local_path)
-%   DOWNLOAD Checks if the specified file is missing and downlods it from the 
-%   specified url. Requires MATLAB 2014b or above
+%DOWNLOAD download dataset from URL.
+%   download(FILE, URL) checks if the specified file is missing and 
+%   downlods it from URL. The input argument FILE is a string that contains
+%   the absolute path to the file.
+%
+%   Example:
+%       url = 'http://ustb.no/datasets/ARFI_dataset.uff';
+%       file = fullfile(ustb_path(), 'data', 'ARFI_dataset.uff');
+%       tools.download(file, url)
 
 [path, name, ext] = fileparts(file);
 
-if nargin == 3 % Added three arguments for backwards compability
-    path = [local_path,filesep]; % The third argument used to be the path
-    url = [url,'/',file]; % The URL now needs to include the file name
-    file = fullfile(path,[name,ext]); % The file need to have the full path to be saved correctly later
+% Undocumented optional third argument that ensures backward compatibility 
+% with old examples
+if nargin > 2 
+    path = local_path;  % The third argument used to be the path
+    url = [url, '/', file]; % The URL now needs to include the file name
+    file = fullfile(path, [name, ext]); % The file need to have the full path 
+                                        % to be saved correctly later
 end
 
 % Check that the file has not been downloaded previously
