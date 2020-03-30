@@ -22,7 +22,23 @@ end
 
 % Check that the file has not been downloaded previously
 if ~exist(file,  'file')
-    fprintf(1, 'Downloading %s%s\nfrom %s\nto %s\n', name, ext, url, path)
+    
+    fprintf(1, 'USTB download tool\n')
+    msg = textwrap({strcat(name, ext)}, 50);
+    fprintf('File:\t\t%s\n', msg{1});
+    for i = 2:numel(msg)
+        fprintf('\t\t\t%s\n', msg{i});
+    end
+    msg = textwrap({url}, 50);
+    fprintf('URL:\t\t%s\n', msg{1});
+    for i = 2:numel(msg)
+        fprintf('\t\t\t%s\n', msg{i});
+    end
+    msg = textwrap({path}, 50);
+    fprintf('Path:\t\t%s\n', msg{1});
+    for i = 2:numel(msg)
+        fprintf('\t\t\t%s\n', msg{i});
+    end
     
     % Create folder if it does not exist
     if ~exist(path, 'dir')

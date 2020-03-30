@@ -2,7 +2,7 @@ clear all
 close all
 clc
 
-file_id = 4;    % 1. Google drive. Large file. Requires confirm
+file_id = 2;    % 1. Google drive. Large file. Requires confirm
                 % 2. Google drive. Small file. Does not require confirm
                 % 3. Nyhirse St. Olav 
                 % 4. ustb.no
