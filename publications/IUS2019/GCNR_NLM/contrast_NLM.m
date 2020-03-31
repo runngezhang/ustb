@@ -51,7 +51,7 @@ for n=1:b_data.N_frames
             ylabel('z[mm]');
            % title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
         %end
-        
+        mkdir([ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/b_mode_images/'])
         saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/b_mode_images/',my_title,num2str(n)],'eps2c')
     %end
    
@@ -89,6 +89,7 @@ for n=1:b_data.N_frames
            ylim([0 0.03])
         end
         
+        mkdir([ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/PDFs/',my_title,num2str(n)])
         saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/PDFs/',my_title,num2str(n)],'eps2c')
     %end
     

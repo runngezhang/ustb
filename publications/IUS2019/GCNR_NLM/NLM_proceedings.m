@@ -70,20 +70,20 @@ b_das.plot([],['DAS'],50)
 %% 
 n = 13;
 img = abs(reshape(b_das.data(:,1,1,n),[b_das.scan.N_z_axis b_das.scan.N_x_axis]));
-            f = figure;
-            imagesc(b_das.scan.x_axis*1e3,b_das.scan.z_axis*1e3, 20*log10(img./max(img(:)))); colormap gray; axis equal tight; colorbar;
-            caxis([-50 0])
-            set(gca,'FontSize', 20);
-            xlabel('x[mm]');
-            ylabel('z[mm]');
-            %title(sprintf("%s %0.2f dB", 'DAS', 10*log10(channel_SNR(n))));
-            viscircles([x0, z0]*1000,ri*1000,'LineWidth',3)
-            viscircles([x0, z0]*1000,ro*1000,'LineWidth',3,'Color','blue')
-            viscircles([x0, z0]*1000,rO*1000,'LineWidth',3,'Color','blue')
-            
-            pi*(ri*1000)^2
-            (pi*(rO*1000)^2)-(pi*(ro*1000)^2)
-            saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/das_circles'],'eps2c')
+f = figure;
+imagesc(b_das.scan.x_axis*1e3,b_das.scan.z_axis*1e3, 20*log10(img./max(img(:)))); colormap gray; axis equal tight; colorbar;
+caxis([-50 0])
+set(gca,'FontSize', 20);
+xlabel('x[mm]');
+ylabel('z[mm]');
+%title(sprintf("%s %0.2f dB", 'DAS', 10*log10(channel_SNR(n))));
+viscircles([x0, z0]*1000,ri*1000,'LineWidth',3)
+viscircles([x0, z0]*1000,ro*1000,'LineWidth',3,'Color','blue')
+viscircles([x0, z0]*1000,rO*1000,'LineWidth',3,'Color','blue')
+
+pi*(ri*1000)^2
+(pi*(rO*1000)^2)-(pi*(ro*1000)^2)
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/das_circles'],'eps2c')
 
 %% Non Local Means Filtering
 nlm = postprocess.non_local_means_filtering()
@@ -302,9 +302,6 @@ b_slsc_M_clamped.scan = sca;
 b_slsc_M_clamped.data = aux_data_clamped;
 
 [C, CNR, Pmax, GCNR]=contrast_NLM(M, channel_SNR, b_slsc_M_clamped, mask_o, mask_i, 'SLSC_2');
-%%
-
-
 
 %% Evaluate resolution on edge of cyst
 
@@ -342,5 +339,5 @@ ylim([-30 0])
 set(gca,'FontSize',15);
 
 %%
-saveas(f,'Figures/edges.eps','eps2c')
+saveas(f,[ustb_path,filesep,'Publications',filesep,'IUS2019',filesep,'GCNR_NLM',filesep,'Figures/edges.eps'],'eps2c')
 
