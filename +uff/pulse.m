@@ -23,7 +23,7 @@ classdef pulse < uff
     
     %% plot methods
     methods
-        function figure_handle=plot(h,figure_handle_in,title_in,style)
+        function figure_handle=plot(h,figure_handle_in,title_in,LineStyle)
             t0=linspace(-2/h.center_frequency/h.fractional_bandwidth,2/h.center_frequency/h.fractional_bandwidth,512);
             
             % plotting pulse
@@ -40,13 +40,13 @@ classdef pulse < uff
                 axis_handle = gca(figure_handle);
                 title('Pulse'); hold on;
             end
-            
-            if ~exist('style')||~isempty(style)
-                style ='-';
+            if nargin < 4
+                LineStyle = '-';
             end
             
-            plot(axis_handle,t0*1e6,h.signal(t0),style); grid on; axis tight;
-            xlabel('time [mus]');
+
+            plot(axis_handle,t0*1e6,h.signal(t0), 'LineStyle', LineStyle); grid on; axis tight;
+            xlabel('time [\mu{}s]','Interpreter','tex');
             set(gca,'ZDir','Reverse');
             set(gca,'fontsize',14);
             

@@ -71,7 +71,7 @@ classdef beamformed_data < uff
     
     %% display methods
     methods (Access = public)
-        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces,frame_idex,spatial_units)
+        function figure_handle=plot(h,figure_handle_in,in_title,dynamic_range,compression,indeces,frame_idex,spatial_units,mode)
             %PLOT Plots beamformed data
             %
             % Usage: figure_handle=plot(figure_handle,title,dynamic_range)
@@ -120,9 +120,19 @@ classdef beamformed_data < uff
             if nargin<8||isempty(spatial_units)
                 spatial_units='mm';
             end
+            if nargin<9||isempty(mode)
+                mode='normal';
+                font_color = [0 0 0];
+                background_color = [1 1 1];
+            end
+            
+            if strcmp(mode,'dark')
+                font_color = [1 1 1];
+                background_color = [0 0 0];
+            end
             
             %Draw the image
-            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data,spatial_units);
+            h.draw_image(axis_handle,h.in_title,dynamic_range,compression,data,spatial_units,font_color,background_color);
             
             % If more than one frame, add the GUI buttons
             [Npixels Nrx Ntx Nframes]=size(data);
@@ -131,13 +141,17 @@ classdef beamformed_data < uff
                 h.current_frame = 1;
                 h.add_buttons(h.figure_handle);
                 h.play_loop = 0;
-                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))]);
+                title([h.in_title,', Frame = ',num2str(h.current_frame),'/',num2str(size(h.all_images,3))],'Color',font_color);
             end
             
+            set(h.figure_handle,'Color',background_color);
+            if isa(h.figure_handle,'matlab.ui.Figure')
+                h.figure_handle.InvertHardcopy = 'off'; %To be able to save background color
+            end
             figure_handle = h.figure_handle;
         end
         
-        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data,spatial_units)
+        function draw_image(h,axis_handle,in_title,dynamic_range,compression,data,spatial_units,font_color,background_color)
             
             [Npixels Nrx Ntx Nframes]=size(data);
             
@@ -181,13 +195,18 @@ classdef beamformed_data < uff
                     h.image_handle = pcolor(axis_handle,x_matrix*scale_factor,z_matrix*scale_factor,h.all_images(:,:,1));
                     shading(axis_handle,'flat');
                     set(axis_handle,'fontsize',14);
+                    set(axis_handle,'color',font_color);
                     set(axis_handle,'YDir','reverse');
                     axis(axis_handle,'tight','equal');
-                    colorbar(axis_handle);
+                    cbar = colorbar(axis_handle);
+                    set(cbar,'color',font_color);
                     colormap(axis_handle,'gray');
-                    xlabel(axis_handle,['x[' spatial_units ']']); ylabel(axis_handle,['z[' spatial_units ']']);
+                    xlabel(axis_handle,['x[' spatial_units ']'],'color',font_color); ylabel(axis_handle,['z[' spatial_units ']'],'color',font_color);
                     caxis(axis_handle,[min_value max_value]);
-                    title(axis_handle,in_title);
+                    title(axis_handle,in_title,'Color',font_color);
+                    set(gca,'YColor',font_color); 
+                    set(gca,'XColor',font_color); 
+                    box off
                     drawnow;
                 case 'uff.linear_3D_scan'
                     [radial_matrix axial_matrix] = meshgrid(h.scan(1).radial_axis,h.scan(1).axial_axis);
@@ -234,12 +253,19 @@ classdef beamformed_data < uff
                     set(axis_handle,'fontsize',14);
                     set(axis_handle,'YDir','reverse');
                     axis(axis_handle,'tight','equal');
-                    colorbar(axis_handle);
+                    cbar = colorbar(axis_handle);
+                    set(cbar,'color',font_color);
                     colormap(axis_handle,'gray');
                     xlabel(axis_handle,['x[' spatial_units ']']); 
                     ylabel(axis_handle,['z[' spatial_units ']']);
                     caxis(axis_handle,[min_value max_value]);
-                    title(axis_handle,in_title);
+                    title(axis_handle,in_title,'color',font_color);
+                    set(gca,'YColor',font_color); 
+                    set(gca,'XColor',font_color); 
+                    set(gca,'Color',background_color);
+                    set(gca,'GridColor',background_color);
+                    set(gca,'GridLineStyle','none');
+                    box off
                     drawnow;
                 case 'uff.scan'
                     error('The uff.scan cannot be plotted automatically as it can contain arbitrarily placed voxel. The data must be reshaped and plotted manually. To avoid this, you may use the structures uff.linear_scan and uff.sector_scan instead.');
@@ -390,8 +416,8 @@ classdef beamformed_data < uff
         end
         
          function save_movie_loop(h,var1,var2,var3)
-             FileName = uiputfile('movie.mp4','Save movie loop as');
-             vidObj = VideoWriter(FileName,'MPEG-4');
+             [FileName,path] = uiputfile('movie.mp4','Save movie loop as');
+             vidObj = VideoWriter([path,filesep,FileName],'MPEG-4');
              vidObj.Quality = 100;
              vidObj.FrameRate = 5;
              open(vidObj);
