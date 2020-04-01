@@ -1,42 +1,73 @@
 classdef non_local_means_filtering < postprocess
-    %COHERENCE_FACTOR   Matlab implementation of Mallart-Fink Coherence Factor
+    %NON LOCAL MEANS FILTERING Matlab implementation of the nonlocal means
+    %   denoising filter
     %
-    %   MATLAB implementation of Mallart-Fink coherence factor beamforming
-    %   method as described in the paper:
+    %   A fast implementation of the non-local means based on distances in
+    %   the features space. The full algorithm is discussed in detail in the
+    %   following paper:
     %
-    %   R. Mallart and M. Fink, "Adaptive focusing in scattering media through
-    %   sound-speed inhomogeneities: The van Cittert Zernike approach and focusing
-    %   criterion", J. Acoust. Soc. Am., vol. 96, no. 6, pp. 3721-3732, 1994
+    %      A. Tristàn-Vega, V. Garcìa-Pèrez, S. Aja-Fernàndez, C.-F. Westin
+    %      "Efficient and robust nonlocal means denoising of MR data based on
+    %      salient features matching"
+    %      Computer Methods and Programs in Biomedicine, vol. 105, pp. 131-144
+    %      (2012)
     %
-    %   The implementation computes coherence either on transmit, receive, or
-    %   both.
+    %   implementers:   Antonio Tristán-Vega <atriveg@lpi.tel.uva.es>
+    %                   Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %
-    %   implementers: Ole Marius Hoel Rindal <olemarius@olemarius.net>
-    %                 Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
-    %
-    %   $Last updated: 2017/09/12$
+    %   $Last updated: 2020/01/04$
     
     %% constructor
     methods (Access = public)
-        function h=non_local_means_filtering()
-            h.name='Non Local Means Filtering';
-            h.reference= '';
-            h.implemented_by={'Ole Marius Hoel Rindal <olemarius@olemarius.net>','Tore BjÃ¥stad','The people at Mathworks'};
-            h.version='v1.0.0';
+        function h = non_local_means_filtering()
+            h.name = 'Non Local Means Filtering';
+            h.reference = ['A. Tristàn-Vega, V. Garcìa-Pèrez, S. Aja-Fernàndez, ' ...
+                'C.F. Westin', '"Efficient and robust nonlocal means denoising ' ...
+                'of MR data based on salient features matching"', 'Computer ' ...
+                'Methods and Programs in Biomedicine, vol. 105, pp. 131-144, ' ...
+                '(2012)'];
+            h.implemented_by = {'Ole Marius Hoel Rindal <olemarius@olemarius.net>'};
+            h.version = 'v1.0.0';
         end
     end
     
     %% Additional properties
     properties
-        dimension = dimension.both;                   % dimension class that specifies whether the process will run only on transmit, receive, or both.
+        dimension = dimension.both; % Dimension class that specifies whether the 
+                                    % process will run only on transmit, receive, or both.
+                                    
         run_on_logcompressed = 1;
-        sigma = 60;
-        beta = 1.0;     % default 1.0
-        rs   = [30,30,1]; % default [2,2,2]
-        rc   = [30,30,1]; % default [1,1,1]
-        ps   = 4;       % default 2
-        flag = 'gaussian'; % default 'gaussian', could be rician
-        block= 1;       % 0 loop, 1:vector operations (for larger search windows)
+        
+        sigma = 60;                 % The noise power in the input image. In the Gaussian case, this
+                                    % is the standard deviation of the Gaussian noise at each pixel.
+                                    % In the Rician case, it is the standard deviation of noise in
+                                    % the original, Gaussian distributed, real and imaginary parts of
+                                    % the signal (whose modulus is computed to get the Rician
+                                    % variable).
+                                    
+        beta = 1.0;                 % Filtering parameter. The larger its value, the more
+                                    % aggressive the filtering. The smaller its value, the better
+                                    % details are preserved. It should be in the range of 0.8 to 1.2
+                                    
+        rs   = [30,30,1];           % A 3x1 vector with the search radii
+        
+        rc   = [30,30,1];           % A 3x1 vector with the comparison radii
+        
+        ps   = 4;                   % The preselection threshold. All those pixels in the search
+                                    % window whose normalized distance to the center pixel is larger
+                                    % than this value are automatically removed from the weighted
+                                    % average.
+                                    
+        flag = 'gaussian';          % Must be either 'gaussian' (the default) or 'rician'. In the
+                                    % latter case, the weighted average is performed over the squared
+                                    % pixels, and the filtered value is computed as
+                                    % sqrt(\mu-2\sigma^2) so that the estimate becomes unbiased.
+                                    
+        block= 1;                   % This second flag tells the algorithm if the computation of the
+                                    % weights within the search window must be done with a loop (0,
+                                    % the default since it seems to be faster for the default search
+                                    % window) or it must be done with vector operations (1). Choose 0
+                                    % with small search radii or 1 with larger search radii.
     end
     
     methods
@@ -60,15 +91,12 @@ classdef non_local_means_filtering < postprocess
                 disp([num2str(i),'/20'])
                 D = D_all(:,:,i);
                 [Ns, Nl] = size(D);
-                
-
-                %%
-
-                
+                                
                 D = padarray(D, h.rc(1:2), 'symmetric', 'both'); % Pad to avoid edge artifacts
                 
                 tic
-                V = h.FastNonLocalMeans3D(D, h.sigma, h.beta, h.rs, h.rc, h.ps, h.flag, h.block);
+                V = h.FastNonLocalMeans3D(D, h.sigma, h.beta, h.rs, h.rc, ...
+                    h.ps, h.flag, h.block);
                 toc
                 
                 V = V(h.rc(2)+(1:Nl), h.rc(1)+(1:Ns));
@@ -83,38 +111,36 @@ classdef non_local_means_filtering < postprocess
                 
                 V_all(:,:,i) = V;
                 
-                figure;
+                figure();
+                colormap(gcf, gray(256));
                 if h.run_on_logcompressed
-                    set(gcf, 'position', [378         558        1011         420]);
-                    subplot(121)
+                    subplot(1, 2, 1)
                     imagesc(D-max(max(D)));
                     caxis([-60,0]);
-                    colormap(gray(256));
-                    title({'Image before NLM',''})
-                    subplot(122)
+                    title('Image before NLM')
+                    subplot(1, 2, 2)
                     imagesc(V_all(:,:,i));
+                    colorbar
                     caxis([-60,0]);
-                    colormap(gray(256));
-                    colorbar
                     title({'Image after NLM',...
-                        sprintf('Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ps=%0.3g, flag=%s, nabf=%0.3g',h.sigma, h.beta, h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
+                        sprintf(['Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ' ...
+                        'ps=%0.3g, flag=%s, nabf=%0.3g'], h.sigma, h.beta, ...
+                        h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
                 else
-                    set(gcf, 'position', [378         558        1011         420]);
-                    subplot(121)
+                    subplot(1, 2, 1)
                     imagesc(D);
-                    caxis([0 1]);
-                    colormap(gray(256));
-                    title({'Image before NLM',''})
-                    
-                    subplot(122)
+                    caxis([0, 1]);
+                    title('Image before NLM')
+                    subplot(1, 2, 2)
                     imagesc(V_all(:,:,i));
-                    %caxis([0 1]);
-                    colormap(gray(256));
+                    caxis([0, 1]);
                     colorbar
                     title({'Image after NLM',...
-                        sprintf('Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ps=%0.3g, flag=%s, nabf=%0.3g',h.sigma, h.beta, h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
-                    
+                        sprintf(['Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ' ...
+                        'ps=%0.3g, flag=%s, nabf=%0.3g'], h.sigma, h.beta, ...
+                        h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
                 end
+
                 V_all(:,:,i) = V_all(:,:,i)-max(max(V_all(:,:,i)));
                 if h.run_on_logcompressed
                     V_all(:,:,i) = 10.^(V_all(:,:,i)/20);
@@ -137,25 +163,13 @@ classdef non_local_means_filtering < postprocess
         
         function out = FastNonLocalMeans3D(h, V, sigma, beta, rs, rc, ps, flag, block )
                 % A fast implementation of the non-local means based on distances in
-                % the features space. The full algorithm is discussed in detail in the
-                % following paper:
+                %   the features space. 
                 %
-                %      A. Tristï¿½n-Vega, V. Garcï¿½a-Pï¿½rez, S. Aja-Fernï¿½ndez, C.-F. Westin
-                %      "Efficient and robust nonlocal means denoising of MR data based on
-                %      salient features matching"
-                %      Computer Methods and Programs in Biomedicine, vol. 105, pp. 131-144
-                %      (2012)
-                %
-                % If you are willing to use this software for your research, please cite
-                % this work.
-                %
-                % NOTE: Some of the computational features described in the paper above
-                % cannot be exploited in the matlab implementation. If performance is an
-                % issue for you, we strongly encourage you use the C++/ITK implementation
-                % available at: http://www.nitrc.org/projects/unlmeans, for which both
-                % source code and pre-compiled executables can be downloaded.
-                %
-                %   USAGE: out = FastNonLocalMeans( V, sigma [beta, rs, rc, ps, flag] )
+                %   NOTE: Some of the computational features described in the paper above
+                %   cannot be exploited in the matlab implementation. If performance is an
+                %   issue for you, we strongly encourage you use the C++/ITK implementation
+                %   available at: http://www.nitrc.org/projects/unlmeans, for which both
+                %   source code and pre-compiled executables can be downloaded.
                 %
                 %    V:     The input volume to be filtered (3D). - MANDATORY
                 %    sigma: The noise power in the input image. In the Gaussian case, this
@@ -355,7 +369,6 @@ classdef non_local_means_filtering < postprocess
                 return;
         end
             
-            %--------------------------------------------------------------------------
         function [mu,Gx,Gy,Gz,factors,hcorr] = ComputeLocalFeatures3D(h, I, radii )
                 % Computes the local mean value and the local gradients of a 3D image.
                 %
@@ -428,7 +441,6 @@ classdef non_local_means_filtering < postprocess
                 return;
         end
             
-            %--------------------------------------------------------------------------
         function out = My3DConv(h, I, gx, gy, gz )
                 % Computes a separable 3D convolution
                 gx  = gx(:);

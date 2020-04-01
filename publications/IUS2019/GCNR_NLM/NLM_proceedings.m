@@ -63,7 +63,7 @@ das.dimension = dimension.both;
 b_das = pipe.go({ das });
 
 %%
-b_das.plot([],['DAS'],50)
+b_das.plot([],['DAS'],50);
 %%
 [C, CNR, Pmax, GCNR]=contrast_NLM(M, channel_SNR, b_das, mask_o, mask_i, 'DAS',1);
 
@@ -77,19 +77,19 @@ set(gca,'FontSize', 20);
 xlabel('x[mm]');
 ylabel('z[mm]');
 %title(sprintf("%s %0.2f dB", 'DAS', 10*log10(channel_SNR(n))));
-viscircles([x0, z0]*1000,ri*1000,'LineWidth',3)
-viscircles([x0, z0]*1000,ro*1000,'LineWidth',3,'Color','blue')
-viscircles([x0, z0]*1000,rO*1000,'LineWidth',3,'Color','blue')
+viscircles([x0, z0]*1000,ri*1000,'LineWidth',3);
+viscircles([x0, z0]*1000,ro*1000,'LineWidth',3,'Color','blue');
+viscircles([x0, z0]*1000,rO*1000,'LineWidth',3,'Color','blue');
 
-pi*(ri*1000)^2
-(pi*(rO*1000)^2)-(pi*(ro*1000)^2)
+pi*ri*1000^2
+pi*(rO*1000)^2-pi*(ro*1000)^2
 saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/das_circles'],'eps2c')
 
 %% Non Local Means Filtering
-nlm = postprocess.non_local_means_filtering()
+nlm = postprocess.non_local_means_filtering();
 % %nlm.flag = 'rician';
-nlm.rs = [30 30 1]
-nlm.rc = [30 30 1]
+nlm.rs = [30 30 1];
+nlm.rc = [30 30 1];
 nlm.ps = 4;
 nlm.sigma = 80;
 nlm.input = b_das;
@@ -97,14 +97,13 @@ nlm.input = b_das;
 b_das_nlm = nlm.go();
 
 %%
-[C, CNR, Pmax, GCNR]=contrast_NLM(M, channel_SNR, b_das_nlm, mask_o, mask_i, 'NLM',1);
+[C, CNR, Pmax, GCNR] = contrast_NLM(M, channel_SNR, b_das_nlm, mask_o, mask_i, 'NLM',1);
 
 %% RUN AVERAGE FILTERING
 img_db = b_das.get_image();
 clip_at=0;
 dynamic_range=60;
 for i = 1:20
-    i
     %img=uint16((2^16-1)*min(max((img_db(:,:,i)+dynamic_range)./(clip_at+dynamic_range),0),1));
     %B = imgaussfilt(A)
     img_filtered(:,:,i) = double(imfilter(img_db(:,:,i),fspecial('average',30),'replicate'));
@@ -192,7 +191,7 @@ slsc.maxM = 14;
 slsc.input = b_data_tx;
 slsc.K_in_lambda = 1;
 
-Q = slsc.maxM./M
+Q = slsc.maxM./M;
 
 % Pick out the M channels that contains data, thus only the M elemetns
 % centered around the abscissa of the pixel. This is taken care of by the
@@ -203,7 +202,6 @@ aux_data = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frame
 aux_data_clamped = zeros(b_data_tx.scan.N_z_axis*b_data_tx.scan.N_x_axis,1,1,mix.N_frames);
 data_cube_M_elements = complex(zeros(b_data_tx.scan.N_z_axis,b_data_tx.scan.N_x_axis,M,1));
 for f = 1:mix.N_frames
-    f
     % Reshape the beamformed data as a cube (Z,X,Elements)
     data_cube = reshape(b_data_tx.data(:,:,1,f),sca.N_z_axis,sca.N_x_axis,mix.N_channels);
     for x = 1: b_data_tx.scan.N_x_axis

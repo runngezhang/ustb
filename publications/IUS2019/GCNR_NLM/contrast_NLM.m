@@ -7,12 +7,15 @@ GCNR=[];
 AUC=[];
 
 if nargin < 7
-    make_movie = 0
+    make_movie = 0;
 end
 
 if make_movie
-    mkdir([ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Movie/']);
-    FileNameMovie = [ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Movie/',my_title];
+    movie_dir = [ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Movie/'];
+    if ~isfolder(movie_dir)
+        mkdir(movie_dir);
+    end
+    FileNameMovie = [movie_dir, my_title];
     vidObj = VideoWriter(FileNameMovie,'MPEG-4');
     vidObj.Quality = 100;
     vidObj.FrameRate = 5;
@@ -51,8 +54,11 @@ for n=1:b_data.N_frames
             ylabel('z[mm]');
            % title(sprintf("%s %0.2f dB", my_title, 10*log10(SNR(n))));
         %end
-        mkdir([ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/b_mode_images/'])
-        saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/b_mode_images/',my_title,num2str(n)],'eps2c')
+        figure_dir = [ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/b_mode_images/'];
+        if ~isfolder(figure_dir)
+            mkdir(figure_dir)
+        end
+        saveas(f,[figure_dir, my_title, num2str(n)],'eps2c')
     %end
    
     %% clasic
@@ -89,8 +95,12 @@ for n=1:b_data.N_frames
            ylim([0 0.03])
         end
         
-        mkdir([ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/PDFs/',my_title,num2str(n)])
-        saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/PDFs/',my_title,num2str(n)],'eps2c')
+        pdf_dir = [ustb_path,filesep,'publications',filesep,'IUS2019/GCNR_NLM/Figures/PDFs/',my_title,num2str(n)];
+        
+        if ~isfolder(pdf_dir)
+            mkdir(pdf_dir)
+        end
+        saveas(f,[pdf_dir,my_title,num2str(n)],'eps2c')
     %end
     
     if make_movie
