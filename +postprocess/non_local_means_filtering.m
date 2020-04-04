@@ -6,13 +6,13 @@ classdef non_local_means_filtering < postprocess
     %   the features space. The full algorithm is discussed in detail in the
     %   following paper:
     %
-    %      A. Tristàn-Vega, V. Garcìa-Pèrez, S. Aja-Fernàndez, C.-F. Westin
+    %      A. TristÄn-Vega, V. GarcÄ—a-PÄrez, S. Aja-FernÄndez, C.-F. Westin
     %      "Efficient and robust nonlocal means denoising of MR data based on
     %      salient features matching"
     %      Computer Methods and Programs in Biomedicine, vol. 105, pp. 131-144
     %      (2012)
     %
-    %   implementers:   Antonio Tristán-Vega <atriveg@lpi.tel.uva.es>
+    %   implementers:   Antonio TristÄn-Vega <atriveg@lpi.tel.uva.es>
     %                   Ole Marius Hoel Rindal <olemarius@olemarius.net>
     %
     %   $Last updated: 2020/01/04$
@@ -21,7 +21,7 @@ classdef non_local_means_filtering < postprocess
     methods (Access = public)
         function h = non_local_means_filtering()
             h.name = 'Non Local Means Filtering';
-            h.reference = ['A. Tristàn-Vega, V. Garcìa-Pèrez, S. Aja-Fernàndez, ' ...
+            h.reference = ['A. TristÄn-Vega, V. GarcÄ—a-PÄrez, S. Aja-FernÄndez, ' ...
                 'C.F. Westin', '"Efficient and robust nonlocal means denoising ' ...
                 'of MR data based on salient features matching"', 'Computer ' ...
                 'Methods and Programs in Biomedicine, vol. 105, pp. 131-144, ' ...
@@ -110,45 +110,13 @@ classdef non_local_means_filtering < postprocess
                 end
                 
                 V_all(:,:,i) = V;
-                
-                figure();
-                colormap(gcf, gray(256));
-                if h.run_on_logcompressed
-                    subplot(1, 2, 1)
-                    imagesc(D-max(max(D)));
-                    caxis([-60,0]);
-                    title('Image before NLM')
-                    subplot(1, 2, 2)
-                    imagesc(V_all(:,:,i));
-                    colorbar
-                    caxis([-60,0]);
-                    title({'Image after NLM',...
-                        sprintf(['Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ' ...
-                        'ps=%0.3g, flag=%s, nabf=%0.3g'], h.sigma, h.beta, ...
-                        h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
-                else
-                    subplot(1, 2, 1)
-                    imagesc(D);
-                    caxis([0, 1]);
-                    title('Image before NLM')
-                    subplot(1, 2, 2)
-                    imagesc(V_all(:,:,i));
-                    caxis([0, 1]);
-                    colorbar
-                    title({'Image after NLM',...
-                        sprintf(['Sigma=%0.3g, beta=%0.3g, rs=%0.3g, rc=%0.3g, ' ...
-                        'ps=%0.3g, flag=%s, nabf=%0.3g'], h.sigma, h.beta, ...
-                        h.rs(1), h.rc(1), h.ps, h.flag, doNoiseAddBack*nabf)} )
-                end
-
                 V_all(:,:,i) = V_all(:,:,i)-max(max(V_all(:,:,i)));
+                
                 if h.run_on_logcompressed
                     V_all(:,:,i) = 10.^(V_all(:,:,i)/20);
-                end
-                                
+                end                 
                 
             end
-            
             
             h.output=uff.beamformed_data(h.input); % ToDo: instead we should copy everything but the data
             
