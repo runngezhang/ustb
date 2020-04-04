@@ -89,15 +89,15 @@ for n=1:b_data.N_frames
     
     if make_movie
         %%
-        f = figure(101012);
-        subplot(121)
+        f = figure(101012);clf;
+        subplot(121);
         imagesc(b_data.scan.x_axis*1e3,b_data.scan.z_axis*1e3, 20*log10(img./max(img(:)))); colormap gray; axis equal tight; colorbar;
         caxis([-50 0])
         set(gca,'FontSize', 25);
         xlabel('x[mm]');
         ylabel('z[mm]');
         title(['SNR=',num2str(10*log10(SNR(n)))]);
-        subplot(122)
+        subplot(122);
         plot(x,pdf_i./sum(pdf_i),'r-', 'linewidth',2); hold on; grid on;
         plot(x,pdf_o./sum(pdf_o),'b-', 'linewidth',2);
         hh=area(x,min([pdf_i./sum(pdf_i); pdf_o./sum(pdf_o)]));
