@@ -408,6 +408,7 @@ classdef beamformed_data < uff
                 catch ME
                     if strcmp(ME.identifier,'MATLAB:class:InvalidHandle')
                         %The Figure was closed while the video was running
+                        break
                     else
                         rethrow(ME)
                     end
