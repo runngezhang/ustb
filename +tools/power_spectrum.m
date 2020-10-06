@@ -5,7 +5,7 @@ function [fx, pw] = power_spectrum(data, fs, normalised, N)
         normalised = true;
     end
     if nargin < 4    
-        N = max(25, size(data, 4));     % number of temporal frames to average
+        N = min(25, size(data, 4));     % number of temporal frames to average
     end
     
     pw = fftshift(fft(data(:,:,:,1:N), [], 1));
@@ -13,7 +13,7 @@ function [fx, pw] = power_spectrum(data, fs, normalised, N)
     if normalised 
         pw = pw/max(pw); 
     end
-    fx = linspace(-fs/2,fs/2, nfft+1);
+    fx = linspace(-fs/2,fs/2, size(data, 1)+1);
     fx(end) = []; 
 end
 
