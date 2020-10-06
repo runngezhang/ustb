@@ -2,23 +2,27 @@ classdef fast_demodulation < preprocess
     %FAST_DEMODULATION   Faster MATLAB implementation of demodulation
     %
     %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+    %            Stefano Fiorentini <stefano.fiorentini@ntnu.no>
     %
-    %   $Last updated: 2017/09/10$
+    %   $Last updated: 2020/10/06$
     
     %% constructor
     methods (Access = public)
-        function h=demodulation()
-            h.name='Fast demodulation MATLAB';
-            h.reference='www.ustb.no';
-            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>'};
-            h.version='v1.0.0';
+        function h = fast_demodulation()
+            h.name = 'Fast demodulation MATLAB';
+            h.reference = 'www.ustb.no';
+            h.implemented_by = {'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>', ...
+                'Stefano Fiorentini <stefano.fiorentini@ntnu.no>'};
+            h.version = 'v1.0.1';
         end
     end
     
     properties (Access = public)
-        plot_on                     % plot intermediate graphs
-        modulation_frequency        % modulation frequency [Hz]
-        downsample_frequency        % sampling frequency after downsampling [Hz]
+        plot_on                                     % plot intermediate graphs
+        modulation_frequency                        % modulation frequency [Hz]
+        downsample_frequency                        % sampling frequency after downsampling [Hz]
+        baseband_frequency_vector = [0.5, 1.5];     % start and end of the transition band, defined
+                                                    % as a multiple of the modulation frequency
     end
     
     methods
@@ -30,97 +34,118 @@ classdef fast_demodulation < preprocess
                 return;
             end
             
-            % modulation frequency
-            if isempty(h.modulation_frequency)||(h.modulation_frequency<eps)
-                warning('The modulation frequency is not specified. The estimated central frequency will be used. For faster demodulation please provide the modulation frequency as a parameter.');
+            % estimate modulation frequency if needed
+            if isempty(h.modulation_frequency)
+                warning(['The modulation frequency is not specified. ', ...
+                    'The estimated central frequency will be used. '])
 
-                [fx pw] = tools.power_spectrum(h.input.data,h.sampling_frequency);
-                assert(sum(pw)>0,'Dataset is zero');
+                [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
                 
                 % computing central frequency and bandwidth
-                disp('Estimating power spectrum');
-                fpw=filter(ones(1,26)./26,1,pw);fpw=[fpw(13:end); zeros(12,1)];
-                [dc ic]=max(fpw.*(fx>0).'); fc=fx(ic);
-                bw_up=min(fx((fx>fc)&(fpw<dc/2).')); % -6dB upper limit
-                bw_do=max(fx((fx<fc)&(fpw<dc/2).')); % -6dB down limit
-                fc=(bw_up+bw_do)/2;                  % center frequency
-                bw=2*(bw_up-fc);
+                fprintf(1, 'Estimating power spectrum');
+                [dc, ic] = max(pw); 
+
+                bw_lo = interp1(pw(1:ic), fx(1:ic), dc/2);      % -6dB lower limit
+                bw_up = interp1(pw(ic:end), fx(ic:end), dc/2);  % -6dB upper limit
+                fc = (bw_lo+bw_up)/2;                           % center frequency
                 
                 % set modulation ferquency
-                h.modulation_frequency=fc;
+                h.modulation_frequency = fc;
             end
             
-            % downsampling frequency
+            % estimate downsampling frequency if needed
             if isempty(h.downsample_frequency)
-                warning('The downsampling frequency is not specified. Using 4*modulation_frequency.');
-                h.downsample_frequency=4*h.modulation_frequency;
+                warning(['The downsampling frequency is not specified. ', ...
+                    'Using 2*modulation_frequency.'])
+                
+                h.downsample_frequency = 2*h.modulation_frequency;
+            else
+                if mod(h.input.sampling_frequency, h.downsample_frequency) ~= 0
+                    warning(['The input sample frequency is not a multiple of the specified downsample frequency. ', ...
+                        'Rounding up to the next higher downsample frequency.'])
+                end
+                
+                Ndown = ceil(h.input.sampling_frequency / h.downsample_frequency);
+                h.downsample_frequency = h.input.sampling_frequency / Ndown;
             end
-            
-            % collapse any dimensions beyond 3rd
-            siz = size(h.input.data);
-            N = prod(siz(3:end));        
-  
-            %% copy data
-            data = h.input.data(:,:,1:N);
-            
-            %% show spectrum
-            if(h.plot_on)
-                [fx pw] = tools.power_spectrum(data,h.sampling_frequency);
-                assert(sum(pw)>0,'Dataset is zero');
-                figure();
-                subplot(1,2,1);
-                plot(fx*1e-6,pw,'k'); hold on; axis manual; grid on;
-                plot([h.modulation_frequency h.modulation_frequency]*1e-6,[0 1],'r--');
-                plot(-[h.modulation_frequency h.modulation_frequency]*1e-6,[0 1],'r--');
-                axis([-4*h.modulation_frequency*1e-6 4*h.modulation_frequency*1e-6 0 1]);
+              
+            % Plot RF channel data power spectrum
+            if(h.plot_on)      
+                if ~exist('pw', 'var')
+                    [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
+                end
+                
+                pv = max(pw);       % find peak value
+                
+                figure('Color', 'w')
+                subplot(1,2,1)
+                hold on
+                plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1)
+                plot([h.modulation_frequency, h.modulation_frequency]*1e-6, [-60, 0]+10*log10(pv), 'r--', ...
+                    'LineWidth', 1)
+                plot(-[h.modulation_frequency, h.modulation_frequency]*1e-6, [-60, 0]+10*log10(pv), 'r--', ...
+                    'LineWidth', 1)
+                hold off
+                xlim([-2*h.modulation_frequency, 2*h.modulation_frequency])
+                ylim([-60, 0])
+                axis tight
+                grid on
+                box on
                 xlabel('f [MHz]');
-                ylabel('Relative amplitude');
+                ylabel('Power spectrum [dB]');
                 title('Before demodulation');
             end
             
-            %% demodulation
-            if isempty(h.modulation_frequency) error('Modulation frequency must be provided'); end
-            mod_sig=repmat(exp(-j*2*pi*h.modulation_frequency*h.input.time),1,size(data,2),size(data,3));
-            data=data.*mod_sig;
+            % Demodulation
+            data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
             
             if(h.plot_on)    
-                [fx pw] = tools.power_spectrum(data,h.sampling_frequency);
-                subplot(1,2,2);
-                plot(fx*1e-6,pw,'k'); hold on; axis manual; grid on;
-                plot([0 0]*1e-6,[0 1],'r--');
-                plot(-2*[h.modulation_frequency h.modulation_frequency]*1e-6,[0 1],'r--');
-                axis([-4*h.modulation_frequency*1e-6 4*h.modulation_frequency*1e-6 0 1]);
+                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                
+                pv = max(pw);       % find peak value
+
+                subplot(1,2,2)
+                hold on
+                plot(fx*1e-6, pw, 'k', 'LineWidth', 1)
+                plot([0, 0]*1e-6, [-60, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
+                hold off
+                xlim([-h.downsample_frequency/2, h.downsample_frequency/2])
+                ylim([-60, 0])
+                axis tight
+                grid on
+                box on
                 xlabel('f [MHz]');
-                ylabel('Relative amplitude');
-                title('After demodulation');
+                ylabel('Power spectrum [dB]');
+                title('Before demodulation');
             end
 
-            %% low pass filtering
-            disp('Base Band filtering');
-            baseband_frequency_vector=[0.9*h.modulation_frequency h.modulation_frequency];
-            [data fre_res w]=tools.low_pass(data,h.sampling_frequency,baseband_frequency_vector);
+            % Perform base-band filtering
+            fprintf(1, 'Base Band filtering');
+            [data, fre_res, w, delay] = tools.low_pass(data, h.sampling_frequency, ...
+                h.baseband_frequency_vector*h.modulation_frequency);
 
             if(h.plot_on)    
-                [fx pw] = tools.power_spectrum(data,h.sampling_frequency);
-                subplot(1,2,2);
-                plot(fx*1e-6,pw,'g--'); hold on; axis manual; grid on;
+                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                
+                pv = max(pw);       % find peak value
+
+                subplot(1,2,2)
+                hold on
+                plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1)
                 plot(fs*w/2/pi*1e-6,abs(fre_res)/max(abs(fre_res)),'b-')
                 plot(-fs*w/2/pi*1e-6,abs(fre_res)/max(abs(fre_res)),'b-')
+                hold on
             end
             
-            %% resampling
-            if isempty(h.downsample_frequency) error('Downsampling frequency must be provided'); end
-            Ndown=round(h.input.sampling_frequency/h.downsample_frequency);
+            % Downsampling            
+            id = delay+1:Ndown:size(data, 1);       % decimating vector
             
-            ind_new = 1:Ndown:siz(1);       % decimating vector
-            L = length(ind_new);            % length decimating  vector       
-            
-            % write in the output
-            h.output=uff.channel_data(h.input);
-            h.output.modulation_frequency=h.modulation_frequency;
-            h.output.initial_time=h.input.initial_time;
-            h.output.sampling_frequency=h.input.sampling_frequency/Ndown;
-            h.output.data=reshape(data(ind_new,:,:),[L siz(2:end)]);
+            % Create output channel datta object
+            h.output = uff.channel_data();
+            h.output.modulation_frequency = h.modulation_frequency;
+            h.output.initial_time = h.input.initial_time;
+            h.output.sampling_frequency = h.downsample_frequency;
+            h.output.data = data(id, :, :, :);
             
             % pass reference
             output = h.output;
@@ -132,15 +157,15 @@ classdef fast_demodulation < preprocess
     
     %% set methods
     methods
-        function h=set.plot_on(h,in_plot_on)
+        function set.plot_on(h, in_plot_on)
             assert(isa(in_plot_on,'logical'), 'The input plot_on is not a LOGICAL class (true/false). Check HELP LOGICAL.');
-            h.plot_on=in_plot_on;
+            h.plot_on = in_plot_on;
         end
-        function h=set.modulation_frequency(h,in_modulation_frequency)
+        function set.modulation_frequency(h, in_modulation_frequency)
             assert(numel(in_modulation_frequency)==1, 'The modulation_frequency must be a escalar');
             h.modulation_frequency=in_modulation_frequency;
         end
-        function h=set.downsample_frequency(h,in_downsample_frequency)
+        function set.downsample_frequency(h, in_downsample_frequency)
             assert(numel(in_downsample_frequency)==1, 'The downsample_frequency must be a escalar');
             h.downsample_frequency=in_downsample_frequency;
         end
