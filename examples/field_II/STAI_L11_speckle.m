@@ -23,6 +23,7 @@ field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
+set_field('threads', 20)
 
 %% Transducer definition L11-4v, 128-element linear array transducer
 probe = uff.linear_array();
@@ -34,12 +35,12 @@ kerf                    = 0.03e-03;        % gap between elements [m]
 probe.element_width     = probe.pitch-kerf;% Width of element [m]
 lens_el                 = 20e-3;           % position of the elevation focus
 probe.N                 = 128;             % Number of elements
-pulse_duration          = 2.5;             % pulse duration [cycles]
+pulse_duration          = 1;               % pulse duration [cycles]
 
 %% pulse definition
 pulse = uff.pulse();
 pulse.center_frequency = f0;
-pulse.fractional_bandwidth = 0.65;        % probe bandwidth [1]
+pulse.fractional_bandwidth = 1.2;        % probe bandwidth [1]
 t0 = (-1/pulse.fractional_bandwidth/f0): dt : (1/pulse.fractional_bandwidth/f0);
 impulse_response = gauspuls(t0, f0, pulse.fractional_bandwidth);
 impulse_response = impulse_response-mean(impulse_response); % To get rid of DC
@@ -113,60 +114,20 @@ for n=1:probe.N
     seq(n).delay = probe.r(n)/c0-lag*dt+t; % t0 and center of pulse compensation
 end
 close(wb);
+field_end()
 
 %% CHANNEL DATA
-channel_data = uff.channel_data();
-channel_data.sampling_frequency = fs;
-channel_data.sound_speed = c0;
-channel_data.initial_time = 0;
-channel_data.pulse = pulse;
-channel_data.probe = probe;
-channel_data.sequence = seq;
-channel_data.data = STA*10^29;
+rfch_data = uff.channel_data();
+rfch_data.sampling_frequency = fs;
+rfch_data.sound_speed = c0;
+rfch_data.initial_time = 0;
+rfch_data.pulse = pulse;
+rfch_data.probe = probe;
+rfch_data.sequence = seq;
+rfch_data.data = repmat(STA, [1, 1, 1, 10])*10^29;
 
-%% SCAN
-scan=uff.linear_scan('x_axis',linspace(-5e-3,5e-3,256).', 'z_axis', linspace(15e-3,20e-3,256).');
+demod = preprocess.fast_demodulation();
+demod.input = rfch_data;
+demod.plot_on = true;
 
-%% PIPELINE
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=scan;
-
-% Delay and sum on receive, then coherent compounding
-b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
-% Display image
-b_data.plot()
-
-%%
-envelope = abs(b_data.data);
-envelope = envelope./max(envelope(:));
-m = mean(envelope(:));
-s = std(envelope(:));
-
-snr_calculated_das = m/s
-snr_theoretical = (pi/(4-pi))^(1/2)
-b = s/(sqrt((4-pi)/2)); %Scale parameter
-
-% Estimate PDF
-x_axis = linspace(0,1,200);
-[n,xout] = hist(envelope(:),x_axis);
-delta_x = xout(2)-xout(1);
-n = n/sum(n)/delta_x;
-
-% Theoretical Raileigh PDF 
-theoretical_pdf = (x_axis./b^2).*exp(-x_axis.^2/(2.*b^2));
-
-% Plot
-color=[0.25 1 0.75]
-figure(1);clf;  
-plot(xout,n,'LineWidth',2,'Color','r','DisplayName','Estimated PDF');hold on;
-plot(x_axis,theoretical_pdf,'--','Color',color,'LineWidth',2,'DisplayName','Rayleigh Theoretical PDF');
-title('PDF of envelope');
-xlabel('Normalized amplitude');
-ylabel('Probability')
-legend('show');
-
-%% Save UFF dataset
-filename=[ustb_path(),'/data/FieldII_speckle_simulation_v2.uff'];
-channel_data.write(filename,'channel_data');
-b_data.write(filename,'beamformed_data');
+iqch_data = demod.go();

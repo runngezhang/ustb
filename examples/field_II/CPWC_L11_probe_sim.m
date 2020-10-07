@@ -34,6 +34,7 @@ field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
+set_field('threads', 20)
 
 %% Transducer definition L11-4v, 128-element linear array transducer
 % 
@@ -172,44 +173,5 @@ channel_data.probe = probe;
 channel_data.sequence = seq;
 channel_data.data = CPW./max(CPW(:));
 
-%% Scan
-%
-% The scan area is defines as a collection of pixels spanning our region of 
-% interest. For our example here, we use the *linear_scan* structure, 
-% which is defined with two components: the lateral range and the 
-% depth range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_scan('x_axis',linspace(-10e-3,10e-3,256).', 'z_axis', linspace(5e-3,20e-3,256).');
-
-%% Pipeline
-%
-% With *channel_data* and a *scan* we have all we need to produce an
-% ultrasound image. We now use a USTB structure *pipeline*, that takes an
-% *apodization* structure in addition to the *channel_data* and *scan*.
-
-pipe=pipeline();
-pipe.channel_data=channel_data;
-pipe.scan=sca;
-
-pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=F_number;
-
-%% 
-%
-% The *pipeline* structure allows you to implement different beamformers 
-% by combination of multiple built-in *processes*. By changing the *process*
-% chain other beamforming sequences can be implemented. It returns yet 
-% another *UFF* structure: *beamformed_data*.
-% 
-% To achieve the goal of this example, we use delay-and-sum (implemented in 
-% the *das_mex()* process) as well as coherent compounding.
-
-b_data=pipe.go({midprocess.das() postprocess.coherent_compounding()});
-
-% Display images
-b_data.plot();
-
-%% Save UFF dataset
-% 
-% Finally, we can save the data into a UFF file.
-channel_data.write([ustb_path(),'/data/FieldII_CPWC_simulation_v2.uff'],'channel_data');
+%% test demodulation

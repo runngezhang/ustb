@@ -56,7 +56,7 @@ classdef fast_demodulation < preprocess
             % estimate downsampling frequency if needed
             if isempty(h.downsample_frequency)
                 warning(['The downsampling frequency is not specified. ', ...
-                    'Using 4 * modulation_frequency.'])
+                    'Using 2 * modulation_frequency.'])
                 
                 h.downsample_frequency = 2 * h.modulation_frequency;
             end
@@ -80,7 +80,7 @@ classdef fast_demodulation < preprocess
                 figure('Color', 'w')
                 subplot(1,2,1)
                 hold on
-                plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1)
+                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'RF channel data');
                 plot([h.modulation_frequency, h.modulation_frequency]*1e-6, [-120, 0]+10*log10(pv), 'r--', ...
                     'LineWidth', 1)
                 plot(-[h.modulation_frequency, h.modulation_frequency]*1e-6, [-120, 0]+10*log10(pv), 'r--', ...
@@ -90,9 +90,9 @@ classdef fast_demodulation < preprocess
                 ylim([-120, 0])
                 grid on
                 box on
-                xlabel('f [MHz]');
-                ylabel('Power spectrum [dB]');
-                title('Before demodulation');
+                xlabel('f [MHz]')
+                ylabel('Power spectrum [dB]')
+                legend(obj, 'location', 'southeast')
             end
             
             % Demodulation
@@ -105,7 +105,7 @@ classdef fast_demodulation < preprocess
 
                 subplot(1,2,2)
                 hold on
-                plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1)
+                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'Down-mixed channel data');
                 plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
                 hold off
                 xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
@@ -114,7 +114,6 @@ classdef fast_demodulation < preprocess
                 box on
                 xlabel('f [MHz]');
                 ylabel('Power spectrum [dB]');
-                title('After demodulation');
             end
 
             % Perform base-band filtering
@@ -129,10 +128,11 @@ classdef fast_demodulation < preprocess
 
                 subplot(1,2,2)
                 hold on
-                plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1)
-                plot(h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
+                obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, 'DisplayName', 'Base-band filtered channel data');
+                obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', 'DisplayName', 'Base-band filter frequency response');
                 plot(-h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
                 hold off
+                legend(obj, 'location', 'southeast')
             end
             
             % Downsampling            
