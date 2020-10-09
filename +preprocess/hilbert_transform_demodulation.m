@@ -1,34 +1,32 @@
-classdef fast_demodulation < preprocess
-    %FAST_DEMODULATION   Faster MATLAB implementation of demodulation
+classdef hilbert_transform_demodulation < preprocess
+    %HILBERT_DEMODULATION   Hilbert transform-based implementation of complex demodulation
     %
-    %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+    %   authors: Bastien Denarie
     %            Stefano Fiorentini <stefano.fiorentini@ntnu.no>
     %
-    %   $Last updated: 2020/10/06$
+    %   $Last updated: 2020/10/9$
     
     %% constructor
     methods (Access = public)
-        function h = fast_demodulation()
-            h.name='Fast demodulation MATLAB';
+        function h = hilbert_transform_demodulation()
+            h.name='Hilbert transform-based demodulation MATLAB';
             h.reference='www.ustb.no';
-            h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>', ...
+            h.implemented_by={'Bastien Denaire', ...
                 'Stefano Fiorentini <stefano.fiorentini@ntnu.no>'};
             h.version='v1.1.0';
         end
     end
     
     properties (Access = public)
-        plot_on                                     % plot intermediate graphs
-        modulation_frequency                        % modulation frequency [Hz]
-        downsample_frequency                        % sampling frequency after downsampling [Hz]
-        baseband_frequency_vector = [0.5, 1];       % start and end of the transition band, defined
-                                                    % as a multiple of the modulation frequency
+        plot_on                     % plot intermediate graphs
+        modulation_frequency        % modulation frequency [Hz]
+        downsample_frequency        % sampling frequency after downsampling [Hz]
     end
     
     methods
         function output=go(h)
             
-            % Check if we can skip calculation
+% Check if we can skip calculation
             if h.check_hash()
                 output= h.output;
                 return;
@@ -97,17 +95,20 @@ classdef fast_demodulation < preprocess
                 legend(obj, 'location', 'southeast')
             end
             
-            % Down-mix
-            data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+            % Calculate pre-envelope
+            data = hilbert(h.input.data); 
             
-            if(h.plot_on)    
+            % Down-mix
+            data = data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+            
+            if(h.plot_on)
                 [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
                 
                 pv = max(pw);       % find peak value
-
+                
                 subplot(1,2,2)
                 hold on
-                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'Down-mixed channel data');
+                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'IQ channel data');
                 plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
                 hold off
                 xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
@@ -116,24 +117,6 @@ classdef fast_demodulation < preprocess
                 box on
                 xlabel('f [MHz]');
                 ylabel('Power spectrum [dB]');
-            end
-
-            % Perform base-band filtering
-            fprintf(1, 'Base Band filtering\n');
-            [data, H, W, delay] = tools.low_pass(data, h.sampling_frequency, ...
-                h.baseband_frequency_vector*h.modulation_frequency);
-            
-            if(h.plot_on)    
-                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
-                
-                pv = max(pw);       % find peak value
-
-                subplot(1,2,2)
-                hold on
-                obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, 'DisplayName', 'IQ channel data');
-                obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', 'DisplayName', 'Base-band filter frequency response');
-                plot(-h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
-                hold off
                 legend(obj, 'location', 'southeast')
             end
             
@@ -144,10 +127,9 @@ classdef fast_demodulation < preprocess
             h.output.sampling_frequency = h.downsample_frequency;
             
             % Decimate
-            id = delay + 1:Ndown:size(data, 1);       % decimation vector
-            h.output.data = data(id, :, :, :);
+            h.output.data = data(1:Ndown:end, :, :, :);
             
-            % Pass reference
+            % pass reference
             output = h.output;
             
             % Update hash
@@ -169,9 +151,5 @@ classdef fast_demodulation < preprocess
             validateattributes(val, {'numeric'}, {'scalar', 'real'})
             h.downsample_frequency = val;
         end
-        function set.baseband_frequency_vector(h, val)
-            validateattributes(val, {'numeric'}, {'nonnegative', 'size', [1, 2], 'real'})
-            h.baseband_frequency_vector = val;
-        end
-    end
+    end   
 end
