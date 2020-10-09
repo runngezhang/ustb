@@ -1,5 +1,6 @@
 classdef hilbert_transform_demodulation < preprocess
-    %HILBERT_DEMODULATION   Hilbert transform-based implementation of complex demodulation
+    %HILBERT_DEMODULATION   Hilbert transform-based implementation of IQ
+    %demodulation in MATLAB
     %
     %   authors: Bastien Denarie
     %            Stefano Fiorentini <stefano.fiorentini@ntnu.no>
@@ -9,7 +10,7 @@ classdef hilbert_transform_demodulation < preprocess
     %% constructor
     methods (Access = public)
         function h = hilbert_transform_demodulation()
-            h.name='Hilbert transform-based demodulation MATLAB';
+            h.name='Hilbert transform-based IQ demodulation in MATLAB';
             h.reference='www.ustb.no';
             h.implemented_by={'Bastien Denaire', ...
                 'Stefano Fiorentini <stefano.fiorentini@ntnu.no>'};

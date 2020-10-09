@@ -1,5 +1,5 @@
 classdef fast_demodulation < preprocess
-    %FAST_DEMODULATION   Faster MATLAB implementation of demodulation
+    %FAST_DEMODULATION   Faster implementation of IQ demodulation in MATLAB
     %
     %   authors: Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
     %            Stefano Fiorentini <stefano.fiorentini@ntnu.no>
@@ -9,7 +9,7 @@ classdef fast_demodulation < preprocess
     %% constructor
     methods (Access = public)
         function h = fast_demodulation()
-            h.name='Fast demodulation MATLAB';
+            h.name='Fast IQ demodulation implementation in MATLAB';
             h.reference='www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>', ...
                 'Stefano Fiorentini <stefano.fiorentini@ntnu.no>'};
@@ -21,7 +21,7 @@ classdef fast_demodulation < preprocess
         plot_on                                     % plot intermediate graphs
         modulation_frequency                        % modulation frequency [Hz]
         downsample_frequency                        % sampling frequency after downsampling [Hz]
-        baseband_frequency_vector = [0.5, 1];       % start and end of the transition band, defined
+        lowpass_frequency_vector = [0.5, 1];        % start and end of the transition band, defined
                                                     % as a multiple of the modulation frequency
     end
     
@@ -82,11 +82,12 @@ classdef fast_demodulation < preprocess
                 figure('Color', 'w')
                 subplot(1,2,1)
                 hold on
-                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'RF channel data');
-                plot([h.modulation_frequency, h.modulation_frequency]*1e-6, [-120, 0]+10*log10(pv), 'r--', ...
-                    'LineWidth', 1)
-                plot(-[h.modulation_frequency, h.modulation_frequency]*1e-6, [-120, 0]+10*log10(pv), 'r--', ...
-                    'LineWidth', 1)
+                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
+                    'DisplayName', 'RF channel data');
+                plot([h.modulation_frequency, h.modulation_frequency]*1e-6, ...
+                    [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
+                plot(-[h.modulation_frequency, h.modulation_frequency]*1e-6, ...
+                    [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
                 hold off
                 xlim([-2*h.modulation_frequency, 2*h.modulation_frequency]*1e-6)
                 ylim([-120, 0])
@@ -107,7 +108,8 @@ classdef fast_demodulation < preprocess
 
                 subplot(1,2,2)
                 hold on
-                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, 'DisplayName', 'Down-mixed channel data');
+                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
+                    'DisplayName', 'Down-mixed channel data');
                 plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
                 hold off
                 xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
@@ -119,9 +121,9 @@ classdef fast_demodulation < preprocess
             end
 
             % Perform base-band filtering
-            fprintf(1, 'Base Band filtering\n');
-            [data, H, W, delay] = tools.low_pass(data, h.sampling_frequency, ...
-                h.baseband_frequency_vector*h.modulation_frequency);
+            fprintf(1, 'Low-pass filtering\n');
+            [data, H, W] = tools.low_pass(data, h.input.sampling_frequency, ...
+                h.lowpass_frequency_vector*h.modulation_frequency);
             
             if(h.plot_on)    
                 [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
@@ -130,9 +132,13 @@ classdef fast_demodulation < preprocess
 
                 subplot(1,2,2)
                 hold on
-                obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, 'DisplayName', 'IQ channel data');
-                obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', 'DisplayName', 'Base-band filter frequency response');
-                plot(-h.input.sampling_frequency*W/2/pi*1e-6, 10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
+                obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, ...
+                    'DisplayName', 'IQ channel data');
+                obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, ...
+                    10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', ...
+                    'DisplayName', 'Low-pass filter frequency response');
+                plot(-h.input.sampling_frequency*W/2/pi*1e-6, ...
+                    10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
                 hold off
                 legend(obj, 'location', 'southeast')
             end
@@ -144,8 +150,7 @@ classdef fast_demodulation < preprocess
             h.output.sampling_frequency = h.downsample_frequency;
             
             % Decimate
-            id = delay + 1:Ndown:size(data, 1);       % decimation vector
-            h.output.data = data(id, :, :, :);
+            h.output.data = data(1:Ndown:end, :, :, :);
             
             % Pass reference
             output = h.output;
@@ -169,9 +174,9 @@ classdef fast_demodulation < preprocess
             validateattributes(val, {'numeric'}, {'scalar', 'real'})
             h.downsample_frequency = val;
         end
-        function set.baseband_frequency_vector(h, val)
+        function set.lowpass_frequency_vector(h, val)
             validateattributes(val, {'numeric'}, {'nonnegative', 'size', [1, 2], 'real'})
-            h.baseband_frequency_vector = val;
+            h.lowpass_frequency_vector = val;
         end
     end
 end
