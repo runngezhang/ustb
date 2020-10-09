@@ -14,31 +14,17 @@ classdef preprocess < process
         input                % CHANNEL_DATA class
         output               % CHANNEL_DATA class
     end
-
-    %% Dependant properties
-    properties  (Dependent)
-        sampling_frequency   % sampling frequency [Hz]
-    end
-
     
     %% set methods
     methods
-      function set.input(h, val)
+        function set.input(h, val)
             validateattributes(val, {'uff.channel_data'}, {'scalar'})
-            h.plot_on = val;
+            h.input = val;
+        end
+        function set.output(h, val)
+            validateattributes(val, {'uff.channel_data'}, {'scalar'})
+            h.output = val;
         end
     end
-    
-    %% get methods
-    methods
-        function value = get.sampling_frequency(h)
-            if isempty(h.input)
-                error('The input channel data has not been asigned.');
-            else
-                value=h.input.sampling_frequency;
-            end
-        end
-    end
-
 end
 

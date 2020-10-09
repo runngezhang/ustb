@@ -21,7 +21,7 @@ classdef demodulation < preprocess
         modulation_frequency                            % modulation frequency [Hz]
         downsample_frequency                            % sampling frequency after downsampling [Hz]
         bandpass_frequency_vector = [0.25, 0.5, 1.5, 1.75];   
-        lowpass_frequency_vector = [0.75, 1.5];         % start and end of the transition band, defined
+        lowpass_frequency_vector = [0.5, 1];            % start and end of the transition band, defined
                                                         % as a multiple of the modulation frequency
     end
     
@@ -39,15 +39,16 @@ classdef demodulation < preprocess
                 warning(['The modulation frequency is not specified. ', ...
                     'The estimated central frequency will be used. '])
 
-                [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(h.input.data, h.input.sampling_frequency);
                 
                 % computing central frequency and bandwidth
                 fprintf(1, 'Estimating power spectrum\n');
                 [dc, ic] = max(pw); 
 
-                bw_lo = interp1(pw(1:ic), fx(1:ic), dc/2);          % -6dB lower limit
-                bw_up = interp1(pw(ic:end/2), fx(ic:end/2), dc/2);  % -6dB upper limit
-                fc = (bw_lo+bw_up)/2;                               % center frequency
+                bw_lo = interp1(pw(1:ic), fx(1:ic), dc/2);      % -6dB lower limit
+                bw_up = interp1(pw(ic:round(end/2)), ...
+                    fx(ic:round(end/2)), dc/2);                 % -6dB upper limit
+                fc = (bw_lo+bw_up)/2;                           % center frequency
                 
                 % Set modulation ferquency
                 h.modulation_frequency = -fc;
@@ -74,7 +75,7 @@ classdef demodulation < preprocess
             % Plot RF channel data power spectrum
             if(h.plot_on)      
                 if ~exist('pw', 'var')
-                    [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
+                    [fx, pw] = tools.power_spectrum(h.input.data, h.input.sampling_frequency);
                 end
                 
                 pv = max(pw);       % find peak value
@@ -88,13 +89,8 @@ classdef demodulation < preprocess
                     [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
                 plot(-[h.modulation_frequency, h.modulation_frequency]*1e-6, ...
                     [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
-                hold off
                 xlim([-2*h.modulation_frequency, 2*h.modulation_frequency]*1e-6)
                 ylim([-120, 0])
-                grid on
-                box on
-                xlabel('f [MHz]')
-                ylabel('Power spectrum [dB]')
             end
             
             % Perform band-pass filtering
@@ -103,20 +99,25 @@ classdef demodulation < preprocess
                 h.bandpass_frequency_vector*h.modulation_frequency);
             
             if(h.plot_on)
-                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                 obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, ...
                     'DisplayName', 'Band-pass filtered RF channel data');
                 obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, ...
                     10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', ...
                     'DisplayName', 'Band-pass filter frequency response');
+                hold off
+                grid on
+                box on
+                xlabel('f [MHz]')
+                ylabel('Power spectrum [dB]')
                 legend(obj, 'location', 'southeast')
             end
             
             % Down-mix
-            data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+            data = data .* exp(-1j*2*pi*h.modulation_frequency*(0:size(data, 1)-1).'/h.input.sampling_frequency);
             
             if(h.plot_on)
-                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                 
                 pv = max(pw);       % find peak value
                 
@@ -140,7 +141,7 @@ classdef demodulation < preprocess
                 h.lowpass_frequency_vector*h.modulation_frequency);
             
             if(h.plot_on)    
-                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                 
                 pv = max(pw);       % find peak value
 

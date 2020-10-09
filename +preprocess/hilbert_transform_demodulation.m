@@ -27,7 +27,7 @@ classdef hilbert_transform_demodulation < preprocess
     methods
         function output=go(h)
             
-% Check if we can skip calculation
+            % Check if we can skip calculation
             if h.check_hash()
                 output= h.output;
                 return;
@@ -38,15 +38,16 @@ classdef hilbert_transform_demodulation < preprocess
                 warning(['The modulation frequency is not specified. ', ...
                     'The estimated central frequency will be used. '])
 
-                [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(h.input.data, h.input.sampling_frequency);
                 
                 % computing central frequency and bandwidth
                 fprintf(1, 'Estimating power spectrum\n');
                 [dc, ic] = max(pw); 
 
-                bw_lo = interp1(pw(1:ic), fx(1:ic), dc/2);          % -6dB lower limit
-                bw_up = interp1(pw(ic:end/2), fx(ic:end/2), dc/2);  % -6dB upper limit
-                fc = (bw_lo+bw_up)/2;                               % center frequency
+                bw_lo = interp1(pw(1:ic), fx(1:ic), dc/2);      % -6dB lower limit
+                bw_up = interp1(pw(ic:round(end/2)), ...
+                    fx(ic:round(end/2)), dc/2);                 % -6dB upper limit
+                fc = (bw_lo+bw_up)/2;                           % center frequency
                 
                 % Set modulation ferquency
                 h.modulation_frequency = -fc;
@@ -73,7 +74,7 @@ classdef hilbert_transform_demodulation < preprocess
             % Plot RF channel data power spectrum
             if(h.plot_on)      
                 if ~exist('pw', 'var')
-                    [fx, pw] = tools.power_spectrum(h.input.data, h.sampling_frequency);
+                    [fx, pw] = tools.power_spectrum(h.input.data, h.input.sampling_frequency);
                 end
                 
                 pv = max(pw);       % find peak value
@@ -103,7 +104,7 @@ classdef hilbert_transform_demodulation < preprocess
             data = data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
             
             if(h.plot_on)
-                [fx, pw] = tools.power_spectrum(data, h.sampling_frequency);
+                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                 
                 pv = max(pw);       % find peak value
                 
