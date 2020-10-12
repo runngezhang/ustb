@@ -159,9 +159,8 @@ classdef demodulation < preprocess
             end
             
             % Create output channel data object
-            h.output = uff.channel_data();
+            h.output = uff.channel_data(h.input);
             h.output.modulation_frequency = h.modulation_frequency;
-            h.output.initial_time = h.input.initial_time;
             h.output.sampling_frequency = h.downsample_frequency;
             
             % Decimate
