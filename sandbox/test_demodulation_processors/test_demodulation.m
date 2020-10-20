@@ -114,13 +114,13 @@ ch_rf.initial_time = 0;
 ch_rf.pulse = pulse;
 ch_rf.probe = probe;
 ch_rf.sequence = seq; 
-ch_rf.data = repmat(STA, [1,1,1,75]);
+ch_rf.data = repmat(STA, [1,1,1,50]);
 
 clear STA 
 
 % Test demodulation processors
 demod = preprocess.fast_demodulation();
-demod.plot_on = false;
+demod.plot_on = true;
 demod.input = ch_rf;
 ch_iq(1) = demod.go();
 

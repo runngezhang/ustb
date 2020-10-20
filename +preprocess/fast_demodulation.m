@@ -13,7 +13,7 @@ classdef fast_demodulation < preprocess
             h.reference='www.ustb.no';
             h.implemented_by={'Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>', ...
                 'Stefano Fiorentini <stefano.fiorentini@ntnu.no>'};
-            h.version='v1.1.0';
+            h.version='v1.2.0';
         end
     end
     
@@ -30,7 +30,7 @@ classdef fast_demodulation < preprocess
     end
     
     methods
-        function output=go(h)            
+        function output=go(h)  
             % Check if we can skip calculation
             if h.check_hash()
                 output= h.output;
@@ -40,7 +40,7 @@ classdef fast_demodulation < preprocess
             % Estimate modulation frequency if needed
             if isempty(h.modulation_frequency)
                 warning(['The modulation frequency is not specified. ', ...
-                    'The estimated central frequency will be used. '])
+                    'The estimated central frequency will be used. ']);
 
                 [fx, pw] = tools.power_spectrum(h.input.data, h.input.sampling_frequency);
                 
@@ -140,7 +140,10 @@ classdef fast_demodulation < preprocess
                     
                     pv = max(pw);       % find peak value
                     
-                    [H, F] = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = fftshift(H);
+                    F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
+                    F(end) = [];
 
                     subplot(1,2,2)
                     hold on
@@ -166,7 +169,7 @@ classdef fast_demodulation < preprocess
                     size(h.input.data, [2, 3, 4])], 'like', h.input.data));
                 
                 % Process 1st frame separately to allow plotting
-                tmp = h.input.data(:,:,:,1) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+                tmp = h.input.data(:,:,:,1) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);   % Down-mix
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
@@ -186,13 +189,16 @@ classdef fast_demodulation < preprocess
                     ylabel('Power spectrum [dB]');
                 end
                 
-                tmp = filter(h.b, 1, tmp, [], 1);
+                tmp = filter(h.b, 1, tmp, [], 1);   % Filter
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
                     pv = max(pw);       % find peak value
                     
-                    [H, F] = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = fftshift(H);
+                    F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
+                    F(end) = [];
                     
                     subplot(1,2,2)
                     hold on
@@ -204,15 +210,16 @@ classdef fast_demodulation < preprocess
                     hold off
                     legend(obj, 'location', 'southeast')
                 end
-                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);
+                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);   % Decimate
                 
                 % Rest of the frames are processed together
                 for i = 2:size(h.input.data, 4)
-                    tmp = h.input.data(:,:,:,i) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
-                    tmp = filter(h.b, 1, tmp, [], 1);
-                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :, :);
+                    tmp = h.input.data(:,:,:,i) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);   % Down-mix
+                    tmp = filter(h.b, 1, tmp, [], 1);                                                   % Filter
+                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :, :);                                       % Decimate
                 end
             end
+            
             % Create output channel data object
             h.output = uff.channel_data(h.input);
             h.output.modulation_frequency = h.modulation_frequency;
