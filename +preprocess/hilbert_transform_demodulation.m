@@ -1,6 +1,6 @@
 classdef hilbert_transform_demodulation < preprocess
-    %HILBERT_DEMODULATION   Hilbert transform-based implementation of IQ
-    %demodulation in MATLAB
+    %HILBERT_DEMODULATION   Hilbert transform-based implementation of IQ demodulation in MATLAB
+    %
     %
     %   authors: Bastien Denarie
     %            Stefano Fiorentini <stefano.fiorentini@ntnu.no>
@@ -19,7 +19,7 @@ classdef hilbert_transform_demodulation < preprocess
     end
     
     properties (Access = public)
-        plot_on                     % plot intermediate graphs
+        plot_on = false             % plot intermediate graphs
         modulation_frequency        % modulation frequency [Hz]
         downsample_frequency        % sampling frequency after downsampling [Hz]
     end
@@ -71,6 +71,7 @@ classdef hilbert_transform_demodulation < preprocess
             Ndown = floor(h.input.sampling_frequency / h.downsample_frequency);
             h.downsample_frequency = h.input.sampling_frequency / Ndown;
             
+                            
             % Plot RF channel data power spectrum
             if(h.plot_on)      
                 if ~exist('pw', 'var')
@@ -95,12 +96,24 @@ classdef hilbert_transform_demodulation < preprocess
                 xlabel('f [MHz]')
                 ylabel('Power spectrum [dB]')
                 legend(obj, 'location', 'southeast')
+                drawnow()
             end
+            
+            % Perform check to ensure that the complex matrix will fit into
+            % memory. If not, print a warning and process dataset in a loop     
+            
+            s = numel(h.input.data) * (isa(h.input.data, 'double')*8 + ...
+                isa(h.input.data, 'single')*4); % approximate size of RF channel data
+            
+            if s < tools.getAvailableMemory() / 3 
+                % Down-mix
+                data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
             
             % Calculate pre-envelope
             data = hilbert(h.input.data); 
             
             % Down-mix
+            
             data = data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
             
             if(h.plot_on)
@@ -117,18 +130,66 @@ classdef hilbert_transform_demodulation < preprocess
                 ylim([-120, 0])
                 grid on
                 box on
-                xlabel('f [MHz]');
-                ylabel('Power spectrum [dB]');
+                xlabel('f [MHz]')
+                ylabel('Power spectrum [dB]')
                 legend(obj, 'location', 'southeast')
+                drawnow()
+            end
+            
+            % Decimate
+            data = data(1:Ndown:end, :, :, :);
+            
+            else
+                warning(['Size of RF channel data is greater than 30% of the available memory. ', ...
+                    'Data will be processed in a loop to prevent out-of-memory issues.'])
+                
+                % Pre-allocate IQ channel data matrix
+                data = complex(zeros([length(1:Ndown:size(h.input.data, 1)), ...
+                    size(h.input.data, [2, 3, 4])], 'like', h.input.data));
+                
+                % Process 1st frame separately to allow plotting   
+                tmp = hilbert(h.input.data(:,:,:,1)); 
+                
+                % Down-mix
+                downmix = exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+                tmp = tmp .* downmix;
+                
+                if(h.plot_on)
+                    [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
+                    
+                    pv = max(pw);       % find peak value
+                    
+                    subplot(1,2,2)
+                    hold on
+                    obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
+                        'DisplayName', 'Down-mixed channel data');
+                    plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
+                    hold off
+                    xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
+                    ylim([-120, 0])
+                    grid on
+                    box on
+                    xlabel('f [MHz]')
+                    ylabel('Power spectrum [dB]')
+                    legend(obj, 'location', 'southeast')
+                    drawnow()
+                end
+                % Decimate
+                data(:,:,:,1) = tmp(1:Ndown:end, :, :, 1);   
+                
+                % Rest of the frames are processed together
+                for i = 2:size(h.input.data, 4)
+                    tmp = hilbert(h.input.data(:,:,:,i));      	% Calculate pre-envelope
+                    tmp = tmp .* downmix;                       % Down-mix
+                    data(:,:,:,i) = tmp(1:Ndown:end, :, :, :); 	% Decimate
+                end
             end
             
             % Create output channel data object
             h.output = uff.channel_data(h.input);
             h.output.modulation_frequency = h.modulation_frequency;
             h.output.sampling_frequency = h.downsample_frequency;
-            
-            % Decimate
-            h.output.data = data(1:Ndown:end, :, :, :);
+            h.output.data = data;
             
             % pass reference
             output = h.output;

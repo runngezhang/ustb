@@ -100,10 +100,11 @@ classdef fast_demodulation < preprocess
                 xlabel('f [MHz]')
                 ylabel('Power spectrum [dB]')
                 legend(obj, 'location', 'southeast')
+                drawnow()
             end
             
             % Perform check to ensure that the complex matrix will fit into
-            % memory. If not, print a warning and process dataset in a loop
+            % memory. If not, print a warning and process dataset in a loop     
             
             s = numel(h.input.data) * (isa(h.input.data, 'double')*8 + ...
                 isa(h.input.data, 'single')*4); % approximate size of RF channel data
@@ -127,8 +128,9 @@ classdef fast_demodulation < preprocess
                     ylim([-120, 0])
                     grid on
                     box on
-                    xlabel('f [MHz]');
-                    ylabel('Power spectrum [dB]');
+                    xlabel('f [MHz]')
+                    ylabel('Power spectrum [dB]')
+                    drawnow()
                 end
                 
                 % Perform base-band filtering
@@ -154,6 +156,7 @@ classdef fast_demodulation < preprocess
                         'DisplayName', 'Low-pass filter frequency response');
                     hold off
                     legend(obj, 'location', 'southeast')
+                    drawnow()
                 end
                 
                 % Decimate
@@ -169,7 +172,9 @@ classdef fast_demodulation < preprocess
                     size(h.input.data, [2, 3, 4])], 'like', h.input.data));
                 
                 % Process 1st frame separately to allow plotting
-                tmp = h.input.data(:,:,:,1) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);   % Down-mix
+                % Down-mix
+                downmix = exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+                tmp = h.input.data(:,:,:,1) .* downmix;   
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
@@ -185,11 +190,13 @@ classdef fast_demodulation < preprocess
                     ylim([-120, 0])
                     grid on
                     box on
-                    xlabel('f [MHz]');
-                    ylabel('Power spectrum [dB]');
+                    xlabel('f [MHz]')
+                    ylabel('Power spectrum [dB]')
+                    drawnow()
                 end
-                
-                tmp = filter(h.b, 1, tmp, [], 1);   % Filter
+                % Filter
+                b = h.b;
+                tmp = filter(b, 1, tmp, [], 1);   
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
@@ -209,14 +216,16 @@ classdef fast_demodulation < preprocess
                         'DisplayName', 'Low-pass filter frequency response');
                     hold off
                     legend(obj, 'location', 'southeast')
+                    drawnow()
                 end
-                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);   % Decimate
+                % Decimate
+                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);   
                 
                 % Rest of the frames are processed together
                 for i = 2:size(h.input.data, 4)
-                    tmp = h.input.data(:,:,:,i) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);   % Down-mix
-                    tmp = filter(h.b, 1, tmp, [], 1);                                                   % Filter
-                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :, :);                                       % Decimate
+                    tmp = h.input.data(:,:,:,i) .* downmix;     % Down-mix
+                    tmp = filter(b, 1, tmp, [], 1);          	% Filter
+                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :); 	% Decimate
                 end
             end
             

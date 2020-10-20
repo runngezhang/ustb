@@ -122,14 +122,20 @@ clear STA
 demod = preprocess.fast_demodulation();
 demod.plot_on = true;
 demod.input = ch_rf;
-ch_iq(1) = demod.go();
+tic()
+demod.go();
+toc()
 
 demod = preprocess.demodulation();
 demod.plot_on = true;
 demod.input = ch_rf;
-ch_iq(2) = demod.go();
+tic()
+demod.go();
+toc()
 
 demod = preprocess.hilbert_transform_demodulation();
 demod.plot_on = true;
 demod.input = ch_rf;
-ch_iq(2) = demod.go();
+tic()
+demod.go();
+toc()
