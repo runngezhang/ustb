@@ -114,7 +114,7 @@ ch_rf.initial_time = 0;
 ch_rf.pulse = pulse;
 ch_rf.probe = probe;
 ch_rf.sequence = seq; 
-ch_rf.data = repmat(STA, [1,1,1,50]);
+ch_rf.data = STA; % repmat(STA, [1,1,1,50]); % increase dataset to test slicing strategy
 
 clear STA 
 
