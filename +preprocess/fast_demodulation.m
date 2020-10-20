@@ -18,16 +18,19 @@ classdef fast_demodulation < preprocess
     end
     
     properties (Access = public)
-        plot_on                                     % plot intermediate graphs
+        plot_on = false                             % plot intermediate graphs
         modulation_frequency                        % modulation frequency [Hz]
         downsample_frequency                        % sampling frequency after downsampling [Hz]
         lowpass_frequency_vector = [0.5, 1];        % start and end of the transition band, defined
                                                     % as a multiple of the modulation frequency
     end
     
+    properties (Dependent)
+        b                                           % Low-pass FIR filter coefficients
+    end
+    
     methods
-        function output=go(h)
-            
+        function output=go(h)            
             % Check if we can skip calculation
             if h.check_hash()
                 output= h.output;
@@ -99,58 +102,122 @@ classdef fast_demodulation < preprocess
                 legend(obj, 'location', 'southeast')
             end
             
-            % Down-mix
-            data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+            % Perform check to ensure that the complex matrix will fit into
+            % memory. If not, print a warning and process dataset in a loop
             
-            if(h.plot_on)    
-                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
+            s = numel(h.input.data) * (isa(h.input.data, 'double')*8 + ...
+                isa(h.input.data, 'single')*4); % approximate size of RF channel data
+            
+            if s < tools.getAvailableMemory() / 3 
+                % Down-mix
+                data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
                 
-                pv = max(pw);       % find peak value
-
-                subplot(1,2,2)
-                hold on
-                obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
-                    'DisplayName', 'Down-mixed channel data');
-                plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
-                hold off
-                xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
-                ylim([-120, 0])
-                grid on
-                box on
-                xlabel('f [MHz]');
-                ylabel('Power spectrum [dB]');
-            end
-
-            % Perform base-band filtering
-            fprintf(1, 'Low-pass filtering\n');
-            [data, H, W] = tools.low_pass(data, h.input.sampling_frequency, ...
-                h.lowpass_frequency_vector*h.modulation_frequency);
-            
-            if(h.plot_on)    
-                [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
+                if(h.plot_on)
+                    [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
+                    
+                    pv = max(pw);       % find peak value
+                    
+                    subplot(1,2,2)
+                    hold on
+                    obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
+                        'DisplayName', 'Down-mixed channel data');
+                    plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
+                    hold off
+                    xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
+                    ylim([-120, 0])
+                    grid on
+                    box on
+                    xlabel('f [MHz]');
+                    ylabel('Power spectrum [dB]');
+                end
                 
-                pv = max(pw);       % find peak value
+                % Perform base-band filtering
+                fprintf(1, 'Low-pass filtering\n');
+                data = filter(h.b, 1, data, [], 1);
+                
+                if(h.plot_on)
+                    [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
+                    
+                    pv = max(pw);       % find peak value
+                    
+                    [H, F] = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
 
-                subplot(1,2,2)
-                hold on
-                obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, ...
-                    'DisplayName', 'IQ channel data');
-                obj(3) = plot(h.input.sampling_frequency*W/2/pi*1e-6, ...
-                    10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', ...
-                    'DisplayName', 'Low-pass filter frequency response');
-                plot(-h.input.sampling_frequency*W/2/pi*1e-6, ...
-                    10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-')
-                hold off
-                legend(obj, 'location', 'southeast')
+                    subplot(1,2,2)
+                    hold on
+                    obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, ...
+                        'DisplayName', 'IQ channel data');
+                    obj(3) = plot(F*1e-6, ...
+                        10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', ...
+                        'DisplayName', 'Low-pass filter frequency response');
+                    hold off
+                    legend(obj, 'location', 'southeast')
+                end
+                
+                % Decimate
+                [~, Ns] = max(abs(hilbert(h.b)));
+                data = data(Ns+1:Ndown:end, :, :, :);
+            else
+                warning(['Size of RF channel data is greater than 30% of the available memory. ', ...
+                    'Data will be processed in a loop to prevent out-of-memory issues.'])
+        
+                % Pre-allocate IQ channel data matrix
+                [~, Ns] = max(abs(hilbert(h.b)));
+                data = complex(zeros([length(Ns+1:Ndown:size(h.input.data, 1)), ...
+                    size(h.input.data, [2, 3, 4])], 'like', h.input.data));
+                
+                % Process 1st frame separately to allow plotting
+                tmp = h.input.data(:,:,:,1) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+                if(h.plot_on)
+                    [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
+                    
+                    pv = max(pw);       % find peak value
+                    
+                    subplot(1,2,2)
+                    hold on
+                    obj = plot(fx*1e-6, 10*log10(pw), 'k', 'LineWidth', 1, ...
+                        'DisplayName', 'Down-mixed channel data');
+                    plot([0, 0]*1e-6, [-120, 0]+10*log10(pv), 'r--', 'LineWidth', 1)
+                    hold off
+                    xlim([-h.downsample_frequency, h.downsample_frequency]*1e-6)
+                    ylim([-120, 0])
+                    grid on
+                    box on
+                    xlabel('f [MHz]');
+                    ylabel('Power spectrum [dB]');
+                end
+                
+                tmp = filter(h.b, 1, tmp, [], 1);
+                if(h.plot_on)
+                    [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
+                    
+                    pv = max(pw);       % find peak value
+                    
+                    [H, F] = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    
+                    subplot(1,2,2)
+                    hold on
+                    obj(2) = plot(fx*1e-6, 10*log10(pw), 'c--', 'LineWidth', 1, ...
+                        'DisplayName', 'IQ channel data');
+                    obj(3) = plot(F*1e-6, ...
+                        10*log10(abs(H).^2 / max(abs(H).^2)) + 10*log10(pv), 'b-', ...
+                        'DisplayName', 'Low-pass filter frequency response');
+                    hold off
+                    legend(obj, 'location', 'southeast')
+                end
+                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);
+                
+                % Rest of the frames are processed together
+                for i = 2:size(h.input.data, 4)
+                    tmp = h.input.data(:,:,:,i) .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
+                    tmp = filter(h.b, 1, tmp, [], 1);
+                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :, :);
+                end
             end
-            
             % Create output channel data object
             h.output = uff.channel_data(h.input);
             h.output.modulation_frequency = h.modulation_frequency;
             h.output.sampling_frequency = h.downsample_frequency;
-            
-            % Decimate
-            h.output.data = data(1:Ndown:end, :, :, :);
+            h.output.data = data;
             
             % Pass reference
             output = h.output;
@@ -177,6 +244,18 @@ classdef fast_demodulation < preprocess
         function set.lowpass_frequency_vector(h, val)
             validateattributes(val, {'numeric'}, {'nonnegative', 'size', [1, 2], 'real'})
             h.lowpass_frequency_vector = val;
+        end
+    end
+    
+    %% get methods
+    methods
+        function val = get.b(h)
+            % Filter specification
+            A = [1, 0];                                                      	% band type: 0='stop', 1='pass'
+            dev = [1e-2, 1e-3];                                                	% max ripple in pass-band and stop-band
+            [N, Wn, beta, ftype] = kaiserord(h.lowpass_frequency_vector * ...
+                h.modulation_frequency, A, dev, h.input.sampling_frequency);   	% window parameters
+            val = fir1(N, Wn, ftype, kaiser(N+1,beta), 'noscale');             	% filter design
         end
     end
 end

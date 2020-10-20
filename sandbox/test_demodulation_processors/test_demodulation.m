@@ -113,14 +113,14 @@ ch_rf.sound_speed = c0;
 ch_rf.initial_time = 0;
 ch_rf.pulse = pulse;
 ch_rf.probe = probe;
-ch_rf.sequence = seq;
-ch_rf.data = STA;
+ch_rf.sequence = seq; 
+ch_rf.data = repmat(STA, [1,1,1,75]);
 
 clear STA 
 
 % Test demodulation processors
 demod = preprocess.fast_demodulation();
-demod.plot_on = true;
+demod.plot_on = false;
 demod.input = ch_rf;
 ch_iq(1) = demod.go();
 

@@ -1,9 +1,9 @@
 function [pf, h, w] = low_pass(p, Fs, F)
-    % function pf = low_pass(p, Fs, [upper_freq_on upper_freq_off])
+    % function pf = low_pass(p, Fs, [upper_freq_on, upper_freq_off])
     
     % Filter specification
     A = [1, 0];                                             % band type: 0='stop', 1='pass'
-    dev = [1e-3, 1e-3];                                     % max ripple in pass-band and stop-band
+    dev = [1e-2, 1e-3];                                     % max ripple in pass-band and stop-band
     [N, Wn, beta, ftype] = kaiserord(F, A, dev, Fs);        % window parameters
     b = fir1(N, Wn, ftype, kaiser(N+1,beta), 'noscale');    % filter design
 
@@ -11,7 +11,9 @@ function [pf, h, w] = low_pass(p, Fs, F)
     
     % Filtering
     [~, Ns] = max(abs(hilbert(b)));
-    pf = filter(b, 1, p, [], 1);  
+    Sp = size(p);
+    
+    pf = filter(b, 1, p, [], 1);
     
     % Remove invalid samples
     pf(1:Ns, :, :, :) = [];
