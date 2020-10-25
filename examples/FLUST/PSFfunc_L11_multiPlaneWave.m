@@ -1,15 +1,18 @@
-function PSFs = PSFfunc_L11_singlePlaneWave(flowLine, p) % parameter structure not used in this example
+function PSFs = PSFfunc_L11_multiPlaneWave(flowLine, p) % parameter structure not used in this example
 
-%% Computation of a CPWI dataset with Field II and beamforming with USTB
+%% Simulation of multi-angle plane wave dataset with Field II and beamforming with USTB
 %
-% This example shows how to create a Field II simulation of Coherent Plane
-% Wave Compounded (CPWC) imaging into a USTB channel_data object and beamform 
-% the image using the USTB routines.
+% Creates a Field II simulation of plane waves from
+% multiple angles, converts into a USTB channel_data object and beamforms
+% the image using the USTB routines. Steering angles used for
+% both transmit and receive beamforming is specified in the script.
+
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
-% date:     03.10.2017
-% authors:  Ole Marius Hoel RIndal <olemarius@olemarius.net>
-%           Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+% date:               23.10.2020
+% based on code by :  Ole Marius Hoel RIndal <olemarius@olemarius.net>
+%                     Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+% modified by      :  Joergen Avdal <jorgen.avdal@ntnu.no>
 
 
 %% Basic Constants
@@ -102,11 +105,13 @@ xdc_center_focus(Rh,[0 0 0]);
  
 %% Define plane wave sequence
 % Define the start_angle and number of angles
-F_number = 1.7;
-alpha_max = 0; %atan(1/2/F_number);
-Na=1;                                      % number of plane waves 
+F_number = 1.7; %receive F#
+alpha_max = 15/180*pi; %atan(1/2/F_number);
+Na=2;                                      % number of plane waves 
 F=size(flowLine,1);                        % number of frames
-alpha=linspace(-alpha_max,alpha_max,Na);   % vector of angles [rad]
+alphaTx=linspace(-alpha_max,alpha_max,Na);   % vector of Tx angles [rad]
+alphaRx=alphaTx;                             % vector of Rx angles [rad]
+
  
 %% Define phantom
 % Define some points in a phantom for the simulation
@@ -127,14 +132,17 @@ CPW=zeros(cropat,probe.N,Na,F);  % impulse response channel data
  
 %% Compute CPW signals
 disp('Field II: Computing CPW dataset');
+% wb = waitbar(0, 'Field II: Computing CPW dataset');
 for f=1:F
+%     waitbar(0, wb, sprintf('Field II: Computing CPW dataset, frame %d',f));
     for n=1:Na
+%         waitbar(n/Na, wb);
         clc
         disp( [num2str(f) '/' num2str(F)]);
          
         % transmit aperture
         xdc_apodization(Th,0,ones(1,probe.N));
-        xdc_times_focus(Th,0,probe.geometry(:,1)'.*sin(alpha(n))/c0);
+        xdc_times_focus(Th,0,probe.geometry(:,1)'.*sin(alphaTx(n))/c0);
         
         % receive aperture
         xdc_apodization(Rh, 0, ones(1,probe.N));
@@ -151,12 +159,13 @@ for f=1:F
         % Save transmit sequence
         seq(n)=uff.wave();
         seq(n).probe=probe;
-        seq(n).source.azimuth=alpha(n);
+        seq(n).source.azimuth=alphaTx(n);
         seq(n).source.distance=Inf;
         seq(n).sound_speed=c0;
         seq(n).delay = -lag*dt;
     end
 end
+% close(wb);s
 
 %% Channel Data
 % 
@@ -195,11 +204,13 @@ pipe.channel_data=channel_data;
 
 myDemodulation=preprocess.fast_demodulation;
 myDemodulation.modulation_frequency = f0;
-myDemodulation.downsample_frequency = f0;
+myDemodulation.downsample_frequency = fs/4;
 % myDemodulation.sampling_frequency = fs;
 % myDemodulation.plot_on = true;
 
 demod_channel_data=pipe.go({myDemodulation});
+
+demodData = demod_channel_data.data;
 
 pipe.channel_data=demod_channel_data;
 pipe.scan=sca;
@@ -216,10 +227,18 @@ pipe.receive_apodization.f_number=F_number;
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
 
-b_data=pipe.go({midprocess.das()});
-b_data.modulation_frequency = f0; %myDemodulation.modulation_frequency;
+for aa = 1:length( alphaRx)
+    pipe.receive_apodization.tilt = [alphaRx(aa) 0];
+    pipe.channel_data.data = demodData(:,:,aa,:);
+    pipe.channel_data.sequence = seq(aa);
+    PSFs=pipe.go({midprocess.das()});
+    if aa == 1
+        dsize = size( PSFs.data);
+        bfData = single( zeros( dsize(1), dsize(2), length( alphaRx), dsize(4) ) );
+    end
+    bfData(:,:,aa,:) = PSFs.data;
+end
+PSFs.modulation_frequency = f0; %myDemodulation.modulation_frequency;
+PSFs.data = bfData;
 
-
-
-PSFs = b_data; %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
 end

@@ -1,15 +1,16 @@
-function PSFs = PSFfunc_L11_singlePlaneWave(flowLine, p) % parameter structure not used in this example
+function PSFs = PSFfunc_LinearArray_Sectorscan(flowLine, p) % parameter structure not used in this example
 
 %% Computation of a CPWI dataset with Field II and beamforming with USTB
 %
-% This example shows how to create a Field II simulation of Coherent Plane
-% Wave Compounded (CPWC) imaging into a USTB channel_data object and beamform 
+% This code calculates Field II point scatterers of a sector
+% scan using a linear probe, convert into a USTB channel_data object and beamform 
 % the image using the USTB routines.
 % The Field II simulation program (field-ii.dk) should be in MATLAB's path.
 %
 % date:     03.10.2017
-% authors:  Ole Marius Hoel RIndal <olemarius@olemarius.net>
-%           Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+% based on code written by :  Ole Marius Hoel RIndal <olemarius@olemarius.net>
+%                             Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>
+% modified by              :  Joergen Avdal <jorgen.avdal@ntnu.no>
 
 
 %% Basic Constants
@@ -40,15 +41,25 @@ set_field('use_rectangles',1);  % use rectangular elements
 % Transducer and set our parameters to match it.
 
 probe = uff.linear_array();
-f0                      = 5.1333e+06;      % Transducer center frequency [Hz]
+f0                      = 2.5e+06;      % Transducer center frequency [Hz]
 lambda                  = c0/f0;           % Wavelength [m]
 probe.element_height    = 5e-3;            % Height of element [m]
-probe.pitch             = 0.300e-3;        % probe.pitch [m]
-kerf                    = 0.03e-03;        % gap between elements [m]
+probe.pitch             = 0.200e-3;        % probe.pitch [m]
+kerf                    = 0.020e-3;        % gap between elements [m]
 probe.element_width     = probe.pitch-kerf;% Width of element [m]
-lens_el                 = 20e-3;           % position of the elevation focus
-probe.N                 = 128;             % Number of elements
-pulse_duration          = 4.5;             % pulse duration [cycles]
+lens_el                 = 7e-2;           % position of the elevation focus
+probe.N                 = 96;             % Number of elements
+pulse_duration          = 2.5;             % pulse duration [cycles]
+focal_depth             = 7e-2;
+
+%% Define scanned steered sequence
+% Define the start_angle and number of angles
+alpha_max = 5/180*pi; %43/180*pi;
+Na_tx=31;                                      % number of angles 
+noMLA = 2;
+F=size(flowLine,1);                        % number of frames
+alpha=linspace(-alpha_max,alpha_max,Na_tx);   % vector of angles [rad]
+
 
  
 %% Pulse definition
@@ -88,8 +99,9 @@ noSubAz=round(probe.element_width/(lambda/8));        % number of subelements in
 noSubEl=round(probe.element_height/(lambda/8));       % number of subelements in the elevation direction
 % Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 % Rh = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
-Th = xdc_focused_array (probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf]); 
-Rh = xdc_focused_array (probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf]); 
+
+Th = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
+Rh = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
 
 % We also set the excitation, impulse response and baffle as below:
 xdc_excitation (Th, excitation);
@@ -100,18 +112,13 @@ xdc_impulse (Rh, impulse_response);
 xdc_baffle(Rh, 0);
 xdc_center_focus(Rh,[0 0 0]);
  
-%% Define plane wave sequence
-% Define the start_angle and number of angles
-F_number = 1.7;
-alpha_max = 0; %atan(1/2/F_number);
-Na=1;                                      % number of plane waves 
-F=size(flowLine,1);                        % number of frames
-alpha=linspace(-alpha_max,alpha_max,Na);   % vector of angles [rad]
  
 %% Define phantom
 % Define some points in a phantom for the simulation
-
-point_position = flowLine;
+chunkSize = 30;
+for cc = 1:chunkSize:size(flowLine, 1)
+    
+point_position = flowLine(cc:min( cc+chunkSize-1, size( flowLine,1) ),: );
 % 
 % point_position(1,:) = [0 0 10e-3];
 % point_position(2,:) = [-5e-3 0 10e-3];
@@ -122,19 +129,29 @@ point_position = flowLine;
 point_amplitudes = ones(size(point_position,1),1);
 
 %% output data
-cropat=round(2*50e-3/c0/dt);    % maximum time sample, samples after this will be dumped
-CPW=zeros(cropat,probe.N,Na,F);  % impulse response channel data
+
+point_dists = sqrt( sum( point_position.^2, 2) );
+
+cropstart=floor(1.8*min(point_dists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
+cropend=ceil(1.2*2*max(point_dists)/c0/dt);    % maximum time sample, samples after this will be dumped
+CPW=zeros(cropend-cropstart+1,probe.N,Na_tx,chunkSize);  % impulse response channel data
  
 %% Compute CPW signals
+unitVec = [0 1].';
 disp('Field II: Computing CPW dataset');
-for f=1:F
-    for n=1:Na
+for f=1:size( point_position,1)
+    for n=1:Na_tx
         clc
-        disp( [num2str(f) '/' num2str(F)]);
-         
+        disp( [num2str(f+cc-1) '/' num2str(F)]);
+
+        rotMat = [cos( alpha(n) ) sin( alpha(n) ); -sin( alpha(n) ) cos( alpha(n) ) ];
+        rotVec = rotMat*unitVec;
+        focVec = rotVec*focal_depth;
+        
         % transmit aperture
         xdc_apodization(Th,0,ones(1,probe.N));
-        xdc_times_focus(Th,0,probe.geometry(:,1)'.*sin(alpha(n))/c0);
+%         xdc_times_focus(Th,0,probe.geometry(:,1)'.*sin(alpha(n))/c0);
+        xdc_focus(Th, 0, [focVec(1) 0 focVec(2)]);
         
         % receive aperture
         xdc_apodization(Rh, 0, ones(1,probe.N));
@@ -144,7 +161,7 @@ for f=1:F
         [v,t]=calc_scat_multi(Th, Rh, point_position(f,:), point_amplitudes(f));
          
         % build the dataset
-        toffset = round(t/dt);
+        toffset = round(t/dt)-cropstart+1;
         numinds = min( size(v,1), size( CPW,1)-toffset );
         CPW( toffset+(1:numinds),:,n,f)=v(1:numinds,:);
          
@@ -152,7 +169,7 @@ for f=1:F
         seq(n)=uff.wave();
         seq(n).probe=probe;
         seq(n).source.azimuth=alpha(n);
-        seq(n).source.distance=Inf;
+        seq(n).source.distance=focal_depth;
         seq(n).sound_speed=c0;
         seq(n).delay = -lag*dt;
     end
@@ -166,7 +183,7 @@ end
 channel_data = uff.channel_data();
 channel_data.sampling_frequency = fs;
 channel_data.sound_speed = c0;
-channel_data.initial_time = 0;
+channel_data.initial_time = (cropstart-1)*dt;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
@@ -180,7 +197,15 @@ channel_data.data = CPW/1e-21; %
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-sca=uff.linear_scan('x_axis',linspace(-10e-3,10e-3,256).', 'z_axis', linspace(10e-3,30e-3,256).');
+% sca=uff.linear_scan('x_axis',linspace(-10e-3,10e-3,256).', 'z_axis', linspace(10e-3,30e-3,256).');
+% sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(0e-3,7e-2,256).');
+sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(4e-3,6e-2,128).');
+
+if Na_tx > 1,
+    dalpha = alpha(2)-alpha(1);
+    alpha_rx = linspace(alpha(1)-dalpha*(noMLA-1)/2, alpha(end)+dalpha*(noMLA-1)/2, noMLA*Na_tx);
+    sca=uff.sector_scan('azimuth_axis',alpha_rx.', 'depth_axis', linspace(0e-3,10e-2,256).');
+end
 
 %% Pipeline
 %
@@ -195,7 +220,7 @@ pipe.channel_data=channel_data;
 
 myDemodulation=preprocess.fast_demodulation;
 myDemodulation.modulation_frequency = f0;
-myDemodulation.downsample_frequency = f0;
+myDemodulation.downsample_frequency = f0*4;
 % myDemodulation.sampling_frequency = fs;
 % myDemodulation.plot_on = true;
 
@@ -203,8 +228,8 @@ demod_channel_data=pipe.go({myDemodulation});
 
 pipe.channel_data=demod_channel_data;
 pipe.scan=sca;
-pipe.receive_apodization.window=uff.window.tukey25;
-pipe.receive_apodization.f_number=F_number;
+pipe.receive_apodization.window=uff.window.boxcar;
+pipe.receive_apodization.f_number=0;
 
 %% 
 %
@@ -215,11 +240,18 @@ pipe.receive_apodization.f_number=F_number;
 % 
 % To achieve the goal of this example, we use delay-and-sum (implemented in 
 % the *das_mex()* process) as well as coherent compounding.
-
-b_data=pipe.go({midprocess.das()});
+bmf = midprocess.das();
+bmf.receive_apodization = uff.apodization();
+bmf.transmit_apodization = uff.apodization();
+bmf.transmit_apodization.window = uff.window.scanline;
+bmf.transmit_apodization.MLA = noMLA;
+bmf.dimension = dimension.both;
+b_data=pipe.go({bmf});
 b_data.modulation_frequency = f0; %myDemodulation.modulation_frequency;
 
 
-
-PSFs = b_data; %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
+if cc == 1,
+    PSFs = b_data;
+end
+PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = b_data.data(:,:,:,1:size(point_position,1)); %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
 end
