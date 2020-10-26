@@ -72,25 +72,13 @@ excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
 lag = length(two_way_ir)/2+1;   
-
-% We display the pulse to check that the lag estimation is on place 
-% (and that the pulse is symmetric)
-% 
-% figure;
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,two_way_ir); hold on; grid on; axis tight
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,abs(hilbert(two_way_ir)),'r')
-% plot([0 0],[min(two_way_ir) max(two_way_ir)],'g');
-% legend('2-ways pulse','Envelope','Estimated lag');
-% title('2-ways impulse response Field II');
  
 %% Aperture Objects
 % Next, we define the the mesh geometry with the help of Field II's
-% *xdc_linear_array* function.
+% *xdc_focused_array* function.
 
 noSubAz=round(probe.element_width/(lambda/8));        % number of subelements in the azimuth direction
 noSubEl=round(probe.element_height/(lambda/8));       % number of subelements in the elevation direction
-% Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
-% Rh = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 Th = xdc_focused_array (probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf]); 
 Rh = xdc_focused_array (probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf]); 
 
@@ -116,29 +104,27 @@ alphaRx=alphaTx;                             % vector of Rx angles [rad]
 %% Define phantom
 % Define some points in a phantom for the simulation
 
-point_position = flowLine;
-% 
-% point_position(1,:) = [0 0 10e-3];
-% point_position(2,:) = [-5e-3 0 10e-3];
-% point_position(3,:) = [5e-3 0 10e-3];
-% point_position(4,:) = [0 0 15e-3];
+chunkSize = 50;
+for cc = 1:chunkSize:size(flowLine, 1)
+    
+point_position = flowLine(cc:min( cc+chunkSize-1, size( flowLine,1) ),: );
 
 % Set point amplitudes
 point_amplitudes = ones(size(point_position,1),1);
 
 %% output data
-cropat=round(2*50e-3/c0/dt);    % maximum time sample, samples after this will be dumped
-CPW=zeros(cropat,probe.N,Na,F);  % impulse response channel data
+point_zdists = abs( point_position(:,3) );
+point_dists = sqrt( sum( point_position.^2, 2) );
+cropstart=floor(1.7*min(point_zdists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
+cropend=ceil(1.2*2*max(point_dists)/c0/dt);    % maximum time sample, samples after this will be dumped
+CPW=zeros(cropend-cropstart+1,probe.N,Na,chunkSize);  % impulse response channel data
  
 %% Compute CPW signals
 disp('Field II: Computing CPW dataset');
-% wb = waitbar(0, 'Field II: Computing CPW dataset');
-for f=1:F
-%     waitbar(0, wb, sprintf('Field II: Computing CPW dataset, frame %d',f));
+for f=1:size(point_position,1)
     for n=1:Na
-%         waitbar(n/Na, wb);
         clc
-        disp( [num2str(f) '/' num2str(F)]);
+        disp( [num2str(f+cc-1) '/' num2str(F)]);
          
         % transmit aperture
         xdc_apodization(Th,0,ones(1,probe.N));
@@ -152,9 +138,10 @@ for f=1:F
         [v,t]=calc_scat_multi(Th, Rh, point_position(f,:), point_amplitudes(f));
          
         % build the dataset
-        toffset = round(t/dt);
+        toffset = round(t/dt)-cropstart+1;
         numinds = min( size(v,1), size( CPW,1)-toffset );
         CPW( toffset+(1:numinds),:,n,f)=v(1:numinds,:);
+        
          
         % Save transmit sequence
         seq(n)=uff.wave();
@@ -165,7 +152,6 @@ for f=1:F
         seq(n).delay = -lag*dt;
     end
 end
-% close(wb);s
 
 %% Channel Data
 % 
@@ -175,7 +161,7 @@ end
 channel_data = uff.channel_data();
 channel_data.sampling_frequency = fs;
 channel_data.sound_speed = c0;
-channel_data.initial_time = 0;
+channel_data.initial_time = (cropstart-1)*dt;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
@@ -204,9 +190,7 @@ pipe.channel_data=channel_data;
 
 myDemodulation=preprocess.fast_demodulation;
 myDemodulation.modulation_frequency = f0;
-myDemodulation.downsample_frequency = fs/4;
-% myDemodulation.sampling_frequency = fs;
-% myDemodulation.plot_on = true;
+myDemodulation.downsample_frequency = fs/4; % at least 4 times f0 recommended
 
 demod_channel_data=pipe.go({myDemodulation});
 
@@ -231,14 +215,20 @@ for aa = 1:length( alphaRx)
     pipe.receive_apodization.tilt = [alphaRx(aa) 0];
     pipe.channel_data.data = demodData(:,:,aa,:);
     pipe.channel_data.sequence = seq(aa);
-    PSFs=pipe.go({midprocess.das()});
+    b_data=pipe.go({midprocess.das()});
     if aa == 1
-        dsize = size( PSFs.data);
+        dsize = size( b_data.data);
         bfData = single( zeros( dsize(1), dsize(2), length( alphaRx), dsize(4) ) );
     end
-    bfData(:,:,aa,:) = PSFs.data;
+    bfData(:,:,aa,:) = b_data.data;
 end
-PSFs.modulation_frequency = f0; %myDemodulation.modulation_frequency;
-PSFs.data = bfData;
+b_data.modulation_frequency = f0;
+
+if cc == 1
+    PSFs = b_data;
+    PSFs.data(:,:,Na,F) = zeros; % trick to allocate data matrix
+end
+
+PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = bfData(:,:,:,1:size(point_position,1));
 
 end

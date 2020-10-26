@@ -37,8 +37,7 @@ set_field('use_rectangles',1);  % use rectangular elements
 %% Transducer definition L11-4v, 128-element linear array transducer
 % 
 % Our next step is to define the ultrasound transducer array we are using.
-% For this experiment, we shall use a 128 element
-% linear array transducer.
+% For this experiment, we use a linear array transducer.
 
 probe = uff.linear_array();
 f0                      = 7.7e+06;      % Transducer center frequency [Hz]
@@ -95,13 +94,10 @@ lag = length(two_way_ir)/2+1;
  
 %% Aperture Objects
 % Next, we define the the mesh geometry with the help of Field II's
-% *xdc_linear_array* function.
+% *xdc_focused_array* function.
 
 noSubAz=round(probe.element_width/(lambda/8));        % number of subelements in the azimuth direction
 noSubEl=round(probe.element_height/(lambda/8));       % number of subelements in the elevation direction
-% Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
-% Rh = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
-
 Th = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
 Rh = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
 
@@ -121,20 +117,14 @@ chunkSize = 30;
 for cc = 1:chunkSize:size(flowLine, 1)
     
 point_position = flowLine(cc:min( cc+chunkSize-1, size( flowLine,1) ),: );
-% 
-% point_position(1,:) = [0 0 10e-3];
-% point_position(2,:) = [-5e-3 0 10e-3];
-% point_position(3,:) = [5e-3 0 10e-3];
-% point_position(4,:) = [0 0 15e-3];
 
 % Set point amplitudes
 point_amplitudes = ones(size(point_position,1),1);
 
 %% output data
-
+point_zdists = abs( point_position(:,3) );
 point_dists = sqrt( sum( point_position.^2, 2) );
-
-cropstart=floor(1.8*min(point_dists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
+cropstart=floor(1.7*min(point_zdists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
 cropend=ceil(1.2*2*max(point_dists)/c0/dt);    % maximum time sample, samples after this will be dumped
 CPW=zeros(cropend-cropstart+1,probe.N,noTx,chunkSize);  % impulse response channel data
  
@@ -262,6 +252,7 @@ b_data.modulation_frequency = f0; %myDemodulation.modulation_frequency;
 
 if cc == 1,
     PSFs = b_data;
+    PSFs.data(:,:,:,F) = zeros; %trick to preallocate data matrix
 end
 PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = b_data.data(:,:,:,1:size(point_position,1)); %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
 end

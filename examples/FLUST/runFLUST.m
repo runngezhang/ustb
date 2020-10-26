@@ -24,9 +24,9 @@ contrastDensity = 0.1; % if using contrastMode, determines the density of scatte
 
 s.phantom_function = @Phantom_small2Dtube;
 % s.PSF_function = @PSFfunc_L11_singlePlaneWave;
-s.PSF_function = @PSFfunc_L11_multiPlaneWave;
+% s.PSF_function = @PSFfunc_L11_multiPlaneWave_dev;
 % s.PSF_function = @PSFfunc_LinearArray_Sectorscan;
-% s.PSF_function = @PSFfunc_LinearArray_Linearscan;
+s.PSF_function = @PSFfunc_LinearArray_Linearscan;
 
 s.phantom_params = []; % this structure may contain phantom parameters
 s.PSF_params = [];     % this structure may contain beamforming parameters
@@ -75,7 +75,6 @@ for kk = 1:length(flowField),
 
         chunksize = 5; %chunking on channels/scanlines
 
-        % timetab = gpuArray( flowField(pp).timetab );
         timetab = gpuArray( newtimetab );
 
         ts = gpuArray( min(timetab):(1/s.firing_rate)/s.overSampFact:max(timetab) );

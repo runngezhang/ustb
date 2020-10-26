@@ -37,8 +37,7 @@ set_field('use_rectangles',1);  % use rectangular elements
 %% Transducer definition L11-4v, 128-element linear array transducer
 % 
 % Our next step is to define the ultrasound transducer array we are using.
-% For this experiment, we shall use the L11-4v 128 element Verasonics
-% Transducer and set our parameters to match it.
+% For this experiment, we use a linear array transducer.
 
 probe = uff.linear_array();
 f0                      = 2.5e+06;      % Transducer center frequency [Hz]
@@ -81,24 +80,13 @@ one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
 lag = length(two_way_ir)/2+1;   
 
-% We display the pulse to check that the lag estimation is on place 
-% (and that the pulse is symmetric)
-% 
-% figure;
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,two_way_ir); hold on; grid on; axis tight
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,abs(hilbert(two_way_ir)),'r')
-% plot([0 0],[min(two_way_ir) max(two_way_ir)],'g');
-% legend('2-ways pulse','Envelope','Estimated lag');
-% title('2-ways impulse response Field II');
- 
+
 %% Aperture Objects
 % Next, we define the the mesh geometry with the help of Field II's
-% *xdc_linear_array* function.
+% *xdc_focused_array* function.
 
 noSubAz=round(probe.element_width/(lambda/8));        % number of subelements in the azimuth direction
 noSubEl=round(probe.element_height/(lambda/8));       % number of subelements in the elevation direction
-% Th = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
-% Rh = xdc_linear_array (probe.N, probe.element_width, probe.element_height, kerf, noSubAz, noSubEl, [0 0 Inf]); 
 
 Th = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
 Rh = xdc_focused_array( probe.N, probe.element_width, probe.element_height, kerf, lens_el, noSubAz, noSubEl, [0 0 Inf] );
@@ -119,20 +107,14 @@ chunkSize = 30;
 for cc = 1:chunkSize:size(flowLine, 1)
     
 point_position = flowLine(cc:min( cc+chunkSize-1, size( flowLine,1) ),: );
-% 
-% point_position(1,:) = [0 0 10e-3];
-% point_position(2,:) = [-5e-3 0 10e-3];
-% point_position(3,:) = [5e-3 0 10e-3];
-% point_position(4,:) = [0 0 15e-3];
 
 % Set point amplitudes
 point_amplitudes = ones(size(point_position,1),1);
 
 %% output data
-
+point_zdists = abs( point_position(:,3) );
 point_dists = sqrt( sum( point_position.^2, 2) );
-
-cropstart=floor(1.8*min(point_dists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
+cropstart=floor(1.7*min(point_zdists(:))/c0/dt);    %minimum time sample, samples before this will be dumped
 cropend=ceil(1.2*2*max(point_dists)/c0/dt);    % maximum time sample, samples after this will be dumped
 CPW=zeros(cropend-cropstart+1,probe.N,Na_tx,chunkSize);  % impulse response channel data
  
@@ -150,7 +132,6 @@ for f=1:size( point_position,1)
         
         % transmit aperture
         xdc_apodization(Th,0,ones(1,probe.N));
-%         xdc_times_focus(Th,0,probe.geometry(:,1)'.*sin(alpha(n))/c0);
         xdc_focus(Th, 0, [focVec(1) 0 focVec(2)]);
         
         % receive aperture
@@ -197,9 +178,8 @@ channel_data.data = CPW/1e-21; %
 % which is defined with two components: the lateral range and the 
 % depth range. *scan* too has a useful *plot* method it can call.
 
-% sca=uff.linear_scan('x_axis',linspace(-10e-3,10e-3,256).', 'z_axis', linspace(10e-3,30e-3,256).');
-% sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(0e-3,7e-2,256).');
-sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(4e-3,6e-2,128).');
+
+sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(0e-3,10e-2,256).');
 
 if Na_tx > 1,
     dalpha = alpha(2)-alpha(1);
@@ -220,9 +200,7 @@ pipe.channel_data=channel_data;
 
 myDemodulation=preprocess.fast_demodulation;
 myDemodulation.modulation_frequency = f0;
-myDemodulation.downsample_frequency = f0*4;
-% myDemodulation.sampling_frequency = fs;
-% myDemodulation.plot_on = true;
+myDemodulation.downsample_frequency = fs/4; % at least 4*f0 recommended
 
 demod_channel_data=pipe.go({myDemodulation});
 
@@ -250,8 +228,9 @@ b_data=pipe.go({bmf});
 b_data.modulation_frequency = f0; %myDemodulation.modulation_frequency;
 
 
-if cc == 1,
+if cc == 1
     PSFs = b_data;
+    PSFs.data(:,:,:,F) = zeros; %trick to preallocate data matrix
 end
 PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = b_data.data(:,:,:,1:size(point_position,1)); %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
 end

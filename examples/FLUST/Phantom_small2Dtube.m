@@ -1,4 +1,4 @@
-function flowField = Phantom_IntegrityCheck_small2Dtube( p ) % parameter structure p not used in this example
+function flowField = Phantom_small2Dtube( p ) % parameter structure p not used in this example
 
 %% small 2D tube phantom, run and check signal integrity in the middle of the tube
 btf = 60;
@@ -6,7 +6,7 @@ npoints = 10;
 flowlength = 0.005;
 tubedepth = 0.015; %0.03;
 depthstep = 0.00015; %lambda/2 for 5 MHz
-noFlowLines = 3; %odd number
+noFlowLines = 1; %odd number
 max_vel = 1;
 
 
