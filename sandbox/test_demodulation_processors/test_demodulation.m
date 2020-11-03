@@ -14,7 +14,6 @@ field_init(0);
 set_field('c',c0);              % Speed of sound [m/s]
 set_field('fs',fs);             % Sampling frequency [Hz]
 set_field('use_rectangles',1);  % use rectangular elements
-set_field('threads', 22);  % use rectangular elements
 
 %% Transducer definition L11-4v, 128-element linear array transducer
 probe = uff.linear_array();
