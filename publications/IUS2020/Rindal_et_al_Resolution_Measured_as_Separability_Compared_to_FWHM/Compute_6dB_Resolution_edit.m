@@ -1,4 +1,4 @@
-function [res] = Compute_6dB_Resolution(x_axis,y_signal,p,fig,num)
+function [res] = Compute_6dB_Resolution_edit(x_axis,y_signal,p,fig,num)
 
 %-- Perform interpolation
 coeff = 10;
@@ -19,13 +19,9 @@ if (p==1)
     hold on; plot([x_interp(idx1) x_interp(idx1)],[-100 0],'-k','linewidth',1);
     hold on; plot([x_interp(idx2) x_interp(idx2)],[-100 0],'-k','linewidth',1);
     hold off; ylabel('Amp [dB]');
-    if (num==2)
-        title(sprintf('Axial res = %02.2f [mm]',res));
-        xlabel('z [mm]');
-    else
-        xlabel('x [mm]');
-        title(sprintf('Lateral res = %02.2f [mm]',res));
-    end
+
+    xlabel('x [mm]');
+    title(sprintf('res = %02.2f [mm]',res));
 end
 
 end

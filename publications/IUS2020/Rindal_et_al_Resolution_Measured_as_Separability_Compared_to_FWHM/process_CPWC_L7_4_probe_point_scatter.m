@@ -150,6 +150,7 @@ mv.K_in_lambda = 1.5;
 mv.L_elements = channel_data.probe.N/2;
 mv.regCoef = 1/100;
 b_data_mv = mv.go();
+figure(5);clf;
 b_data_mv.plot()
 %mv_img = b_data_mv.get_image('none').*weights;
 %mv_img = db(abs(mv_img./max(mv_img(:))));
@@ -180,6 +181,7 @@ dmas.receive_apodization = mid.receive_apodization;
 dmas.input = b_data_tx;
 dmas.channel_data = channel_data;
 b_data_dmas = dmas.go();
+figure(6);clf
 b_data_dmas.plot(6,['DMAS'])
 
 

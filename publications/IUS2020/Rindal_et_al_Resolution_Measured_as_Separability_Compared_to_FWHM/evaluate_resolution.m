@@ -1,3 +1,5 @@
+clear all;
+close all;
 filename = [ustb_path(),'/data/FieldII_CPWC_point_scatterers_res_v2.uff'];
 
 b_data_das = uff.beamformed_data();
@@ -49,6 +51,21 @@ tags{5} = 'MV';
 tags{6} = 'EBMV';
 tags{7} = 'F-DMAS';
 
+[FileName,path] = uiputfile('movie.mp4','Save movie loop as');
+vidObj = VideoWriter([path,filesep,FileName],'MPEG-4');
+vidObj.Quality = 100;
+vidObj.FrameRate = 1;
+open(vidObj);
+%for i = 1:size(h.all_images,3)
+%    
+%    set(h.image_handle,'CData',h.all_images(:,:,i));
+%    title([h.in_title,', Frame = ',num2str(i),'/',num2str(size(h.all_images,3))]);
+%    drawnow();
+%    writeVideo(vidObj, getframe(h.figure_handle));
+    
+%end
+%close(vidObj)
+
 idx = 1;
 for i = frames
     f = figure(100+i);clf;
@@ -72,19 +89,27 @@ for i = frames
         ylabel('Amplitude [dB]');
     end
     subplot(3,7,[8:21]); hold all;
-plot(sca.x_axis*1000,ones(1,length(sca.x_axis))*-6,'r--','DisplayName',tags{m},'LineWidth',2,'DisplayName','-6 dB')
-linkaxes(ax);
-legend show
-set(gca,'FontSize',15)
-set(gcf,'Position',[66 108 1083 579]);
-if i == 1
-    saveas(f,[ustb_path,filesep,'publications',filesep,'Rindal_phd_kappe',filesep,'figures',filesep,'resolution',filesep,'FWHM_PSF_v2'],'eps2c')
-else
-    saveas(f,[ustb_path,filesep,'publications',filesep,'Rindal_phd_kappe',filesep,'figures',filesep,'resolution',filesep,'FWHM_PSF_',num2str(separating_distance(idx)),'_v2'],'eps2c')  
-    idx = idx+1;
-end
-end
+    plot(sca.x_axis*1000,ones(1,length(sca.x_axis))*-6,'r--','DisplayName',tags{m},'LineWidth',2,'DisplayName','-6 dB')
+    linkaxes(ax);
+    legend show
+    set(gcf,'Position',[46 50 1083 750]);
+    set(gca,'FontSize',20)
 
+if i == 1
+    mkdir([ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures'])
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_v2'],'eps2c')
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_v2'],'png')
+
+else
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_',strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'eps2c')  
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_',strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'png')  
+ 
+    idx = idx+1;
+    drawnow();
+    writeVideo(vidObj, getframe(f));
+end
+end
+close(vidObj)
 
 
 %%
@@ -117,7 +142,6 @@ for m= 1:7
 end
 
 %%
-addpath ../DynamicRange/Functions/
 img_none{1} = b_data_das.get_image('none');
 img_none{2} = b_data_cf.get_image('none');
 img_none{3} = b_data_pcf.get_image('none');
@@ -148,13 +172,10 @@ xlim([0.5 7.5])
 ylabel('FWHM [mm]');
 xticks(1:7)
 xticklabels(tags)
-set(gca,'FontSize',15);
-set(gcf,'Position',[10 163 1304 464])
-saveas(f,[ustb_path,filesep,'publications',filesep,'Rindal_phd_kappe',filesep,'figures',filesep,'resolution',filesep,'FWHM_res_v2'],'eps2c')
-
-
-%%
-
+set(gca,'FontSize',13);
+set(gcf,'Position',[10 163 1454 464])
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_res_v2'],'eps2c')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_res_v2'],'png')  
 
 %%
 separability_lim = 6;
@@ -170,12 +191,15 @@ plot(separability(6,:),'-*','LineWidth',2,'DisplayName',tags{6})
 plot(separability(7,:),'-*','LineWidth',2,'DisplayName',tags{7})
 plot([1:7],ones(7,1)*separability_lim,'LineWidth',2,'Color','r','LineStyle','--','DisplayName','6 dB limit')
 legend show
-xlim([1 8])
+xlim([1 9])
 xticks([1:6])
 xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2)) num2str(separating_distance(3)) num2str(separating_distance(4)) num2str(separating_distance(5)) num2str(separating_distance(6))})
 xlabel('Distance between scatterers [mm]')
 ylabel('Separability [dB]');
-set(gca,'FontSize',15)
+set(gca,'FontSize',12)
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_1'],'eps2c')  
+
+f = figure
 subplot(212);hold all;
 plot((separability(1,:)>separability_lim)-0.15,'-*','LineWidth',2,'DisplayName',tags{1})
 plot((separability(2,:)>separability_lim)-0.1,'-*','LineWidth',2,'DisplayName',tags{2})
@@ -188,10 +212,11 @@ ylim([-0.5 1.5])
 xticks([1:6])
 xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2)) num2str(separating_distance(3)) num2str(separating_distance(4)) num2str(separating_distance(5)) num2str(separating_distance(6))})
 xlabel('Distance between scatterers [mm]')
-xlim([1 8])
+xlim([1 9])
 yticks([0 1])
 yticklabels({'Not separated','Separated'})
-set(gca,'FontSize',15)
-legend show
-saveas(f,[ustb_path,filesep,'publications',filesep,'Rindal_phd_kappe',filesep,'figures',filesep,'resolution',filesep,'separability_v2'],'eps2c')
+set(gca,'FontSize',12)
+legend('show')
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_2'],'eps2c')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_2'],'png')  
 
