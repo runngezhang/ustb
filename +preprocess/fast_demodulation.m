@@ -75,6 +75,10 @@ classdef fast_demodulation < preprocess
             Ndown = floor(h.input.sampling_frequency / h.downsample_frequency);
             h.downsample_frequency = h.input.sampling_frequency / Ndown;
             
+            % Calculate gr delay introduced by the filter
+            b = h.b; %#ok<*PROP>
+            delay = (length(b) - 1) / 2 / h.input.sampling_frequency;
+            
             % Plot RF channel data power spectrum
             if(h.plot_on)      
                 if ~exist('pw', 'var')
@@ -135,14 +139,14 @@ classdef fast_demodulation < preprocess
                 
                 % Perform base-band filtering
                 fprintf(1, 'Low-pass filtering\n');
-                data = filter(h.b, 1, data, [], 1);
+                data = filter(b, 1, data, [], 1);
                 
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                     
                     pv = max(pw);       % find peak value
                     
-                    H = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(b, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -160,15 +164,13 @@ classdef fast_demodulation < preprocess
                 end
                 
                 % Decimate
-                [~, Ns] = max(abs(hilbert(h.b)));
-                data = data(Ns+1:Ndown:end, :, :, :);
+                data = data(1:Ndown:end, :, :, :);
             else
                 warning(['Size of RF channel data is greater than 30% of the available memory. ', ...
                     'Data will be processed in a loop to prevent out-of-memory issues.'])
         
                 % Pre-allocate IQ channel data matrix
-                [~, Ns] = max(abs(hilbert(h.b)));
-                data = complex(zeros([length(Ns+1:Ndown:size(h.input.data, 1)), ...
+                data = complex(zeros([length(1:Ndown:size(h.input.data, 1)), ...
                     size(h.input.data, [2, 3, 4])], 'like', h.input.data));
                 
                 % Process 1st frame separately to allow plotting
@@ -195,14 +197,13 @@ classdef fast_demodulation < preprocess
                     drawnow()
                 end
                 % Filter
-                b = h.b;
                 tmp = filter(b, 1, tmp, [], 1);   
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
                     pv = max(pw);       % find peak value
                     
-                    H = freqz(h.b, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(b, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -219,18 +220,19 @@ classdef fast_demodulation < preprocess
                     drawnow()
                 end
                 % Decimate
-                data(:,:,:,1) = tmp(Ns+1:Ndown:end, :, :, 1);   
+                data(:,:,:,1) = tmp(1:Ndown:end, :, :, 1);   
                 
                 % Rest of the frames are processed together
                 for i = 2:size(h.input.data, 4)
                     tmp = h.input.data(:,:,:,i) .* downmix;     % Down-mix
                     tmp = filter(b, 1, tmp, [], 1);          	% Filter
-                    data(:,:,:,i) = tmp(Ns+1:Ndown:end, :, :); 	% Decimate
+                    data(:,:,:,i) = tmp(1:Ndown:end, :, :); 	% Decimate
                 end
             end
             
             % Create output channel data object
             h.output = uff.channel_data(h.input);
+            h.output.initial_time = h.output.initial_time - delay;
             h.output.modulation_frequency = h.modulation_frequency;
             h.output.sampling_frequency = h.downsample_frequency;
             h.output.data = data;

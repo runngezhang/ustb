@@ -77,6 +77,13 @@ classdef demodulation < preprocess
             Ndown = floor(h.input.sampling_frequency / h.downsample_frequency);
             h.downsample_frequency = h.input.sampling_frequency / Ndown;
             
+            % Calculate group delay introduced by the filter
+            bbp = h.bbp; %#ok<*PROP>
+            blp = h.blp;
+            
+            delay0 = (length(bbp)-1) / 2 / h.input.sampling_frequency;
+            delay1 = (length(blp)-1) / 2 / h.input.sampling_frequency;
+                
             % Plot RF channel data power spectrum
             if(h.plot_on)
                 if ~exist('pw', 'var')
@@ -114,12 +121,12 @@ classdef demodulation < preprocess
                 
                 % Perform band-pass filtering
                 fprintf(1, 'Band-pass filtering\n')
-                data = filter(h.bbp, 1, h.input.data, [], 1);
+                data = filter(bbp, 1, h.input.data, [], 1);
                                 
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                     
-                    H = freqz(h.bbp, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(bbp, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -161,13 +168,13 @@ classdef demodulation < preprocess
                 
                 % Perform base-band filtering
                 fprintf(1, 'Low-pass filtering\n');
-                data = filter(h.blp, 1, data, [], 1);
+                data = filter(blp, 1, data, [], 1);
                 
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(data, h.input.sampling_frequency);
                     pv = max(pw);       % find peak value
                     
-                    H = freqz(h.blp, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(blp, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -185,9 +192,7 @@ classdef demodulation < preprocess
                 end
                 
                 % Decimate
-                [~, Ns(1)] = max(abs(hilbert(h.bbp)));
-                [~, Ns(2)] = max(abs(hilbert(h.blp)));
-                data = data(Ns(1)+Ns(2)+2:Ndown:end, :, :, :);
+                data = data(1:Ndown:end, :, :, :);
             else
                 warning(['Size of RF channel data is greater than 30% of the available memory. ', ...
                     'Data will be processed in a loop to prevent out-of-memory issues.'])
@@ -196,19 +201,18 @@ classdef demodulation < preprocess
                 [~, Ns(1)] = max(abs(hilbert(h.bbp)));
                 [~, Ns(2)] = max(abs(hilbert(h.blp)));
 
-                data = complex(zeros([length(Ns(1)+Ns(2)+2:Ndown:size(h.input.data, 1)), ...
+                data = complex(zeros([length(1:Ndown:size(h.input.data, 1)), ...
                     size(h.input.data, [2, 3, 4])], 'like', h.input.data));
                 
                 % Process 1st frame separately to allow plotting
                 % Perform band-pass filtering
                 fprintf(1, 'Band-pass filtering\n')
-                bbp = h.bbp;
                 tmp = filter(bbp, 1, h.input.data(:,:,:,1), [], 1);
                 
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     
-                    H = freqz(h.bbp, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(bbp, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -255,13 +259,12 @@ classdef demodulation < preprocess
                 
                 % Perform base-band filtering
                 fprintf(1, 'Low-pass filtering\n');
-                blp = h.blp;
                 tmp = filter(blp, 1, tmp, [], 1);                
                 if(h.plot_on)
                     [fx, pw] = tools.power_spectrum(tmp, h.input.sampling_frequency);
                     pv = max(pw);       % find peak value
                     
-                    H = freqz(h.blp, 1, 1024, 'whole', h.input.sampling_frequency);
+                    H = freqz(blp, 1, 1024, 'whole', h.input.sampling_frequency);
                     H = fftshift(H);
                     F = linspace(-h.input.sampling_frequency/2, h.input.sampling_frequency/2, 1025);
                     F(end) = [];
@@ -279,7 +282,7 @@ classdef demodulation < preprocess
                 end
                 
                 % Decimate
-                data(:,:,:,1) = tmp(Ns(1)+Ns(2)+2:Ndown:end, :, :, :);
+                data(:,:,:,1) = tmp(1:Ndown:end, :, :, :);
                 
                 % Rest of the frames are processed together
                 for i = 2:size(h.input.data, 4)
@@ -291,6 +294,7 @@ classdef demodulation < preprocess
             end
             % Create output channel data object
             h.output = uff.channel_data(h.input);
+            h.output.initial_time = h.output.initial_time - delay0 - delay1;
             h.output.modulation_frequency = h.modulation_frequency;
             h.output.sampling_frequency = h.downsample_frequency;
             h.output.data = data;
