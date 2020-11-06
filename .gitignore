@@ -38,3 +38,4 @@ examples/huff/recording.h5
 .mex/lib/
 .mex
 *.eps
+*.m~
