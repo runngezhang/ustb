@@ -117,7 +117,7 @@ classdef demodulation < preprocess
             s = numel(h.input.data) * (isa(h.input.data, 'double')*8 + ...
                 isa(h.input.data, 'single')*4); % approximate size of RF channel data
             
-            if s < tools.getAvailableMemory() / 3
+            if s < tools.getAvailableMemory() / 4
                 
                 % Perform band-pass filtering
                 fprintf(1, 'Band-pass filtering\n')

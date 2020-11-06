@@ -113,7 +113,7 @@ classdef fast_demodulation < preprocess
             s = numel(h.input.data) * (isa(h.input.data, 'double')*8 + ...
                 isa(h.input.data, 'single')*4); % approximate size of RF channel data
             
-            if s < tools.getAvailableMemory() / 3 
+            if s < tools.getAvailableMemory() / 4 
                 % Down-mix
                 data = h.input.data .* exp(-1j*2*pi*h.modulation_frequency*h.input.time);
                 
