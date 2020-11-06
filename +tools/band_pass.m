@@ -11,6 +11,9 @@ function [pf, h, w] = band_pass(p, Fs, F)
 
     % Filtering
     [~, Ns] = max(abs(hilbert(b)));
+    if mod(length(b)-1,2)
+        warning("In tools.band_pass: Filter length is even. Results in inaccurate group delay compensation")
+    end
     pf = filter(b, 1, p, [], 1);  
     
     % Remove invalid samples

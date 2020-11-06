@@ -11,7 +11,9 @@ function [pf, h, w] = low_pass(p, Fs, F)
     
     % Filtering
     [~, Ns] = max(abs(hilbert(b)));
-    Sp = size(p);
+    if mod(length(b)-1,2)
+        warning("In tools.low_pass: Filter length is even. Results in inaccurate group delay compensation")
+    end
     
     pf = filter(b, 1, p, [], 1);
     
