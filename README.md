@@ -10,7 +10,7 @@ An open source MATLAB toolbox for beamforming, processing, and visualization of 
 
 * Just clone the repository and add the folder (without subfolders) to MATLAB's path
 
-### Citationware ### 
+### Citationware ###
 
 The USTB is made possible through the contribution of several labs around the world. It contains pieces of intellectual property from many authors, and because of that different references must be cited depending on your use of USTB. There are three kinds of intellectual properties that must be acknowledged: datasets, processes, and the toolbox itself. Please se our website http://www.ustb.no/citation/ for details on how to properly refence the intellectual property. Be sure to reference our proceedings paper from IUS (IEEE International Ultrasonics Symposium) 2017 whenever you are using the toolbox in research or other publications:
 
@@ -60,11 +60,12 @@ The project administrators are:
 
 * Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>,
 * Ole Marius Hoel Rindal <omrindal@ifi.uio.no>,
-* Olivier Bernard <olivier.bernard@insa-lyon.fr>.
+* Stefano Fiorentini <stefano.fiorentini@ntnu.no>.
  
 
 Collaborators:
 
+* Olivier Bernard
 * Andreas Austeng 
 * Arun Nair
 * Muyinatu A. Lediju Bell, 
