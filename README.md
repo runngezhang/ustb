@@ -20,17 +20,18 @@ The USTB is made possible through the contribution of several labs around the wo
 
 The USTB is still under development, so there might be larger structural changes. The current version in main is;
 
-* v2.1: https://bitbucket.org/ustb/ustb/commits/tag/v2.1.2
+* v2.2: https://bitbucket.org/ustb/ustb/commits/tag/v2.2.1
 
 compared to the previous version
 
-* v2.0: https://bitbucket.org/ustb/ustb/commits/tag/v2.0.1
+* v2.1: https://bitbucket.org/ustb/ustb/commits/tag/v2.1.2
 
 the main changes are:
 
-* updated the processing pipeline defining the pre, mid and postprocess objects 
-* the apodization object has been rewritten
-* a GPU implementation of the DAS beamformer has been added 
+* improved download tool to include dowloads from Google drive
+* added "dark mode plotting"
+* adding code from several publications under /publications/
+* more tests have been added
 * several bugfixes and other improvements have been done as well.
 
 ### Documentation ###
