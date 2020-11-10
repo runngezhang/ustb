@@ -165,7 +165,7 @@ channel_data.initial_time = (cropstart-1)*dt;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
-channel_data.data = CPW/1e-21; %
+channel_data.data = CPW/1e-26; %
 
 
 %% Scan

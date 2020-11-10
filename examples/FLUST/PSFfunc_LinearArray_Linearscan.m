@@ -59,7 +59,6 @@ Txspacing = probe.pitch*2;
 TxCenters = ( -(noTx-1)/2:1:(noTx-1)/2 )*Txspacing;
 noMLA = 4;
 F=size(flowLine,1);                        % number of frames
-% alpha=linspace(-alpha_max,alpha_max,Na_tx);   % vector of angles [rad]
 
 
  
@@ -81,16 +80,6 @@ excitation = square(2*pi*f0*te+pi/2);
 one_way_ir = conv(impulse_response,excitation);
 two_way_ir = conv(one_way_ir,impulse_response);
 lag = length(two_way_ir)/2+1;   
-
-% We display the pulse to check that the lag estimation is on place 
-% (and that the pulse is symmetric)
-% 
-% figure;
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,two_way_ir); hold on; grid on; axis tight
-% plot((0:(length(two_way_ir)-1))*dt -lag*dt,abs(hilbert(two_way_ir)),'r')
-% plot([0 0],[min(two_way_ir) max(two_way_ir)],'g');
-% legend('2-ways pulse','Envelope','Estimated lag');
-% title('2-ways impulse response Field II');
  
 %% Aperture Objects
 % Next, we define the the mesh geometry with the help of Field II's
@@ -186,7 +175,7 @@ channel_data.initial_time = (cropstart-1)*dt;
 channel_data.pulse = pulse;
 channel_data.probe = probe;
 channel_data.sequence = seq;
-channel_data.data = CPW/1e-21; %
+channel_data.data = CPW/1e-26; %
 
 
 %% Scan
@@ -197,8 +186,6 @@ channel_data.data = CPW/1e-21; %
 % depth range. *scan* too has a useful *plot* method it can call.
 
 sca=uff.linear_scan('x_axis',linspace(-10e-3,10e-3,256).', 'z_axis', linspace(0e-3,30e-3,256).');
-% sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(0e-3,7e-2,256).');
-% sca=uff.sector_scan('azimuth_axis',alpha.', 'depth_axis', linspace(4e-3,6e-2,128).');
 % 
 if noTx > 1,
     dTx = TxCenters(2)-TxCenters(1);
@@ -220,9 +207,7 @@ pipe.channel_data=channel_data;
 
 myDemodulation=preprocess.fast_demodulation;
 myDemodulation.modulation_frequency = f0;
-myDemodulation.downsample_frequency = f0*4;
-% myDemodulation.sampling_frequency = fs;
-% myDemodulation.plot_on = true;
+myDemodulation.downsample_frequency = fs/4;
 
 demod_channel_data=pipe.go({myDemodulation});
 
