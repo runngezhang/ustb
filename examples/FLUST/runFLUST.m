@@ -29,8 +29,8 @@
 % 6) Publish results, report statistical properties, make results
 %    reproducible.
 
-addpath('C:\Users\jorgenav\Documents\MATLAB\Software\Field_II');
-addpath('C:\Users\jorgenav\GitProjects\ustb_flust');
+addpath('pathToField_II');
+addpath('pathToUSTB');
 
 s = struct();
 
