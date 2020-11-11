@@ -186,3 +186,9 @@ elseif isa( PSFstruct.scan, 'uff.sector_scan')
         pause(0.01);
     end
 end
+
+%% Visualizing using the built inn beamformed data object
+b_data = uff.beamformed_data();
+b_data.scan = PSFstruct.scan;
+b_data.data = reshape(firstRealization,size(firstRealization,1)*size(firstRealization,2),1,1,size(firstRealization,3));
+b_data.plot([],['Flow from FLUST'],[20])
