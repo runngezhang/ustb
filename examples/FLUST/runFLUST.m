@@ -66,7 +66,7 @@ s.PSF_params = [];     % this structure may contain beamforming parameters
 flowField = s.phantom_function(s.phantom_params); % flowField should have timetab and postab fields
 
 %% FLUST main loop
-for kk = 1:length(flowField),
+for kk = 1:length(flowField)
 
     %% resample along flowlines with density s.dr
     prop = diff( flowField(kk).postab, 1);
@@ -93,7 +93,7 @@ for kk = 1:length(flowField),
 
         PSFs = reshape( PSFstruct.data, [szZ, szX, noAngs, length( newtimetab)] );
 
-        if kk == 1 && anglectr == 1,
+        if kk == 1 && anglectr == 1
             realTab = complex( zeros( szZ, szX, s.nrSamps, noAngs, s.nrReps, 'single') );
         end
 
@@ -105,7 +105,7 @@ for kk = 1:length(flowField),
 
             fNoiseTab = randn( [1 length( 1) length(ts)+s.nrSamps*s.overSampFact*noAngs*s.nrReps+s.overSampFact*noAngs ], 'single');
 
-            if contrastMode,
+            if contrastMode
                 fN_sort = sort( abs( fNoiseTab(:) ) );
                 fN_thresh = fN_sort( round( length( fN_sort)*(1-contrastDensity) ) );
                 fNoiseTab = single( abs(fNoiseTab) >= fN_thresh );
@@ -117,7 +117,7 @@ for kk = 1:length(flowField),
             fNoiseTab_GPU = gpuArray( fNoiseTab);
         end
 
-        for coffset = 1:chunksize:szX,    
+        for coffset = 1:chunksize:szX
             mm = 1;
             cinds = coffset:min( coffset+chunksize-1, szX );
 
@@ -146,5 +146,41 @@ for kk = 1:length(flowField),
             disp(['Firing nr ' num2str(anglectr) '/' num2str(noAngs)] );
             disp(['Image line ' num2str( coffset ) '/' num2str( szX) ] );
         end
+    end
+end
+clc
+disp('Finished!')
+
+%% VISUALIZE FIRST REALIZATION
+firstRealization = realTab(:,:,:,1,1);
+gain = 20*log10( abs( max( abs( firstRealization(:) ) ) ) );
+scale_factor = 1;
+dyn = 20;
+figure(1000),
+
+if isa( PSFstruct.scan, 'uff.linear_scan')    
+    for kk = 1:size( realTab,3)
+        imagesc(PSFstruct.scan.x_axis*scale_factor,PSFstruct.scan.z*scale_factor,20*log10( abs( firstRealization(:,:,kk) ) ) );
+        colormap( gray);
+        caxis([-dyn 0]+gain)
+        axis ij
+        title( ['Realization frame ' num2str(kk) ]);
+        axis equal tight
+        drawnow
+        pause(0.01);
+    end
+elseif isa( PSFstruct.scan, 'uff.sector_scan')
+    for kk = 1:size( realTab,3)
+        x_matrix=reshape(PSFstruct.scan.x,[PSFstruct.scan(1).N_depth_axis PSFstruct.scan(1).N_azimuth_axis]);
+        z_matrix=reshape(PSFstruct.scan.z,[PSFstruct.scan(1).N_depth_axis PSFstruct.scan(1).N_azimuth_axis ]);
+        pcolor(x_matrix*scale_factor,z_matrix*scale_factor,20*log10( abs( firstRealization(:,:,kk) ) ) );
+        shading flat;
+        colormap( gray);
+        caxis([-dyn 0]+gain)
+        axis ij
+        title( ['Realization frame ' num2str(kk) ]);
+        axis equal tight
+        drawnow
+        pause(0.01);
     end
 end
