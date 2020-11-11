@@ -192,3 +192,20 @@ b_data = uff.beamformed_data();
 b_data.scan = PSFstruct.scan;
 b_data.data = reshape(firstRealization,size(firstRealization,1)*size(firstRealization,2),1,1,size(firstRealization,3));
 b_data.plot([],['Flow from FLUST'],[20])
+
+%% Estimate axial displacement using autocorrelation displacement estimation 
+ac = postprocess.autocorrelation_displacement_estimation();
+ac.channel_data = channel_data;
+ac.packet_size = 10;
+ac.input = b_data;
+b_data_color = ac.go();
+
+% Create a mask to filter out unwanted color doppler region
+mask = mean(b_data.get_image('none'), 4);
+mask(db(abs(mask./max(mask(:)))) <= -15) = 0;
+mask(db(abs(mask./max(mask(:)))) > -15) = 1;
+mask = imclose(mask, strel('disk',2));
+
+b_data_color.data = b_data_color.data.*mask(:)./(1/s.firing_rate);
+b_data_color.plot([],['Axial velocity'],[],'none')
+colormap jet
