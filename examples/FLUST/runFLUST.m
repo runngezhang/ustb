@@ -80,7 +80,7 @@ for kk = 1:length(flowField)
 
     %% calculate PSFs
     simStart = tic;
-    PSFstruct = s.PSF_function(newpostab, s.PSF_params); % PSFs in uff/beamformed_data format
+    [PSFstruct, channel_data] = s.PSF_function(newpostab, s.PSF_params); % PSFs in uff/beamformed_data format
     AsimTime = toc(simStart);
 
     %% make realizations
@@ -172,10 +172,10 @@ b_data_color = ac.go();
 
 % Create a mask to filter out unwanted color doppler region
 mask = mean(b_data.get_image('none'), 4);
-mask(db(abs(mask./max(mask(:)))) <= -15) = 0;
-mask(db(abs(mask./max(mask(:)))) > -15) = 1;
+mask(db(abs(mask./max(mask(:)))) <= -20) = 0;
+mask(db(abs(mask./max(mask(:)))) > -20) = 1;
 mask = imclose(mask, strel('disk',2));
 
-b_data_color.data = b_data_color.data.*mask(:)./(1/s.firing_rate);
+b_data_color.data = b_data_color.data.*mask(:)./(1/(s.firing_rate/noAngs));
 b_data_color.plot([],['Axial velocity'],[],'none')
 colormap jet
