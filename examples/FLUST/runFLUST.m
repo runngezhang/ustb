@@ -29,6 +29,9 @@
 % 6) Publish results, report statistical properties, make results
 %    reproducible.
 
+clear all;
+close all;
+
 addpath('pathToField_II');
 addpath('pathToUSTB');
 
