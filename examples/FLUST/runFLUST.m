@@ -154,43 +154,10 @@ end
 clc
 disp('Finished!')
 
-%% VISUALIZE FIRST REALIZATION
+%% VISUALIZE FIRST REALIZATION using the built inn beamformed data object
 firstRealization = realTab(:,:,:,1,1);
-gain = 20*log10( abs( max( abs( firstRealization(:) ) ) ) );
-scale_factor = 1000;
-dyn = 20;
-figure(1000),
 
-if isa( PSFstruct.scan, 'uff.linear_scan')    
-    for kk = 1:size( realTab,3)
-        imagesc(PSFstruct.scan.x_axis*scale_factor,PSFstruct.scan.z*scale_factor,20*log10( abs( firstRealization(:,:,kk) ) ) );
-        xlabel('x [mm]');ylabel('z [mm]');colorbar
-        colormap( gray);
-        caxis([-dyn 0]+gain)
-        axis ij
-        title( ['Realization frame ' num2str(kk) ]);
-        axis equal tight
-        drawnow
-        pause(0.01);
-    end
-elseif isa( PSFstruct.scan, 'uff.sector_scan')
-    for kk = 1:size( realTab,3)
-        x_matrix=reshape(PSFstruct.scan.x,[PSFstruct.scan(1).N_depth_axis PSFstruct.scan(1).N_azimuth_axis]);
-        z_matrix=reshape(PSFstruct.scan.z,[PSFstruct.scan(1).N_depth_axis PSFstruct.scan(1).N_azimuth_axis ]);
-        pcolor(x_matrix*scale_factor,z_matrix*scale_factor,20*log10( abs( firstRealization(:,:,kk) ) ) );
-        xlabel('x [mm]');ylabel('z [mm]');colorbar
-        shading flat;
-        colormap( gray);
-        caxis([-dyn 0]+gain)
-        axis ij
-        title( ['Realization frame ' num2str(kk) ]);
-        axis equal tight
-        drawnow
-        pause(0.01);
-    end
-end
-
-%% Visualizing using the built inn beamformed data object
+%% Visualizing 
 b_data = uff.beamformed_data();
 b_data.scan = PSFstruct.scan;
 b_data.data = reshape(firstRealization,size(firstRealization,1)*size(firstRealization,2),1,1,size(firstRealization,3));
