@@ -157,13 +157,20 @@ disp('Finished!')
 %% VISUALIZE FIRST REALIZATION using the built inn beamformed data object
 firstRealization = realTab(:,:,:,1,1);
 
-%% Visualizing 
 b_data = uff.beamformed_data();
 b_data.scan = PSFstruct.scan;
 b_data.data = reshape(firstRealization,size(firstRealization,1)*size(firstRealization,2),1,1,size(firstRealization,3));
 b_data.plot([],['Flow from FLUST'],[20])
 
 %% Estimate axial displacement using autocorrelation displacement estimation 
+% initiate uff.pulse object
+pulse = uff.pulse()
+pulse.center_frequency = PSFstruct.modulation_frequency;
+
+% initiate uff.channel_data object
+channel_data = uff.channel_data;
+channel_data.pulse = pulse;
+
 ac = postprocess.autocorrelation_displacement_estimation();
 ac.channel_data = channel_data;
 ac.packet_size = 10;
