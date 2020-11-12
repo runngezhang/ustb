@@ -154,7 +154,7 @@ end
 clc
 disp('Finished!')
 
-%% VISUALIZE FIRST REALIZATION using the built inn beamformed data object
+%% VISUALIZE FIRST REALIZATION using the built-in beamformed data object
 firstRealization = realTab(:,:,:,1,1);
 
 b_data = uff.beamformed_data();
