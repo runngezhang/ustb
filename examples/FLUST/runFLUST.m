@@ -80,7 +80,7 @@ for kk = 1:length(flowField)
 
     %% calculate PSFs
     simStart = tic;
-    [PSFstruct, channel_data] = s.PSF_function(newpostab, s.PSF_params); % PSFs in uff/beamformed_data format
+    PSFstruct = s.PSF_function(newpostab, s.PSF_params); % PSFs in uff/beamformed_data format
     AsimTime = toc(simStart);
 
     %% make realizations

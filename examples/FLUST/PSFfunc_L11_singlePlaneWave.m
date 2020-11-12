@@ -1,4 +1,4 @@
-function [PSFs, channel_data] = PSFfunc_L11_singlePlaneWave(flowLine, p) % parameter structure not used in this example
+function PSFs = PSFfunc_L11_singlePlaneWave(flowLine, p) % parameter structure not used in this example
 
 %% Computation of a CPWI dataset with Field II and beamforming with USTB
 %
