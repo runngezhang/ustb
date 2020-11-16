@@ -10,7 +10,7 @@ An open source MATLAB toolbox for beamforming, processing, and visualization of 
 
 * Just clone the repository and add the folder (without subfolders) to MATLAB's path
 
-### Citationware ### 
+### Citationware ###
 
 The USTB is made possible through the contribution of several labs around the world. It contains pieces of intellectual property from many authors, and because of that different references must be cited depending on your use of USTB. There are three kinds of intellectual properties that must be acknowledged: datasets, processes, and the toolbox itself. Please se our website http://www.ustb.no/citation/ for details on how to properly refence the intellectual property. Be sure to reference our proceedings paper from IUS (IEEE International Ultrasonics Symposium) 2017 whenever you are using the toolbox in research or other publications:
 
@@ -20,17 +20,18 @@ The USTB is made possible through the contribution of several labs around the wo
 
 The USTB is still under development, so there might be larger structural changes. The current version in main is;
 
-* v2.1: https://bitbucket.org/ustb/ustb/commits/tag/v2.1.2
+* v2.2: https://bitbucket.org/ustb/ustb/commits/tag/v2.2.1
 
 compared to the previous version
 
-* v2.0: https://bitbucket.org/ustb/ustb/commits/tag/v2.0.1
+* v2.1: https://bitbucket.org/ustb/ustb/commits/tag/v2.1.2
 
 the main changes are:
 
-* updated the processing pipeline defining the pre, mid and postprocess objects 
-* the apodization object has been rewritten
-* a GPU implementation of the DAS beamformer has been added 
+* improved download tool to include dowloads from Google drive
+* added "dark mode plotting"
+* adding code from several publications under /publications/
+* more tests have been added
 * several bugfixes and other improvements have been done as well.
 
 ### Documentation ###
@@ -60,11 +61,12 @@ The project administrators are:
 
 * Alfonso Rodriguez-Molares <alfonso.r.molares@ntnu.no>,
 * Ole Marius Hoel Rindal <omrindal@ifi.uio.no>,
-* Olivier Bernard <olivier.bernard@insa-lyon.fr>.
+* Stefano Fiorentini <stefano.fiorentini@ntnu.no>.
  
 
 Collaborators:
 
+* Olivier Bernard
 * Andreas Austeng 
 * Arun Nair
 * Muyinatu A. Lediju Bell, 
