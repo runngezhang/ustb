@@ -231,8 +231,8 @@ if cc == 1
     else
         PSFs.data = bfData(:,:,:,1:F);
     end
-else
-    PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = bfData(:,:,:,1:size(point_position,1));
 end
+PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = bfData(:,:,:,1:size(point_position,1));
+
 
 end
