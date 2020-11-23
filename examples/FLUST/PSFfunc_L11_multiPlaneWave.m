@@ -226,9 +226,13 @@ b_data.modulation_frequency = f0;
 
 if cc == 1
     PSFs = b_data;
-    PSFs.data(:,:,Na,F) = zeros; % trick to allocate data matrix
+    if F > chunkSize
+        PSFs.data(:,:,Na,F) = zeros; % trick to allocate data matrix
+    else
+        PSFs.data = bfData(:,:,:,1:F);
+    end
+else
+    PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = bfData(:,:,:,1:size(point_position,1));
 end
-
-PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = bfData(:,:,:,1:size(point_position,1));
 
 end
