@@ -1,4 +1,7 @@
-% Example generating the plots in Resolution Measured as Separability Compared to Full Width Half Maximum for Adaptive Beamformers
+% Example generating the plots in Resolution Measured as Separability 
+% Compared to Full Width Half Maximum for Adaptive Beamformers
+%
+%
 % If using some of this data or code you should cite: 
 % Rindal, O. M. H., Rodriguez-Molares, A., & Austeng, A. (2020). Resolution
 % Measured as Separability Compared to Full Width Half Maximum for Adaptive 
@@ -23,7 +26,7 @@ clear all;
 close all;
 
 % data location
-url='http://ustb.no/datasets/';            % if not found data will be downloaded from here
+url='http://ustb.no/datasets/';       % if not found data will be downloaded from here
 local_path = [data_path(), filesep];  % location of example data on this computer
 
 filename = ['FieldII_CPWC_point_scatterers_res_v2.uff'];
@@ -108,8 +111,12 @@ xticks(1:7)
 xticklabels(tags)
 set(gca,'FontSize',13);
 set(gcf,'Position',[10 163 1454 464])
-saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_res_v2'],'eps2c')  
-saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_res_v2'],'png')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+    'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+    filesep,'figures',filesep,'FWHM_res_v2'],'eps2c')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+    'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+    filesep,'figures',filesep,'FWHM_res_v2'],'png')  
 
 %% Create plot and movie of images with displacement indicated
 frames = [1 2 3 4 5 6 7];
@@ -150,13 +157,25 @@ for i = frames
     set(gca,'FontSize',20)
 
 if i == 1
-    mkdir([ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures'])
-    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_v2'],'eps2c')
-    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_v2'],'png')
+    mkdir([ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+        'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+        filesep,'figures'])
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+        'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+        filesep,'figures',filesep,'FWHM_PSF_v2'],'eps2c')
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+        'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+        filesep,'figures',filesep,'FWHM_PSF_v2'],'png')
 
 else
-    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_',strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'eps2c')  
-    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'FWHM_PSF_',strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'png')  
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+        'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+        filesep,'figures',filesep,'FWHM_PSF_',...
+        strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'eps2c')  
+    saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+        'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+        filesep,'figures',filesep,'FWHM_PSF_',...
+        strrep(num2str(separating_distance(idx)),'.','_'),'_v2'],'png')  
  
     idx = idx+1;
     drawnow();
@@ -201,15 +220,20 @@ plot(separability(4,:),'-*','LineWidth',2,'DisplayName',tags{4})
 plot(separability(5,:),'-*','LineWidth',2,'DisplayName',tags{5})
 plot(separability(6,:),'-*','LineWidth',2,'DisplayName',tags{6})
 plot(separability(7,:),'-*','LineWidth',2,'DisplayName',tags{7})
-plot([1:7],ones(7,1)*separability_lim,'LineWidth',2,'Color','r','LineStyle','--','DisplayName','6 dB limit')
+plot([1:7],ones(7,1)*separability_lim,'LineWidth',2,'Color','r',...
+    'LineStyle','--','DisplayName','6 dB limit')
 legend show
 xlim([1 9])
 xticks([1:6])
-xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2)) num2str(separating_distance(3)) num2str(separating_distance(4)) num2str(separating_distance(5)) num2str(separating_distance(6))})
+xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2))...
+    num2str(separating_distance(3)) num2str(separating_distance(4)) ...
+    num2str(separating_distance(5)) num2str(separating_distance(6))})
 xlabel('Distance between scatterers [mm]')
 ylabel('Separability [dB]');
 set(gca,'FontSize',12)
-saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_1'],'eps2c')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+    'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+    filesep,'figures',filesep,'separability_1'],'eps2c')  
 
 f = figure;
 subplot(212);hold all;
@@ -222,13 +246,18 @@ plot((separability(6,:)>separability_lim)+0.1,'-*','LineWidth',2,'DisplayName',t
 plot((separability(7,:)>separability_lim)+0.15,'-*','LineWidth',2,'DisplayName',tags{7})
 ylim([-0.5 1.5])
 xticks([1:6])
-xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2)) num2str(separating_distance(3)) num2str(separating_distance(4)) num2str(separating_distance(5)) num2str(separating_distance(6))})
+xticklabels({num2str(separating_distance(1)) num2str(separating_distance(2)) ...
+    num2str(separating_distance(3)) num2str(separating_distance(4)) num2str(separating_distance(5)) num2str(separating_distance(6))})
 xlabel('Distance between scatterers [mm]')
 xlim([1 9])
 yticks([0 1])
 yticklabels({'Not separated','Separated'})
 set(gca,'FontSize',12)
 legend('show')
-saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_2'],'eps2c')  
-saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',filesep,'figures',filesep,'separability_2'],'png')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+    'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+    filesep,'figures',filesep,'separability_2'],'eps2c')  
+saveas(f,[ustb_path,filesep,'publications',filesep,'IUS2020',filesep,...
+    'Rindal_et_al_Resolution_Measured_as_Separability_Compared_to_FWHM',...
+    filesep,'figures',filesep,'separability_2'],'png')  
 
