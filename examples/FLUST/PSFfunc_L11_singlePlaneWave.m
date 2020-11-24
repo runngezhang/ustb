@@ -206,9 +206,13 @@ b_data=pipe.go({midprocess.das()});
 b_data.modulation_frequency = f0; %myDemodulation.modulation_frequency;
 
 
-if cc == 1,
+if cc == 1
     PSFs = b_data;
-    PSFs.data(:,:,:,F) = zeros; %trick to preallocate large enough data matrix
+    if F > chunkSize
+        PSFs.data(:,:,:,F) = zeros; % trick to allocate data matrix
+    else
+        PSFs.data = PSFs.data(:,:,:,1:F);
+    end
 else
     PSFs.data(:,:,:,cc:cc+size(point_position,1)-1) = b_data.data(:,:,:,1:size(point_position,1)); %reshape( b_data.data, length( sca.z_axis), length( sca.x_axis), size( flowLine, 1) );
 end
