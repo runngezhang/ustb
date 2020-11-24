@@ -21,7 +21,16 @@ create_beampatterns_plot
 %% Load the data
 clear all;
 close all;
-filename = [ustb_path(),'/data/FieldII_CPWC_point_scatterers_res_v2.uff'];
+
+% data location
+url='http://ustb.no/datasets/';            % if not found data will be downloaded from here
+local_path = [data_path(), filesep];  % location of example data on this computer
+
+filename = ['FieldII_CPWC_point_scatterers_res_v2.uff'];
+
+% check if the file is available in the local path & downloads otherwise
+tools.download(filename, url, local_path);
+
 
 b_data_das = uff.beamformed_data();
 b_data_cf = uff.beamformed_data();
@@ -31,13 +40,13 @@ b_data_mv = uff.beamformed_data();
 b_data_ebmv = uff.beamformed_data();
 b_data_dmas = uff.beamformed_data();
 
-b_data_das.read([filename],'/b_data_das');
-b_data_cf.read([filename],'/b_data_cf');
-b_data_pcf.read([filename],'/b_data_pcf');
-b_data_gcf.read([filename],'/b_data_gcf');
-b_data_mv.read([filename],'/b_data_mv');
-b_data_ebmv.read([filename],'/b_data_ebmv');
-b_data_dmas.read([filename],'/b_data_dmas');
+b_data_das.read([local_path,filesep,filename],'/b_data_das');
+b_data_cf.read([local_path,filesep,filename],'/b_data_cf');
+b_data_pcf.read([local_path,filesep,filename],'/b_data_pcf');
+b_data_gcf.read([local_path,filesep,filename],'/b_data_gcf');
+b_data_mv.read([local_path,filesep,filename],'/b_data_mv');
+b_data_ebmv.read([local_path,filesep,filename],'/b_data_ebmv');
+b_data_dmas.read([local_path,filesep,filename],'/b_data_dmas');
 
 sca = b_data_das.scan;
 % Separating distances used in the simulation. See 

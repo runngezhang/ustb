@@ -35,7 +35,6 @@ for i = 1:length(Ns)
         W = W./max(W);
         
         %% Create plot of array geometry
-        figure;clf();
         probe.plot();
         view(2);
         title(['Array (N=', num2str((Ns(i))),', width = ',num2str(D*1000,'%.2f'),' mm, pitch = ',pitch_signs{1}]);
