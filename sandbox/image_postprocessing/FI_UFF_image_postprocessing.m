@@ -13,7 +13,7 @@ tools.download(file, url)
 % https://drive.google.com/file/d/1Nf4Zk0lYo0emV-6YdhHJZz9noqtb35Wb/view?usp=sharing
 % read the data
 channel_data = uff.read_object(file,'/channel_data');
-scan = uff.read_object(file,'/scan');
+%scan = uff.read_object(file,'/scan'); Potentially read the scan from the file
 
 %% Create the images of the heart.
 % Only use 5 frames
