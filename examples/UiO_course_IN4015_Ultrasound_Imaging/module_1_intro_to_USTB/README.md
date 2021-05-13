@@ -1,4 +1,4 @@
-# Module 1 Introduction to the USTB: Recording and prosessing an ultrasound image
+# Module 1 Introduction to the USTB: Recording and prosessing ultrasound images
 
 The lab assignments for module 1 consists of using existing USTB examples for part 2 and 3 of the exercise.
 
