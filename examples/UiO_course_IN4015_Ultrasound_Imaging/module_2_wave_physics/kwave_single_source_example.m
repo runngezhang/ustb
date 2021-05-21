@@ -1,4 +1,7 @@
-% Monopole Point Source In A Homogeneous Propagation Medium Example
+% A simple propagating wave example and one way beamforming
+%
+% based on the k-wave example 
+% "Monopole Point Source In A Homogeneous Propagation Medium Example"
 %
 % This example provides a simple demonstration of using k-Wave for the
 % simulation and detection of a time varying pressure source within a
@@ -6,35 +9,23 @@
 % Homogeneous Propagation Medium and Recording The Particle Velocity
 % examples.
 %
-% author: Bradley Treeby
+% orgiginal author: Bradley Treeby
 % date: 2nd December 2009
-% last update: 4th May 2017
-%  
-% This function is part of the k-Wave Toolbox (http://www.k-wave.org)
-% Copyright (C) 2009-2017 Bradley Treeby
-
-% This file is part of k-Wave. k-Wave is free software: you can
-% redistribute it and/or modify it under the terms of the GNU Lesser
-% General Public License as published by the Free Software Foundation,
-% either version 3 of the License, or (at your option) any later version.
-% 
-% k-Wave is distributed in the hope that it will be useful, but WITHOUT ANY
-% WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-% FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
-% more details. 
-% 
-% You should have received a copy of the GNU Lesser General Public License
-% along with k-Wave. If not, see <http://www.gnu.org/licenses/>. 
 %
 % Modified by Ole Marius Hoel Rindal <olemarius@olemarius.net>
 %   Using a "burst" instead of continous sinus as transmit signal
 %   Using multiple receive sensors
+%   One-way beamforming using the USTB.
 
 clearvars;
 
 % =========================================================================
-% SIMULATION
+% K-wave SIMULATION
 % =========================================================================
+number_of_sensors = 4; % Define how many receive sensors with lambda/2 spacing
+dynamic_range = 40; % How many decibels to display in image
+%transmit_signal = 'sinus';
+transmit_signal = 'gaussian_pulse';
 
 % create the computational grid
 Nx = 128;           % number of grid points in the x (row) direction
@@ -56,10 +47,14 @@ source.p_mask = zeros(Nx, Ny);
 source.p_mask(Nx/2, Ny/2) = 1;
 
 % define a time varying sinusoidal source
-source_freq = 0.25e6;   % [Hz]
+source_freq = 0.5e6;0.25e6;   % [Hz]
 source_mag = 5;         % [Pa]
-source.p = source_mag * sin(2 * pi * source_freq * kgrid.t_array);
-%source.p(end:end+length(source.p)) = 0;
+switch transmit_signal
+    case 'sinus'
+        source.p = source_mag * sin(2 * pi * source_freq * kgrid.t_array);
+    case 'gaussian_pulse'
+        source.p = source_mag * gauspuls(kgrid.t_array-mean(kgrid.t_array),source_freq,1)
+end
 
 
 figure;plot(source.p);
@@ -70,16 +65,14 @@ source.p = filterTimeSeries(kgrid, medium, source.p);
 sensor.mask = zeros(Nx, Ny);
 
 %% or multiple sensor points
-number_of_sensors = 8;
 lambda = medium.sound_speed/source_freq;
 sensor_spacing = round(lambda/2 / dx);
 
-sensor.mask(Nx/8, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2) = 1;
+sensor.mask(Nx/16, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2) = 1;
 for s = 1:number_of_sensors-1
-    s
-    sensor.mask(Nx/8, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2+sensor_spacing*s) = 1;
+    sensor.mask(Nx/16, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2+sensor_spacing*s) = 1;
 end
-% sensor.mask(Nx/8, Ny/4) = 1;
+
 %%
 % define the acoustic parameters to record
 sensor.record = {'p', 'p_final'};
@@ -110,9 +103,9 @@ xlabel(['Time [' prefix 's]']);
 ylabel('Signal Amplitude');
 axis tight;
 title('Input Pressure Signal');
-%%
+                                                                                       
+
 for s = 1:size(sensor_data.p,1)
-    s
     subplot(size(sensor_data.p,1)+1, 1, s + 1);
     plot(kgrid.t_array * scale, sensor_data.p(s,:), 'r-');
     xlabel(['Time [' prefix 's]']);
@@ -120,3 +113,46 @@ for s = 1:size(sensor_data.p,1)
     axis tight;
     title(['Sensor Pressure Signal at sensor ',num2str(s)]);
 end
+
+%% 
+% #     #  #####  ####### ######  
+% #     # #     #    #    #     # 
+% #     # #          #    #     # 
+% #     #  #####     #    ######  
+% #     #       #    #    #     # 
+% #     # #     #    #    #     # 
+%  #####   #####     #    ######  
+%   
+% processing below   
+
+% Define the probe
+probe = uff.linear_array();
+probe.pitch = lambda/2;
+probe.N = number_of_sensors;
+
+% Define the transmit sequence
+seq = uff.wave();
+seq.probe = probe;
+seq.wavefront = uff.wavefront.photoacoustic;
+seq.sound_speed = medium.sound_speed;
+
+% Create channel data object
+channel_data = uff.channel_data();
+channel_data.data = sensor_data.p';
+channel_data.probe = probe;
+channel_data.sequence = seq;
+[~,lag] = max(source.p);
+channel_data.sampling_frequency = 1./kgrid.dt;
+channel_data.initial_time = -lag*kgrid.dt;
+
+% Create scan
+scan = uff.linear_scan();
+scan.x_axis = linspace(-20/1000,20/1000,512)';
+scan.z_axis = linspace(0/1000,40/1000,512)';
+
+% Perform beamforming
+das = midprocess.das();
+das.channel_data = channel_data;
+das.scan = scan;
+b_data = das.go()
+b_data.plot([],[],[dynamic_range])
