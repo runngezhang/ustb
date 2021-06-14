@@ -433,4 +433,31 @@ classdef beamformed_data < uff
              close(vidObj)
         end
     end
+    
+    methods (Access = public )
+         function save_as_gif(h,filename)
+             if nargin < 2
+                FileName = uiputfile('movie.gif','Save gif loop as');
+             else
+                FileName = filename;
+             end
+
+             for i = 1:size(h.all_images,3)
+                 
+                 set(h.image_handle,'CData',h.all_images(:,:,i));
+                 title([h.in_title,', Frame = ',num2str(i),'/',num2str(size(h.all_images,3))]);
+                 drawnow();
+                 frame = getframe(gcf);
+                 im = frame2im(frame);
+                 [imind,cm] = rgb2ind(im,256);
+                 
+                 if i == 1
+                     imwrite(imind,cm,FileName,'gif', 'Loopcount',inf);
+                 else
+                     imwrite(imind,cm,FileName,'gif','WriteMode','append');
+                 end
+                 
+             end
+         end
+    end
 end
