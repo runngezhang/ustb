@@ -46,7 +46,7 @@ classdef wave < uff
     
     %% compulsory properties
     properties  (Access = public)
-        wavefront         % WAVEFRONT enumeration class
+        wavefront = uff.wavefront.spherical % WAVEFRONT enumeration class
         source            % POINT class
         apodization       % APODIZATION class
     end
@@ -55,8 +55,8 @@ classdef wave < uff
     properties  (Access = public)
         probe              % PROBE class 
         event              % index of the transmit/receive event this wave refers to
-        delay              % time interval between t0 and acquistion start
-        sound_speed        % reference speed of sound
+        delay = 0          % time interval between t0 and acquistion start
+        sound_speed = 1540 % reference speed of sound
     end
     
     
@@ -73,10 +73,7 @@ classdef wave < uff
             h = h@uff(varargin{:});
             
             % default values
-            h.source        = uff.point();
-            h.wavefront     = uff.wavefront.spherical;
-            h.sound_speed   = 1540; 
-            h.delay         = 0;    
+            if ~isa(h.source, 'uff.point'), h.source = uff.point(); end
         end
     end
     

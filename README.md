@@ -28,6 +28,7 @@ compared to the previous version
 
 the main changes are:
 
+* added function to save to GIF
 * added the FLUST simulator 
 * improved implementation of demodulation and filtering
 * improved download tool to include dowloads from Google drive
