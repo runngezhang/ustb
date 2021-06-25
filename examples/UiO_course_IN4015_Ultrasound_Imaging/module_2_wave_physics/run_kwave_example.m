@@ -17,16 +17,7 @@
 %   Using multiple receive sensors
 %   One-way beamforming using the USTB.
 
-clearvars;
-
-% =========================================================================
-% K-wave SIMULATION
-% =========================================================================
-number_of_sensors = 4; % Define how many receive sensors with lambda/2 spacing
-dynamic_range = 40; % How many decibels to display in image
-%transmit_signal = 'sinus';
-transmit_signal = 'gaussian_pulse';
-
+function [channel_data, kgrid] = run_kwave_example(number_of_sensors,transmit_signal)
 % create the computational grid
 Nx = 128;           % number of grid points in the x (row) direction
 Ny = 128;           % number of grid points in the y (column) direction
@@ -68,9 +59,11 @@ sensor.mask = zeros(Nx, Ny);
 lambda = medium.sound_speed/source_freq;
 sensor_spacing = round(lambda/2 / dx);
 
-sensor.mask(Nx/16, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2) = 1;
+sensor.mask(Ny/32, Nx/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2) = 1;
+sensor_loc(1,:) = [kgrid.x_vec(Nx/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2) kgrid.y_vec(Ny/32)];
 for s = 1:number_of_sensors-1
-    sensor.mask(Nx/16, Ny/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2+sensor_spacing*s) = 1;
+    sensor.mask(Ny/32, Nx/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2+sensor_spacing*s) = 1;
+    sensor_loc(s+1,:) = [kgrid.x_vec(Nx/2-(number_of_sensors/2)*sensor_spacing+sensor_spacing/2+sensor_spacing*s) kgrid.y_vec(Ny/32) ];
 end
 
 %%
@@ -129,6 +122,8 @@ end
 probe = uff.linear_array();
 probe.pitch = lambda/2;
 probe.N = number_of_sensors;
+probe.geometry(:,1) = sensor_loc(:,1);
+probe.geometry(:,3) = 0;%sensor_loc(:,2);
 
 % Define the transmit sequence
 seq = uff.wave();
@@ -145,14 +140,4 @@ channel_data.sequence = seq;
 channel_data.sampling_frequency = 1./kgrid.dt;
 channel_data.initial_time = -lag*kgrid.dt;
 
-% Create scan
-scan = uff.linear_scan();
-scan.x_axis = linspace(-20/1000,20/1000,512)';
-scan.z_axis = linspace(0/1000,40/1000,512)';
-
-% Perform beamforming
-das = midprocess.das();
-das.channel_data = channel_data;
-das.scan = scan;
-b_data = das.go()
-b_data.plot([],[],[dynamic_range])
+end
