@@ -67,7 +67,6 @@ mid_MLA=midprocess.das();
 mid_MLA.channel_data=channel_data;
 mid_MLA.dimension = dimension.both();
 mid_MLA.scan=scan_MLA;
-mid_MLA.transmit_delay_model = transmit_delay_model.hybrid;
 mid_MLA.transmit_apodization.window=uff.window.scanline;
 mid_MLA.transmit_apodization.MLA = MLA;
 mid_MLA.transmit_apodization.MLA_overlap = MLA/2;
