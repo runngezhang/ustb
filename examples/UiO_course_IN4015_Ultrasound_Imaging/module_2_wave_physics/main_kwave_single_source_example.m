@@ -23,7 +23,7 @@ dynamic_range = 40; % How many decibels to display in image
 %transmit_signal = 'sinus';
 transmit_signal = 'gaussian_pulse';
 
-[channel_data, kgrid] = run_kwave_example(number_of_sensors,transmit_signal)
+[channel_data, kgrid] = run_kwave_simulation(number_of_sensors,transmit_signal)
 
 %%  
 % Reconstructing an image of the single source using the USTB.

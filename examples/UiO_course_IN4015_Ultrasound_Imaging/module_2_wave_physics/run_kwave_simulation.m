@@ -17,7 +17,7 @@
 %   Using multiple receive sensors
 %   One-way beamforming using the USTB.
 
-function [channel_data, kgrid] = run_kwave_example(number_of_sensors,transmit_signal)
+function [channel_data, kgrid] = run_kwave_simulation(number_of_sensors,transmit_signal)
 % create the computational grid
 Nx = 128;           % number of grid points in the x (row) direction
 Ny = 128;           % number of grid points in the y (column) direction
