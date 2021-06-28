@@ -31,7 +31,6 @@ transmit_signal = 'gaussian_pulse';
 % Create scan UFF object to define the set of pixels we want to beamform
 scan = uff.linear_scan();
 scan.x_axis = linspace(kgrid.x_vec(1),kgrid.x_vec(end),1024)';
-%scan.z_axis = linspace(kgrid.y_vec(1),kgrid.y_vec(end),1024)';
 scan.z_axis = linspace(0,30e-3,1024)';
 
 % Perform the beamforming using the DAS midprocess object
@@ -46,7 +45,7 @@ b_data.plot([],[],[dynamic_range])
 %% Your own receive beamforming
 % Now, your assignment is to implement a receive beamformer. However, most
 % of the code is allready written, so you simply have to get the receive
-% delay correct (thus finish line 65) and your image should be similar to
+% delay correct (thus finish line 67) and your image should be similar to
 % the one resulting from the USTB.
 
 % Allow me to extract the variables you need
@@ -85,9 +84,11 @@ set(gca,'fontsize',14);
 % To be commented...
 figure()
 subplot(211)
-imagesc(x_pixels);title('x-pixels');
+imagesc(scan.x_axis*1000,scan.z_axis*1000,x_pixels);title('x-pixels');
+xlabel('x [mm]');ylabel('y [mm]');axis image;
 subplot(212)
-imagesc(z_pixels);title('z-pixels');
+imagesc(scan.x_axis*1000,scan.z_axis*1000,z_pixels);title('z-pixels');
+xlabel('x [mm]');ylabel('y [mm]');axis image;
 
 figure(10);
 for i = 1:number_of_sensors
