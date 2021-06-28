@@ -83,24 +83,16 @@ set(gca,'fontsize',14);
 
 %% More indepth analysis of the partial and final results
 % To be commented...
-figure;
-for i = 1:number_of_sensors
-    subplot(number_of_sensors/2,number_of_sensors/2,i)
-    imagesc(scan.x_axis*1000,scan.z_axis*1000,real(delayed_data(:,:,i)));
-    xlabel('x [mm]');ylabel('y [mm]');
-    title(['Delayed signal from sensor ',num2str(i)])
-end
-
 figure()
 subplot(211)
 imagesc(x_pixels);title('x-pixels');
 subplot(212)
 imagesc(z_pixels);title('z-pixels');
 
-figure;
+figure(10);
 for i = 1:number_of_sensors
     subplot(number_of_sensors/2,number_of_sensors/2,i)
-    imagesc(scan.x_axis*1000,scan.z_axis*1000,receive_delay(:,:,i));
+    imagesc(scan.x_axis*1000,scan.z_axis*1000,real(delayed_data(:,:,i)));
     xlabel('x [mm]');ylabel('y [mm]');
     title(['Delayed signal from sensor ',num2str(i)])
 end
