@@ -41,6 +41,6 @@ Next, add to path (see below).
 
 There are two ways to add to path:
 
-1. Create a new file called "startup.m", and add the path through this file by writing
+1. Create a new file called "startup.m" in your working directory, and add the path in this file by writing
     + addpath *filepath, i.e. Documents/MATLAB/k-wave*
 2. Pathtool: open pathtool in Matlab by writing pathtool in the Command Window in Matlab. Click "Add Folder" to add k-wave and field-ii to path, and press save. To use this method, you have to have Admin rights on the computer you are using.
