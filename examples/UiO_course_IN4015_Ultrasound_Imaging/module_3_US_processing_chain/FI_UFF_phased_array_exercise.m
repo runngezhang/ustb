@@ -131,7 +131,7 @@ linkaxes(ax);
 
 % Finally, let's use the scan convert tool in the USTB to scan convert the
 % image from beam space to pixel space.
-[img_sc, Xs, Zs] = tools.scan_convert(db(abs(img./max(img(:)))),angles,radius,512,512);
+[img_sc, Xs, Zs] = tools.scan_convert(db(abs(img./max(img(:)))),angles,radial_distance,512,512);
 
 figure;
 imagesc(Xs*1000, Zs*1000, img_sc);
