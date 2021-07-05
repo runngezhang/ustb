@@ -8,6 +8,10 @@
 %   to create images of higher quality. We will explore this in this
 %   exercise.
 %
+%   Litterature:
+%           See section 1.7.3 and 1.7.4 in the compendium "Software 
+%                               Beamforming in Medical Ultrasound Imaging". 
+%
 %   The exercise:
 %       Part I : Implement both coherent compounding and incoherent
 %       compounding of the individual plane wave images. You can read about
