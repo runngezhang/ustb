@@ -63,7 +63,7 @@ delayed_data = zeros(scan.N_x_axis,scan.N_z_axis,channel_data.N_elements);
 img = zeros(scan.N_x_axis,scan.N_z_axis);
 
 for rx = 1:channel_data.N_elements
-    % See equation (2) in Grythe, or equation (1.15) in Rindal.
+    % See equation (2) in Grythe, or equation (1.15) in Rindal (remember to convert (1.15) to seconds).
     receive_delay(:,:,rx) = 0;
     delayed_data(:,:,rx) = interp1(channel_data.time,ch_data(:,rx),receive_delay(:,:,rx),'linear',0);
     img = img + delayed_data(:,:,rx);
@@ -74,7 +74,7 @@ figure;
 b_data.plot(subplot(121),['USTB image'],[dynamic_range])
 subplot(122)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
-xlabel('x [mm]');ylabel('y [mm]')
+xlabel('x [mm]');ylabel('z [mm]')
 colormap gray; caxis([-dynamic_range 0])
 colorbar; axis image;
 title('Your image');
@@ -85,23 +85,24 @@ set(gca,'fontsize',14);
 figure()
 subplot(211)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,x_pixels);title('x-pixels');
-xlabel('x [mm]');ylabel('y [mm]');axis image;
+xlabel('x [mm]');ylabel('z [mm]');axis image;
 subplot(212)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,z_pixels);title('z-pixels');
-xlabel('x [mm]');ylabel('y [mm]');axis image;
+xlabel('x [mm]');ylabel('z [mm]');axis image;
 
+% Plot the delayed signal from each sensor
 figure(10);
 for i = 1:number_of_sensors
     subplot(number_of_sensors/2,number_of_sensors/2,i)
     imagesc(scan.x_axis*1000,scan.z_axis*1000,real(delayed_data(:,:,i)));
-    xlabel('x [mm]');ylabel('y [mm]');
+    xlabel('x [mm]');ylabel('z [mm]');
     title(['Delayed signal from sensor ',num2str(i)])
 end
 
 figure;
 imagesc(scan.x_axis*1000,scan.z_axis*1000,sum(real(delayed_data),3))
-xlabel('x [mm]');ylabel('y [mm]')
+xlabel('x [mm]');ylabel('z [mm]')
 figure;
 imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
-xlabel('x [mm]');ylabel('y [mm]')
+xlabel('x [mm]');ylabel('z [mm]')
 colormap gray; caxis([-20 0])
