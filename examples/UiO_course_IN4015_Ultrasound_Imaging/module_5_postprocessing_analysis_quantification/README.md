@@ -23,8 +23,9 @@ the compendium "Software Beamforming in Medical Ultrasound Imaging"
 Comparing your implementation to the USTB implementation.
        
 ### Part III
-Implement a mix of coherent and incoherent compounding
+Implement a mix of coherent and incoherent compounding.
 
 ### Part IV
-Compare the resoluting resolution from coherent, incoherent and mix compounding
-
+Compare the resoluting resolution from coherent, incoherent and mixed compounding.
+Discuss how the different compounding strategies influenced the resolution
+of the point scatter at line 191.
