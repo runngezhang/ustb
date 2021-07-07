@@ -1,4 +1,4 @@
-# Module 5 - Coherent and incoherent compounding
+# Module 5 - Postprocessing analysis quantification
 This example and exercise demonstrates what we in the USTB defines as
 postprocessing processing objects. Thus, how one can work with the
 delayed data after beamforming. More specific we are going to look at
