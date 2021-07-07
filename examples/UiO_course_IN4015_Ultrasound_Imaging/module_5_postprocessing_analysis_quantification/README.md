@@ -18,7 +18,7 @@ Implement both coherent compounding and incoherent
 compounding of the individual plane wave images. You can read about
 coherent and incoherent compounding in section 1.7.3 and 1.7.4 in
 the compendium "Software Beamforming in Medical Ultrasound Imaging"
-
+Note: the weight w is 1 in both cases here.
 ### Part II
 Comparing your implementation to the USTB implementation.
        
