@@ -6,6 +6,11 @@
 % More specifically, we will look at the coherence factor.
 % See the parts below (please add them here as well, Helene and Erlend ;))
 %
+%
+% NB! Datasettet må lastes ned fra  google drive (feiler når det lastes ned
+% fra ustb.no tror jeg).
+% Google drive link: https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
+
 
 filename = 'FieldII_STAI_dynamic_range.uff';
 url='http://ustb.no/datasets/';      % if not found downloaded from here
