@@ -1,4 +1,4 @@
-%% Cherent and incoherent compounding
+%% Coherent and incoherent compounding
 %   This example and exercise demonstrates what we in the USTB defines as
 %   postprocessing processing objects. Thus, how one can work with the
 %   delayed data after beamforming. More specific we are going to look at
@@ -96,7 +96,8 @@ channel_data.N_waves
 single_image = zeros(scan.N_x_axis,scan.N_z_axis);
 coherent_compounding = zeros(scan.N_x_axis,scan.N_z_axis);
 incoherent_compounding = zeros(scan.N_x_axis,scan.N_z_axis);
-mix_compounding = zeros(scan.N_x_axis,scan.N_z_axis);
+% mix_compounding = zeros(scan.N_x_axis,scan.N_z_axis); % Moved to be able
+% to work in sections.
 
 % Extract single image
 single_image = db(abs(image_matrix(:,:,37)./max(max(image_matrix(:,:,37)))));
@@ -138,12 +139,11 @@ incoherent_compounding_USTB = b_data_incoherent.get_image();
 
 %% Compare your implementation of incoherent compounding to the USTB
 
-
 %% Exercise Part III : Implement a mix of coherent and incoherent compounding
 % We can also to something inbetween full coherent and incoherent
-% compounding. We can for example split the low quality images into two,
-% and sum the different halfs coherently, and sum those two images
-% incoherently. If you for example split the transmit angles into to as:
+% compounding. We can for example split the low quality images into two parts,
+% and sum the different halfs coherently, before summing those two images
+% incoherently. If you for example split the transmit angles into two as:
 
 angles_first_sum = 1:channel_data.N_waves/2;
 angles_second_sum = round(channel_data.N_waves/2)+1:channel_data.N_waves;
@@ -151,6 +151,7 @@ angles_second_sum = round(channel_data.N_waves/2)+1:channel_data.N_waves;
 % And then sum the plane wave images resulting from the angles_first_sum
 % coherently, and then angles_first_sum coherently. Before they both are
 % combined incoherently.
+mix_compounding = zeros(scan.N_x_axis,scan.N_z_axis);
 
 
 %% Exercise Part IV : Compare the resoluting resolution from coherent, 
@@ -158,9 +159,9 @@ angles_second_sum = round(channel_data.N_waves/2)+1:channel_data.N_waves;
 % Below, we provide the code to plot the lateral line, the line along the
 % x-axis, through the point scatter at 19 mm. Often resolution is measured
 % as the Full Width Half Maximum (FWHM) equal to the width at -6 dB.
-% Improved resolution means smaller width of the point scatter. Discuss how
-% the different compounding strategies influenced the resolution of this
-% point scatter.
+% Improved resolution means smaller width of the point scatter. 
+% Discuss how the different compounding strategies influenced the resolution
+% of this point scatter.
 line = 191;
 
 figure()
