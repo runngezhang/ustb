@@ -6,10 +6,23 @@
 % More specifically, we will look at the coherence factor.
 % See the parts below (please add them here as well, Helene and Erlend ;))
 %
+% Part I:
+%     Calculate the coherence factor as in equation 1.38 in the compendium
+% Part II:
+%     Check your implementation agains the USTB implementation
+% Part III:
+%     Analyse the delayed data
+% Part IV:
+%     Applying the CF as a image weight to the DAS image
+% Part V:
+%     Compare DAS CF to DAS image
 %
-% NB! Datasettet må lastes ned fra  google drive (feiler når det lastes ned
-% fra ustb.no tror jeg).
-% Google drive link: https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
+% % NB! Datasettet må lastes ned fra  google drive (feiler når det lastes ned
+% % fra ustb.no tror jeg).
+
+% The dataset might fail to download, if so download it from this Google 
+% drive link:
+% https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
 
 
 filename = 'FieldII_STAI_dynamic_range.uff';
@@ -79,7 +92,7 @@ b_data_cf = cf.go()
 das_CF_USTB = b_data_cf.get_image();
 USTB_coherence_factor = cf.CF.get_image('none');
 
-%% Part II : Check you implementation agains the USTB implementation
+%% Part II : Check your implementation agains the USTB implementation
 
 
 %% Part III : Let's analyse the delayed data
