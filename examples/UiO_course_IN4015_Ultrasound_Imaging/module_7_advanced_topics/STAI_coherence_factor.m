@@ -59,7 +59,7 @@ incoherent_sum = zeros(scan.N_x_axis,scan.N_z_axis);
 CF = zeros(scan.N_x_axis,scan.N_z_axis);
 das_weighted_CF = zeros(scan.N_x_axis,scan.N_z_axis);
 
-%% Exercise Par I: Calculate the coherence factor as in equation 1.38 in the compendium
+%% Exercise Part I: Calculate the coherence factor as in equation 1.38 in the compendium
 % Calculate the coherent sum over the elements (the expression in the
 % numerator (above the brøkstrek ;))
 coherent_sum;
@@ -79,7 +79,7 @@ b_data_cf = cf.go()
 das_CF_USTB = b_data_cf.get_image();
 USTB_coherence_factor = cf.CF.get_image('none');
 
-%% Part II : Check you implmentation agains the USTB implementation
+%% Part II : Check you implementation agains the USTB implementation
 
 
 %% Part III : Let's analyse the delayed data
