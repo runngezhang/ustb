@@ -131,6 +131,9 @@ caxis([-200 0])
 % conventional DAS image multiplied with the CF as an image weight as in
 % equation 1.39. Implement this yourself and verify that it is equal to the
 % USTB implementation.
+[weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
+das_img_signal = b_data_das.get_image('none').*weights;
+das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
 
 das_weighted_CF = das_img_signal.*CF;
 das_weighted_CF = db(abs(das_weighted_CF./max(das_weighted_CF(:))));
@@ -150,9 +153,6 @@ das_weighted_CF = db(abs(das_weighted_CF./max(das_weighted_CF(:))));
 % next course! Or read the reference
 channel_data.print_authorship
 
-[weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
-das_img_signal = b_data_das.get_image('none').*weights;
-das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
 %%
 [~,x_start] = min(abs(scan.x_axis+14/1000));
 [~,x_stop] = min(abs(scan.x_axis-14/1000));
