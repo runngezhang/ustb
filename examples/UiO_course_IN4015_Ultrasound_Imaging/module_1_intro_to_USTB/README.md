@@ -37,7 +37,7 @@ Next, extract the folder on your preferred spot, and add to path (see below).
 Go to the download site at (https://field-ii.dk/), and download the file for your operating system. Extract the folder (twice) at your preferred location.
 Next, add to path (see below).
 
-### Add to path
+## How to add to path
 
 There are two ways to add to path:
 

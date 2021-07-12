@@ -1,11 +1,11 @@
-%% Exercise for Module 7 : Advanced Methods in Ultrasound Imaging
+% % Exercise for Module 7 : Advanced Methods in Ultrasound Imaging
 % In this exercise you will exlore more advanced beamforming, often known
 % as adaptive beamforming. Because we are adapting the beamforming process
 % to the data we have received.
-%
+% 
 % More specifically, we will look at the coherence factor.
-% See the parts below (please add them here as well, Helene and Erlend ;))
-%
+% See the parts below.
+% 
 % Part I:
 %     Calculate the coherence factor as in equation 1.38 in the compendium
 % Part II:
@@ -17,11 +17,8 @@
 % Part V:
 %     Compare DAS CF to DAS image
 %
-% % NB! Datasettet må lastes ned fra  google drive (feiler når det lastes ned
-% % fra ustb.no tror jeg).
-
-% The dataset might fail to download, if so download it from this Google 
-% drive link:
+% The dataset might fail to download, if so delete it from the folder data,
+% and download it from this Google drive link:
 % https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
 
 
