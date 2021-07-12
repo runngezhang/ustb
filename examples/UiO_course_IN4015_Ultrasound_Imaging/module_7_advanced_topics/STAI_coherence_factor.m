@@ -89,7 +89,7 @@ b_data_cf = cf.go()
 das_CF_USTB = b_data_cf.get_image();
 USTB_coherence_factor = cf.CF.get_image('none');
 
-%% Part II : Check your implementation agains the USTB implementation
+%% Part II : Check your implementation against the USTB implementation
 
 
 %% Part III : Let's analyse the delayed data
@@ -173,7 +173,7 @@ imagesc(scan.x_axis*1000, scan.z_axis*1000, das_img_db)
 colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS');
 subplot(222)
 imagesc(scan.x_axis*1000, scan.z_axis*1000, das_weighted_CF)
-colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS wighted with CF');
+colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS weighted with CF');
 subplot(2,2,[3 4]);hold on;
 plot(scan.x_axis(x_start:x_stop)*1000,linspace(0,-50,x_stop-x_start+1),'k--','LineWidth',2,'Displayname','DAS')
 plot(scan.x_axis(x_start:x_stop)*1000,mean(das_img_db(350:470,x_start:x_stop),1)-max(mean(das_img_db(350:470,x_start:x_stop),1)),'b','LineWidth',2,'Displayname','DAS weighted CF')
