@@ -12,3 +12,15 @@ After your implementation of the total propagation delay, your method will
 be compared to USTB built in method. In this module we are aiming to minimize
 the difference between your method and USTBs method. Finally we will implement
 your method to make your own image.
+
+
+## Litterature
+
+
+## The exercise:
+### Part I
+Do phased array beamforming with the USTB
+
+### Part II
+Implement your own beambased beamforming from scratch.
+

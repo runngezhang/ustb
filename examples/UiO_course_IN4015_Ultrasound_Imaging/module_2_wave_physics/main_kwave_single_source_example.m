@@ -6,11 +6,22 @@
 % beamforming the data into an image. Thus we will do "receive beamforming"
 % and reconstruct an image of the single source. 
 %
-% Your task is to implement your own pixelbased receive beamformer. For
-% background you can read page 1 and 2 of Jørgen Grythes document
+% Your task is to implement your own pixelbased receive beamformer. 
+% 
+% Litterature:
+% For background you can read page 1 and 2 of Jørgen Grythes document
 % "Beamforming Algorithms - beamformers" or pages 22-29. However, remember
 % that here you only need to to receive beamforming.
 %
+% The exercise :
+% Part I
+%    Implement your own pixelbased beamforming.
+% Part II
+%     Reflect and answer the following questions:
+%     + What happens when you change the number of sensors from 4 to 16?
+%     + What happens when you change the transmit signal from *gauusian_pulse* to *sinus*?
+%     + What is illustrated in Figure 10? Explain the images and how they differ from the final image.
+% 
 % Author: Ole Marius Hoel Rindal
 clearvars;
 
@@ -42,7 +53,7 @@ b_data = das.go()
 % Visualise the image
 b_data.plot([],[],[dynamic_range])
 
-%% Your own receive beamforming
+%% Part I : Your own receive beamforming
 % Now, your assignment is to implement a receive beamformer. However, most
 % of the code is allready written, so you simply have to get the receive
 % delay correct (thus finish line 67) and your image should be similar to

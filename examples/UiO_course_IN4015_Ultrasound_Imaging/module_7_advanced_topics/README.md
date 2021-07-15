@@ -6,21 +6,25 @@ to the data we have received.
 
 More specifically, we will look at the coherence factor.
 
-## Part I:
+## Litterature:
+See equation 1.38 in the compendium.
+
+## The exercise:
+### Part I
     Calculate the coherence factor as in equation 1.38 in the compendium.
 
-## Part II:
+### Part II
     Check your implementation agains the USTB implementation.
 
-## Part III:
+### Part III
     Analyse the delayed data:
     + How will your observations of delay affect the coherence factor?
     + What is the image you plot of the coherent sum equal to?
 
-## Part IV:
+### Part IV
     Applying the CF as a image weight to the DAS image
 
-## Part V:
+### Part V
     Compare DAS CF to DAS image:
     + What are the differences between the results of the conventional DAS to the image with DAS weighted with CF?
     + What happened to the object from x = 0 to x = 2.5 mm at z = 30 mm in the two plots?

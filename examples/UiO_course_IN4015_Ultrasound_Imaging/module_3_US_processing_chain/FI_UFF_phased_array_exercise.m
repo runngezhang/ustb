@@ -4,6 +4,16 @@
 % phased array beambased beamforming to get the same image as was produced
 % with the USTB.
 %
+% Litterature:
+% 
+% 
+% The exercise:
+%   Part I
+%   Do phased array beamforming with the USTB
+% 
+%   Part II
+%   Implement your own beambased beamforming from scratch.
+% 
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
 % Date: 28.05.21
 
@@ -22,7 +32,7 @@ filename='Verasonics_P2-4_parasternal_long_small.uff';
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
 
-%% Do phased array beamforming with the USTB
+%% Part I : Do phased array beamforming with the USTB
 % Define the scan
 depth_axis=linspace(0e-3,110e-3,1024).';
 azimuth_axis=zeros(channel_data.N_waves,1);
@@ -53,7 +63,7 @@ ylabel('Depth [mm]');xlabel(['angle'])
 colormap gray; caxis([-60 0]); title('USTB image in "beamspace"');
 
 
-%% Implement beambased beamforming from scratch
+%% Part II : Implement beambased beamforming from scratch
 % Please see the slides on beambased beamforming, and especially the slide
 % on the geometry og beambased beamforming on tips on how to implement
 % this.
