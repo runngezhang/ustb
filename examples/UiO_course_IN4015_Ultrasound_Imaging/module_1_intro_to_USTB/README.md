@@ -1,9 +1,9 @@
 # Module 1 Introduction to the USTB: Recording and prosessing ultrasound images
 
-The lab assignments for module 1 consists of using existing USTB examples for part 2 and 3 of the exercise.
+The lab assignments for module 1 consists of using existing USTB examples for part 1 and 2 of the exercise.
 
-+ Part 2: Get to know the UltraSound ToolBox by running and getting familiar with multiple examples 
-	+ Pure USTB examples. Run at least three of these
++ Part 1: Get to know the UltraSound ToolBox by running and getting familiar with multiple examples 
+	+ Pure USTB examples. Run at least five of these
 		+ examples/uff/CPWC_UFF_Alpinion.m
 		+ examples/uff/CPWC_UFF_Verasonics.m
 		+ examples/uff/FI_UFF_phased_array.m
@@ -19,12 +19,6 @@ The lab assignments for module 1 consists of using existing USTB examples for pa
 	+ USTB + Field II examples. You need to install and add ultrasound simulator Field II (https://field-ii.dk/) to your MATLAB path. See simple description below.
 		+ examples/field_II/STAI_L11_resolution_phantom.m
 		
-+ Part 3 : Recording an image of a CIRS phantom using the Verasonics Vantage 256 scanner. 
-	+ Using the example available at examples/verasonics/FI_linear_array_L11.m record two images
-		+ One image of the point scatteres in the phantom
-		+ One image of the cysts in the phantom
-	+ Using the example available at examples/verasonics/FI_phased_array_P4.m record an image covering both the point scatteres and the cysts in the phantom.
-
 ## How to download k-wave and Field II
 
 ### K-wave
@@ -39,8 +33,15 @@ Next, add to path (see below).
 
 ## How to add to path
 
-There are two ways to add to path:
+There are multiple ways to add to path:
 
 1. Create a new file called "startup.m" in your working directory, and add the path in this file by writing
     + addpath *filepath, i.e. Documents/MATLAB/k-wave*
 2. Pathtool: open pathtool in Matlab by writing pathtool in the Command Window in Matlab. Click "Add Folder" to add k-wave and field-ii to path, and press save. To use this method, you have to have Admin rights on the computer you are using.
+3. Use the command "addpath()" and possibly "genpath()" in the MATLAB command window.
+
++ Part 2 : Recording an image of a CIRS phantom using the Verasonics Vantage 256 scanner. 
+	+ Using the example available at examples/verasonics/FI_linear_array_L11.m record two images
+		+ One image of the point scatteres in the phantom
+		+ One image of the cysts in the phantom
+	+ Using the example available at examples/verasonics/FI_phased_array_P4.m record an image covering both the point scatteres and the cysts in the phantom.
