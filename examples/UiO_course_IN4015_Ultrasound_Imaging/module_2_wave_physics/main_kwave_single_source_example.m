@@ -11,7 +11,8 @@
 % Litterature:
 % For background you can read page 1 and 2 of Jørgen Grythes document
 % "Beamforming Algorithms - beamformers" or pages 22-29. However, remember
-% that here you only need to to receive beamforming.
+% that here you only need to do receive beamforming. The compendium for the
+% course is relevant, especially section 1.7.
 %
 % The exercise :
 % Part I
@@ -21,6 +22,16 @@
 %     + What happens when you change the number of sensors from 4 to 16?
 %     + What happens when you change the transmit signal from *gausian_pulse* to *sinus*?
 %     + What is illustrated in Figure 10? Explain the images and how they differ from the final image.
+%
+% Part III
+%     Visualize the channel data before and after delay for point scatter
+%     First of all, this plot is much better if you use e.g. 16 elements on
+%       line 32. So you should go ahead and change that. 
+% 
+%     Your task here is to use the plot above to find the location of the point
+%     scatter. Use the cursor in the plot and find the maximum, and simply set
+%     the correct value in the variables below for the x and z locatino of the
+%     scatterer, also known as the point spread function (PSF).
 % 
 % Author: Ole Marius Hoel Rindal
 clearvars;
@@ -29,7 +40,7 @@ clearvars;
 % Run K-wave SIMULATION
 % =========================================================================
 % Set up some parameters
-number_of_sensors = 4; % Define how many receive sensors with lambda/2 spacing
+number_of_sensors = 16; % Define how many receive sensors with lambda/2 spacing
 dynamic_range = 40; % How many decibels to display in image
 %transmit_signal = 'sinus';
 transmit_signal = 'gaussian_pulse';
@@ -75,7 +86,7 @@ img = zeros(scan.N_x_axis,scan.N_z_axis);
 
 for rx = 1:channel_data.N_elements
     % See equation (2) in Grythe, or equation (1.15) in Rindal (remember to convert (1.15) to seconds).
-    receive_delay(:,:,rx) = 0;
+    receive_delay(:,:,rx) = -inf;
     delayed_data(:,:,rx) = interp1(channel_data.time,ch_data(:,rx),receive_delay(:,:,rx),'linear',0);
     img = img + delayed_data(:,:,rx);
 end
@@ -121,37 +132,62 @@ imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
 xlabel('x [mm]');ylabel('z [mm]')
 colormap gray; caxis([-20 0])
 
-%% Visualize the channel data before and after delay for line with point scatter
-[~,scatter_pos_indx_x] = min(abs(scan.x_axis))
-[~,scatter_pos_indx_z] = min(abs(scan.z_axis))
+%% Part III: Visualize the channel data before and after delay for point scatter
+% First of all, this plot is much better if you use e.g. 16 elements on
+% line 32. So you should go ahead and change that. 
+% 
+% Your task here is to use the plot above to find the location of the point
+% scatter. Use the cursor in the plot and find the maximum, and simply set
+% the correct value in the variables below for the x and z locatino of the
+% scatterer, also known as the point spread function (PSF).
+%
+% Describe what you see in the resulting figure and interpret the results.
+
+psf_x_loc = 0/1000; % Find the x-location of the point scatter in m
+psf_z_loc = 0/1000; % FInd the z-location of the point scatter in m
+
+[~,scatter_pos_indx_x] = min(abs(scan.x_axis-psf_x_loc))
+[~,scatter_pos_indx_z] = min(abs(scan.z_axis-psf_z_loc))
 
 figure
-subplot(121)
-imagesc(1:channel_data.N_elements,channel_data.time,real(channel_data.data));hold on;
-ylim([0 max(channel_data.time)])
-plot(squeeze(receive_delay(scatter_pos_indx_z,scatter_pos_indx_x,:)),'r','LineWidth',2)
+subplot(231)
+imagesc(1:channel_data.N_elements,channel_data.time*channel_data.sound_speed*1000,real(channel_data.data));hold on;
+ylim([0 max(channel_data.time*channel_data.sound_speed*1000)])
+plot(squeeze(receive_delay(scatter_pos_indx_z,scatter_pos_indx_x,:)*channel_data.sound_speed*1000),'r','LineWidth',2)
 legend('Delay');
-ylabel('Time [s]');xlabel('Element');
+ylabel('Depth [mm]');xlabel('Element');
 title('Received channel data before delay');
-subplot(122)
+subplot(234)
 imagesc(1:channel_data.N_elements,scan.z_axis*1000,squeeze(real(delayed_data(:,end/2,:))));
 ylabel('z [mm]');xlabel('Element');
 title('Received channel data after delay');
-%%
-figure
+
 for e = 1:channel_data.N_elements
-   subplot(221); hold on;
+   ax{1} = subplot(232); hold on;
    element_data = channel_data.data(:,e)./max(channel_data.data(:,e))/2; %Normalized to max 0.5
-   plot(channel_data.time,element_data+e);hold all;
-   xlim([0 max(channel_data.time)])
+   plot(channel_data.time*channel_data.sound_speed*1000,element_data+e);hold all;
+   ylabel('Element');xlabel('Depth [mm]')
+   xlim([0 max(channel_data.time*channel_data.sound_speed*1000)])
+   ylim([0 channel_data.N_elements+1])
+   title('Received channel data before delay');
    
-   subplot(222); hold on;
+   ax{2} = subplot(235); hold on;
    element_data = squeeze(real(delayed_data(:,end/2,e)))./max(squeeze(real(delayed_data(:,end/2,e))))/2; %Normalized to max 0.5
-   plot(element_data+e);hold all;
+   plot(scan.z_axis*1000,element_data+e);hold all;
+   ylabel('Element');xlabel('Depth [mm]')
+   ylim([0 channel_data.N_elements+1])
+   title('Received channel data after delay');
 end
-
-subplot(2,2,[3 4]);hold all;
-plot(channel_data.time*channel_data.sound_speed*1000,sum(channel_data.data,2),'DisplayName','Sum of undelayed data');
-plot(scan.z_axis*1000,sum(squeeze(real(delayed_data(:,end/2,:))),2),'DisplayName','Sum of delayed data');
+ 
+ax{3} = subplot(2,3,[3,6]);hold all;
+plot(channel_data.time*channel_data.sound_speed*1000,sum(channel_data.data,2),'LineWidth',2,'DisplayName','Sum of undelayed data');
+plot(scan.z_axis*1000,sum(squeeze(real(delayed_data(:,end/2,:))),2),'LineWidth',2,'DisplayName','Sum of delayed data');
 xlim([0 max(channel_data.time*channel_data.sound_speed*1000)])
+ylabel('Amplitude');xlabel('Depth [mm]');legend show
+title('Combined channel data');
 
+for a = 1:length(ax)
+    set(ax{a},'YDir','reverse');
+    set(ax{a},'XDir','reverse');
+    camroll(ax{a},90)
+end
