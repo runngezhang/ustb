@@ -19,7 +19,7 @@
 % Part II
 %     Reflect and answer the following questions:
 %     + What happens when you change the number of sensors from 4 to 16?
-%     + What happens when you change the transmit signal from *gauusian_pulse* to *sinus*?
+%     + What happens when you change the transmit signal from *gausian_pulse* to *sinus*?
 %     + What is illustrated in Figure 10? Explain the images and how they differ from the final image.
 % 
 % Author: Ole Marius Hoel Rindal
@@ -92,7 +92,8 @@ title('Your image');
 set(gca,'fontsize',14);
 
 %% More indepth analysis of the partial and final results
-% To be commented...
+% The next plot is displaying the spatial value of the x-value and z-value of the
+% coordinates of the pixels.
 figure()
 subplot(211)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,x_pixels);title('x-pixels');
@@ -101,7 +102,9 @@ subplot(212)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,z_pixels);title('z-pixels');
 xlabel('x [mm]');ylabel('z [mm]');axis image;
 
-% Plot the delayed signal from each sensor
+%%
+% Plot the delayed signal from each individual sensor. What is different
+% between these images and the final image?
 figure(10);
 for i = 1:number_of_sensors
     subplot(number_of_sensors/2,number_of_sensors/2,i)
@@ -112,8 +115,43 @@ end
 
 figure;
 imagesc(scan.x_axis*1000,scan.z_axis*1000,sum(real(delayed_data),3))
-xlabel('x [mm]');ylabel('z [mm]')
+xlabel('x [mm]');ylabel('z [mm]'); title('Image of the signal before envelope detection');
 figure;
 imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
 xlabel('x [mm]');ylabel('z [mm]')
 colormap gray; caxis([-20 0])
+
+%% Visualize the channel data before and after delay for line with point scatter
+[~,scatter_pos_indx_x] = min(abs(scan.x_axis))
+[~,scatter_pos_indx_z] = min(abs(scan.z_axis))
+
+figure
+subplot(121)
+imagesc(1:channel_data.N_elements,channel_data.time,real(channel_data.data));hold on;
+ylim([0 max(channel_data.time)])
+plot(squeeze(receive_delay(scatter_pos_indx_z,scatter_pos_indx_x,:)),'r','LineWidth',2)
+legend('Delay');
+ylabel('Time [s]');xlabel('Element');
+title('Received channel data before delay');
+subplot(122)
+imagesc(1:channel_data.N_elements,scan.z_axis*1000,squeeze(real(delayed_data(:,end/2,:))));
+ylabel('z [mm]');xlabel('Element');
+title('Received channel data after delay');
+%%
+figure
+for e = 1:channel_data.N_elements
+   subplot(221); hold on;
+   element_data = channel_data.data(:,e)./max(channel_data.data(:,e))/2; %Normalized to max 0.5
+   plot(channel_data.time,element_data+e);hold all;
+   xlim([0 max(channel_data.time)])
+   
+   subplot(222); hold on;
+   element_data = squeeze(real(delayed_data(:,end/2,e)))./max(squeeze(real(delayed_data(:,end/2,e))))/2; %Normalized to max 0.5
+   plot(element_data+e);hold all;
+end
+
+subplot(2,2,[3 4]);hold all;
+plot(channel_data.time*channel_data.sound_speed*1000,sum(channel_data.data,2),'DisplayName','Sum of undelayed data');
+plot(scan.z_axis*1000,sum(squeeze(real(delayed_data(:,end/2,:))),2),'DisplayName','Sum of delayed data');
+xlim([0 max(channel_data.time*channel_data.sound_speed*1000)])
+
