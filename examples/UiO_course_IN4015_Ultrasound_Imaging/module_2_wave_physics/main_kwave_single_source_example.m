@@ -9,7 +9,7 @@ clearvars;
 % Run K-wave SIMULATION
 % =========================================================================
 % Set up some parameters
-number_of_sensors = 16; % Define how many receive sensors with lambda/2 spacing
+number_of_sensors = 4; % Define how many receive sensors with lambda/2 spacing
 dynamic_range = 40; % How many decibels to display in image
 %transmit_signal = 'sinus';
 transmit_signal = 'gaussian_pulse';
