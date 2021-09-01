@@ -5,11 +5,11 @@ continuous apertures. The aim is to understand how the beam width and
 depth-of-focus varies with aperture size, frequency, and focal point.  
 
 This second exercise demonstrates how to run a simulation in k-wave to record a
-signal originating from a single source. We are then showing how we can
-import the recorded signal into a channel data UFF object in the USTB and
-beamforming the data into an image. Thus, we will do "receive beamforming"
-and reconstruct an image of the single source. Your task is to implement
-your own pixel-based receive beamformer.
+signal originating from a single source. We then show how this recorded signal
+can be written to a UFF channel data object in the USTB and beamformed into an image. 
+Thus, we will do "receive beamforming" and reconstruct an image of the single source.
+Your task is to implement your own pixel-based receive beamformer and verify that
+your results are similar to the results from the USTB.
 
 ## Litterature:
 The first example is covered in this weeks lecture and reading material.  
