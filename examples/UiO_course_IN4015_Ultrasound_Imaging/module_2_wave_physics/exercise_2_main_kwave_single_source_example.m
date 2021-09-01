@@ -101,7 +101,7 @@ imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
 xlabel('x [mm]');ylabel('z [mm]')
 colormap gray; caxis([-20 0])
 
-%% Part III: Visualize the channel data before and after delay for point scatter
+%% Part II: Visualize the channel data before and after delay for point scatter
 % First of all, this plot is much better if you use e.g. 16 elements on
 % line 32. So you should go ahead and change that. 
 % 
