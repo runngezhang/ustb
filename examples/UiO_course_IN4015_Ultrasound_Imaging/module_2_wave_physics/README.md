@@ -2,7 +2,7 @@
 
 This module contains two exercises. The first  concerns transmit beams from 
 continuous apertures. The aim is to understand how the beam width and 
-depth-of-focus varies with aperture size, frequency, and focal direction.  
+depth-of-focus varies with aperture size, frequency, and focal point.  
 
 This second exercise demonstrates how to run a simulation in k-wave to record a
 signal originating from a single source. We are then showing how we can
@@ -21,10 +21,11 @@ section 1.7.
 
 ## Delivery:
 Please provide a written report that
+
 - report the results you are asked to find
 - answers the question raised
-- provides the main code lines needed to solve the questions
-- all plots needed 
+- provides the main code lines needed to solve the questions directly in the report
+- all plots needed for supporting your arguments when answering the exercise parts
 
 The report should be uploaded to [devilry.ifi.uio.no](devilry.ifi.uio.no).  
 **Deadline for uploading: Tuesday 2 September at 12:00. **
@@ -106,25 +107,36 @@ Assuming no delays between beams or images, what is the corresponding frame rate
 The m-code that needs modification is *exercise_2_main_kwave_single_source_example.m*.  
 You also need the supporting m-code *run_kwave_simulation.m*.
 
+An important part of this exercise is to try to understand what is going on in the code you are running.
+A hot tip for running this code is to run it per "block". You can run the higlighted block
+using "ctrl+enter".
+
 ### Part I
 Implement your own receive pixel-based beamformer. Your assignment is to 
 implement a receive beamformer. However, most of the code is allready written,
 so you simply have to get the receive delay correct (thus finish line 58) 
-and your image should be similar to the one resulting from the USTB.
+and your image should be similar to the one resulting from the USTB. 
+See the reference to the litterature above. 
 
 ### Part II
-+ Change from 4 elements to 16 elements on line 12. How did this change the beamformed image?
-+ What happens when you change the transmit signal from *gausian_pulse* to *sinus*? How did this influence the image?
+
++ Change from 4 elements to 16 elements on line 12. How does this change the beamformed image?
++ What happens when you change the transmit signal from *gausian_pulse* to *sinus*? How did this influence the beamformed image?
 
 ### Part III
-Visualize the channel data before and after delay for a the single source
-First of all, this plot is much better if you use e.g. 16 elements so make sure you use this on line 12. 
+Visualize the channel data before and after delay for the single source.
+First of all, this plot is much better if you use e.g. 16 elements use the 
+*gausian_pulse* as the signal transmitted so make sure you use this on line 12 and 15. 
 
-Your task here is to use the plot above to find the location of the source.
+Your task is to use the plot in Figure 9 to find the location of the source.
 Use the cursor in the plot and find the maximum, and simply set the correct
-value in the variables below for the x and z location of the source.
+value in the variables on line 87 and 88 for the x and z location of the source.
+
+Discuss and interpret the resulting plots in figure 11.
 
 ### Part IV
-Reflect and answer the following questions:
-+ What is illustrated in Figure 10? Explain the images and how they differ from the final image.
 
+Discuss and answer the following questions:
+
++ What is illustrated in Figure 13? Explain the images and how they differ from the final image.
++ What is illustrated in Figure 14? Explain the images.
