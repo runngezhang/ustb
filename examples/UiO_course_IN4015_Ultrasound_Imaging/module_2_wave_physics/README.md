@@ -109,22 +109,22 @@ You also need the supporting m-code *run_kwave_simulation.m*.
 ### Part I
 Implement your own receive pixel-based beamformer. Your assignment is to 
 implement a receive beamformer. However, most of the code is allready written,
-so you simply have to get the receive delay correct (thus finish line 67) 
+so you simply have to get the receive delay correct (thus finish line 58) 
 and your image should be similar to the one resulting from the USTB.
 
 ### Part II
++ Change from 4 elements to 16 elements on line 12. How did this change the beamformed image?
++ What happens when you change the transmit signal from *gausian_pulse* to *sinus*? How did this influence the image?
+
+### Part III
 Visualize the channel data before and after delay for a the single source
-First of all, this plot is much better if you use e.g. 16 elements on
-line 32. So you should go ahead and change that. 
+First of all, this plot is much better if you use e.g. 16 elements so make sure you use this on line 12. 
 
 Your task here is to use the plot above to find the location of the source.
 Use the cursor in the plot and find the maximum, and simply set the correct
 value in the variables below for the x and z location of the source.
 
-### Part III
+### Part IV
 Reflect and answer the following questions:
-+ What happens when you change the number of sensors from 4 to 16?
-+ What happens when you change the transmit signal from *gausian_pulse* to *sinus*?
 + What is illustrated in Figure 10? Explain the images and how they differ from the final image.
-+ What is illustrated in Figure 
 
