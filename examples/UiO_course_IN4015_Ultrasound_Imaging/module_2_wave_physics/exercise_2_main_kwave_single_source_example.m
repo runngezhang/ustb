@@ -1,46 +1,17 @@
 % Receive beamforming on k-wave single source exampler
 %
-% This example demonstrates how to run a simulation in k-wave recording a
-% single originating from a single source. We are then showing how we can
-% import the recorded signal into a channel data UFF object in the USTB and
-% beamforming the data into an image. Thus we will do "receive beamforming"
-% and reconstruct an image of the single source. 
-%
-% Your task is to implement your own pixelbased receive beamformer. 
-% 
-% Litterature:
-% For background you can read page 1 and 2 of Jørgen Grythes document
-% "Beamforming Algorithms - beamformers" or pages 22-29. However, remember
-% that here you only need to do receive beamforming. The compendium for the
-% course is relevant, especially section 1.7.
-%
-% The exercise :
-% Part I
-%    Implement your own pixelbased beamforming.
-% Part II
-%     Reflect and answer the following questions:
-%     + What happens when you change the number of sensors from 4 to 16?
-%     + What happens when you change the transmit signal from *gausian_pulse* to *sinus*?
-%     + What is illustrated in Figure 10? Explain the images and how they differ from the final image.
-%
-% Part III
-%     Visualize the channel data before and after delay for point scatter
-%     First of all, this plot is much better if you use e.g. 16 elements on
-%       line 32. So you should go ahead and change that. 
-% 
-%     Your task here is to use the plot above to find the location of the point
-%     scatter. Use the cursor in the plot and find the maximum, and simply set
-%     the correct value in the variables below for the x and z locatino of the
-%     scatterer, also known as the point spread function (PSF).
+% See the README.md in the current folder module_2_wave_physics
 % 
 % Author: Ole Marius Hoel Rindal
 clearvars;
+clear all;
+close all;
 
 % =========================================================================
 % Run K-wave SIMULATION
 % =========================================================================
 % Set up some parameters
-number_of_sensors = 16; % Define how many receive sensors with lambda/2 spacing
+number_of_sensors = 4; % Define how many receive sensors with lambda/2 spacing
 dynamic_range = 40; % How many decibels to display in image
 %transmit_signal = 'sinus';
 transmit_signal = 'gaussian_pulse';
@@ -62,7 +33,8 @@ das.scan = scan;
 b_data = das.go()
 
 % Visualise the image
-b_data.plot([],[],[dynamic_range])
+f = figure(9)
+b_data.plot(f,['Beamformed image using USTB'],[dynamic_range])
 
 %% Part I : Your own receive beamforming
 % Now, your assignment is to implement a receive beamformer. However, most
@@ -92,7 +64,7 @@ for rx = 1:channel_data.N_elements
 end
 
 %% Plotting the image from the USTB and the resulting images from your beamformer
-figure;
+figure(10)
 b_data.plot(subplot(121),['USTB image'],[dynamic_range])
 subplot(122)
 imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
@@ -102,39 +74,9 @@ colorbar; axis image;
 title('Your image');
 set(gca,'fontsize',14);
 
-%% More indepth analysis of the partial and final results
-% The next plot is displaying the spatial value of the x-value and z-value of the
-% coordinates of the pixels.
-figure()
-subplot(211)
-imagesc(scan.x_axis*1000,scan.z_axis*1000,x_pixels);title('x-pixels');
-xlabel('x [mm]');ylabel('z [mm]');axis image;
-subplot(212)
-imagesc(scan.x_axis*1000,scan.z_axis*1000,z_pixels);title('z-pixels');
-xlabel('x [mm]');ylabel('z [mm]');axis image;
-
-%%
-% Plot the delayed signal from each individual sensor. What is different
-% between these images and the final image?
-figure(10);
-for i = 1:number_of_sensors
-    subplot(number_of_sensors/2,number_of_sensors/2,i)
-    imagesc(scan.x_axis*1000,scan.z_axis*1000,real(delayed_data(:,:,i)));
-    xlabel('x [mm]');ylabel('z [mm]');
-    title(['Delayed signal from sensor ',num2str(i)])
-end
-
-figure;
-imagesc(scan.x_axis*1000,scan.z_axis*1000,sum(real(delayed_data),3))
-xlabel('x [mm]');ylabel('z [mm]'); title('Image of the signal before envelope detection');
-figure;
-imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
-xlabel('x [mm]');ylabel('z [mm]')
-colormap gray; caxis([-20 0])
-
 %% Part III: Visualize the channel data before and after delay for point scatter
-% First of all, this plot is much better if you use e.g. 16 elements on
-% line 32. So you should go ahead and change that. 
+% First of all, this plot is much better if you use e.g. 16 elements use the 
+% *gausian_pulse* as the signal transmitted so make sure you use this on line 12 and 15. 
 % 
 % Your task here is to use the plot above to find the location of the point
 % scatter. Use the cursor in the plot and find the maximum, and simply set
@@ -149,7 +91,7 @@ psf_z_loc = 0/1000; % FInd the z-location of the point scatter in m
 [~,scatter_pos_indx_x] = min(abs(scan.x_axis-psf_x_loc))
 [~,scatter_pos_indx_z] = min(abs(scan.z_axis-psf_z_loc))
 
-figure
+figure(11);clf;
 subplot(231)
 imagesc(1:channel_data.N_elements,channel_data.time*channel_data.sound_speed*1000,real(channel_data.data));hold on;
 ylim([0 max(channel_data.time*channel_data.sound_speed*1000)])
@@ -157,10 +99,12 @@ plot(squeeze(receive_delay(scatter_pos_indx_z,scatter_pos_indx_x,:)*channel_data
 legend('Delay');
 ylabel('Depth [mm]');xlabel('Element');
 title('Received channel data before delay');
+colormap default
 subplot(234)
 imagesc(1:channel_data.N_elements,scan.z_axis*1000,squeeze(real(delayed_data(:,end/2,:))));
 ylabel('z [mm]');xlabel('Element');
 title('Received channel data after delay');
+colormap default
 
 for e = 1:channel_data.N_elements
    ax{1} = subplot(232); hold on;
@@ -191,3 +135,47 @@ for a = 1:length(ax)
     set(ax{a},'XDir','reverse');
     camroll(ax{a},90)
 end
+
+%% Part IV: More indepth analysis of the partial and final results
+% The next plot is displaying the spatial value of the x-value and z-value of the
+% coordinates of the pixels.
+figure(12);clf
+subplot(211)
+imagesc(scan.x_axis*1000,scan.z_axis*1000,x_pixels);title('x-pixels');
+xlabel('x [mm]');ylabel('z [mm]');axis image; colormap default
+subplot(212)
+imagesc(scan.x_axis*1000,scan.z_axis*1000,z_pixels);title('z-pixels');
+xlabel('x [mm]');ylabel('z [mm]');axis image; colormap default
+
+%%
+% Plot the delayed signal from each individual sensor. What is different
+% between these images and the final image?
+figure(13);clf;
+for i = 1:number_of_sensors
+    if number_of_sensors == 16
+        subplot(number_of_sensors/4,number_of_sensors/4,i)
+    elseif number_of_sensors == 4
+        subplot(number_of_sensors/2,number_of_sensors/2,i)
+    else
+       warning('This plot looks best with 4 or 16 sensors :)');
+       subplot(number_of_sensors/2,number_of_sensors/2,i)
+    end
+    imagesc(scan.x_axis*1000,scan.z_axis*1000,real(delayed_data(:,:,i)));
+    xlabel('x [mm]');ylabel('z [mm]');
+    title(['Delayed signal from sensor ',num2str(i)])
+end
+
+
+%%
+% Plot the image before and after envelope detection
+%
+figure(14);clf
+subplot(121)
+imagesc(scan.x_axis*1000,scan.z_axis*1000,sum(real(delayed_data),3))
+xlabel('x [mm]');ylabel('z [mm]'); title('Image of the signal before envelope detection');
+axis image
+subplot(122)
+imagesc(scan.x_axis*1000,scan.z_axis*1000,db(abs(img./max(img(:)))))
+xlabel('x [mm]');ylabel('z [mm]'); title('Image of the signal after envelope detection');
+colormap gray; caxis([-dynamic_range 0])
+axis image
