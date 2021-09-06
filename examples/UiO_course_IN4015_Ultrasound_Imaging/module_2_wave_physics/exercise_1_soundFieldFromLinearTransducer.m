@@ -2,8 +2,13 @@
 % Script used in Module 2, IN3015/4015, 
 % Dept. of Informatics, University of Oslo, Norway
 %
-% Version 1.0
-% August 31, 2021.
+% Version 1.0: August 31, 2021.
+%
+% Version 1.1: September 3, 2021
+%	       Made dx independent of frequency, i.e.
+% 	       changed "dx=c/f0/3" to "dx=c/f0/3*(f0/2.5e6)"
+%              OBS: Choose f0<2.5e6 to have proper sampling.
+%
 %
 
 
@@ -32,7 +37,8 @@ cycles = 20;            % No of cycles in pulse
 % Defining grid
 Nx = 256;           % number of grid points in the x (row) direction
 Ny = Nx/2;            % number of grid points in the y (column) direction
-dx = c/f0/3;    	% grid point spacing in the x direction [m]
+% dx = c/f0/3;    	% grid point spacing in the x direction [m]
+dx = c/f0/3*(f0/2.5e6);    % grid point spacing in the x direction [m]
 dy = dx;            % grid point spacing in the y direction [m]
 x_offset = 20;      % x-position of transducer center [grid points]
 
