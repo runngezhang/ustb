@@ -1,24 +1,14 @@
 %% Phased array beamforming
-% In this example we see how one can do phased array imaging with the USTB.
-% In the second part of the script is an exercise where one can implement
-% phased array beambased beamforming to get the same image as was produced
-% with the USTB.
 %
-% Litterature:
-% 
-% 
-% The exercise:
-%   Part I
-%   Do phased array beamforming with the USTB
-% 
-%   Part II
-%   Implement your own beambased beamforming from scratch.
-% 
+% See the README.md in the current folder module_3_US_processing_chain
+%
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
 % Date: 28.05.21
+% Updated 14.09.21
 
 % Clear up
 close all;
+clear all;
 
 % Read the data, poentitally download it
 url='http://ustb.no/datasets/';      % if not found downloaded from here
@@ -33,6 +23,10 @@ tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
 
 %% Part I : Do phased array beamforming with the USTB
+% Here you dont't have to implemen anything. Just run the code as it is.
+% You will later compare your beamformed image with the image resulting
+% from this beamforming. Just try to understand what is going on.
+
 % Define the scan
 depth_axis=linspace(0e-3,110e-3,1024).';
 azimuth_axis=zeros(channel_data.N_waves,1);
@@ -41,11 +35,11 @@ for n=1:channel_data.N_waves
 end
 scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
 
-% Call the midprocessor delay and sum 
+% Call the midprocessor to do convnetional delay and sum beamforming 
 mid=midprocess.das();
 mid.channel_data=channel_data;
 mid.scan=scan;
-mid.dimension = dimension.both()
+mid.dimension=dimension.both()
 mid.transmit_apodization.window=uff.window.scanline;
 mid.receive_apodization.window=uff.window.none;
 b_data = mid.go();
@@ -53,7 +47,7 @@ b_data = mid.go();
 %% Plot image
 b_data.plot(3,['DAS'],[],[],[],[],[],'dark');
 
-% Get the first frame from UFF beamformed data object
+% Get the first frame from the UFF beamformed data object
 ustb_img = b_data.get_image('none');
 ustb_img = ustb_img(:,:,1)./max(max((ustb_img(:,:,1))));
 
@@ -87,8 +81,8 @@ sample_time = channel_data.time;                 % The time in seconds for each 
 for t = 1:N_transmits 
     angles(t) = channel_data.sequence(t).source.azimuth; % Transmit angles (in radians)
     offset(t) = channel_data.sequence(t).delay;         % Extract the offset for each transmit event
-                                        % this offset is used to get
-                                        % the correct time zero convention
+                                                        % this offset is used to get
+                                                        % the correct time zero convention
 end
 
 % Let us define the radial distance
