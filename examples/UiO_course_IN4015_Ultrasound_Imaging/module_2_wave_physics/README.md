@@ -114,14 +114,17 @@ using "ctrl+enter".
 ### Part I
 Implement your own receive pixel-based beamformer. Your assignment is to 
 implement a receive beamformer. However, most of the code is allready written,
-so you simply have to get the receive delay correct (thus finish line 58) 
-and your image should be similar to the one resulting from the USTB. 
+so you simply have to get the receive delay correct (thus update the line
+that says <------ UPDATE THIS LINE) under #Part I# in the code.
+Your image should be similar to the one resulting from the USTB. 
 See the reference to the litterature above. 
 
 ### Part II
 
-+ Change from 4 elements to 16 elements on line 12. How does this change the beamformed image?
-+ What happens when you change the transmit signal from *gausian_pulse* to *sinus*? How did this influence the beamformed image?
++ Change from 4 elements to 16 elements where you find <------- CHANGE NUMBER OF ELEMENTS HERE 
+towards the top of the script. How does this change the beamformed image?
++ What happens when you change the transmit signal from *gausian_pulse* to *sinus*? 
+How did this influence the beamformed image?
 
 ### Part III
 Visualize the channel data before and after delay for the single source.
@@ -130,7 +133,8 @@ First of all, this plot is much better if you use e.g. 16 elements use the
 
 Your task is to use the plot in Figure 9 to find the location of the source.
 Use the cursor in the plot and find the maximum, and simply set the correct
-value in the variables on line 87 and 88 for the x and z location of the source.
+value in the variables where you see "<------- UPDATE THIS LINE" for the x and z
+location of the source.
 
 Discuss and interpret the resulting plots in figure 11.
 
