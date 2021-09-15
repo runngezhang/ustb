@@ -16,8 +16,9 @@ local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long_small.uff';
-%filename='FieldII_P4_point_scatterers.uff';
+%filename='Verasonics_P2-4_parasternal_long_small.uff';
+filename='FieldII_P4_point_scatterers.uff';
+
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
@@ -142,3 +143,36 @@ imagesc(Xs*1000, Zs*1000, img_sc);
 ylabel(['z [mm]']); xlabel('x [mm]');
 colormap gray;caxis([-60 0])
 title('Your image scan converted')
+
+%% Part III : Optional exercise : Inspecting receive apodization 
+% In this exercise you will inspect how the receive apodization influences
+% the image.
+
+% Let's take the same setup for the midprocessor we used in part I
+% Call the midprocessor to do convnetional delay and sum beamforming 
+mid=midprocess.das();
+mid.channel_data=channel_data;
+mid.scan=scan;
+mid.dimension=dimension.both()
+mid.transmit_apodization.window=uff.window.scanline;
+mid.receive_apodization.window=uff.window.none; 
+b_data = mid.go();
+
+b_data.plot([],['DAS no receive apodization'],[],[],[],[],[],'dark');
+
+% Notice that we for the receive apodization used a "none" window. Meaning
+% that we simply weighted all the receive elements the same for the full image
+% Now, you should change it to uff.window.hamming and set the f# to e.g 2 by commenting
+% out and filling out the lines below. You should run this with
+% both with the cardiac dataset and the dataset with only point scatterers.
+
+%mid.receive_apodization.window =    %<--- UNCOMMENT AND FILL OUT THIS LINE
+%mid.receive_apodization.f_number =  %<--- UNCOMMENT AND FILL OUT THIS LINE
+
+b_data_with_rx_apod = mid.go();
+b_data_with_rx_apod.plot([],['DAS with receive apodization'],[],[],[],[],[],'dark');
+
+% In the report, answer the following questions:
+% What happened to the images when you changed the receive apodization? 
+% Is it easiest to see the changes in the cardiac dataset or the dataset
+% with point scatterers?
