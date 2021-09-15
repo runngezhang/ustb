@@ -18,7 +18,7 @@ well as 1.9. However, the other sections prior to 1.5 is also very relevant.
 But remember that you are implementing a beambased beamformer, while the compendium
 describes the pixel based beamformer in the USTB.
 
-%% Datasets
+## Datasets
 You have two available datasets you can use for this exercise
 
 + Verasonics_P2-4_parasternal_long_small.uff which is a in-vivo cardiac dataset
@@ -49,20 +49,20 @@ include to compensate for the transmit part of the propagation delay as
 well as handling multiple transmits.
 
 Pseudocode for the beambased phased array beamformer you will implement
-for each transmit
-    calculate the transmit part and the receive part of the delay for
-    every receive channel. Remember to calculate the delays in seconds
-    not distance, and remember to subtract the offset for each transmit
-    event to get a correct time zero convention.
+    for each transmit
+        calculate the transmit part and the receive part of the delay for
+        every receive channel. Remember to calculate the delays in seconds
+        not distance, and remember to subtract the offset for each transmit
+        event to get a correct time zero convention.
 
-    for each receive channel
-        use your calculated delays to timedelay the channeldata by
-        interpolating (using interp1) for each dept sample for each transmit
-        the call to interp1 might look like this:
-        interp1(sample_time, rfData(:,r,t)', delays(t,:,r))'
-            where r is the current receive channel and t is the current transmit
-            you allready have sample_time and rfData, and need to calculate the delays
-            as described in the first loop.
+        for each receive channel
+            use your calculated delays to timedelay the channeldata by
+            interpolating (using interp1) for each dept sample for each transmit
+            the call to interp1 might look like this:
+            interp1(sample_time, rfData(:,r,t)', delays(t,:,r))'
+                where r is the current receive channel and t is the current transmit
+                you allready have sample_time and rfData, and need to calculate the delays
+                as described in the first loop.
 
 The resulting beamformed image should be stored in the variable img, and the rest
 of the code will compare it to the implementation in the USTB. When they are similar
