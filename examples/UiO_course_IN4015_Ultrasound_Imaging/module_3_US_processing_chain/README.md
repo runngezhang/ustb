@@ -66,7 +66,9 @@ for each transmit
 
 The resulting beamformed image should be stored in the variable img, and the rest
 of the code will compare it to the implementation in the USTB. When they are similar
-you are done with the exercise.
+you are done with the exercise. We only show differences larger than -100 dB. 
+Differences smaller than -90 dB can be ignored, since they most likely originate from  numerical
+differences resulting from minor differences in implementation.
 
 ### Optional Part III :  Inspecting receive apodization 
 This part is optional, meaning it will not be required to pass this exercise. 

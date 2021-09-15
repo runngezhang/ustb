@@ -108,12 +108,13 @@ img = zeros(N_depth,N_transmits);                % Buffer for the final image
             % where r is the current receive channel and t is the current transmit
             % you allready have sample_time and rfData, but need to calculate
             % the propriate delays
-
+            
 %Normalize the image to maximum value = 1
-img = img./max(img(:));
+if max(img(:)) ~= 0
+    img = img./max(img(:));
+end
 
-% Plot the image you created and compare with the USTB image. The
-% difference between them should be 0
+% Plot the image you created and compare with the USTB image.
 figure;
 subplot(131)
 imagesc(db(abs(img)));
@@ -127,12 +128,17 @@ caxis([-60 0])
 ax(2) = gca();
 title('USTB image')
 
+%We only show differences larger than -100 dB. Differences smaller than
+% -90 dB can be ignored, since they most likely originate from  numerical
+% differences resulting from minor differences in implementation.
 subplot(133)
-imagesc(db(abs(img))-db(abs(ustb_img)));
+imagesc(db(abs(img-ustb_img)));
 colorbar
 ax(3) = gca();
+caxis([-100 0])
 title('The difference');
 linkaxes(ax);
+colormap jet
 
 % Finally, let's use the scan convert tool in the USTB to scan convert the
 % image from beam space to pixel space.
