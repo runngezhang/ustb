@@ -72,7 +72,7 @@ you are done with the exercise.
 This part is optional, meaning it will not be required to pass this exercise. 
 However, you might leare something by doing it. In this exercise you will inspect
 how the receive apodization influences the image.  You should change the receive
-beamforming window to a Hamming window, and set the f# to2 by commenting out and filling
+beamforming window to a Hamming window, and set the f# to 2 by commenting out and filling
 out the lines marked with "<--- UNCOMMENT AND FILL OUT THIS LINE".
 
 In the report, answer the following questions:
