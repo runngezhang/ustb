@@ -49,6 +49,8 @@ include to compensate for the transmit part of the propagation delay as
 well as handling multiple transmits.
 
 Pseudocode for the beambased phased array beamformer you will implement
+
+
     for each transmit
         calculate the transmit part and the receive part of the delay for
         every receive channel. Remember to calculate the delays in seconds
