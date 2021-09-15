@@ -1,24 +1,14 @@
 %% Phased array beamforming
-% In this example we see how one can do phased array imaging with the USTB.
-% In the second part of the script is an exercise where one can implement
-% phased array beambased beamforming to get the same image as was produced
-% with the USTB.
 %
-% Litterature:
-% 
-% 
-% The exercise:
-%   Part I
-%   Do phased array beamforming with the USTB
-% 
-%   Part II
-%   Implement your own beambased beamforming from scratch.
-% 
+% See the README.md in the current folder module_3_US_processing_chain
+%
 % Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
 % Date: 28.05.21
+% Updated 14.09.21
 
 % Clear up
 close all;
+clear all;
 
 % Read the data, poentitally download it
 url='http://ustb.no/datasets/';      % if not found downloaded from here
@@ -26,13 +16,18 @@ local_path = [ustb_path(),'/data/']; % location of example data
 addpath(local_path);
 
 % Choose dataset
-filename='Verasonics_P2-4_parasternal_long_small.uff';
-%filename='FieldII_P4_point_scatterers.uff';
+%filename='Verasonics_P2-4_parasternal_long_small.uff';
+filename='FieldII_P4_point_scatterers.uff';
+
 % check if the file is available in the local path or downloads otherwise
 tools.download(filename, url, local_path);
 channel_data = uff.read_object([local_path, filename],'/channel_data');
 
 %% Part I : Do phased array beamforming with the USTB
+% Here you dont't have to implemen anything. Just run the code as it is.
+% You will later compare your beamformed image with the image resulting
+% from this beamforming. Just try to understand what is going on.
+
 % Define the scan
 depth_axis=linspace(0e-3,110e-3,1024).';
 azimuth_axis=zeros(channel_data.N_waves,1);
@@ -41,11 +36,11 @@ for n=1:channel_data.N_waves
 end
 scan=uff.sector_scan('azimuth_axis',azimuth_axis,'depth_axis',depth_axis);
 
-% Call the midprocessor delay and sum 
+% Call the midprocessor to do convnetional delay and sum beamforming 
 mid=midprocess.das();
 mid.channel_data=channel_data;
 mid.scan=scan;
-mid.dimension = dimension.both()
+mid.dimension=dimension.both()
 mid.transmit_apodization.window=uff.window.scanline;
 mid.receive_apodization.window=uff.window.none;
 b_data = mid.go();
@@ -53,7 +48,7 @@ b_data = mid.go();
 %% Plot image
 b_data.plot(3,['DAS'],[],[],[],[],[],'dark');
 
-% Get the first frame from UFF beamformed data object
+% Get the first frame from the UFF beamformed data object
 ustb_img = b_data.get_image('none');
 ustb_img = ustb_img(:,:,1)./max(max((ustb_img(:,:,1))));
 
@@ -87,8 +82,8 @@ sample_time = channel_data.time;                 % The time in seconds for each 
 for t = 1:N_transmits 
     angles(t) = channel_data.sequence(t).source.azimuth; % Transmit angles (in radians)
     offset(t) = channel_data.sequence(t).delay;         % Extract the offset for each transmit event
-                                        % this offset is used to get
-                                        % the correct time zero convention
+                                                        % this offset is used to get
+                                                        % the correct time zero convention
 end
 
 % Let us define the radial distance
@@ -113,12 +108,13 @@ img = zeros(N_depth,N_transmits);                % Buffer for the final image
             % where r is the current receive channel and t is the current transmit
             % you allready have sample_time and rfData, but need to calculate
             % the propriate delays
-
+            
 %Normalize the image to maximum value = 1
-img = img./max(img(:));
+if max(img(:)) ~= 0
+    img = img./max(img(:));
+end
 
-% Plot the image you created and compare with the USTB image. The
-% difference between them should be 0
+% Plot the image you created and compare with the USTB image.
 figure;
 subplot(131)
 imagesc(db(abs(img)));
@@ -132,12 +128,17 @@ caxis([-60 0])
 ax(2) = gca();
 title('USTB image')
 
+%We only show differences larger than -100 dB. Differences smaller than
+% -90 dB can be ignored, since they most likely originate from  numerical
+% differences resulting from minor differences in implementation.
 subplot(133)
-imagesc(db(abs(img))-db(abs(ustb_img)));
+imagesc(db(abs(img-ustb_img)));
 colorbar
 ax(3) = gca();
+caxis([-100 0])
 title('The difference');
 linkaxes(ax);
+colormap jet
 
 % Finally, let's use the scan convert tool in the USTB to scan convert the
 % image from beam space to pixel space.
@@ -148,3 +149,36 @@ imagesc(Xs*1000, Zs*1000, img_sc);
 ylabel(['z [mm]']); xlabel('x [mm]');
 colormap gray;caxis([-60 0])
 title('Your image scan converted')
+
+%% Part III : Optional exercise : Inspecting receive apodization 
+% In this exercise you will inspect how the receive apodization influences
+% the image.
+
+% Let's take the same setup for the midprocessor we used in part I
+% Call the midprocessor to do convnetional delay and sum beamforming 
+mid=midprocess.das();
+mid.channel_data=channel_data;
+mid.scan=scan;
+mid.dimension=dimension.both()
+mid.transmit_apodization.window=uff.window.scanline;
+mid.receive_apodization.window=uff.window.none; 
+b_data = mid.go();
+
+b_data.plot([],['DAS no receive apodization'],[],[],[],[],[],'dark');
+
+% Notice that we for the receive apodization used a "none" window. Meaning
+% that we simply weighted all the receive elements the same for the full image
+% Now, you should change it to uff.window.hamming and set the f# to e.g 2 by commenting
+% out and filling out the lines below. You should run this with
+% both with the cardiac dataset and the dataset with only point scatterers.
+
+%mid.receive_apodization.window =    %<--- UNCOMMENT AND FILL OUT THIS LINE
+%mid.receive_apodization.f_number =  %<--- UNCOMMENT AND FILL OUT THIS LINE
+
+b_data_with_rx_apod = mid.go();
+b_data_with_rx_apod.plot([],['DAS with receive apodization'],[],[],[],[],[],'dark');
+
+% In the report, answer the following questions:
+% What happened to the images when you changed the receive apodization? 
+% Is it easiest to see the changes in the cardiac dataset or the dataset
+% with point scatterers?
