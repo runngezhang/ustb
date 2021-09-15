@@ -18,6 +18,17 @@ well as 1.9. However, the other sections prior to 1.5 is also very relevant.
 But remember that you are implementing a beambased beamformer, while the compendium
 describes the pixel based beamformer in the USTB.
 
+## Delivery:
+Please provide a written report that
+
+- report the results you are asked to find
+- answers the question raised
+- provides the main code lines needed to solve the questions directly in the report
+- all plots needed for supporting your arguments when answering the exercise parts
+
+The report should be uploaded to [devilry.ifi.uio.no](devilry.ifi.uio.no).  
+**Deadline for uploading: Tuesday 21. September at 12:00. **
+
 ## Datasets
 You have two available datasets you can use for this exercise
 
