@@ -42,6 +42,7 @@ with the point scatterers. However, you should also try to use the cardiac datas
 in the lab. More information regarding this will be given in the lecture and the group lecture
 
 The two datasets can be downloaded directly from (if you have issues with the automatic download in the USTB):
+
 + https://www.ustb.no/datasets/FieldII_P4_point_scatterers.uff
 + https://www.ustb.no/datasets/Verasonics_P2-4_parasternal_long_small.uff
 
