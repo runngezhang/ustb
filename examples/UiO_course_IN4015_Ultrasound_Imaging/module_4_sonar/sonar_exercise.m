@@ -67,6 +67,6 @@ channel_data_compressed.data = match_filtered_data;
 b_data_compare = uff.beamformed_data(b_data);
 b_data_compare.data(:,1) = b_data.data./mean(b_data.data(:));
 b_data_compare.data(:,2) = b_data_compressed.data./mean(b_data_compressed.data(:));
-b_data_compare.plot([],['SONAR 1 = uncompressed, 2 = compressed'],[],[],[],[],'m','dark')
+b_data_compare.plot([],['SONAR 1 = raw, 2 = compressed'],[],[],[],[],'m','dark')
 caxis([-65 -10])
 colormap default
