@@ -41,6 +41,8 @@ match_filtered_data = zeros(2*channel_data.N_samples-1,channel_data.N_elements);
 
 % replace the copied data in the uff.channel_data object with the
 % pulse compressed data
+% NB! Look at the hints in the exercise text regarding which part of the
+% data you should write back to the channel_data_compressed.data... ;)
 channel_data_compressed.data = match_filtered_data;
 
 %% Plot and compare channel data compressed and not compressed
