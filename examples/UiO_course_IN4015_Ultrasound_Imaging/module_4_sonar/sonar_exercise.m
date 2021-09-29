@@ -1,6 +1,6 @@
-% Sonar imaging : Exercise for Module 3
+% Sonar imaging : Exercise for Module 4
 %
-%   See the README.md in the current folder for the exercise text.
+%   See the sonar_exercise.pdf in the current folder for the exercise text.
 %
 % Author: Ole Marius Hoel Rindal <21.09.2021> adapted from code and data
 %         from Roy Egard Hansen and Fabrice Prieur
