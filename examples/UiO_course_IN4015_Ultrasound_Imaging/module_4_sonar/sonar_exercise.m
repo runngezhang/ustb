@@ -14,6 +14,8 @@ channel_data.read('./sonar_ping.uff','/channel_data');
 channel_data.plot()
 
 %% Read a beamformed image of the raw uncompressed signal
+% This is an example of how the image beamformed fomr the raw uncompressed
+% signal might look like in part c) of the exercise
 b_data_raw= uff.beamformed_data();
 b_data_raw.read('./sonar_ping.uff','/b_data_raw');
 b_data_raw.plot([],['SONAR uncompressed'],[],[],[],[],'m','dark')
