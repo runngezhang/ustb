@@ -3,7 +3,7 @@
 %   See the sonar_exercise.pdf in the current folder for the exercise text.
 %
 % Author: Ole Marius Hoel Rindal <21.09.2021> adapted from code and data
-%         from Roy Egard Hansen and Fabrice Prieur
+%         from Roy Edgar Hansen and Fabrice Prieur
 
 clear all;
 close all;
