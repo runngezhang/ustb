@@ -13,8 +13,8 @@ close all;
 
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
-%filename='PICMUS_experiment_resolution_distortion.uff';
-filename='PICMUS_simulation_contrast_speckle.uff';
+filename='PICMUS_experiment_resolution_distortion.uff';
+%filename='PICMUS_simulation_contrast_speckle.uff';
 
 % checks if the data is in your data path, and downloads it otherwise.
 % The defaults data path is under USTB's folder, but you can change this
@@ -127,7 +127,24 @@ angles_second_sum = round(channel_data.N_waves/2)+1:channel_data.N_waves;
 mix_compounding; % <---- Implement coherent compounding here. You might need more than one line
 
 
-
+figure()
+subplot(221)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, single_image)
+colormap gray; axis image;colorbar; caxis([-60 0])
+title('Single transmit');
+subplot(222)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, coherent_compounding)
+colormap gray; axis image;colorbar; caxis([-60 0])
+title('Coherent Compounding')
+subplot(223)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, incoherent_compounding)
+colormap gray; axis image;colorbar;  caxis([-60 0])
+title('Incoherent Compounding')
+subplot(224)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, mix_compounding)
+colormap gray; axis image;colorbar;  caxis([-60 0])
+title('Mix Compounding')
+    
 %% Exercise Part IV : Compare the resoluting resolution from coherent, incoherent and mix compounding
 % Below, we provide the code to plot the lateral line, the line along the
 % x-axis, through the point scatter at 19 mm. Often resolution is measured
@@ -139,25 +156,6 @@ mix_compounding; % <---- Implement coherent compounding here. You might need mor
 % You need to make sure you are running this on the resolution dataset
 if contains(filename,'resolution')
     line = 156;
-    
-    figure()
-    subplot(221)
-    imagesc(scan.x_axis*1000, scan.z_axis*1000, single_image)
-    colormap gray; axis image;colorbar; caxis([-60 0])
-    title('Single transmit');
-    subplot(222)
-    imagesc(scan.x_axis*1000, scan.z_axis*1000, coherent_compounding)
-    colormap gray; axis image;colorbar; caxis([-60 0])
-    title('Coherent Compounding')
-    subplot(223)
-    imagesc(scan.x_axis*1000, scan.z_axis*1000, incoherent_compounding)
-    colormap gray; axis image;colorbar;  caxis([-60 0])
-    title('Incoherent Compounding')
-    subplot(224)
-    imagesc(scan.x_axis*1000, scan.z_axis*1000, mix_compounding)
-    colormap gray; axis image;colorbar;  caxis([-60 0])
-    title('Mix Compounding')
-    
     
     figure();hold all;
     plot(scan.x_axis*1000,single_image(line,:),'LineWidth',2,'DisplayName','Single Transmit Image');hold on;
