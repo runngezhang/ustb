@@ -1,7 +1,7 @@
 # Module 5 - Postprocessing analysis quantification
-This example and exercise demonstrates what we in the USTB defines as
+This example and exercise demonstrates what we in the USTB define as
 postprocessing processing objects. Thus, how one can work with the
-delayed data after beamforming. More specific we are going to look at
+delayed data after beamforming. More specificly we are going to look at
 coherent and incoherent compounding of individual plane wave images.
 When you do plane wave imaging you can create one low quality image
 from each transmit. These low quality images can be combined together
