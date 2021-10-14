@@ -5,8 +5,10 @@
 %
 %   Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
 
+clear all;
+close all;
+
 %% Getting the data
-%
 % We define the local path and the url where the data is stored
 
 % data location
@@ -71,10 +73,10 @@ mix_compounding = zeros(scan.N_x_axis,scan.N_z_axis);
 single_image = db(abs(image_matrix(:,:,37)./max(max(image_matrix(:,:,37)))));
 
 % Create coherent compounded image
-coherent_compounding = coherent_compounding_USTB;           % <---- Implement coherent compounding here
+coherent_compounding;           % <---- Implement coherent compounding here
 
 % Create incoherent compounded image
-incoherent_compounding = incoherent_compounding_USTB;         % <---- Implement incoherent compounding here
+incoherent_compounding;         % <---- Implement incoherent compounding here
 
 %% Verify your implementation of coherent and incoherent compounding
 % Using changing the dimension to "both" to get coherent compounding
@@ -122,7 +124,7 @@ angles_second_sum = round(channel_data.N_waves/2)+1:channel_data.N_waves;
 % Before they both are combined incoherently. Thus you have done mix
 % compounding. You can put the results in the mix_compounding variable:
 
-mix_compounding = coherent_compounding_USTB; % <---- Implement coherent compounding here. You might need more than one line
+mix_compounding; % <---- Implement coherent compounding here. You might need more than one line
 
 
 
