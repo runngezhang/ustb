@@ -4,6 +4,7 @@
 %   module_5_postprocessing_analysis_quantification.
 %
 %   Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%   Update 18.10.2021
 
 clear all;
 close all;
@@ -14,7 +15,7 @@ close all;
 % data location
 url='http://ustb.no/datasets/';      % if not found data will be downloaded from here
 filename='PICMUS_experiment_resolution_distortion.uff';
-%filename='PICMUS_simulation_contrast_speckle.uff';
+filename='PICMUS_simulation_contrast_speckle.uff';
 
 % checks if the data is in your data path, and downloads it otherwise.
 % The defaults data path is under USTB's folder, but you can change this
@@ -221,34 +222,38 @@ if contains(filename,'contrast')
     % We need to extract the signal before log compression and envelope detection
     % To make sure we get the signal I have used the USTB results, but feel
     % free to exchange with your solution and add your mixed compounding
+    
+    % First, let's get the images as one vector to easier "look up" the
+    % region of background and ROI
     single_image_signal = image_matrix(:,:,37);
-    coherent_compounding_signal = b_data_coherent.get_image('none');
-    incoherent_compounding_signal = b_data_incoherent.get_image('none');
-    %mix_compounding_signal 
+    single_image_signal = single_image_signal(:);
+    coherent_compounding_signal = b_data_coherent.data;
+    incoherent_compounding_signal = b_data_incoherent.data;
+    %mix_compounding_signal = mix_compounding_signal(:);
     
     % Estimate the mean and the background of all images
-    mean_background_single = mean(abs(idx_background(:).*single_image_signal(:)).^2)
-    mean_ROI_single = mean(abs(idx_ROI(:).*single_image_signal(:)).^2)
+    mean_background_single = mean(abs(single_image_signal(idx_background(:))).^2)
+    mean_ROI_single = mean(abs(single_image_signal(idx_ROI(:))).^2)
+
+    mean_background_coherent = mean(abs(coherent_compounding_signal(idx_background(:))).^2)
+    mean_ROI_coherent = mean(abs(coherent_compounding_signal(idx_ROI(:))).^2)
     
-    mean_background_coherent = mean(abs(idx_background(:).*coherent_compounding_signal(:)).^2)
-    mean_ROI_coherent = mean(abs(idx_ROI(:).*coherent_compounding_signal(:)).^2)
+    mean_background_incoherent = mean(abs(incoherent_compounding_signal(idx_background(:))).^2)
+    mean_ROI_incoherent = mean(abs(incoherent_compounding_signal(idx_ROI(:))).^2)
     
-    mean_background_incoherent = mean(abs(idx_background(:).*incoherent_compounding_signal(:)).^2)
-    mean_ROI_incoherent = mean(abs(idx_ROI(:).*incoherent_compounding_signal(:)).^2)
-    
-    %mean_background_mix = mean(abs(idx_background(:).*mix_compounding_signal(:)).^2)
-    %mean_ROI_mix = mean(abs(idx_ROI(:).*mix_compounding_signal(:)).^2)
+    %mean_background_mix = mean(abs(mix_compounding_signal(idx_background(:))).^2)
+    %mean_ROI_mix = mean(abs(mix_compounding_signal(idx_ROI(:))).^2)
     
     % Calculate Contrast Ratio
     CR_single = 10*log10(mean_ROI_single/mean_background_single)
     CR_coherent = 10*log10(mean_ROI_coherent/mean_background_coherent)
     CR_incoherent = 10*log10(mean_ROI_incoherent/mean_background_incoherent)
     %CR_mix = 10*log10(mean_ROI_mix/mean_background_mix)
-    
+
     figure
-    bar([CR_single CR_coherent CR_incoherent])
+    bar([CR_single CR_coherent CR_incoherent])% CR_mix])
     set(gca, 'YDir','reverse')
-    xticklabels({'Single Image','Coherent Compounded','Incoherent Compounding'})
+    xticklabels({'Single Image','Coherent Compounded','Incoherent Compounding'})%, 'Mix Compounding'})
     ylabel('CR [dB]')
     
     
