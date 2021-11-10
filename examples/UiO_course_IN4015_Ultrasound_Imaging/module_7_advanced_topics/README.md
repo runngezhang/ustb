@@ -42,7 +42,7 @@ https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=shari
 
 ### Part III
     Analyse the delayed data:
-    + How will your observations of delay affect the coherence factor?
+    + Describe how the plotted delayed data will affect the coherence factor?
     + What is the image you plot of the coherent sum equal to?
 
 ### Part IV
@@ -55,3 +55,8 @@ https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=shari
     + In the plot below we also plot the mean lateral line through the gradient
         from x = +-14mm at z = 40 to 48 mm. Theoretically, this should go from 0
         to -50 dB, which one is most correct?
+
+
+%%# Part VI: Calculate the contrast ratio for DAS and CF
+    Calculate the contrast ratio for DAS and CF and discuss these results in
+    relation to the response to the gradient in V.
