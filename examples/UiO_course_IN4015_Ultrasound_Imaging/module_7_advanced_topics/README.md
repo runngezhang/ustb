@@ -1,13 +1,11 @@
 # Module 7 : Advanced Methods in Ultrasound Imaging
 
-In this exercise you will exlore more advanced beamforming, often known
-as adaptive beamforming. Because we are adapting the beamforming process
-to the data we have received.
-
-More specifically, we will look at the coherence factor.
+In this exercise you will explore more advanced beamforming, known
+as adaptive beamforming since we are adapting the beamforming process
+to the data we have received. More specifically, we will investigate the coherence factor.
 
 ## Litterature:
-See equation 1.38 in the compendium.
+Section 1.8, 1.9 and 1.11 in the compendium, and specifically equation 1.38  for the coherence factor.
 
 ## Delivery: 
 Please provide a written report that
@@ -57,6 +55,6 @@ https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=shari
         to -50 dB, which one is most correct?
 
 
-%%# Part VI: Calculate the contrast ratio for DAS and CF
+### Part VI: Calculate the contrast ratio for DAS and CF
     Calculate the contrast ratio for DAS and CF and discuss these results in
     relation to the response to the gradient in V.
