@@ -55,6 +55,6 @@ https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=shari
         to -50 dB, which one is most correct?
 
 
-### Part VI: Calculate the contrast ratio for DAS and CF
+### Part VI
     Calculate the contrast ratio for DAS and CF and discuss these results in
     relation to the response to the gradient in V.
