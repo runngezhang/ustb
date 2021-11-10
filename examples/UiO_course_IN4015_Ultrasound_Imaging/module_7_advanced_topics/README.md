@@ -9,6 +9,30 @@ More specifically, we will look at the coherence factor.
 ## Litterature:
 See equation 1.38 in the compendium.
 
+## Delivery: 
+Please provide a written report that
+
+- report the results you are asked to find
+- answers the question raised
+- provides the main code lines needed to solve the questions directly in the report
+- all plots needed for supporting your arguments when answering the exercise parts and displaying your results.
+
+The report should be uploaded to [devilry.ifi.uio.no](devilry.ifi.uio.no).  
+**Deadline for uploading: Tuesday 23. November at 12:00. **
+
+## Datasets
+You will use the simulated Synthetic Transmit Aperture Imaging (STAI) dataset
+from the publication 
+    Rindal, O. M. H., Austeng, A., Fatemi, A., & Rodriguez-Molares, A. (2019).
+    The Effect of Dynamic Range Alterations in the Estimation of Contrast. 
+    IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 
+    66(7), 1198–1208. https://doi.org/10.1109/TUFFC.2019.2911267
+
+The dataset might fail to download, if so delete it from the folder data,
+and download it from this Google drive link:
+https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
+
+
 ## The exercise:
 ### Part I
     Calculate the coherence factor as in equation 1.38 in the compendium.
