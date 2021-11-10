@@ -1,41 +1,30 @@
-% % Exercise for Module 7 : Advanced Methods in Ultrasound Imaging
-% In this exercise you will exlore more advanced beamforming, often known
-% as adaptive beamforming. Because we are adapting the beamforming process
-% to the data we have received.
-% 
-% More specifically, we will look at the coherence factor.
-% See the parts below.
-% 
-% Part I:
-%     Calculate the coherence factor as in equation 1.38 in the compendium
-% Part II:
-%     Check your implementation agains the USTB implementation
-% Part III:
-%     Analyse the delayed data
-% Part IV:
-%     Applying the CF as a image weight to the DAS image
-% Part V:
-%     Compare DAS CF to DAS image
+% Module 7 : Advanced Methods in Ultrasound Imaging
 %
+%   See the README.md in the current folder
+%   module_7_advanced_topics.
+%
+%   Author: Ole Marius Hoel Rindal <olemarius@olemarius.net>
+%   Update 10.11.2021
+
+
 % The dataset might fail to download, if so delete it from the folder data,
 % and download it from this Google drive link:
 % https://drive.google.com/file/d/1xAXoEWhPcYjam9R1iuQ0gWKdDXiVlPCX/view?usp=sharing
-
 
 filename = 'FieldII_STAI_dynamic_range.uff';
 url='http://ustb.no/datasets/';      % if not found downloaded from here
 
 % Download data
-tools.download(filename, url, data_path);   
+tools.download(filename, url, data_path);
 
 % Read data
 channel_data = uff.channel_data();
 channel_data.read([data_path,filesep,filename],'/channel_data');
 
-%% Define scan
+% Defining an appropriate scan
 scan=uff.linear_scan('x_axis',linspace(-20e-3,20e-3,512).', 'z_axis', linspace(10e-3,52.5e-3,512).');
 
-%% Beamformer
+%% Set up the delay-and-sum beamforming using the midprocess
 mid = midprocess.das();
 mid.channel_data=channel_data;
 mid.scan=scan;
@@ -48,16 +37,29 @@ mid.transmit_apodization.window=uff.window.boxcar;
 mid.transmit_apodization.f_number=1.75;
 b_data_tx = mid.go();
 
-%% Conventional DAS image
+%% The beamformer just delayed the data, so to get the DAS image we need to
+% coherently compound the data, or rerun the midprocessor making sure we
+% coherently compound all dimensions.
 mid.dimension = dimension.both()
 b_data_das = mid.go();
 
-%%
+%% Display the resulting DAS image
 b_data_das.plot([],[],[80])
-%%
+
+%% Exercise Part I: Calculate the coherence factor as in equation 1.38 in the compendium
+% Let us first extract the "delayed data cube" as shown in slide 11 in the
+% lecture for module 7.
 data_cube = reshape(b_data_tx.data,scan.N_z_axis,scan.N_x_axis,channel_data.probe.N_elements);
 
-% To get the scalar M in equation 1.38 in the compendium you can do this.
+% Notice that the dimension of this data is equal to the number of
+% z-pixels X number of x-pixels X number of elements.
+size(data_cube)
+scan.N_z_axis
+scan.N_x_axis
+channel_data.N_elements
+
+% To get the scalar M in equation 1.38 in the compendium is dependent on
+% the number of active elements as decided by the receive weighting and
 % M is thus dependent on the receive apodization because different number
 % of receive elements are used for different depths (expanding aperture)
 w_rx = reshape(mid.receive_apodization.data,scan.N_z_axis,scan.N_x_axis,channel_data.probe.N_elements);
@@ -67,18 +69,17 @@ M = sum(w_rx,3);
 coherent_sum = zeros(scan.N_x_axis,scan.N_z_axis);
 incoherent_sum = zeros(scan.N_x_axis,scan.N_z_axis);
 CF = zeros(scan.N_x_axis,scan.N_z_axis);
-das_weighted_CF = zeros(scan.N_x_axis,scan.N_z_axis);
+das_weighted_CF_signal = zeros(scan.N_x_axis,scan.N_z_axis);
 
-%% Exercise Part I: Calculate the coherence factor as in equation 1.38 in the compendium
 % Calculate the coherent sum over the elements (the expression in the
 % numerator (above the brøkstrek ;))
-coherent_sum;
-% Calculate the incoherent sum over the elements (the sum in the expression 
+coherent_sum;                             %<----- Finish this line
+% Calculate the incoherent sum over the elements (the sum in the expression
 % in the denominator (below the brøkstrek ;))
-incoherent_sum;
+incoherent_sum;                               %<----- Finish this line
 % Use the coherent, incoherent sum and the scalar M for each pixel to
 % calculate the coherence factor as in expression 1.38.
-CF;
+CF;                                           %<----- Finish this line
 
 %% USTB implementation of coherence factor
 cf = postprocess.coherence_factor()
@@ -90,12 +91,13 @@ das_CF_USTB = b_data_cf.get_image();
 USTB_coherence_factor = cf.CF.get_image('none');
 
 %% Part II : Check your implementation against the USTB implementation
-
+% Do as you have done in earlier module exercises. Some numerical tolerance
+% might be needed. Display the results in your report.
 
 %% Part III : Let's analyse the delayed data
 % If we plot the delayed data for two pixels in the image, and deliberately
-% choosing to plot the delayed data around the point scatter at x = -5.5 mm 
-% and z = 35 +- 2 mm, the top plot, and right next to it in x = -4.7 mm with 
+% choosing to plot the delayed data around the point scatter at x = -5.5 mm
+% and z = 35 +- 2 mm, the top plot, and right next to it in x = -4.7 mm with
 % the same z = 35 +- 2mm in the plot below.
 
 figure
@@ -114,7 +116,7 @@ xlabel('Rx Element')
 ylabel('z [mm]')
 title(['The delayed data through x= ',num2str(scan.x_axis(197)*1000,2),'mm , z = ',num2str(scan.z_axis(302)*1000,2),' mm']);
 
-% In the top plot we see that the delayed data align perfectly along the 
+% In the top plot we see that the delayed data align perfectly along the
 % red line overlayed at the location of the point scatter. While in the
 % plot below, we see that the the data does not align perfectly and that
 % the amplitude of the data is alternating from a positive to a negative
@@ -145,13 +147,13 @@ caxis([-200 0])
 das_img_signal = b_data_das.get_image('none').*weights;
 das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
 
-das_weighted_CF = das_img_signal.*CF;
-das_weighted_CF = db(abs(das_weighted_CF./max(das_weighted_CF(:))));
+das_weighted_CF_signal = das_img_signal.*CF;
+das_weighted_CF_db = db(abs(das_weighted_CF_signal./max(das_weighted_CF_signal(:))));
 
 % Compare that to the USTB versions as well. It is in das_CF_USTB
 
 
-%% Part V: Compare DAS CF to DAS image
+%% Part V: Compare DAS.*CF to DAS image
 % Now, let's compare the results from conventional DAS to the image with
 % DAS weighted with CF. What are the differences?
 % What happened to the object from x = 0 to x = 2.5 mm at z = 30 mm?
@@ -159,23 +161,67 @@ das_weighted_CF = db(abs(das_weighted_CF./max(das_weighted_CF(:))));
 % from x = +-14mm at z = 40 to 48 mm. Theoretically, this should go from 0
 % to -50 dB, which one is most correct?
 %
-% If you want to understand why this is happening, you have to take our
-% next course! Or read the reference
 channel_data.print_authorship
 
-%%
+%% Plot the images with the resulting gradient
 [~,x_start] = min(abs(scan.x_axis+14/1000));
 [~,x_stop] = min(abs(scan.x_axis-14/1000));
-%%
+
 figure
 subplot(221)
 imagesc(scan.x_axis*1000, scan.z_axis*1000, das_img_db)
 colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS');
 subplot(222)
-imagesc(scan.x_axis*1000, scan.z_axis*1000, das_weighted_CF)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, das_weighted_CF_db)
 colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS weighted with CF');
 subplot(2,2,[3 4]);hold on;
 plot(scan.x_axis(x_start:x_stop)*1000,linspace(0,-50,x_stop-x_start+1),'k--','LineWidth',2,'Displayname','DAS')
 plot(scan.x_axis(x_start:x_stop)*1000,mean(das_img_db(350:470,x_start:x_stop),1)-max(mean(das_img_db(350:470,x_start:x_stop),1)),'b','LineWidth',2,'Displayname','DAS weighted CF')
-plot(scan.x_axis(x_start:x_stop)*1000,mean(das_weighted_CF(350:470,x_start:x_stop),1)-max(mean(das_weighted_CF(350:470,x_start:x_stop),1)),'r','LineWidth',2,'Displayname','Theoretical')
+plot(scan.x_axis(x_start:x_stop)*1000,mean(das_weighted_CF_db(350:470,x_start:x_stop),1)-max(mean(das_weighted_CF_db(350:470,x_start:x_stop),1)),'r','LineWidth',2,'Displayname','Theoretical')
 xlabel('x [mm]');ylabel('Amplitude [dB]');legend show
+
+
+%% Part VI: Calculate the contrast ratio for DAS and CF
+% Calculate the contrast ratio for DAS and CF and discuss these results in
+% relation to the response to the gradient in V.
+xc_ROI = -6.5;
+zc_ROI = 17.5;
+r_ROI = 3;
+r_background_inner = 5;
+r_background_outer = 7.5;
+
+
+% Create masks to mask out the ROI of the cyst and the background.
+for p = 1:length(scan.z_axis)
+    positions(p,:,1) = scan.x_axis;
+end
+
+for p = 1:length(scan.x_axis)
+    positions(:,p,2) = scan.z_axis;
+end
+points = ((positions(:,:,1)-xc_ROI*10^-3).^2) + (positions(:,:,2)-zc_ROI*10^-3).^2;
+idx_ROI = (points < (r_ROI*10^-3)^2);
+idx_background_outer =  (((positions(:,:,1)-xc_ROI*10^-3).^2) + (positions(:,:,2)-zc_ROI*10^-3).^2 < (r_background_outer*10^-3)^2); %ROI speckle
+idx_background_inner =  (((positions(:,:,1)-xc_ROI*10^-3).^2) + (positions(:,:,2)-zc_ROI*10^-3).^2 < (r_background_inner*10^-3)^2); %ROI speckle
+idx_background_outer(idx_background_inner) = 0;
+idx_background = idx_background_outer;
+
+
+% Display the mask and the images with the mask applied of the background
+% and ROI.
+figure;
+subplot(221)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, idx_background)
+axis image; xlabel('x [mm]'); ylabel('z [mm]'); title('Background region')
+subplot(222)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, idx_background.*das_img_db)
+colormap gray; caxis([-60 0]); axis image; xlabel('x [mm]'); ylabel('z [mm]'); title('Background image values')
+subplot(223)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, idx_ROI)
+axis image; axis image; xlabel('x [mm]'); ylabel('z [mm]'); title('ROI region')
+subplot(224)
+imagesc(scan.x_axis*1000, scan.z_axis*1000, idx_ROI.*das_img_db)
+colormap gray; caxis([-60 0]); axis image; xlabel('x [mm]'); ylabel('z [mm]'); title('ROI image values')
+
+% Estimate the mean and the background of all images and calculate the CR
+
