@@ -147,8 +147,8 @@ caxis([-200 0])
 das_img_signal = b_data_das.get_image('none').*weights;
 das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
 
-das_weighted_CF_signal = das_img_signal.*CF;
-das_weighted_CF_db = db(abs(das_weighted_CF_signal./max(das_weighted_CF_signal(:))));
+das_weighted_CF_signal = ; % <-------- You should implement this
+das_weighted_CF_db = ;  % <---------- You should implement this
 
 % Compare that to the USTB versions as well. It is in das_CF_USTB
 
