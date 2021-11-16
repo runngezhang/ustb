@@ -144,8 +144,8 @@ caxis([-200 0])
 % equation 1.39. Implement this yourself and verify that it is equal to the
 % USTB implementation.
 [weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
-das_img_signal = b_data_das.get_image('none').*weights;
-das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
+das_img_signal = b_data_das.get_image('none');
+das_img_db = db(abs((das_img_signal.*weights)./max(das_img_signal(:).*weights(:))));
 
 das_weighted_CF_signal ; % <-------- You should implement this
 das_weighted_CF_db ;  % <---------- You should implement this
