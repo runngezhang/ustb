@@ -14,7 +14,8 @@ classdef das < midprocess
         % spherical transmit delay model enumeration for deciding model when the source is in front of the transducer
         spherical_transmit_delay_model = spherical_transmit_delay_model.hybrid;  
         pw_margin = 1/1000;                 % The margin of the area around focus in m for the spherical_transmit_delay_model.hybrid
-        transmit_delay                      % Variable returning the calculated tx delay so that it can be plotted
+        transmit_delay                      % Variable returning the calculated tx part of the receive delay so that it can be plotted
+        receive_delay                       % Variable returning the calculated rx part of the receive delay so that it can be plotted
     end
     
     %% constructor
@@ -66,6 +67,7 @@ classdef das < midprocess
             ym=bsxfun(@minus,h.channel_data.probe.y.',h.scan.y);
             zm=bsxfun(@minus,h.channel_data.probe.z.',h.scan.z);
             receive_delay=single(sqrt(xm.^2+ym.^2+zm.^2)/h.channel_data.sound_speed);
+            h.receive_delay = receive_delay;
             
             % calculate transmit delay
             transmit_delay=zeros(N_pixels,N_waves);
@@ -153,8 +155,9 @@ classdef das < midprocess
             % convert to single
             transmit_delay = single(transmit_delay);
             
-            % Saving tx delay to a public parameter to be able to plot it
+            % Saving receive tx and rx delay to a public parameter to be able to plot it
             h.transmit_delay = transmit_delay;
+            
             
             % precalculating hilbert (if needed)
             tools.check_memory(prod([size(h.channel_data.data) 8]));
