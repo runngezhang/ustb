@@ -144,11 +144,11 @@ caxis([-200 0])
 % equation 1.39. Implement this yourself and verify that it is equal to the
 % USTB implementation.
 [weights,array_gain_compensation,geo_spreading_compensation] = tools.uniform_fov_weighting(mid);
-das_img_signal = b_data_das.get_image('none').*weights;
-das_img_db = db(abs((das_img_signal)./max(das_img_signal(:))));
+das_img_signal = b_data_das.get_image('none');
+das_img_db = db(abs((das_img_signal.*weights)./max(das_img_signal(:).*weights(:))));
 
-das_weighted_CF_signal = ; % <-------- You should implement this
-das_weighted_CF_db = ;  % <---------- You should implement this
+das_weighted_CF_signal ; % <-------- You should implement this
+das_weighted_CF_db ;  % <---------- You should implement this
 
 % Compare that to the USTB versions as well. It is in das_CF_USTB
 
@@ -175,9 +175,9 @@ subplot(222)
 imagesc(scan.x_axis*1000, scan.z_axis*1000, das_weighted_CF_db)
 colorbar; caxis([-60 0]); colormap gray; axis image; title('DAS weighted with CF');
 subplot(2,2,[3 4]);hold on;
-plot(scan.x_axis(x_start:x_stop)*1000,linspace(0,-50,x_stop-x_start+1),'k--','LineWidth',2,'Displayname','DAS')
-plot(scan.x_axis(x_start:x_stop)*1000,mean(das_img_db(350:470,x_start:x_stop),1)-max(mean(das_img_db(350:470,x_start:x_stop),1)),'b','LineWidth',2,'Displayname','DAS weighted CF')
-plot(scan.x_axis(x_start:x_stop)*1000,mean(das_weighted_CF_db(350:470,x_start:x_stop),1)-max(mean(das_weighted_CF_db(350:470,x_start:x_stop),1)),'r','LineWidth',2,'Displayname','Theoretical')
+plot(scan.x_axis(x_start:x_stop)*1000,linspace(0,-50,x_stop-x_start+1),'k--','LineWidth',2,'Displayname','Theoretical')
+plot(scan.x_axis(x_start:x_stop)*1000,mean(das_img_db(350:470,x_start:x_stop),1)-max(mean(das_img_db(350:470,x_start:x_stop),1)),'b','LineWidth',2,'Displayname','Theoretical')
+plot(scan.x_axis(x_start:x_stop)*1000,mean(das_weighted_CF_db(350:470,x_start:x_stop),1)-max(mean(das_weighted_CF_db(350:470,x_start:x_stop),1)),'r','LineWidth',2,'Displayname','DAS weighted CF')
 xlabel('x [mm]');ylabel('Amplitude [dB]');legend show
 
 
