@@ -20,7 +20,7 @@ The USTB is made possible through the contribution of several labs around the wo
 
 The USTB is still under development, so there might be larger structural changes. The current version in main is;
 
-* v2.2: https://bitbucket.org/ustb/ustb/commits/tag/v2.2.1
+* v2.2: https://bitbucket.org/ustb/ustb/commits/tag/v2.2.3
 
 compared to the previous version
 
@@ -28,6 +28,9 @@ compared to the previous version
 
 the main changes are:
 
+* added function to save to GIF
+* added the FLUST simulator 
+* improved implementation of demodulation and filtering
 * improved download tool to include dowloads from Google drive
 * added "dark mode plotting"
 * adding code from several publications under /publications/
